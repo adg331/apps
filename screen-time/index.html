@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>屏幕时间管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9ff 0%, #eef2fb 100%);
+            min-height: 100vh;
+            padding: 20px 15px;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* 顶部总时长卡片 - 标题整体居中 */
+        .total-card {
+            background: linear-gradient(135deg, #4361ee 0%, #3a56d9 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.2);
+            margin-bottom: 25px;
+        }
+
+        .total-title {
+            font-size: 16px;
+            opacity: 0.95;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .total-time {
+            font-size: 38px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .total-unit {
+            font-size: 16px;
+            margin-left: 5px;
+            opacity: 0.9;
+        }
+
+        /* 通用卡片 */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* 单选按钮组样式（手机友好大尺寸） */
+        .radio-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .radio-group::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .radio-item {
+            flex: 1;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .radio-item input {
+            display: none;
+        }
+
+        .radio-item label {
+            display: block;
+            height: 44px;
+            line-height: 44px;
+            border: 1px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #555;
+            background: #fafbfc;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .radio-item input:checked + label {
+            background: #4361ee;
+            color: #fff;
+            border-color: #4361ee;
+        }
+
+        /* 按钮组 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* 提交按钮 */
+        .submit-btn {
+            flex: 3;
+            height: 56px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+            transition: all 0.2s;
+        }
+
+        /* 重置按钮 */
+        .reset-btn {
+            flex: 1;
+            height: 56px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+            transition: all 0.2s;
+        }
+
+        .submit-btn:active, .reset-btn:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        /* 操作记录区域 */
+        .log-list {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .log-item {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 15px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-reward {
+            background: rgba(16, 185, 129, 0.08);
+            border-left: 4px solid #10b981;
+        }
+
+        .log-punish {
+            background: rgba(239, 68, 0.08);
+            border-left: 4px solid #ef4444;
+        }
+
+        .log-icon {
+            font-size: 20px;
+        }
+
+        .empty-log {
+            text-align: center;
+            padding: 30px 10px;
+            color: #95a3b3;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container>
+        <!-- 顶部总时长卡片：图标+文字整体居中 -->
+        <div class="total-card">
+            <div class="total-title">🚇 付墨砚本周屏幕时间 🚈</div>
+            <div class="total-time">
+                <span id="totalNum">0</span>
+                <span class="total-unit">分钟</span>
+            </div>
+        </div>
+
+        <!-- 操作区域 -->
+        <div class="card">
+            <div class="card-title">⚙️ 时间管理操作</div>
+
+            <!-- 1. 日期选择：横向单选按钮 -->
+            <div class="form-row">
+                <label class="form-label">选择日期</label>
+                <div class="radio-group" id="dayGroup">
+                    <div class="radio-item">
+                        <input type="radio" name="day" id="day1" value="周一" checked>
+                        <label for="day1">周一</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="day" id="day2" value="周二">
+                        <label for="day2">周二</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="day" id="day3" value="周三">
+                        <label for="day3">周三</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="day" id="day4" value="周四">
+                        <label for="day4">周四</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="day" id="day5" value="周五">
+                        <label for="day5">周五</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="day" id="day6" value="周六">
+                        <label for="day6">周六</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="day" id="day7" value="周日">
+                        <label for="day7">周日</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 操作类型 -->
+            <div class="form-row">
+                <label class="form-label">操作类型</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" name="action" id="actionReward" value="奖励" checked>
+                        <label for="actionReward">奖励</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="action" id="actionPunish" value="扣除">
+                        <label for="actionPunish">扣除</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 操作原因 -->
+            <div class="form-row">
+                <label class="form-label">选择原因</label>
+                <div class="radio-group" id="reasonGroup"></div>
+            </div>
+
+            <!-- 4. 时长选择：默认选中10分钟 -->
+            <div class="form-row">
+                <label class="form-label">时长（分钟）</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" name="time" id="time5" value="5">
+                        <label for="time5">5</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="time" id="time10" value="10" checked>
+                        <label for="time10">10</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="time" id="time15" value="15">
+                        <label for="time15">15</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交 + 重置 按钮 -->
+            <div class="btn-group">
+                <button class="submit-btn" onclick="submitAction()">确认提交</button>
+                <button class="reset-btn" onclick="resetWeek()">重置</button>
+            </div>
+        </div>
+
+        <!-- 操作记录 -->
+        <div class="card">
+            <div class="card-title">📝 操作记录</div>
+            <div class="log-list" id="logContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // 核心配置：扣除原因新增【已使用】
+        const WEEK_DAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+        const DEFAULT_DATA = {
+            "周一": 0, "周二": 0, "周三": 0, "周四": 0,
+            "周五": 60, "周六": 60, "周日": 60
+        };
+        const REWARD_REASONS = ["作业规范", "学校不玩电脑"];
+        // 扣除原因：原有两项 + 新增 已使用
+        const PUNISH_REASONS = ["说脏话", "故意涂改作业", "已使用"];
+        
+        // 本地存储key
+        const DATA_KEY = "screen_time_data";
+        const LOG_KEY = "screen_time_log";
+
+        // 全局数据
+        let timeData = {};
+        let logData = [];
+
+        // 页面初始化
+        window.onload = function () {
+            loadData();
+            renderReasonRadio();
+            renderTotal();
+            renderLogs();
+
+            // 监听操作类型切换，动态更新原因单选
+            const actionRadios = document.querySelectorAll('input[name="action"]');
+            actionRadios.forEach(radio => {
+                radio.addEventListener("change", renderReasonRadio);
+            });
+        };
+
+        // 读取本地数据
+        function loadData() {
+            timeData = JSON.parse(localStorage.getItem(DATA_KEY)) || { ...DEFAULT_DATA };
+            logData = JSON.parse(localStorage.getItem(LOG_KEY)) || [];
+        }
+
+        // 保存数据到本地
+        function saveData() {
+            localStorage.setItem(DATA_KEY, JSON.stringify(timeData));
+            localStorage.setItem(LOG_KEY, JSON.stringify(logData));
+        }
+
+        // 动态渲染【原因】单选按钮组
+        function renderReasonRadio() {
+            const reasonBox = document.getElementById("reasonGroup");
+            const action = document.querySelector('input[name="action"]:checked').value;
+            const reasonList = action === "奖励" ? REWARD_REASONS : PUNISH_REASONS;
+
+            reasonBox.innerHTML = "";
+            reasonList.forEach((item, idx) => {
+                const itemId = `reason${idx}`;
+                // 奖励默认选中【学校不玩电脑】(索引1)，扣除默认选中第一个
+                let isChecked = false;
+                if (action === "奖励") {
+                    isChecked = idx === 1;
+                } else {
+                    isChecked = idx === 0;
+                }
+                const div = document.createElement("div");
+                div.className = "radio-item";
+                div.innerHTML = `
+                    <input type="radio" name="reason" id="${itemId}" value="${item}" ${isChecked ? "checked" : ""}>
+                    <label for="${itemId}">${item}</label>
+                `;
+                reasonBox.appendChild(div);
+            });
+        }
+
+        // 计算本周总时长
+        function getTotal() {
+            return Object.values(timeData).reduce((a, b) => a + b, 0);
+        }
+
+        // 刷新顶部总时长
+        function renderTotal() {
+            document.getElementById("totalNum").textContent = getTotal();
+        }
+
+        // 渲染操作记录列表
+        function renderLogs() {
+            const container = document.getElementById("logContainer");
+            container.innerHTML = "";
+
+            if (logData.length === 0) {
+                container.innerHTML = '<div class="empty-log">暂无操作记录</div>';
+                return;
+            }
+
+            logData.forEach(log => {
+                const div = document.createElement("div");
+                const isReward = log.includes("奖励");
+                div.className = `log-item ${isReward ? "log-reward" : "log-punish"}`;
+                div.innerHTML = `<span class="log-icon">${isReward ? "✅" : "❌"}</span>${log}`;
+                container.appendChild(div);
+            });
+        }
+
+        // 提交操作
+        function submitAction() {
+            // 获取选中项
+            const day = document.querySelector('input[name="day"]:checked').value;
+            const action = document.querySelector('input[name="action"]:checked').value;
+            const reason = document.querySelector('input[name="reason"]:checked').value;
+            const minutes = parseInt(document.querySelector('input[name="time"]:checked').value);
+
+            // 更新每日时长（扣除不低于0）
+            if (action === "奖励") {
+                timeData[day] += minutes;
+            } else {
+                timeData[day] = Math.max(timeData[day] - minutes, 0);
+            }
+
+            // 生成记录并插入顶部
+            const record = `【${day}】${action} ${minutes}分钟 | ${reason}`;
+            logData.unshift(record);
+
+            // 保存 + 刷新界面
+            saveData();
+            renderTotal();
+            renderLogs();
+        }
+
+        // 重置本周数据
+        function resetWeek() {
+            if (!confirm("确定要重置本周所有数据吗？重置后恢复默认时长，记录清空！")) {
+                return;
+            }
+            // 清空本地存储
+            localStorage.removeItem(DATA_KEY);
+            localStorage.removeItem(LOG_KEY);
+            // 重新加载默认数据
+            loadData();
+            // 恢复所有单选到初始状态
+            document.querySelector('input[name="day"][value="周一"]').checked = true;
+            document.querySelector('input[name="action"][value="奖励"]').checked = true;
+            document.querySelector('input[name="time"][value="10"]').checked = true;
+            // 重新渲染原因选项、时长、记录
+            renderReasonRadio();
+            renderTotal();
+            renderLogs();
+            alert("本周数据已重置完成！");
+        }
+    </script>
+</body>
+</html>
