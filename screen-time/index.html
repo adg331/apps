@@ -1,476 +1,148 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>屏幕时间管理</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif;
-        }
+Visual Studio Code 1.122
 
-        body {
-            background: linear-gradient(135deg, #f8f9ff 0%, #eef2fb 100%);
-            min-height: 100vh;
-            padding: 20px 15px;
-            color: #2c3e50;
-        }
+Show release notes after an update
 
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-        }
+Follow us on LinkedIn, X, Bluesky | View online
 
-        /* 顶部总时长卡片 - 标题整体居中 */
-        .total-card {
-            background: linear-gradient(135deg, #4361ee 0%, #3a56d9 100%);
-            color: white;
-            padding: 30px 20px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.2);
-            margin-bottom: 25px;
-        }
+Release date: May 28, 2026
 
-        .total-title {
-            font-size: 16px;
-            opacity: 0.95;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-        }
+Welcome to the 1.122 release of Visual Studio Code. This release further enhances the agent experience and makes BYOK more flexible, while adding new capabilities for testing web apps across different devices.
 
-        .total-time {
-            font-size: 38px;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
+Air-gapped BYOK: Use your own language models, even when you're not connected.
 
-        .total-unit {
-            font-size: 16px;
-            margin-left: 5px;
-            opacity: 0.9;
-        }
+Browser device emulation: Test your website's responsiveness across different devices directly in the integrated browser.
 
-        /* 通用卡片 */
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            margin-bottom: 25px;
-        }
+Rich issue reporting: Create rich VS Code issue reports, including screenshots and video recordings.
 
-        .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+Happy Coding!
 
-        .form-row {
-            margin-bottom: 20px;
-        }
+VS Code is rolling out gradually to all users. Use Check for Updates in VS Code to get the latest version immediately.
 
-        .form-label {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-bottom: 10px;
-            display: block;
-        }
+To try new features as soon as possible, download the nightly Insiders build, which includes the latest updates as soon as they are available.
 
-        /* 单选按钮组样式（手机友好大尺寸） */
-        .radio-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            padding-bottom: 5px;
-        }
+In this update
+Agents
+Language Models
+Integrated browser
+Editor Experience
+Deprecated features and settings
+Notable fixes
+Thank you
+Agents
+Agents Window (Preview)
+The Agents window is a dedicated companion window optimized for exploring, iterating on, and reviewing agent sessions across projects, harnesses, and machines. We keep improving it and the updates for this release include:
 
-        .radio-group::-webkit-scrollbar {
-            height: 4px;
-        }
+Session hover details: Hover over a session in the session list to see its details at a glance. The hover shows the session title with an icon indicating the harness used, along with the project, worktree, and files changed.
 
-        .radio-item {
-            flex: 1;
-            min-width: 45px;
-            text-align: center;
-        }
+Local VS Code harness (Insiders only): We're continuing to iterate on the ability to use the local harness in the Agents window, such as improvements to the custom agent picker. The availability of the local harness is an early, experimental feature available only in VS Code Insiders. To try it out, you can enable the sessions.chat.localAgent.enabled setting in Insiders.
 
-        .radio-item input {
-            display: none;
-        }
+Screenshot showing the Agents window with a hover over a session in the list
 
-        .radio-item label {
-            display: block;
-            height: 44px;
-            line-height: 44px;
-            border: 1px solid #e1e8ed;
-            border-radius: 12px;
-            font-size: 15px;
-            color: #555;
-            background: #fafbfc;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
+You can open the Agents window in several ways, including the Open in Agents button in the VS Code title bar. To learn more about how it works and what you can do with it, visit the Agents window documentation. You can also check out our new VS Code Insiders podcast episode about how the Agents window fits into agent-first development workflows.
 
-        .radio-item input:checked + label {
-            background: #4361ee;
-            color: #fff;
-            border-color: #4361ee;
-        }
+Your feedback continues to be a great help in shaping Agents. If you've already been using it and providing feedback, thank you! Please continue to file issues on GitHub or browse existing issues.
 
-        /* 按钮组 */
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
+Richer OpenTelemetry signals for agents
+Local agent sessions now emit a canonical github.copilot.* attribute namespace to OpenTelemetry, matching the GitHub Copilot CLI OpenTelemetry conventions. New signals add repository context, agent type, structured tool parameters, and hook outcomes to each session.
 
-        /* 提交按钮 */
-        .submit-btn {
-            flex: 3;
-            height: 56px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 17px;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-            transition: all 0.2s;
-        }
+For the full attribute reference, see Monitor agent usage with OpenTelemetry.
 
-        /* 重置按钮 */
-        .reset-btn {
-            flex: 1;
-            height: 56px;
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
-            transition: all 0.2s;
-        }
+Sandboxing
+Setting:   chat.agent.sandbox.enabled
 
-        .submit-btn:active, .reset-btn:active {
-            transform: scale(0.97);
-            opacity: 0.9;
-        }
+Previously, when you ran commands with Bypass Approvals or Autopilot mode, they were first attempted in the sandbox. If the command failed with a non-zero exit code, it was automatically retried outside the sandbox. Since approvals were bypassed anyway, this did not provide a meaningful safety benefit and could make the behavior harder to reason about.
 
-        /* 操作记录区域 */
-        .log-list {
-            max-height: 380px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
+Based on feedback from Insiders users, terminal sandboxing now only applies when you use Default Approvals, where it provides a clearer balance between safety and usefulness.
 
-        .log-item {
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-size: 15px;
-            line-height: 1.4;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+Language Models
+Use BYOK without a GitHub sign in
+Previously, using your own language model API key in VS Code required signing in to GitHub. Now, Bring Your Own Key (BYOK) works without signing in, so you can use chat, tools, and MCP servers in air-gapped or restricted environments where GitHub sign-in isn't possible. This also enables fully offline workflows with local models like Ollama.
 
-        .log-reward {
-            background: rgba(16, 185, 129, 0.08);
-            border-left: 4px solid #10b981;
-        }
+To get started, run Manage Language Models from the Command Palette and add a provider such as Anthropic, Azure, Gemini, OpenAI, Ollama, OpenRouter, or a custom endpoint. Once at least one BYOK model is configured, the Chat view becomes available and sign-in prompts are suppressed.
 
-        .log-punish {
-            background: rgba(239, 68, 0.08);
-            border-left: 4px solid #ef4444;
-        }
+Built-in tools and any configured MCP servers continue to work. Requests go directly to your provider.
 
-        .log-icon {
-            font-size: 20px;
-        }
+Note: Inline suggestions and next edit suggestions (NES) still require a GitHub sign-in. BYOK powers chat, tools, and MCP servers only.
 
-        .empty-log {
-            text-align: center;
-            padding: 30px 10px;
-            color: #95a3b3;
-        }
+Utility model notification
+Settings:   chat.utilityModel ,   chat.utilitySmallModel
 
-        /* 滚动条美化 */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
+A few flows in VS Code, such as chat title generation, commit message generation, and feedback, use a smaller utility model that normally comes from your Copilot subscription. When you use BYOK while signed out, the default utility models are unreachable, so a notification in the chat input prompts you to point them at one of your BYOK models.
 
-        ::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
-        }
-    </style>
-</head>
+You have two options:
 
-<body>
-    <div class="container>
-        <!-- 顶部总时长卡片：图标+文字整体居中 -->
-        <div class="total-card">
-            <div class="total-title">🚇 付墨砚本周屏幕时间 🚈</div>
-            <div class="total-time">
-                <span id="totalNum">0</span>
-                <span class="total-unit">分钟</span>
-            </div>
-        </div>
+Select Configure to open settings and pick a BYOK model for   chat.utilityModel and   chat.utilitySmallModel . This unlocks the full set of AI features using your own language model.
 
-        <!-- 操作区域 -->
-        <div class="card">
-            <div class="card-title">⚙️ 时间管理操作</div>
+Dismiss the notification if you only need to use chat. The utility-driven features remain inactive until you configure a model.
 
-            <!-- 1. 日期选择：横向单选按钮 -->
-            <div class="form-row">
-                <label class="form-label">选择日期</label>
-                <div class="radio-group" id="dayGroup">
-                    <div class="radio-item">
-                        <input type="radio" name="day" id="day1" value="周一" checked>
-                        <label for="day1">周一</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="day" id="day2" value="周二">
-                        <label for="day2">周二</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="day" id="day3" value="周三">
-                        <label for="day3">周三</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="day" id="day4" value="周四">
-                        <label for="day4">周四</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="day" id="day5" value="周五">
-                        <label for="day5">周五</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="day" id="day6" value="周六">
-                        <label for="day6">周六</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="day" id="day7" value="周日">
-                        <label for="day7">周日</label>
-                    </div>
-                </div>
-            </div>
+The notification hides automatically once you configure both utility settings, sign in to GitHub, or remove all BYOK models.
 
-            <!-- 2. 操作类型 -->
-            <div class="form-row">
-                <label class="form-label">操作类型</label>
-                <div class="radio-group">
-                    <div class="radio-item">
-                        <input type="radio" name="action" id="actionReward" value="奖励" checked>
-                        <label for="actionReward">奖励</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="action" id="actionPunish" value="扣除">
-                        <label for="actionPunish">扣除</label>
-                    </div>
-                </div>
-            </div>
+Custom Endpoint provider in Stable
+The Custom Endpoint provider lets you connect models that implement Chat Completions, Responses, or Messages APIs, so you can use chat with your own endpoint and API key. You can use it to connect to self-hosted, enterprise, or other compatible AI endpoints.
 
-            <!-- 3. 操作原因 -->
-            <div class="form-row">
-                <label class="form-label">选择原因</label>
-                <div class="radio-group" id="reasonGroup"></div>
-            </div>
+The Custom Endpoint provider is now available in VS Code Stable.
 
-            <!-- 4. 时长选择：默认选中10分钟 -->
-            <div class="form-row">
-                <label class="form-label">时长（分钟）</label>
-                <div class="radio-group">
-                    <div class="radio-item">
-                        <input type="radio" name="time" id="time5" value="5">
-                        <label for="time5">5</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="time" id="time10" value="10" checked>
-                        <label for="time10">10</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="time" id="time15" value="15">
-                        <label for="time15">15</label>
-                    </div>
-                </div>
-            </div>
+To learn how to set it up, see Add a custom endpoint model.
 
-            <!-- 提交 + 重置 按钮 -->
-            <div class="btn-group">
-                <button class="submit-btn" onclick="submitAction()">确认提交</button>
-                <button class="reset-btn" onclick="resetWeek()">重置</button>
-            </div>
-        </div>
+Manage models in Agents window
+You can now run the command Chat: Manage Language Models directly from the Agents window to configure the language models you want to use while working there.
 
-        <!-- 操作记录 -->
-        <div class="card">
-            <div class="card-title">📝 操作记录</div>
-            <div class="log-list" id="logContainer"></div>
-        </div>
-    </div>
+This works with local sessions, and you can use BYOK models through the same flow. Model configuration is shared with the editor window, so changes you make in either place are reflected in both.
 
-    <script>
-        // 核心配置：扣除原因新增【已使用】
-        const WEEK_DAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
-        const DEFAULT_DATA = {
-            "周一": 0, "周二": 0, "周三": 0, "周四": 0,
-            "周五": 60, "周六": 60, "周日": 60
-        };
-        const REWARD_REASONS = ["作业规范", "学校不玩电脑"];
-        // 扣除原因：原有两项 + 新增 已使用
-        const PUNISH_REASONS = ["说脏话", "故意涂改作业", "已使用"];
-        
-        // 本地存储key
-        const DATA_KEY = "screen_time_data";
-        const LOG_KEY = "screen_time_log";
+Granular BYOK provider group actions in Manage Language Models
+Managing BYOK providers often means making small updates, such as rotating an API key or renaming a provider group without opening and editing the full JSON configuration by hand.
 
-        // 全局数据
-        let timeData = {};
-        let logData = [];
+In the Language Model editor, supported provider groups now expose targeted actions based on the provider schema: Update API Key, Add Model, Rename Group, and Delete. This makes common provider maintenance tasks faster while keeping you in the same flow.
 
-        // 页面初始化
-        window.onload = function () {
-            loadData();
-            renderReasonRadio();
-            renderTotal();
-            renderLogs();
+Remote Development
+The Remote Development extensions, allow you to use a Dev Container, remote machine via SSH or Remote Tunnels, or the Windows Subsystem for Linux (WSL) as a full-featured development environment.
 
-            // 监听操作类型切换，动态更新原因单选
-            const actionRadios = document.querySelectorAll('input[name="action"]');
-            actionRadios.forEach(radio => {
-                radio.addEventListener("change", renderReasonRadio);
-            });
-        };
+Highlights include:
 
-        // 读取本地数据
-        function loadData() {
-            timeData = JSON.parse(localStorage.getItem(DATA_KEY)) || { ...DEFAULT_DATA };
-            logData = JSON.parse(localStorage.getItem(LOG_KEY)) || [];
-        }
+EOL for 32-bit ARM Linux hosts
+You can learn more about these features in the Remote Development release notes.
 
-        // 保存数据到本地
-        function saveData() {
-            localStorage.setItem(DATA_KEY, JSON.stringify(timeData));
-            localStorage.setItem(LOG_KEY, JSON.stringify(logData));
-        }
+Integrated browser
+Emulate devices
+The integrated browser now includes out-of-the-box support for device emulation including screen sizes, mobile / touch emulation, custom user-agents, and more. This is especially useful for web development and debugging, allowing you to quickly test your website's responsiveness and behavior across different devices directly from VS Code without needing to switch to a separate browser or use external tools.
 
-        // 动态渲染【原因】单选按钮组
-        function renderReasonRadio() {
-            const reasonBox = document.getElementById("reasonGroup");
-            const action = document.querySelector('input[name="action"]:checked').value;
-            const reasonList = action === "奖励" ? REWARD_REASONS : PUNISH_REASONS;
+To get started from a browser tab, select the Show Emulation Toolbar command from the overflow menu.
 
-            reasonBox.innerHTML = "";
-            reasonList.forEach((item, idx) => {
-                const itemId = `reason${idx}`;
-                // 奖励默认选中【学校不玩电脑】(索引1)，扣除默认选中第一个
-                let isChecked = false;
-                if (action === "奖励") {
-                    isChecked = idx === 1;
-                } else {
-                    isChecked = idx === 0;
-                }
-                const div = document.createElement("div");
-                div.className = "radio-item";
-                div.innerHTML = `
-                    <input type="radio" name="reason" id="${itemId}" value="${item}" ${isChecked ? "checked" : ""}>
-                    <label for="${itemId}">${item}</label>
-                `;
-                reasonBox.appendChild(div);
-            });
-        }
 
-        // 计算本周总时长
-        function getTotal() {
-            return Object.values(timeData).reduce((a, b) => a + b, 0);
-        }
+Agents can also trigger device emulation via Playwright code, for example to catch mobile responsiveness issues:
 
-        // 刷新顶部总时长
-        function renderTotal() {
-            document.getElementById("totalNum").textContent = getTotal();
-        }
 
-        // 渲染操作记录列表
-        function renderLogs() {
-            const container = document.getElementById("logContainer");
-            container.innerHTML = "";
+Add browser screenshot as chat context
+The new Add Screenshot to Chat feature lets you attach a screenshot of the current browser viewport to the chat as context. This is especially useful for UI-related tasks, such as debugging a layout issue.
 
-            if (logData.length === 0) {
-                container.innerHTML = '<div class="empty-log">暂无操作记录</div>';
-                return;
-            }
 
-            logData.forEach(log => {
-                const div = document.createElement("div");
-                const isReward = log.includes("奖励");
-                div.className = `log-item ${isReward ? "log-reward" : "log-punish"}`;
-                div.innerHTML = `<span class="log-icon">${isReward ? "✅" : "❌"}</span>${log}`;
-                container.appendChild(div);
-            });
-        }
+Editor Experience
+Improved issue reporting flow
+Setting:   issueReporter.wizard.enabled
 
-        // 提交操作
-        function submitAction() {
-            // 获取选中项
-            const day = document.querySelector('input[name="day"]:checked').value;
-            const action = document.querySelector('input[name="action"]:checked').value;
-            const reason = document.querySelector('input[name="reason"]:checked').value;
-            const minutes = parseInt(document.querySelector('input[name="time"]:checked').value);
+To help us better understand and fix any problems you might run into in VS Code, we've improved the issue reporting flow with a new issue reporting wizard. The wizard guides you through creating high quality issues directly from VS Code, including adding relevant details, screenshots, and video recordings.
 
-            // 更新每日时长（扣除不低于0）
-            if (action === "奖励") {
-                timeData[day] += minutes;
-            } else {
-                timeData[day] = Math.max(timeData[day] - minutes, 0);
-            }
+Enable the   issueReporter.wizard.enabled setting to opt in to the new issue reporter.
 
-            // 生成记录并插入顶部
-            const record = `【${day}】${action} ${minutes}分钟 | ${reason}`;
-            logData.unshift(record);
 
-            // 保存 + 刷新界面
-            saveData();
-            renderTotal();
-            renderLogs();
-        }
+Deprecated features and settings
+New deprecations in this release
+Upcoming deprecations
+Notable fixes
+Thank you
+Contributions to our issue tracking:
 
-        // 重置本周数据
-        function resetWeek() {
-            if (!confirm("确定要重置本周所有数据吗？重置后恢复默认时长，记录清空！")) {
-                return;
-            }
-            // 清空本地存储
-            localStorage.removeItem(DATA_KEY);
-            localStorage.removeItem(LOG_KEY);
-            // 重新加载默认数据
-            loadData();
-            // 恢复所有单选到初始状态
-            document.querySelector('input[name="day"][value="周一"]').checked = true;
-            document.querySelector('input[name="action"][value="奖励"]').checked = true;
-            document.querySelector('input[name="time"][value="10"]').checked = true;
-            // 重新渲染原因选项、时长、记录
-            renderReasonRadio();
-            renderTotal();
-            renderLogs();
-            alert("本周数据已重置完成！");
-        }
-    </script>
-</body>
-</html>
+@gjsjohnmurray (John Murray)
+@RedCMD (RedCMD)
+@IllusionMH (Andrii Dieiev)
+@albertosantini (Alberto Santini)
+Contributions to vscode:
+
+@aaronpowell (Aaron Powell): Add marketplace ref support for plugin marketplaces PR #317901
+@oded-ist (Oded S): Fix read_cell_output incorrectly reporting all outputs as too large PR #318148
+@PenguinDOOM (Penguin): Fix BYOK invalid stateful marker retries PR #317292
+@SLdragon (rentu): feat: add languageDiagnosticsService option for nes/inline completion provider PR #317678
+We really appreciate people trying our new features as soon as they are ready, so check back here often and learn what's new.
+
+If you'd like to read release notes for previous VS Code versions, go to Updates on code.visualstudio.com.
+
