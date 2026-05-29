@@ -320,9 +320,9 @@
                     </select>
                 </div>
                 <textarea id="wordText" placeholder="格式支持两种：
-1. 完整格式：单词/短语 /音标/ 词性 中文 例句
+1. 完整格式：单词 /音标/ 词性 中文 例句
 示例：receive /rɪ'siːv/ v. 接待 The hotel receives many guests.
-2. 简化格式：单词/短语 中文 例句
+2. 简化格式：单词 中文 例句
 示例：put out 熄灭；扑灭 The firemen quickly put out the fire."></textarea>
                 <button class="btn btn-primary" style="width:100%;margin-bottom:10px;" id="importBtn">开始导入</button>
                 <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" id="viewBtn">查看已导入内容</button>
@@ -347,7 +347,6 @@
                 </div>
                 <div class="input-row">
                     <input type="number" id="planCount" placeholder="本次计划学习数量" min="1" value="10">
-                    <!-- 默认选中 英译中 -->
                     <select id="modeSelect">
                         <option value="mixed">混合模式</option>
                         <option value="en2cn" selected>英译中</option>
@@ -398,7 +397,6 @@
     </div>
 
     <script>
-        // 包裹所有JS代码，防止语法错误阻塞页面
         try {
             const DATA_KEY = "wordStudyDictData";
             const ERR_KEY = "wordErrorData";
@@ -416,7 +414,6 @@
             let currentStudyDict = "";
             let studyQueue = [];
 
-            // 原生Web Audio生成音效，无外部资源、无跨域问题
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             let audioCtx = null;
             function initAudio() {
@@ -425,7 +422,6 @@
                 }
             }
 
-            // 答对音效
             function playRightSound() {
                 initAudio();
                 const oscillator = audioCtx.createOscillator();
@@ -440,7 +436,6 @@
                 oscillator.stop(audioCtx.currentTime + 0.3);
             }
 
-            // 答错音效
             function playWrongSound() {
                 initAudio();
                 const oscillator = audioCtx.createOscillator();
@@ -455,15 +450,12 @@
                 oscillator.stop(audioCtx.currentTime + 0.2);
             }
 
-            // 学习完成 庆祝音效（打卡弹窗同步播放）
             function playCelebrateSound() {
                 initAudio();
                 const gain = audioCtx.createGain();
                 gain.connect(audioCtx.destination);
                 gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-
-                // 多音阶组合，欢快庆祝音效
                 const notes = [523, 659, 784, 1047];
                 notes.forEach((freq, idx) => {
                     const osc = audioCtx.createOscillator();
@@ -520,7 +512,6 @@
                 }
             }
 
-            // 保存设置
             function saveSetting() {
                 try {
                     const setting = {
@@ -534,7 +525,6 @@
                 }
             }
 
-            // 加载设置：无历史记录时 默认英译中
             function loadSetting() {
                 try {
                     const str = localStorage.getItem(SETTING_KEY);
@@ -548,7 +538,6 @@
                 }
             }
 
-            // 打卡记录相关
             function initRecord() {
                 try {
                     const record = localStorage.getItem(RECORD_KEY);
@@ -603,7 +592,6 @@
                 showAlert("✅ 打卡成功！", true);
             }
 
-            // 标签切换
             document.querySelectorAll(".tab-item").forEach(tab => {
                 tab.addEventListener("click", function () {
                     document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
@@ -615,12 +603,11 @@
                 });
             });
 
-            // 监听配置变化自动保存
             document.getElementById("studyDictSelect").addEventListener("change", saveSetting);
             document.getElementById("modeSelect").addEventListener("change", saveSetting);
             document.getElementById("spellSwitch").addEventListener("change", saveSetting);
 
-            // 文本解析
+            // 【修复后】适配你词库格式的解析函数，自动清洗释义
             function parseText(text) {
                 const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
                 const ok = [];
@@ -628,23 +615,53 @@
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i];
                     let word, phon, pos, mean, sentence;
-                    const fullMatch = line.match(/^([\s\S]*?)\s+(\/[^\/]+\/)\s+(\S+)\s+(.+?)\s+(.+)$/);
+
+                    // 标准格式：单词 /音标/ 词性 中文释义 例句
+                    const fullMatch = line.match(/^([^\s\/]+)\s+(\/[^\/]+\/)\s+([a-z.]+)\s+([\s\S]*?)\s+([A-Z][\s\S]*)$/i);
                     if (fullMatch) {
                         [, word, phon, pos, mean, sentence] = fullMatch;
                     } else {
-                        const parts = line.split(/\s+/);
-                        let idx = 0;
-                        while (idx < parts.length && !/[\u4e00-\u9fa5]/.test(parts[idx])) idx++;
-                        if (idx === 0 || idx >= parts.length) { bad.push(`第${i+1}行：格式错误 → ${line}`); continue; }
-                        word = parts.slice(0, idx).join(" ");
-                        const rest = parts.slice(idx).join(" ");
-                        const firstSpace = rest.indexOf(" ");
-                        if (firstSpace === -1) { bad.push(`第${i+1}行：格式错误 → ${line}`); continue; }
-                        mean = rest.slice(0, firstSpace);
-                        sentence = rest.slice(firstSpace + 1);
-                        phon = "/ /"; pos = "phr.";
+                        // 简化格式：单词 中文释义 例句（无音标/词性）
+                        const simpleMatch = line.match(/^([^\s]+)\s+([\u4e00-\u9fa5（）/；\s]+)\s+([A-Z][\s\S]*)$/);
+                        if (simpleMatch) {
+                            [, word, mean, sentence] = simpleMatch;
+                            phon = "/ /";
+                            pos = "phr.";
+                        } else {
+                            // 兜底格式：单词 中文释义（无例句）
+                            const fallbackMatch = line.match(/^([^\s]+)\s+([\u4e00-\u9fa5（）/；\s]+)$/);
+                            if (fallbackMatch) {
+                                [, word, mean] = fallbackMatch;
+                                phon = "/ /";
+                                pos = "phr.";
+                                sentence = "";
+                            } else {
+                                bad.push(`第${i+1}行：格式解析失败 → ${line}`);
+                                continue;
+                            }
+                        }
                     }
-                    ok.push({ word, phon, pos, mean, sentence, status: 0 });
+
+                    // 自动清洗释义：删除所有英文、数字、符号，只保留中文
+                    mean = mean
+                        .replace(/[a-zA-Z0-9]/g, "")
+                        .replace(/[\/\\\(\)]/g, "")
+                        .replace(/[.,;!?]/g, "")
+                        .replace(/\s+/g, " ")
+                        .trim();
+
+                    if (!mean) {
+                        bad.push(`第${i+1}行：释义解析后为空 → ${line}`);
+                        continue;
+                    }
+
+                    ok.push({
+                        word: word.trim(),
+                        phon: phon.trim(),
+                        pos: pos.trim(),
+                        mean: mean,
+                        sentence: sentence?.trim() || ""
+                    });
                 }
                 return { ok, bad };
             }
@@ -655,7 +672,6 @@
                 return { wordCnt, phraseCnt, total: list.length };
             }
 
-            // 查看已导入内容
             document.getElementById("viewBtn").addEventListener("click", function () {
                 const dict = document.getElementById("dictSelect").value;
                 const viewArea = document.getElementById("viewArea");
@@ -668,7 +684,6 @@
                 viewArea.style.display = "block";
             });
 
-            // 导入按钮
             document.getElementById("importBtn").addEventListener("click", function () {
                 const dict = document.getElementById("dictSelect").value;
                 const text = document.getElementById("wordText").value;
@@ -688,7 +703,6 @@
                 document.getElementById("wordText").value = "";
             });
 
-            // 清空全部数据
             document.getElementById("clearAllBtn").addEventListener("click", function () {
                 const pwd = prompt("请输入验证码 old6：");
                 if (pwd !== "old6") { showAlert("验证码错误", false); return; }
@@ -699,7 +713,6 @@
                 document.getElementById("viewArea").style.display = "none";
             });
 
-            // 清空错题本
             document.getElementById("clearErrBtn").addEventListener("click", function () {
                 if (!confirm("确定清空错题本？")) return;
                 errorList = []; saveErrData();
@@ -707,7 +720,6 @@
                 nextErrQuestion();
             });
 
-            // 生成学习队列：错题优先 + 70%新词 + 30%复习词
             function generateStudyQueue(dict, total) {
                 const queue = [...errorList];
                 const newWords = (dictData[dict] || []).filter(item => item.status === 0 && !errorList.find(e => e.word === item.word));
@@ -724,7 +736,6 @@
                 return shuffle(queue);
             }
 
-            // 开始学习
             document.getElementById("startStudyBtn").addEventListener("click", function () {
                 const dict = document.getElementById("studyDictSelect").value;
                 const planCount = parseInt(document.getElementById("planCount").value);
@@ -765,12 +776,10 @@
                 }
             }
 
-            // 切换下一题
             function nextQuestion() {
                 stopSpeech();
                 if (isAnswering || !studyStarted) return;
 
-                // 学习完成：弹出打卡弹窗 + 播放庆祝音效
                 if (studiedCount >= studyTotal) {
                     document.getElementById("qTitle").innerText = "🎉 学习完成！";
                     document.getElementById("qSentence").innerText = "准备打卡记录今日学习";
@@ -782,7 +791,6 @@
                     const days = calcConsecutiveDays();
                     document.getElementById("checkDays").innerText = `已连续学习 ${days} 天`;
                     document.getElementById("checkModal").style.display = "flex";
-                    // 播放庆祝音效
                     playCelebrateSound();
                     return;
                 }
@@ -838,7 +846,6 @@
                 speak(word.word + " . " + word.sentence);
             }
 
-            // 选择题作答
             function selectOption(dom, rightWord) {
                 if (isAnswering) return;
                 isAnswering = true;
@@ -868,7 +875,7 @@
                         if (opt.dataset.word === rightWord) opt.classList.add("right");
                     });
                     tip.className = "tip wrong";
-                    tip.innerText = `正确答案：${rightWord}`;
+                    tip.innerText = `正确答案：${dictData[currentStudyDict].find(x => x.word === rightWord).mean}`;
                     if (!errorList.find(e => e.word === currentWord.word)) {
                         errorList.push({...currentWord});
                         saveErrData();
@@ -880,7 +887,6 @@
                 }
             }
 
-            // 拼写题作答
             document.getElementById("spellBtn").addEventListener("click", function () {
                 if (isAnswering) return;
                 isAnswering = true;
@@ -917,7 +923,6 @@
                 }
             });
 
-            // 错题本逻辑
             function getRandErrWord() {
                 return errorList.length ? errorList[Math.floor(Math.random() * errorList.length)] : null;
             }
@@ -989,7 +994,7 @@
                         if (opt.dataset.word === rightWord) opt.classList.add("right");
                     });
                     tip.className = "tip wrong";
-                    tip.innerText = `正确答案：${rightWord}`;
+                    tip.innerText = `正确答案：${dictData[currentStudyDict].find(x => x.word === rightWord).mean}`;
                     setTimeout(() => {
                         isAnswering = false;
                         nextErrQuestion();
@@ -1024,10 +1029,8 @@
                 }
             });
 
-            // 打卡按钮
             document.getElementById("checkBtn").addEventListener("click", finishCheck);
 
-            // 页面初始化
             window.onload = function() {
                 initData();
                 loadSetting();
