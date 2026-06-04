@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-web-capable" content="yes">
     <title>单词记忆工具</title>
     <style>
         * {
@@ -103,6 +103,10 @@
             background: linear-gradient(135deg, #ef4444 0%, #dc2626);
             color: #fff;
         }
+        .btn-success {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: #fff;
+        }
         .btn:active {
             transform: scale(0.97);
         }
@@ -121,7 +125,7 @@
         }
         .option-list {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             margin-bottom: 20px;
         }
@@ -263,9 +267,11 @@
             border-radius: 20px;
             padding: 30px 25px;
             width: 90%;
-            max-width: 350px;
+            max-width: 380px;
             text-align: center;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .check-icon {
             font-size: 48px;
@@ -276,35 +282,77 @@
             font-size: 24px;
             font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         .check-text {
             font-size: 15px;
             color: #666;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
-        .check-btn {
-            width: 100%;
-            height: 44px;
-            background: linear-gradient(135deg, #10b981 0%, #059669);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
+        .calendar-wrap {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .calendar-week {
+            font-size: 12px;
+            color: #999;
             font-weight: 500;
-            cursor: pointer;
+        }
+        .calendar-day {
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 0 auto;
+            background: #f5f7fa;
+            color: #666;
+            position: relative;
+        }
+        .calendar-day.checked {
+            background: #10b981;
+            color: #fff;
+        }
+        .calendar-day.checked::after {
+            content: "✓";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-weight: bold;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .action-buttons button {
+            flex: 1;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="tab-wrap">
-            <div class="tab-item active" data-tab="import">导入单词</div>
-            <div class="tab-item" data-tab="study">开始背诵</div>
+            <div class="tab-item" data-tab="import">导入单词</div>
+            <div class="tab-item active" data-tab="study">开始背诵</div>
             <div class="tab-item" data-tab="error">错题本</div>
         </div>
 
-        <div class="tab-content show" id="tab-import">
+        <div class="tab-content" id="tab-import">
             <div class="card">
                 <div class="card-title">📝 粘贴导入内容</div>
                 <div id="importAlert" class="page-alert"></div>
@@ -320,20 +368,20 @@
                     </select>
                 </div>
                 <textarea id="wordText" placeholder="格式支持两种：
-1. 完整格式：单词/短语 /音标/ 词性 中文 例句
+1. 完整格式：单词 /音标/ 词性 中文 例句
 示例：receive /rɪ'siːv/ v. 接待 The hotel receives many guests.
-2. 简化格式：单词/短语 中文 例句
+2. 简化格式：单词 中文 例句
 示例：put out 熄灭；扑灭 The firemen quickly put out the fire."></textarea>
                 <button class="btn btn-primary" style="width:100%;margin-bottom:10px;" id="importBtn">开始导入</button>
                 <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" id="viewBtn">查看已导入内容</button>
-                <button class="btn btn-danger" style="width:100%" id="clearAllBtn">清空全部词库与记录</button>
+                <button class="btn btn-danger" style="width:100%" id="clearAllBtn">清空选中词库</button>
                 <div id="viewArea" class="view-area"></div>
             </div>
         </div>
 
-        <div class="tab-content" id="tab-study">
+        <div class="tab-content show" id="tab-study">
             <div class="card">
-                <div class="card-title">📖 简单复习模式（错题优先+70%新词+30%复习）</div>
+                <div class="card-title">📖 学习模式</div>
                 <div class="input-row">
                     <select id="studyDictSelect">
                         <option value="">请选择词库</option>
@@ -346,12 +394,9 @@
                     </select>
                 </div>
                 <div class="input-row">
-                    <input type="number" id="planCount" placeholder="本次计划学习数量" min="1" value="10">
-                    <!-- 默认选中 英译中 -->
+                    <input type="number" id="planCount" placeholder="本次计划学习数量" min="1" value="50">
                     <select id="modeSelect">
-                        <option value="mixed">混合模式</option>
                         <option value="en2cn" selected>英译中</option>
-                        <option value="cn2en">中译英</option>
                     </select>
                 </div>
                 <div class="switch-wrap">
@@ -361,7 +406,8 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                <button class="btn btn-primary" style="width:100%;margin-bottom:20px;" id="startStudyBtn">开始学习</button>
+                <button class="btn btn-primary" style="width:100%;margin-bottom:10px;" id="startStudyBtn">开始学习</button>
+                <button class="btn btn-secondary" style="width:100%;margin-bottom:20px;" id="checkRecordBtn">打卡记录</button>
 
                 <div id="studyArea" style="display:none;">
                     <div class="q-title" id="qTitle"></div>
@@ -389,21 +435,38 @@
     </div>
 
     <div id="checkModal" class="check-modal">
-        <div class="check-card">
+        <div class="check-card" id="checkCard">
             <div class="check-icon">🎉</div>
-            <div class="check-days" id="checkDays"></div>
-            <div class="check-text">坚持学习，越来越棒！</div>
-            <button class="check-btn" id="checkBtn">完成今日学习</button>
+            <div class="check-days" id="checkDays">学习完成</div>
+            <div class="check-text" id="checkText"></div>
+            
+            <div class="calendar-wrap">
+                <div class="calendar-title" id="calendarTitle"></div>
+                <div class="calendar-grid" id="calendarWeek">
+                    <div class="calendar-week">日</div>
+                    <div class="calendar-week">一</div>
+                    <div class="calendar-week">二</div>
+                    <div class="calendar-week">三</div>
+                    <div class="calendar-week">四</div>
+                    <div class="calendar-week">五</div>
+                    <div class="calendar-week">六</div>
+                </div>
+                <div class="calendar-grid" id="calendarDays"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-success" id="shareWechatBtn">分享到微信</button>
+                <button class="btn btn-primary" id="checkBtn">完成</button>
+            </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
-        // 包裹所有JS代码，防止语法错误阻塞页面
         try {
             const DATA_KEY = "wordStudyDictData";
             const ERR_KEY = "wordErrorData";
-            const RECORD_KEY = "studyRecord";
-            const SETTING_KEY = "studySetting";
+            const RECORD_KEY = "studyCheckRecord";
 
             let dictData = {};
             let errorList = [];
@@ -416,629 +479,376 @@
             let currentStudyDict = "";
             let studyQueue = [];
 
-            // 原生Web Audio生成音效，无外部资源、无跨域问题
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             let audioCtx = null;
             function initAudio() {
-                if (!audioCtx) {
-                    audioCtx = new AudioContext();
-                }
+                if (!audioCtx) audioCtx = new AudioContext();
             }
 
-            // 答对音效
             function playRightSound() {
                 initAudio();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = 880;
-                oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                oscillator.start(audioCtx.currentTime);
-                oscillator.stop(audioCtx.currentTime + 0.3);
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.connect(g); g.connect(audioCtx.destination);
+                o.frequency.value = 880;
+                g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.3);
+                o.start(); o.stop(audioCtx.currentTime+0.3);
             }
 
-            // 答错音效
             function playWrongSound() {
                 initAudio();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = 220;
-                oscillator.type = 'sawtooth';
-                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                oscillator.start(audioCtx.currentTime);
-                oscillator.stop(audioCtx.currentTime + 0.2);
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.connect(g); g.connect(audioCtx.destination);
+                o.frequency.value = 220;
+                o.type = "sawtooth";
+                g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.2);
+                o.start(); o.stop(audioCtx.currentTime+0.2);
             }
 
-            // 学习完成 庆祝音效（打卡弹窗同步播放）
             function playCelebrateSound() {
                 initAudio();
-                const gain = audioCtx.createGain();
-                gain.connect(audioCtx.destination);
-                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-
-                // 多音阶组合，欢快庆祝音效
-                const notes = [523, 659, 784, 1047];
-                notes.forEach((freq, idx) => {
-                    const osc = audioCtx.createOscillator();
-                    osc.type = 'sine';
-                    osc.frequency.value = freq;
-                    osc.connect(gain);
-                    const startTime = audioCtx.currentTime + idx * 0.12;
-                    osc.start(startTime);
-                    osc.stop(startTime + 0.25);
+                const g = audioCtx.createGain();
+                g.connect(audioCtx.destination);
+                g.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.8);
+                const notes = [523,659,784,1047];
+                notes.forEach((f,i)=>{
+                    const o=audioCtx.createOscillator();
+                    o.frequency.value=f;
+                    o.connect(g);
+                    const t=audioCtx.currentTime+i*0.12;
+                    o.start(t); o.stop(t+0.25);
                 });
-            }
-
-            function showAlert(msg, isSuccess = true) {
-                const alertEl = document.getElementById("importAlert");
-                if (!alertEl) return;
-                alertEl.textContent = msg;
-                alertEl.className = "page-alert " + (isSuccess ? "success" : "error");
-                alertEl.style.display = "block";
-                setTimeout(() => {
-                    if (alertEl) alertEl.style.display = "none";
-                }, 5000);
-            }
-
-            function stopSpeech() {
-                if (window.speechSynthesis) {
-                    window.speechSynthesis.cancel();
-                }
-            }
-
-            function initData() {
-                try {
-                    const local = localStorage.getItem(DATA_KEY);
-                    const errLocal = localStorage.getItem(ERR_KEY);
-                    if (local) dictData = JSON.parse(local);
-                    if (errLocal) errorList = JSON.parse(errLocal);
-                } catch (e) {
-                    console.error("初始化数据失败:", e);
-                    dictData = {};
-                    errorList = [];
-                }
-            }
-            function saveData() {
-                try {
-                    localStorage.setItem(DATA_KEY, JSON.stringify(dictData));
-                } catch (e) {
-                    console.error("保存数据失败:", e);
-                }
-            }
-            function saveErrData() {
-                try {
-                    localStorage.setItem(ERR_KEY, JSON.stringify(errorList));
-                } catch (e) {
-                    console.error("保存错题数据失败:", e);
-                }
-            }
-
-            // 保存设置
-            function saveSetting() {
-                try {
-                    const setting = {
-                        studyDict: document.getElementById("studyDictSelect").value,
-                        mode: document.getElementById("modeSelect").value,
-                        spellOpen: document.getElementById("spellSwitch").checked
-                    };
-                    localStorage.setItem(SETTING_KEY, JSON.stringify(setting));
-                } catch (e) {
-                    console.error("保存设置失败:", e);
-                }
-            }
-
-            // 加载设置：无历史记录时 默认英译中
-            function loadSetting() {
-                try {
-                    const str = localStorage.getItem(SETTING_KEY);
-                    if (!str) return;
-                    const setting = JSON.parse(str);
-                    document.getElementById("studyDictSelect").value = setting.studyDict || "";
-                    document.getElementById("modeSelect").value = setting.mode || "en2cn";
-                    document.getElementById("spellSwitch").checked = !!setting.spellOpen;
-                } catch (e) {
-                    console.error("加载设置失败:", e);
-                }
-            }
-
-            // 打卡记录相关
-            function initRecord() {
-                try {
-                    const record = localStorage.getItem(RECORD_KEY);
-                    return record ? JSON.parse(record) : [];
-                } catch (e) {
-                    console.error("加载打卡记录失败:", e);
-                    return [];
-                }
-            }
-            function saveRecord(record) {
-                try {
-                    localStorage.setItem(RECORD_KEY, JSON.stringify(record));
-                } catch (e) {
-                    console.error("保存打卡记录失败:", e);
-                }
-            }
-            function getTodayStr() {
-                return new Date().toISOString().split('T')[0];
-            }
-            function calcConsecutiveDays() {
-                const record = initRecord();
-                const today = getTodayStr();
-                if (record.includes(today)) {
-                    let cnt = 1;
-                    let d = new Date(today);
-                    while (true) {
-                        d.setDate(d.getDate() - 1);
-                        const prev = d.toISOString().split('T')[0];
-                        if (record.includes(prev)) cnt++;
-                        else break;
-                    }
-                    return cnt;
-                }
-                let cnt = 0;
-                let d = new Date(today);
-                while (true) {
-                    d.setDate(d.getDate() - 1);
-                    const prev = d.toISOString().split('T')[0];
-                    if (record.includes(prev)) cnt++;
-                    else break;
-                }
-                return cnt;
-            }
-            function finishCheck() {
-                const record = initRecord();
-                const today = getTodayStr();
-                if (!record.includes(today)) {
-                    record.push(today);
-                    saveRecord(record);
-                }
-                document.getElementById("checkModal").style.display = "none";
-                showAlert("✅ 打卡成功！", true);
-            }
-
-            // 标签切换
-            document.querySelectorAll(".tab-item").forEach(tab => {
-                tab.addEventListener("click", function () {
-                    document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
-                    this.classList.add("active");
-                    const target = this.dataset.tab;
-                    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("show"));
-                    document.getElementById("tab-" + target).classList.add("show");
-                    if (target === "error") nextErrQuestion();
-                });
-            });
-
-            // 监听配置变化自动保存
-            document.getElementById("studyDictSelect").addEventListener("change", saveSetting);
-            document.getElementById("modeSelect").addEventListener("change", saveSetting);
-            document.getElementById("spellSwitch").addEventListener("change", saveSetting);
-
-            // 文本解析
-            function parseText(text) {
-                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-                const ok = [];
-                const bad = [];
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    let word, phon, pos, mean, sentence;
-                    const fullMatch = line.match(/^([\s\S]*?)\s+(\/[^\/]+\/)\s+(\S+)\s+(.+?)\s+(.+)$/);
-                    if (fullMatch) {
-                        [, word, phon, pos, mean, sentence] = fullMatch;
-                    } else {
-                        const parts = line.split(/\s+/);
-                        let idx = 0;
-                        while (idx < parts.length && !/[\u4e00-\u9fa5]/.test(parts[idx])) idx++;
-                        if (idx === 0 || idx >= parts.length) { bad.push(`第${i+1}行：格式错误 → ${line}`); continue; }
-                        word = parts.slice(0, idx).join(" ");
-                        const rest = parts.slice(idx).join(" ");
-                        const firstSpace = rest.indexOf(" ");
-                        if (firstSpace === -1) { bad.push(`第${i+1}行：格式错误 → ${line}`); continue; }
-                        mean = rest.slice(0, firstSpace);
-                        sentence = rest.slice(firstSpace + 1);
-                        phon = "/ /"; pos = "phr.";
-                    }
-                    ok.push({ word, phon, pos, mean, sentence, status: 0 });
-                }
-                return { ok, bad };
-            }
-
-            function classifyWord(list) {
-                let wordCnt = 0, phraseCnt = 0;
-                list.forEach(item => item.word.includes(" ") ? phraseCnt++ : wordCnt++);
-                return { wordCnt, phraseCnt, total: list.length };
-            }
-
-            // 查看已导入内容
-            document.getElementById("viewBtn").addEventListener("click", function () {
-                const dict = document.getElementById("dictSelect").value;
-                const viewArea = document.getElementById("viewArea");
-                if (!dict) { showAlert("请先选择词库！", false); viewArea.style.display = "none"; return; }
-                const list = dictData[dict] || [];
-                if (list.length === 0) { viewArea.textContent = "该词库暂无导入内容"; viewArea.style.display = "block"; return; }
-                let content = `【${dict}】已导入内容（共${list.length}条）：\n`;
-                list.forEach(item => content += `${item.word} ${item.phon} ${item.pos} ${item.mean} ${item.sentence}\n`);
-                viewArea.textContent = content;
-                viewArea.style.display = "block";
-            });
-
-            // 导入按钮
-            document.getElementById("importBtn").addEventListener("click", function () {
-                const dict = document.getElementById("dictSelect").value;
-                const text = document.getElementById("wordText").value;
-                if (!dict) { showAlert("请先选择词库！", false); return; }
-                if (!text.trim()) { showAlert("请粘贴导入内容！", false); return; }
-                const { ok, bad } = parseText(text);
-                if (ok.length === 0 && bad.length > 0) { showAlert(`❌ 格式错误：${bad[0]}`, false); return; }
-                if (!dictData[dict]) dictData[dict] = [];
-                const exist = new Set(dictData[dict].map(x => x.word));
-                const newWords = ok.filter(x => !exist.has(x.word));
-                dictData[dict].push(...newWords);
-                saveData();
-                const stat = classifyWord(newWords);
-                let msg = `✅ 成功导入：单词${stat.wordCnt}个，短语${stat.phraseCnt}个`;
-                if (bad.length) msg += `\n❌ ${bad.length}行格式错误`;
-                showAlert(msg, true);
-                document.getElementById("wordText").value = "";
-            });
-
-            // 清空全部数据
-            document.getElementById("clearAllBtn").addEventListener("click", function () {
-                const pwd = prompt("请输入验证码 old6：");
-                if (pwd !== "old6") { showAlert("验证码错误", false); return; }
-                if (!confirm("确定清空所有数据？")) return;
-                dictData = {}; errorList = [];
-                saveData(); saveErrData();
-                showAlert("✅ 已清空全部数据！", true);
-                document.getElementById("viewArea").style.display = "none";
-            });
-
-            // 清空错题本
-            document.getElementById("clearErrBtn").addEventListener("click", function () {
-                if (!confirm("确定清空错题本？")) return;
-                errorList = []; saveErrData();
-                showAlert("✅ 错题本已清空！", true);
-                nextErrQuestion();
-            });
-
-            // 生成学习队列：错题优先 + 70%新词 + 30%复习词
-            function generateStudyQueue(dict, total) {
-                const queue = [...errorList];
-                const newWords = (dictData[dict] || []).filter(item => item.status === 0 && !errorList.find(e => e.word === item.word));
-                const reviewWords = (dictData[dict] || []).filter(item => item.status === 1);
-                const newCnt = Math.round(total * 0.7);
-                const reviewCnt = Math.round(total * 0.3);
-                const shuffle = arr => arr.sort(() => Math.random() - 0.5);
-                queue.push(...shuffle(newWords).slice(0, newCnt));
-                queue.push(...shuffle(reviewWords).slice(0, reviewCnt));
-                if (queue.length < total) {
-                    const rest = shuffle([...newWords, ...reviewWords]);
-                    queue.push(...rest.slice(0, total - queue.length));
-                }
-                return shuffle(queue);
-            }
-
-            // 开始学习
-            document.getElementById("startStudyBtn").addEventListener("click", function () {
-                const dict = document.getElementById("studyDictSelect").value;
-                const planCount = parseInt(document.getElementById("planCount").value);
-                if (!dict) { showAlert("请先选择词库！", false); return; }
-                if (isNaN(planCount) || planCount < 1) { showAlert("请输入有效数量！", false); return; }
-                studyQueue = generateStudyQueue(dict, planCount);
-                if (studyQueue.length === 0) { showAlert("暂无学习内容！", false); return; }
-                currentStudyDict = dict;
-                studyTotal = studyQueue.length;
-                studiedCount = 0;
-                studyStarted = true;
-                document.getElementById("studyArea").style.display = "block";
-                nextQuestion();
-            });
-
-            function getRandWord() {
-                return studyQueue[studiedCount];
-            }
-
-            function getOptions(currWord) {
-                const pool = [...(dictData[currentStudyDict] || [])];
-                const opts = [currWord];
-                while (opts.length < 4 && pool.length) {
-                    const r = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-                    if (!opts.find(o => o.word === r.word)) opts.push(r);
-                }
-                return opts.sort(() => Math.random() - 0.5);
             }
 
             function speak(text) {
-                if (!window.speechSynthesis) return;
-                try {
-                    const utter = new SpeechSynthesisUtterance(text);
-                    utter.lang = "en-US";
-                    speechSynthesis.speak(utter);
-                } catch (e) {
-                    console.error("语音朗读失败:", e);
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.speak(utterance);
                 }
             }
 
-            // 切换下一题
-            function nextQuestion() {
+            function showAlert(msg, suc=true){
+                const el=document.getElementById("importAlert");
+                if(!el)return;
+                el.textContent=msg;
+                el.className="page-alert "+(suc?"success":"error");
+                el.style.display="block";
+                setTimeout(()=>el.style.display="none",3000);
+            }
+
+            function stopSpeech(){
+                window.speechSynthesis?.cancel();
+            }
+
+            function initData(){
+                try{
+                    dictData=JSON.parse(localStorage.getItem(DATA_KEY))||{};
+                    errorList=JSON.parse(localStorage.getItem(ERR_KEY))||[];
+                }catch(e){dictData={};errorList=[];}
+            }
+
+            function saveData(){
+                localStorage.setItem(DATA_KEY,JSON.stringify(dictData));
+            }
+
+            function saveErrData(){
+                localStorage.setItem(ERR_KEY,JSON.stringify(errorList));
+            }
+
+            function getCheckRecords(){
+                try{
+                    const list = JSON.parse(localStorage.getItem(RECORD_KEY))||[];
+                    return list.map(item=>item.time.split("T")[0]);
+                }catch(e){return[];}
+            }
+
+            function addCheckRecord(){
+                const list = JSON.parse(localStorage.getItem(RECORD_KEY))||[];
+                list.push({time:new Date().toISOString()});
+                localStorage.setItem(RECORD_KEY,JSON.stringify(list));
+                return list.length;
+            }
+
+            function renderMonthCalendar(){
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth();
+                const checkedDates = getCheckRecords();
+
+                document.getElementById("calendarTitle").textContent = `${year}年${month+1}月打卡日历`;
+                const daysContainer = document.getElementById("calendarDays");
+                daysContainer.innerHTML = "";
+
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const firstWeekDay = firstDay.getDay();
+                const totalDays = lastDay.getDate();
+
+                for(let i=0; i<firstWeekDay; i++){
+                    const empty = document.createElement("div");
+                    empty.className = "calendar-day";
+                    daysContainer.appendChild(empty);
+                }
+
+                for(let day=1; day<=totalDays; day++){
+                    const d = document.createElement("div");
+                    d.className = "calendar-day";
+                    d.textContent = day;
+                    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                    if(checkedDates.includes(dateStr)){
+                        d.classList.add("checked");
+                        d.textContent = "";
+                    }
+                    daysContainer.appendChild(d);
+                }
+            }
+
+            function showCheckModal(){
+                const total = getCheckRecords().length;
+                document.getElementById("checkDays").textContent = `学习完成`;
+                document.getElementById("checkText").textContent = `累计打卡：${total} 次`;
+                renderMonthCalendar();
+                document.getElementById("checkModal").style.display = "flex";
+            }
+
+            // 分享到微信（生成图片 + 微信分享引导）
+            function shareToWechat() {
+                const card = document.getElementById("checkCard");
+                html2canvas(card, {
+                    useCORS: true,
+                    scale: 2,
+                    backgroundColor: "#ffffff"
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL("image/png");
+                    const a = document.createElement("a");
+                    a.href = imgData;
+                    a.download = "单词打卡.png";
+                    a.click();
+                    
+                    setTimeout(() => {
+                        alert("图片已保存！\n请打开微信 → 进入聊天/朋友圈 → 从相册选择图片发送");
+                    }, 500);
+                }).catch(err => {
+                    alert("分享失败：" + err.message);
+                });
+            }
+
+            function initTabs(){
+                document.querySelectorAll(".tab-item").forEach(tab=>{
+                    tab.addEventListener("click",()=>{
+                        document.querySelectorAll(".tab-item").forEach(t=>t.classList.remove("active"));
+                        tab.classList.add("active");
+                        const target=tab.dataset.tab;
+                        document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("show"));
+                        document.getElementById("tab-"+target).classList.add("show");
+                    });
+                });
+            }
+
+            function parseText(text){
+                const lines=text.split(/\n/).map(l=>l.trim()).filter(Boolean);
+                const ok=[],bad=[];
+                lines.forEach((line,i)=>{
+                    let word,phon="/ /",pos="",mean="",sentence="";
+                    const m1=line.match(/^([^\s\/]+)\s*(\/[^\/]+\/)?\s*([a-z]+)?\s*([\u4e00-\u9fa5\s；]+)\s*([A-Z].*)?$/);
+                    if(m1){
+                        word=m1[1];
+                        phon=m1[2]||"/ /";
+                        pos=m1[3]||"";
+                        mean=m1[4]||"";
+                        sentence=m1[5]||"";
+                    }
+                    if(word&&mean){
+                        ok.push({word,phon:phon.trim(),pos,mean:mean.trim(),sentence});
+                    }else{
+                        bad.push(i+1);
+                    }
+                });
+                return{ok,bad};
+            }
+
+            document.getElementById("importBtn").onclick=()=>{
+                const dict=document.getElementById("dictSelect").value;
+                const text=document.getElementById("wordText").value;
+                if(!dict){showAlert("请选择词库",false);return;}
+                if(!text){showAlert("请输入内容",false);return;}
+                const {ok,bad}=parseText(text);
+                if(!dictData[dict])dictData[dict]=[];
+                const exist=new Set(dictData[dict].map(x=>x.word));
+                const newWords=ok.filter(w=>!exist.has(w.word));
+                dictData[dict].push(...newWords);
+                saveData();
+                showAlert(`导入成功：${newWords.length} 个`);
+                document.getElementById("wordText").value="";
+            };
+
+            document.getElementById("viewBtn").onclick=()=>{
+                const dict=document.getElementById("dictSelect").value;
+                const area=document.getElementById("viewArea");
+                if(!dict){showAlert("请选词库",false);return;}
+                const list=dictData[dict]||[];
+                if(list.length===0){area.textContent="无数据";area.style.display="block";return;}
+                let s=`【${dict}】共${list.length}个\n`;
+                list.forEach(it=>s+=`${it.word} ${it.phon} ${it.mean}\n`);
+                area.textContent=s;
+                area.style.display="block";
+            };
+
+            document.getElementById("clearAllBtn").onclick=()=>{
+                const dict=document.getElementById("dictSelect").value;
+                if(!dict){showAlert("请先选择要清空的词库",false);return;}
+                const code=prompt("请输入验证码：old6");
+                if(code!=="old6"){showAlert("验证码错误",false);return;}
+                if(!confirm(`确定清空【${dict}】？`))return;
+                const cnt=dictData[dict]?.length||0;
+                delete dictData[dict];
+                saveData();
+                errorList=errorList.filter(e=>e.dict!==dict);
+                saveErrData();
+                showAlert(`已清空【${dict}】，删除 ${cnt} 个单词`);
+                document.getElementById("viewArea").style.display="none";
+            };
+
+            document.getElementById("clearErrBtn").onclick=()=>{
+                if(!confirm("确定清空错题？"))return;
+                errorList=[];saveErrData();showAlert("已清空错题");
+            };
+
+            document.getElementById("startStudyBtn").onclick=()=>{
+                const dict=document.getElementById("studyDictSelect").value;
+                const cnt=parseInt(document.getElementById("planCount").value);
+                if(!dict){showAlert("请选词库",false);return;}
+                if(isNaN(cnt)||cnt<1){showAlert("数量无效",false);return;}
+                const list=dictData[dict];
+                if(!list||list.length===0){showAlert("词库为空",false);return;}
+                currentStudyDict=dict;
+                studyTotal=cnt;
+                studiedCount=0;
+                studyQueue=[...list].sort(()=>Math.random()-0.5).slice(0,cnt);
+                studyStarted=true;
+                document.getElementById("studyArea").style.display="block";
+                next();
+            };
+
+            document.getElementById("checkRecordBtn").onclick = showCheckModal;
+            document.getElementById("shareWechatBtn").onclick = shareToWechat;
+
+            function next(){
                 stopSpeech();
-                if (isAnswering || !studyStarted) return;
-
-                // 学习完成：弹出打卡弹窗 + 播放庆祝音效
-                if (studiedCount >= studyTotal) {
-                    document.getElementById("qTitle").innerText = "🎉 学习完成！";
-                    document.getElementById("qSentence").innerText = "准备打卡记录今日学习";
-                    document.getElementById("optionList").innerHTML = "";
-                    document.getElementById("spellInput").style.display = "none";
-                    document.getElementById("spellBtn").style.display = "none";
-                    studyStarted = false;
-
-                    const days = calcConsecutiveDays();
-                    document.getElementById("checkDays").innerText = `已连续学习 ${days} 天`;
-                    document.getElementById("checkModal").style.display = "flex";
-                    // 播放庆祝音效
+                if(studiedCount>=studyTotal){
+                    addCheckRecord();
+                    showCheckModal();
                     playCelebrateSound();
+                    document.getElementById("studyArea").style.display="none";
+                    studyStarted=false;
                     return;
                 }
+                isAnswering=false;
+                currentWord=studyQueue[studiedCount];
+                
+                speak(currentWord.word);
+                
+                document.getElementById("qTitle").textContent=`${currentWord.word}\n${currentWord.phon}`;
+                document.getElementById("qSentence").textContent=currentWord.sentence;
+                const tip=document.getElementById("answerTip");
+                tip.textContent="";tip.className="tip";
+                const spell=document.getElementById("spellSwitch").checked;
+                const optWrap=document.getElementById("optionList");
+                const spellInput=document.getElementById("spellInput");
+                const spellBtn=document.getElementById("spellBtn");
+                optWrap.innerHTML="";
+                spellInput.style.display="none";
+                spellBtn.style.display="none";
 
-                document.getElementById("optionList").innerHTML = "";
-                document.getElementById("spellInput").style.display = "none";
-                document.getElementById("spellBtn").style.display = "none";
-                document.getElementById("answerTip").className = "tip";
-                document.getElementById("answerTip").innerText = "";
-
-                const word = getRandWord();
-                if (!word) {
-                    document.getElementById("qTitle").innerText = "🎉 学习完成！";
-                    document.getElementById("qSentence").innerText = "";
-                    return;
-                }
-                currentWord = word;
-                document.getElementById("qSentence").innerText = word.sentence;
-                const mode = document.getElementById("modeSelect").value;
-                const spellEnabled = document.getElementById("spellSwitch").checked;
-                const optWrap = document.getElementById("optionList");
-
-                let type;
-                if (mode === "en2cn") type = 0;
-                else if (mode === "cn2en") type = 1;
-                else type = [0,1,2][Math.floor(Math.random() * 3)];
-
-                if (type === 0) {
-                    document.getElementById("qTitle").innerText = `${word.word}\n${word.phon}`;
-                    getOptions(word).forEach(item => {
-                        const div = document.createElement("div");
-                        div.className = "option-item";
-                        div.innerText = item.mean || item.word;
-                        div.dataset.word = item.word;
-                        div.addEventListener("click", () => selectOption(div, word.word));
+                if(spell){
+                    spellInput.style.display="block";
+                    spellBtn.style.display="block";
+                    spellInput.value="";
+                    spellInput.focus();
+                    spellBtn.onclick=doSpell;
+                }else{
+                    optWrap.style.display="grid";
+                    const all=dictData[currentStudyDict];
+                    const opts=[currentWord];
+                    const pool=[...all].filter(x=>x.word!==currentWord.word);
+                    while(opts.length<4&&pool.length){
+                        opts.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+                    }
+                    opts.sort(()=>Math.random()-0.5);
+                    opts.forEach(o=>{
+                        const div=document.createElement("div");
+                        div.className="option-item";
+                        div.textContent=o.mean;
+                        div.dataset.ans=o.word;
+                        div.onclick=()=>choose(div);
                         optWrap.appendChild(div);
                     });
-                } else if (type === 1) {
-                    document.getElementById("qTitle").innerText = word.mean;
-                    getOptions(word).forEach(item => {
-                        const div = document.createElement("div");
-                        div.className = "option-item";
-                        div.innerText = item.word;
-                        div.dataset.word = item.word;
-                        div.addEventListener("click", () => selectOption(div, word.word));
-                    });
-                } else if (type === 2 && spellEnabled) {
-                    document.getElementById("qTitle").innerText = word.mean;
-                    document.getElementById("spellInput").style.display = "block";
-                    document.getElementById("spellBtn").style.display = "block";
-                    document.getElementById("spellInput").value = "";
                 }
-                speak(word.word + " . " + word.sentence);
             }
 
-            // 选择题作答
-            function selectOption(dom, rightWord) {
-                if (isAnswering) return;
-                isAnswering = true;
-                stopSpeech();
-                const tip = document.getElementById("answerTip");
-                const allOpt = document.querySelectorAll(".option-item");
-                allOpt.forEach(opt => opt.style.pointerEvents = "none");
-
-                if (dom.dataset.word === rightWord) {
-                    playRightSound();
+            function choose(dom){
+                if(isAnswering)return;
+                isAnswering=true;
+                const right=currentWord.word;
+                const tip=document.getElementById("answerTip");
+                if(dom.dataset.ans===right){
                     dom.classList.add("right");
-                    tip.className = "tip right";
-                    tip.innerText = "回答正确！";
-                    if (!errorList.find(e => e.word === currentWord.word)) {
-                        currentWord.status = 1;
-                        saveData();
-                    }
+                    playRightSound();
+                    tip.textContent="正确";tip.className="tip right";
                     studiedCount++;
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextQuestion();
-                    }, 1200);
-                } else {
-                    playWrongSound();
+                    setTimeout(next,1000);
+                }else{
                     dom.classList.add("wrong");
-                    allOpt.forEach(opt => {
-                        if (opt.dataset.word === rightWord) opt.classList.add("right");
-                    });
-                    tip.className = "tip wrong";
-                    tip.innerText = `正确答案：${rightWord}`;
-                    if (!errorList.find(e => e.word === currentWord.word)) {
-                        errorList.push({...currentWord});
+                    playWrongSound();
+                    tip.textContent="错误："+currentWord.mean;tip.className="tip wrong";
+                    if(!errorList.some(e=>e.word===right&&e.dict===currentStudyDict)){
+                        errorList.push({...currentWord,dict:currentStudyDict});
                         saveErrData();
                     }
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextQuestion();
-                    }, 2000);
+                    setTimeout(next,1600);
                 }
             }
 
-            // 拼写题作答
-            document.getElementById("spellBtn").addEventListener("click", function () {
-                if (isAnswering) return;
-                isAnswering = true;
-                stopSpeech();
-                const val = document.getElementById("spellInput").value.trim();
-                const tip = document.getElementById("answerTip");
-                const right = currentWord.word;
-
-                if (val.toLowerCase() === right.toLowerCase()) {
+            function doSpell(){
+                if(isAnswering)return;
+                isAnswering=true;
+                const val=document.getElementById("spellInput").value.trim().toLowerCase();
+                const right=currentWord.word.toLowerCase();
+                const tip=document.getElementById("answerTip");
+                if(val===right){
                     playRightSound();
-                    tip.className = "tip right";
-                    tip.innerText = "拼写正确！";
-                    if (!errorList.find(e => e.word === currentWord.word)) {
-                        currentWord.status = 1;
-                        saveData();
-                    }
+                    tip.textContent="拼写正确";tip.className="tip right";
                     studiedCount++;
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextQuestion();
-                    }, 1200);
-                } else {
+                    setTimeout(next,1000);
+                }else{
                     playWrongSound();
-                    tip.className = "tip wrong";
-                    tip.innerText = `正确答案：${right}`;
-                    if (!errorList.find(e => e.word)) {
-                        errorList.push({...currentWord});
+                    tip.textContent="错误："+currentWord.word;tip.className="tip wrong";
+                    if(!errorList.some(e=>e.word===currentWord.word&&e.dict===currentStudyDict)){
+                        errorList.push({...currentWord,dict:currentStudyDict});
                         saveErrData();
                     }
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextQuestion();
-                    }, 2000);
-                }
-            });
-
-            // 错题本逻辑
-            function getRandErrWord() {
-                return errorList.length ? errorList[Math.floor(Math.random() * errorList.length)] : null;
-            }
-            function nextErrQuestion() {
-                stopSpeech();
-                if (isAnswering) return;
-                document.getElementById("errOptionList").innerHTML = "";
-                document.getElementById("errSpellInput").style.display = "none";
-                document.getElementById("errSpellBtn").style.display = "none";
-                document.getElementById("errAnswerTip").className = "tip";
-                const word = getRandErrWord();
-                if (!word) {
-                    document.getElementById("errQTitle").innerText = "✅ 错题本已完成！";
-                    document.getElementById("errQSentence").innerText = "";
-                    return;
-                }
-                currentErrWord = word;
-                document.getElementById("errQSentence").innerText = word.sentence;
-                const type = [0,1,2][Math.floor(Math.random() * 3)];
-                if (type === 0) {
-                    document.getElementById("errQTitle").innerText = `${word.word}\n${word.phon}`;
-                    getOptions(word).forEach(item => {
-                        const div = document.createElement("div");
-                        div.className = "option-item";
-                        div.innerText = item.mean;
-                        div.dataset.word = item.word;
-                        div.addEventListener("click", () => errSelect(div, word.word));
-                        document.getElementById("errOptionList").appendChild(div);
-                    });
-                } else if (type === 1) {
-                    document.getElementById("errQTitle").innerText = word.mean;
-                    getOptions(word).forEach(item => {
-                        const div = document.createElement("div");
-                        div.className = "option-item";
-                        div.innerText = item.word;
-                        div.dataset.word = item.word;
-                        div.addEventListener("click", () => errSelect(div, word.word));
-                        document.getElementById("errOptionList").appendChild(div);
-                    });
-                } else {
-                    document.getElementById("errQTitle").innerText = word.mean;
-                    document.getElementById("errSpellInput").style.display = "block";
-                    document.getElementById("errSpellBtn").style.display = "block";
-                }
-                speak(word.word);
-            }
-            function errSelect(dom, rightWord) {
-                if (isAnswering) return;
-                isAnswering = true;
-                stopSpeech();
-                const tip = document.getElementById("errAnswerTip");
-                const allOpt = document.querySelectorAll("#errOptionList .option-item");
-                allOpt.forEach(opt => opt.style.pointerEvents = "none");
-                if (dom.dataset.word === rightWord) {
-                    playRightSound();
-                    dom.classList.add("right");
-                    tip.className = "tip right";
-                    tip.innerText = "正确！已移出错题本";
-                    errorList = errorList.filter(e => e.word !== currentErrWord.word);
-                    saveErrData();
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextErrQuestion();
-                    }, 1200);
-                } else {
-                    playWrongSound();
-                    dom.classList.add("wrong");
-                    allOpt.forEach(opt => {
-                        if (opt.dataset.word === rightWord) opt.classList.add("right");
-                    });
-                    tip.className = "tip wrong";
-                    tip.innerText = `正确答案：${rightWord}`;
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextErrQuestion();
-                    }, 2000);
+                    setTimeout(next,1600);
                 }
             }
-            document.getElementById("errSpellBtn").addEventListener("click", function () {
-                if (isAnswering) return;
-                isAnswering = true;
-                stopSpeech();
-                const val = document.getElementById("errSpellInput").value.trim();
-                const tip = document.getElementById("errAnswerTip");
-                const right = currentErrWord.word;
-                if (val.toLowerCase() === right.toLowerCase()) {
-                    playRightSound();
-                    tip.className = "tip right";
-                    tip.innerText = "正确！已移出错题本";
-                    errorList = errorList.filter(e => e.word !== currentErrWord.word);
-                    saveErrData();
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextErrQuestion();
-                    }, 1200);
-                } else {
-                    playWrongSound();
-                    tip.className = "tip wrong";
-                    tip.innerText = `正确答案：${right}`;
-                    setTimeout(() => {
-                        isAnswering = false;
-                        nextErrQuestion();
-                    }, 2000);
-                }
-            });
 
-            // 打卡按钮
-            document.getElementById("checkBtn").addEventListener("click", finishCheck);
-
-            // 页面初始化
-            window.onload = function() {
-                initData();
-                loadSetting();
+            document.getElementById("checkBtn").onclick=()=>{
+                document.getElementById("checkModal").style.display="none";
             };
-        } catch (e) {
-            console.error("页面初始化失败:", e);
-            document.body.innerHTML = `<div style="padding:20px;text-align:center;">
-                <h3>页面加载出错</h3>
-                <p>错误信息：${e.message}</p>
-                <p>请检查代码是否完整复制</p>
-            </div>`;
+
+            window.onload=()=>{
+                initData();
+                initTabs();
+            };
+
+        }catch(e){
+            console.error(e);
+            alert("运行出错："+e.message);
         }
     </script>
 </body>
