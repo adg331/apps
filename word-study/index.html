@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>单词斩 - 英语单词记忆</title>
+    <title>万词斩-考Yan专用</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -198,7 +198,7 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: #f5f6fa;
-            z-index: 90;
+            z-index: 200;
             flex-direction: column;
             overflow: hidden;
         }
@@ -299,7 +299,7 @@
             font-size: 15px;
             color: #555;
             line-height: 1.6;
-            max-width: 480px;
+            max-width: 100%;
             padding: 12px 18px;
             background: #fff;
             border-radius: 12px;
@@ -335,7 +335,7 @@
 
         .options-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 100%;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -380,9 +380,169 @@
             font-weight: 800;
         }
 
+        /* ===== 拼写测试样式 ===== */
+        .spell-body {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .spell-body.active { display: flex; }
+        .spell-card {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: slideUp 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 100%;
+        }
+        .spell-hint {
+            font-size: 18px;
+            color: #636e72;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            padding: 12px 18px;
+            background: #fff;
+            border-radius: 12px;
+            border-left: 4px solid #2dce89;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            text-align: left;
+            width: 100%;
+        }
+        .spell-hint:empty { display: none; }
+        .spell-pos-tag {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .spell-word-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin: 20px 0;
+            min-height: 60px;
+            align-items: center;
+        }
+        .spell-char {
+            width: 40px;
+            height: 52px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+            background: #fff;
+            transition: all 0.2s;
+        }
+        .spell-char.filled {
+            border-color: #5e72e4;
+            color: #5e72e4;
+            background: #f5f7ff;
+        }
+        .spell-char.blank {
+            border-color: #cbd5e0;
+            border-style: dashed;
+            background: #fafbfc;
+            color: #8898aa;
+        }
+        .spell-char.space-char {
+            border-color: transparent;
+            background: transparent;
+            width: 20px;
+        }
+        .spell-char.correct-reveal {
+            border-color: #2dce89;
+            color: #2dce89;
+            background: #e6f9f0;
+            animation: popIn 0.3s ease;
+        }
+        .spell-char.wrong-reveal {
+            border-color: #f5365c;
+            color: #f5365c;
+            background: #ffe6ea;
+            animation: shake 0.4s ease;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+        .spell-input-area {
+            width: 100%;
+            max-width: 100%;
+            margin-top: 8px;
+        }
+        .spell-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 14px;
+            font-size: 20px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 2px;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+        .spell-input:focus {
+            outline: none;
+            border-color: #5e72e4;
+        }
+        .spell-input.correct {
+            border-color: #2dce89;
+            background: #e6f9f0;
+        }
+        .spell-input.wrong {
+            border-color: #f5365c;
+            background: #ffe6ea;
+        }
+        .spell-btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            width: 100%;
+            max-width: 100%;
+        }
+        .spell-btn-row .btn { flex: 1; }
+
+        /* 拼写结果页 */
+        .spell-result {
+            display: none;
+            overflow-y: auto;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 24px;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        .spell-result.active { display: flex; }
+
         /* 结果页（全屏内） */
         .result-fullscreen {
             display: none;
+            overflow-y: auto;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -400,7 +560,7 @@
             gap: 16px;
             margin-bottom: 32px;
             width: 100%;
-            max-width: 360px;
+            max-width: 100%;
         }
         .result-stat {
             flex: 1;
@@ -419,7 +579,7 @@
             display: flex;
             gap: 12px;
             width: 100%;
-            max-width: 360px;
+            max-width: 100%;
         }
         .result-actions .btn { flex: 1; }
 
@@ -439,7 +599,7 @@
             background: #fff;
             border-radius: 20px;
             width: 100%;
-            max-width: 400px;
+            max-width: 100%;
             max-height: 80vh;
             overflow: hidden;
             display: flex;
@@ -557,8 +717,8 @@
 </head>
 <body>
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('import')">导入单词</button>
-        <button class="tab" onclick="switchTab('study')">开始记忆</button>
+        <button class="tab active" onclick="switchTab(this, 'import')">导入单词</button>
+        <button class="tab" onclick="switchTab(this, 'study')">开始记忆</button>
     </div>
 
     <div class="container">
@@ -621,7 +781,7 @@
                     <label class="form-label">选择词库</label>
                     <select id="studyBank" onchange="updateUnitSelect()">
                         <option value="7a">七年级上册</option>
-                        <option value="7b">七年级下册</option>
+                        <option value="7b" selected>七年级下册</option>
                         <option value="8a">八年级上册</option>
                         <option value="8b">八年级下册</option>
                         <option value="9a">九年级上册</option>
@@ -661,6 +821,7 @@
             </div>
         </div>
 
+        <!-- 选择题学习 -->
         <div class="study-body" id="fsStudyBody">
             <div class="word-card" id="fsWordCard">
                 <div class="word-main" id="fsWordMain">word</div>
@@ -672,7 +833,48 @@
             <div class="options-container" id="fsOptions"></div>
         </div>
 
-        <!-- 结果覆盖层 -->
+        <!-- 拼写测试 -->
+        <div class="spell-body" id="fsSpellBody">
+            <div class="spell-card" id="fsSpellCard">
+                <div class="spell-hint" id="fsSpellHint"></div>
+                <div class="spell-pos-tag" id="fsSpellPos"></div>
+                <div class="spell-word-container" id="fsSpellWord"></div>
+                <div class="spell-input-area">
+                    <input type="text" class="spell-input" id="fsSpellInput" placeholder="输入完整单词" autocomplete="off" spellcheck="false" onkeydown="handleSpellKey(event)">
+                </div>
+                <div class="spell-btn-row">
+                    <button class="btn btn-secondary" onclick="skipSpell()">跳过</button>
+                    <button class="btn btn-primary" onclick="submitSpell()">提交</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 拼写结果 -->
+        <div id="fsSpellResult" class="spell-result">
+            <div class="result-emoji" id="spellResultEmoji">✍️</div>
+            <div class="result-title" id="spellResultTitle">拼写测试完成！</div>
+            <div class="result-sub" id="spellResultSub">本次拼写正确 8 / 10</div>
+            <div class="result-stats-row">
+                <div class="result-stat">
+                    <div class="result-stat-num" style="color:#2dce89;" id="spellResultCorrect">0</div>
+                    <div class="result-stat-label">正确</div>
+                </div>
+                <div class="result-stat">
+                    <div class="result-stat-num" style="color:#f5365c;" id="spellResultWrong">0</div>
+                    <div class="result-stat-label">错误</div>
+                </div>
+                <div class="result-stat">
+                    <div class="result-stat-num" style="color:#5e72e4;" id="spellResultAccuracy">0%</div>
+                    <div class="result-stat-label">正确率</div>
+                </div>
+            </div>
+            <div class="result-actions">
+                <button class="btn btn-primary" onclick="startStudy()">再来一组</button>
+                <button class="btn btn-secondary" onclick="exitStudy()">返回设置</button>
+            </div>
+        </div>
+
+        <!-- 选择题结果覆盖层（学习完成后短暂显示，然后自动进入拼写） -->
         <div id="fsResult" class="result-fullscreen">
             <div class="result-emoji" id="resultEmoji">🎉</div>
             <div class="result-title" id="resultTitle">学习完成！</div>
@@ -870,7 +1072,6 @@
             if (speechSynth) speechSynth.cancel();
         }
 
-        // 清理文本中的词性标记（带点和无点版本都处理）
         function cleanTextForSpeech(text) {
             if (!text) return '';
             return text
@@ -907,6 +1108,19 @@
             speechSynth.speak(u1);
         }
 
+        // 仅朗读单词（拼写测试用）
+        function speakOnlyWord(word) {
+            if (!speechSynth || !word) return;
+            speechSynth.cancel();
+            const cleanWord = cleanTextForSpeech(word);
+            const u = new SpeechSynthesisUtterance(cleanWord);
+            u.lang = 'en-US';
+            u.rate = 0.85;
+            u.pitch = 1.0;
+            if (currentVoice) u.voice = currentVoice;
+            speechSynth.speak(u);
+        }
+
         function replayAudio() {
             if (currentIndex < studyWords.length) {
                 const q = studyWords[currentIndex];
@@ -914,7 +1128,7 @@
             }
         }
 
-        // ===================== 解析器（已修复无音标时的词性残留） =====================
+        // ===================== 解析器 =====================
         function parseLine(line) {
             line = line.trim();
             if (!line) return null;
@@ -932,7 +1146,6 @@
             let meaning = '';
             let example = '';
 
-            // 1. 提取音标 /.../，音标前的部分即为单词
             const phoneticMatch = content.match(/(\/[^\/]+\/)/);
             if (phoneticMatch) {
                 phonetic = phoneticMatch[1];
@@ -940,7 +1153,6 @@
                 word = content.substring(0, idxPhonetic).trim();
                 content = content.substring(idxPhonetic + phonetic.length).trim();
             } else {
-                // 无音标：以第一个中文为界，前面是单词
                 const firstChinese = content.search(/[\u4e00-\u9fa5]/);
                 if (firstChinese === -1) {
                     word = content;
@@ -949,7 +1161,6 @@
                     word = content.substring(0, firstChinese).trim();
                     content = content.substring(firstChinese).trim();
 
-                    // 【关键修复】无音标时，检查 word 末尾是否粘附了词性（如 "encourage v."）
                     const trailingPosMatch = word.match(/\s+(n\.|v\.|adj\.|adv\.|prep\.|conj\.|pron\.|det\.|art\.|num\.|int\.|abbr\.|phr\.|aux\.|modal\.|vi\.|vt\.|link-v\.)$/i);
                     if (trailingPosMatch) {
                         pos = trailingPosMatch[1];
@@ -958,7 +1169,6 @@
                 }
             }
 
-            // 2. 从剩余内容开头提取词性（如果还没提取到）
             if (!pos) {
                 const posPattern = /^(n\.|v\.|adj\.|adv\.|prep\.|conj\.|pron\.|det\.|art\.|num\.|int\.|abbr\.|phr\.|aux\.|modal\.|vi\.|vt\.|link-v\.)/;
                 const posMatch = content.match(posPattern);
@@ -974,7 +1184,6 @@
                 }
             }
 
-            // 3. 分离释义和例句
             if (content) {
                 const sentences = content.match(/[A-Z][^。？！]*[.!?]/g);
                 if (sentences && sentences.length > 0) {
@@ -991,19 +1200,56 @@
                 }
             }
 
-            // 清理
             word = word.replace(/\s+/g, ' ').trim();
             word = word.replace(/[;；,，.]$/, '').trim();
+
+            // 最终清理：确保 word 不含词性
+            const cleaned = sanitizeWord(word, pos);
+            word = cleaned.word;
+            pos = cleaned.pos;
 
             if (!word) return null;
             return { unit, word, phonetic, pos, meaning, example };
         }
+        // ===================== 单词清理：剥离尾部/头部词性 =====================
+        function sanitizeWord(word, extractedPos) {
+            if (!word) return { word: '', pos: extractedPos || '' };
+            let cleaned = word.trim();
+            let pos = extractedPos || '';
+
+            // 情况1：word 以词性标记开头，如 "adj. + enough to do sth"
+            const leadingPosMatch = cleaned.match(/^(n\.|v\.|adj\.|adv\.|prep\.|conj\.|pron\.|det\.|art\.|num\.|int\.|abbr\.|phr\.|aux\.|modal\.|vi\.|vt\.|link-v\.)\s*(.+)$/i);
+            if (leadingPosMatch) {
+                pos = pos || leadingPosMatch[1];
+                cleaned = leadingPosMatch[2].trim();
+            }
+
+            // 情况2：word 尾部有词性标记
+            const posList = [
+                'n.', 'v.', 'adj.', 'adv.', 'prep.', 'conj.', 'pron.', 'det.', 'art.', 'num.', 'int.', 'abbr.', 'phr.', 'aux.', 'modal.', 'vi.', 'vt.', 'link-v.',
+                'n', 'v', 'adj', 'adv', 'prep', 'conj', 'pron', 'det', 'art', 'num', 'int', 'abbr', 'phr', 'aux', 'modal', 'vi', 'vt', 'link-v'
+            ];
+            for (const p of posList) {
+                const esc = p.replace(/\./g, '\\.');
+                const re = new RegExp('\\s+' + esc + '\\s*$', 'i');
+                if (re.test(cleaned)) {
+                    cleaned = cleaned.replace(re, '').trim();
+                    if (!pos) pos = p.endsWith('.') ? p : p + '.';
+                    break;
+                }
+            }
+
+            // 清理尾部标点
+            cleaned = cleaned.replace(/[;；,，.\-]+$/, '').trim();
+            return { word: cleaned, pos: pos };
+        }
+
 
         // ===================== UI 交互 =====================
-        function switchTab(tab) {
+        function switchTab(el, tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            event.target.classList.add('active');
+            el.classList.add('active');
             document.getElementById('page-' + tab).classList.add('active');
             if (tab === 'study') updateUnitSelect();
         }
@@ -1046,12 +1292,13 @@
                 if (parsed) {
                     const unitKey = 'unit' + parsed.unit;
                     if (!bank[unitKey]) bank[unitKey] = [];
-                    const exists = bank[unitKey].find(w => w.word === parsed.word);
-                    if (!exists) {
+                    const cleanWord = sanitizeWord(parsed.word).word;
+                    const existsIdx = bank[unitKey].findIndex(w => sanitizeWord(w.word).word === cleanWord);
+                    if (existsIdx === -1) {
                         bank[unitKey].push(parsed);
                         success++;
                     } else {
-                        Object.assign(exists, parsed);
+                        bank[unitKey][existsIdx] = parsed;
                         success++;
                     }
                 } else if (line.trim()) {
@@ -1140,9 +1387,17 @@
         let correctCount = 0;
         let wrongCount = 0;
 
+        // ===================== 全局定时器追踪 =====================
+        let studyTimeoutId = null;
+        function clearStudyTimers() {
+            if (studyTimeoutId) { clearTimeout(studyTimeoutId); studyTimeoutId = null; }
+        }
+
+        // ===================== 学习功能（全屏） =====================
         function startStudy() {
+            clearStudyTimers();
             initAudio();
-            if (speechSynth && speechSynth.state === 'suspended') {
+            if (speechSynth && speechSynth.paused) {
                 speechSynth.resume();
             }
             initSpeech();
@@ -1172,6 +1427,8 @@
 
             document.getElementById('fullscreenStudy').classList.add('active');
             document.getElementById('fsResult').classList.remove('active');
+            document.getElementById('fsSpellBody').classList.remove('active');
+            document.getElementById('fsSpellResult').classList.remove('active');
             document.getElementById('fsStudyBody').style.display = 'flex';
             document.getElementById('fsBankName').textContent = bankNames[bankId];
 
@@ -1179,9 +1436,12 @@
         }
 
         function exitStudy() {
+            clearStudyTimers();
             stopSpeech();
             document.getElementById('fullscreenStudy').classList.remove('active');
             document.getElementById('fsResult').classList.remove('active');
+            document.getElementById('fsSpellBody').classList.remove('active');
+            document.getElementById('fsSpellResult').classList.remove('active');
             document.getElementById('fsStudyBody').style.display = 'flex';
         }
 
@@ -1201,7 +1461,6 @@
             document.getElementById('fsWordPhonetic').textContent = q.phonetic || '';
             document.getElementById('fsWordPhonetic').style.display = q.phonetic ? 'block' : 'none';
 
-            // 显示词性时去掉末尾的点（n. → n）
             const displayPos = q.pos ? q.pos.replace(/\.$/, '') : '';
             document.getElementById('fsWordPos').textContent = displayPos;
             document.getElementById('fsWordPos').style.display = displayPos ? 'inline-block' : 'none';
@@ -1215,7 +1474,6 @@
                 exEl.style.display = 'none';
             }
 
-            // 朗读已过滤词性的纯文本
             speakWordAndExample(q.word, q.example);
 
             const options = generateOptions(q, studyWords);
@@ -1277,7 +1535,7 @@
                 });
             }
 
-            setTimeout(() => {
+            studyTimeoutId = setTimeout(() => {
                 currentIndex++;
                 if (currentIndex < studyWords.length) {
                     showQuestion();
@@ -1287,9 +1545,9 @@
             }, 1300);
         }
 
+        // 选择题完成 → 短暂显示结果 → 自动进入拼写（不打卡）
         function finishStudy() {
             stopSpeech();
-            addCheckin();
             playSound('complete');
 
             document.getElementById('fsStudyBody').style.display = 'none';
@@ -1314,6 +1572,259 @@
                 document.getElementById('resultEmoji').textContent = '💪';
                 document.getElementById('resultTitle').textContent = '继续加油！';
             }
+
+            studyTimeoutId = setTimeout(() => {
+                document.getElementById('fsResult').classList.remove('active');
+                startSpellTest();
+            }, 2000);
+        }
+
+        // ===================== 拼写测试功能 =====================
+        let spellWords = [];
+        let spellIndex = 0;
+        let spellCorrect = 0;
+        let spellWrong = 0;
+        let currentSpellWord = null;
+        let currentSpellBlank = null;
+
+        function startSpellTest() {
+            if (studyWords.length === 0) return;
+            clearStudyTimers();
+            initAudio();
+            stopSpeech();
+
+            spellWords = [...studyWords].sort(() => Math.random() - 0.5);
+            spellIndex = 0;
+            spellCorrect = 0;
+            spellWrong = 0;
+
+            document.getElementById('fsResult').classList.remove('active');
+            document.getElementById('fsStudyBody').style.display = 'none';
+            document.getElementById('fsSpellResult').classList.remove('active');
+
+            const spellBody = document.getElementById('fsSpellBody');
+            spellBody.classList.add('active');
+
+            showSpellQuestion();
+        }
+
+        function showSpellQuestion() {
+            const q = spellWords[spellIndex];
+            currentSpellWord = q;
+            const total = spellWords.length;
+
+            document.getElementById('fsProgressText').textContent = `拼写 ${spellIndex + 1} / ${total}`;
+            document.getElementById('fsProgressFill').style.width = `${((spellIndex + 1) / total * 100)}%`;
+
+            // 关键修复：用 sanitizeWord 确保拼写单词不含词性
+            const spellWord = sanitizeWord(q.word).word;
+            const blankInfo = generateBlank(spellWord);
+            currentSpellBlank = blankInfo;
+
+            // 只显示中文释义
+            let hintText = '';
+            if (q.meaning) hintText += `<strong>释义：</strong>${q.meaning}`;
+            document.getElementById('fsSpellHint').innerHTML = hintText;
+
+            // 显示词性标签（不参与挖空）
+            const displayPos = q.pos ? q.pos.replace(/\.$/, '') : '';
+            const posEl = document.getElementById('fsSpellPos');
+            posEl.textContent = displayPos;
+            posEl.style.display = displayPos ? 'inline-block' : 'none';
+
+            // 渲染单词框（仅单词/词组字母挖空，词性不进入）
+            const container = document.getElementById('fsSpellWord');
+            container.innerHTML = '';
+            blankInfo.displayChars.forEach((item) => {
+                const div = document.createElement('div');
+                if (item.type === 'space') {
+                    div.className = 'spell-char space-char';
+                    div.textContent = '';
+                } else if (item.type === 'shown') {
+                    div.className = 'spell-char filled';
+                    div.textContent = item.char;
+                } else {
+                    div.className = 'spell-char blank';
+                    div.textContent = '';
+                }
+                container.appendChild(div);
+            });
+
+            // 朗读完整单词
+            speakOnlyWord(spellWord);
+
+            // 清空输入框并聚焦
+            const input = document.getElementById('fsSpellInput');
+            input.value = '';
+            input.className = 'spell-input';
+            input.disabled = false;
+            setTimeout(() => input.focus(), 100);
+        }
+
+        // 生成挖空：仅对单词/词组的字母挖空，词性完全不参与
+        function generateBlank(word) {
+            const chars = word.split('');
+            // 只找出字母位置（可挖空）
+            const letterIndices = [];
+            chars.forEach((c, i) => {
+                if (/[a-zA-Z]/.test(c)) letterIndices.push(i);
+            });
+
+            const len = letterIndices.length;
+            let hideCount = Math.max(1, Math.floor(len * 0.4));
+            hideCount = Math.min(hideCount, len);
+            if (len <= 2) hideCount = 1;
+
+            const shuffled = [...letterIndices].sort(() => Math.random() - 0.5);
+            const blankIndices = new Set(shuffled.slice(0, hideCount));
+
+            const displayChars = chars.map((c, i) => {
+                if (c === ' ') {
+                    return { type: 'space', char: ' ' };
+                } else if (blankIndices.has(i)) {
+                    return { type: 'blank', char: c };
+                } else {
+                    return { type: 'shown', char: c };
+                }
+            });
+
+            return { fullWord: word, displayChars, blankIndices: Array.from(blankIndices) };
+        }
+
+        function handleSpellKey(e) {
+            if (e.key === 'Enter') {
+                submitSpell();
+            }
+        }
+
+        function submitSpell() {
+            const input = document.getElementById('fsSpellInput');
+            const userAnswer = input.value.trim().toLowerCase();
+            const correctAnswer = currentSpellBlank.fullWord.toLowerCase();
+
+            if (!userAnswer) {
+                showToast('请输入答案');
+                return;
+            }
+
+            input.disabled = true;
+
+            if (userAnswer === correctAnswer) {
+                spellCorrect++;
+                playSound('correct');
+                input.classList.add('correct');
+
+                const container = document.getElementById('fsSpellWord');
+                container.innerHTML = '';
+                currentSpellBlank.fullWord.split('').forEach(char => {
+                    const div = document.createElement('div');
+                    if (char === ' ') {
+                        div.className = 'spell-char space-char';
+                    } else {
+                        div.className = 'spell-char correct-reveal';
+                        div.textContent = char;
+                    }
+                    container.appendChild(div);
+                });
+
+                studyTimeoutId = setTimeout(() => nextSpell(), 1000);
+            } else {
+                spellWrong++;
+                playSound('wrong');
+                input.classList.add('wrong');
+
+                const container = document.getElementById('fsSpellWord');
+                container.innerHTML = '';
+                currentSpellBlank.fullWord.split('').forEach((char, idx) => {
+                    const div = document.createElement('div');
+                    const wasBlank = currentSpellBlank.blankIndices.includes(idx);
+                    if (char === ' ') {
+                        div.className = 'spell-char space-char';
+                    } else if (wasBlank) {
+                        div.className = 'spell-char wrong-reveal';
+                        div.textContent = char;
+                    } else {
+                        div.className = 'spell-char correct-reveal';
+                        div.textContent = char;
+                    }
+                    container.appendChild(div);
+                });
+
+                studyTimeoutId = setTimeout(() => nextSpell(), 1800);
+            }
+        }
+
+        function skipSpell() {
+            spellWrong++;
+            playSound('wrong');
+
+            const input = document.getElementById('fsSpellInput');
+            input.disabled = true;
+
+            const container = document.getElementById('fsSpellWord');
+            container.innerHTML = '';
+            currentSpellBlank.fullWord.split('').forEach((char, idx) => {
+                const div = document.createElement('div');
+                const wasBlank = currentSpellBlank.blankIndices.includes(idx);
+                if (char === ' ') {
+                    div.className = 'spell-char space-char';
+                } else if (wasBlank) {
+                    div.className = 'spell-char wrong-reveal';
+                    div.textContent = char;
+                } else {
+                    div.className = 'spell-char correct-reveal';
+                    div.textContent = char;
+                }
+                container.appendChild(div);
+            });
+
+            studyTimeoutId = setTimeout(() => nextSpell(), 1500);
+        }
+
+        function nextSpell() {
+            spellIndex++;
+            const input = document.getElementById('fsSpellInput');
+            input.disabled = false;
+
+            if (spellIndex < spellWords.length) {
+                showSpellQuestion();
+            } else {
+                finishSpellTest();
+            }
+        }
+
+        // 拼写完成 → 打卡 → 显示结果
+        function finishSpellTest() {
+            clearStudyTimers();
+            stopSpeech();
+            addCheckin(); // 拼写完成后才打卡
+            playSound('complete');
+
+            document.getElementById('fsSpellBody').classList.remove('active');
+            const result = document.getElementById('fsSpellResult');
+            result.classList.add('active');
+
+            const total = spellWords.length;
+            const accuracy = total === 0 ? 0 : Math.round(spellCorrect / total * 100);
+
+            document.getElementById('spellResultCorrect').textContent = spellCorrect;
+            document.getElementById('spellResultWrong').textContent = spellWrong;
+            document.getElementById('spellResultAccuracy').textContent = accuracy + '%';
+            document.getElementById('spellResultSub').textContent = `本次拼写正确 ${spellCorrect} / ${total}`;
+
+            if (accuracy >= 90) {
+                document.getElementById('spellResultEmoji').textContent = '🏆';
+                document.getElementById('spellResultTitle').textContent = '拼写完美！';
+            } else if (accuracy >= 70) {
+                document.getElementById('spellResultEmoji').textContent = '👍';
+                document.getElementById('spellResultTitle').textContent = '拼写不错！';
+            } else {
+                document.getElementById('spellResultEmoji').textContent = '✍️';
+                document.getElementById('spellResultTitle').textContent = '继续练习拼写！';
+            }
+
+            // 拼写完成后弹出打卡完成提示
+            showToast('打卡完成！今日学习已记录');
         }
 
         // ===================== 打卡功能 =====================
