@@ -956,37 +956,6 @@
         }
 
 
-        /* ===================== TTS 语音选择优化 v8 ===================== */
-        .voice-panel {
-            background: #f6fbf9;
-            border: 1px solid #e4f4ee;
-            border-radius: 18px;
-            padding: 12px;
-        }
-        .voice-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .voice-row select { flex: 1; }
-        .voice-test-btn {
-            min-width: 86px;
-            padding-left: 14px;
-            padding-right: 14px;
-        }
-        .voice-tip {
-            margin-top: 8px;
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.55;
-        }
-        @media (max-width: 420px) {
-            .voice-row { flex-direction: column; align-items: stretch; }
-            .voice-test-btn { width: 100%; }
-        }
-
-
-
         /* ===================== v9 打卡日历与分享图 ===================== */
         .checkin-calendar-card {
             background: #fff;
@@ -1154,16 +1123,6 @@
                         <div class="quantity-option selected" data-value="50" onclick="selectQuantity(this)">50</div>
                         <div class="quantity-option" data-value="75" onclick="selectQuantity(this)">75</div>
                     </div>
-                </div>
-                <div class="form-group voice-panel">
-                    <label class="form-label">朗读语音</label>
-                    <div class="voice-row">
-                        <select id="voiceSelect" onchange="saveVoicePreference()">
-                            <option value="">自动选择最佳英文语音</option>
-                        </select>
-                        <button class="btn btn-secondary voice-test-btn" onclick="testVoice()" type="button">试听</button>
-                    </div>
-                    <div class="voice-tip" id="voiceTip">优先使用 Microsoft / Edge 英文语音；如果手机浏览器不暴露 Edge 自然语音，会自动使用系统英文语音。</div>
                 </div>
                 <button class="btn btn-primary btn-block" onclick="startStudy()">开始学习</button>
                 <button class="btn btn-secondary btn-block" onclick="showCheckin()" style="margin-top:10px;">打卡记录</button>
@@ -1440,97 +1399,21 @@
             }
         }
 
-        // ===================== 语音系统：优先 Microsoft / Edge TTS =====================
-        const VOICE_PREF_KEY = 'ttsVoicePref_v1';
+        // ===================== 语音系统：使用浏览器默认英文语音 =====================
         let speechSynth = window.speechSynthesis || null;
-        let currentVoice = null;
-
-        function scoreVoice(v) {
-            const name = (v.name || '').toLowerCase();
-            const lang = (v.lang || '').toLowerCase();
-            let score = 0;
-            if (lang === 'en-us') score += 60;
-            else if (lang === 'en-gb') score += 48;
-            else if (lang.startsWith('en')) score += 36;
-            if (name.includes('microsoft')) score += 42;
-            if (name.includes('edge') || name.includes('online') || name.includes('natural')) score += 34;
-            if (name.includes('aria') || name.includes('jenny') || name.includes('guy') || name.includes('sonia') || name.includes('ryan')) score += 18;
-            if (name.includes('zira') || name.includes('david') || name.includes('mark')) score += 8;
-            if (v.default) score += 4;
-            return score;
-        }
-
-        function getBestVoice(voices) {
-            const english = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
-            const candidates = english.length ? english : voices;
-            return candidates.sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] || null;
-        }
-
-        function voiceId(v) {
-            return v ? `${v.name}|||${v.lang}` : '';
-        }
-
-        function refreshVoiceSelect(voices) {
-            const select = document.getElementById('voiceSelect');
-            const tip = document.getElementById('voiceTip');
-            if (!select) return;
-            const saved = localStorage.getItem(VOICE_PREF_KEY) || '';
-            const previous = select.value || saved;
-            const english = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'))
-                                  .sort((a, b) => scoreVoice(b) - scoreVoice(a));
-            select.innerHTML = '<option value="">自动选择最佳英文语音</option>';
-            english.forEach(v => {
-                const opt = document.createElement('option');
-                opt.value = voiceId(v);
-                const isMs = /microsoft|edge|online|natural/i.test(v.name);
-                opt.textContent = `${isMs ? '⭐ ' : ''}${v.name} (${v.lang})`;
-                select.appendChild(opt);
-            });
-            if (previous && english.some(v => voiceId(v) === previous)) select.value = previous;
-            if (tip) {
-                if (!english.length) tip.textContent = '当前浏览器暂未返回英文 TTS 语音。可尝试在 Edge 中打开，或在系统语音设置里安装英文语音包。';
-                else if (english.some(v => /microsoft|edge|online|natural/i.test(v.name))) tip.textContent = '已检测到 Microsoft / Edge 英文语音，推荐选择带 ⭐ 的语音。';
-                else tip.textContent = '当前设备只暴露了系统英文语音；依然可以朗读，但不一定是 Edge 自然语音。';
-            }
-        }
 
         function initSpeech() {
+            // 保留初始化入口，兼容原有调用；不再提供手动选择语音。
+            // 朗读时不指定 voice，由浏览器/系统按 lang 自动选择默认英文语音。
             if (!speechSynth) return;
-            const voices = speechSynth.getVoices();
-            if (!voices || !voices.length) return;
-            refreshVoiceSelect(voices);
-            const saved = localStorage.getItem(VOICE_PREF_KEY) || '';
-            currentVoice = saved ? voices.find(v => voiceId(v) === saved) : null;
-            if (!currentVoice) currentVoice = getBestVoice(voices);
-        }
-
-        function saveVoicePreference() {
-            const select = document.getElementById('voiceSelect');
-            if (!select) return;
-            localStorage.setItem(VOICE_PREF_KEY, select.value || '');
-            initSpeech();
-            if (currentVoice) showToast(`已选择：${currentVoice.name}`);
-            else showToast('已切换为自动选择语音');
-        }
-
-        function testVoice() {
-            initSpeech();
-            if (!speechSynth) { showToast('当前浏览器不支持朗读'); return; }
-            speechSynth.cancel();
-            const u = new SpeechSynthesisUtterance('memory, pronunciation, beautiful, successful');
-            u.lang = currentVoice?.lang || 'en-US';
-            u.rate = 0.82;
-            u.pitch = 1.0;
-            if (currentVoice) u.voice = currentVoice;
-            speechSynth.speak(u);
+            if (speechSynth.getVoices) speechSynth.getVoices();
         }
 
         if (speechSynth && speechSynth.onvoiceschanged !== undefined) {
             speechSynth.onvoiceschanged = initSpeech;
         }
         initSpeech();
-        setTimeout(initSpeech, 300);
-        setTimeout(initSpeech, 1000);
+
         function stopSpeech() {
             if (speechSynth) speechSynth.cancel();
         }
@@ -1548,9 +1431,8 @@
             const cleanExample = cleanTextForSpeech(example);
             const u1 = new SpeechSynthesisUtterance(cleanWord);
             u1.lang = 'en-US'; u1.rate = 0.85; u1.pitch = 1.0;
-            if (currentVoice) u1.voice = currentVoice;
             const u2 = cleanExample ? new SpeechSynthesisUtterance(cleanExample) : null;
-            if (u2) { u2.lang = 'en-US'; u2.rate = 0.82; u2.pitch = 1.0; if (currentVoice) u2.voice = currentVoice; }
+            if (u2) { u2.lang = 'en-US'; u2.rate = 0.82; u2.pitch = 1.0; }
             u1.onend = () => { if (u2) speechSynth.speak(u2); };
             speechSynth.speak(u1);
         }
@@ -1560,7 +1442,6 @@
             const cleanWord = cleanTextForSpeech(word);
             const u = new SpeechSynthesisUtterance(cleanWord);
             u.lang = 'en-US'; u.rate = 0.85; u.pitch = 1.0;
-            if (currentVoice) u.voice = currentVoice;
             speechSynth.speak(u);
         }
         function replayAudio() {
