@@ -1036,6 +1036,238 @@
             justify-content: stretch;
         }
         .checkin-footer .btn { flex: 1; }
+    
+        /* ===== v12 挖空点击拼写优化 ===== */
+        .spell-attempts {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px 0 12px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: #fff7e6;
+            color: #b26b00;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .spell-choice-mode {
+            gap: 10px;
+            margin: 24px 0 18px;
+            min-height: 88px;
+        }
+        .spell-char.segment {
+            min-width: 28px;
+            width: auto;
+            padding: 0 8px;
+        }
+        .spell-char.segment.shown-piece {
+            border: none;
+            background: transparent;
+            color: #25324b;
+            font-size: 30px;
+            font-weight: 800;
+            min-width: auto;
+            padding: 0 2px;
+            height: 58px;
+        }
+        .spell-char.segment.blank-segment {
+            min-width: 52px;
+            height: 58px;
+            padding: 0 12px;
+            border: none;
+            border-bottom: 4px solid #25324b;
+            border-radius: 0;
+            background: transparent;
+            color: #25324b;
+            font-size: 28px;
+            font-weight: 800;
+            position: relative;
+        }
+        .spell-char.segment.blank-segment.pending {
+            color: transparent;
+        }
+        .spell-char.segment.blank-segment.active {
+            border-bottom-color: #2bb673;
+            transform: translateY(-2px);
+        }
+        .spell-char.segment.blank-segment.filled-segment {
+            color: #25324b;
+            background: #effaf5;
+            border-bottom-color: #2bb673;
+            border-radius: 10px 10px 4px 4px;
+        }
+        .spell-char.segment.blank-segment.wrong-flash {
+            background: #ffe9ee;
+            border-bottom-color: #f5365c;
+            color: #f5365c;
+        }
+        .spell-char.segment.space-segment {
+            border: none;
+            background: transparent;
+            width: 14px;
+            min-width: 14px;
+            padding: 0;
+        }
+        .spell-choice-helper {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 14px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .spell-choice-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 4px;
+        }
+        .spell-choice-btn {
+            min-height: 58px;
+            border: none;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+            font-size: 22px;
+            font-weight: 700;
+            color: #25324b;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+        }
+        .spell-choice-btn:active {
+            transform: scale(0.97);
+        }
+        .spell-choice-btn.used {
+            opacity: 0.35;
+            box-shadow: none;
+        }
+        .spell-choice-btn.correct-choice {
+            background: #e8fbef;
+            color: #1d8f58;
+        }
+        .spell-choice-btn.wrong-choice {
+            background: #ffe8ee;
+            color: #d62c55;
+        }
+        .spell-action-row {
+            margin-top: 18px;
+        }
+        .spell-card.reveal-mode .spell-choice-grid,
+        .spell-card.reveal-mode .spell-choice-helper {
+            opacity: 0.72;
+        }
+
+    
+        /* ===== v13 百词斩蓝色主题与斩杀/复习优化 ===== */
+        :root {
+            --bcz-blue: #0f4bd8;
+            --bcz-blue-2: #1d63ff;
+            --bcz-bg: #f6f8ff;
+            --bcz-text: #20283a;
+            --bcz-muted: #9aa4b2;
+        }
+        body { background: var(--bcz-bg); color: var(--bcz-text); }
+        .tabs, .card, .study-header, .word-example, .spell-hint, .option, .result-stat, .modal {
+            box-shadow: 0 8px 24px rgba(15, 75, 216, 0.08);
+        }
+        .tab.active, .study-progress-text, .card-title::before, .study-progress-fill,
+        .checkin-summary-number { color: var(--bcz-blue); }
+        .tab.active::after, .card-title::before, .study-progress-fill {
+            background: var(--bcz-blue);
+        }
+        .btn-primary {
+            background: var(--bcz-blue);
+            box-shadow: 0 8px 20px rgba(15, 75, 216, 0.26);
+        }
+        .btn-primary:active { background: #0b3db2; }
+        select:focus, textarea:focus, input:focus {
+            border-color: var(--bcz-blue);
+        }
+        .quantity-option.selected {
+            border-color: var(--bcz-blue);
+            background: var(--bcz-blue);
+        }
+        .word-main-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-kill-word {
+            border: 1.5px solid rgba(15,75,216,0.18);
+            background: #eef4ff;
+            color: var(--bcz-blue);
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .btn-kill-word.killed {
+            background: #e9edf5;
+            color: #8b97a8;
+            border-color: #d8dee9;
+        }
+        .option.correct {
+            border-color: var(--bcz-blue);
+            background: #eaf1ff;
+            color: var(--bcz-blue);
+        }
+        .option.wrong {
+            border-color: #f5365c;
+            background: #ffe8ee;
+        }
+        .word-pos, .spell-pos-tag, .tag-blue {
+            background: #eaf1ff;
+            color: var(--bcz-blue);
+        }
+        .word-example, .spell-hint { border-left-color: var(--bcz-blue); }
+        .spell-attempts {
+            background: #eaf1ff;
+            color: var(--bcz-blue);
+        }
+        .spell-char.segment.shown-piece,
+        .spell-char.segment.blank-segment {
+            color: #20283a;
+        }
+        .spell-char.segment.blank-segment {
+            border-bottom-color: #20283a;
+        }
+        .spell-char.segment.blank-segment.active {
+            border-bottom-color: var(--bcz-blue);
+        }
+        .spell-char.segment.blank-segment.filled-segment {
+            background: #eaf1ff;
+            border-bottom-color: var(--bcz-blue);
+        }
+        .spell-choice-btn {
+            color: #20283a;
+            box-shadow: 0 6px 18px rgba(15,75,216,0.08);
+        }
+        .spell-choice-btn.correct-choice {
+            background: #eaf1ff;
+            color: var(--bcz-blue);
+        }
+        .spell-choice-btn.used {
+            opacity: 0.45;
+        }
+        .spell-choice-helper { color: #7b8797; }
+
+    
+        @keyframes killStrike {
+            0% { transform: scale(1) rotate(0deg); }
+            20% { transform: scale(1.18) rotate(-8deg); background: #ff315b; color: #fff; }
+            45% { transform: scale(0.92) rotate(9deg); background: #111827; color: #fff; }
+            70% { transform: scale(1.08) rotate(-4deg); background: #ff315b; color: #fff; }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .btn-kill-word.kill-strike {
+            animation: killStrike 0.58s ease;
+            box-shadow: 0 0 0 6px rgba(255, 49, 91, 0.14), 0 10px 28px rgba(255,49,91,0.35);
+        }
+
     </style>
 </head>
 <body>
@@ -1145,7 +1377,10 @@
 
         <div class="study-body" id="fsStudyBody">
             <div class="word-card" id="fsWordCard">
-                <div class="word-main" id="fsWordMain">word</div>
+                <div class="word-main-row">
+                    <div class="word-main" id="fsWordMain">word</div>
+                    <button class="btn-kill-word" id="fsKillWordBtn" onclick="killCurrentWord()" title="斩杀后不再出现">斩杀</button>
+                </div>
                 <div class="word-phonetic" id="fsWordPhonetic">/phonetic/</div>
                 <span class="word-pos" id="fsWordPos">n</span>
                 <div class="word-example" id="fsWordExample"></div>
@@ -1158,13 +1393,14 @@
             <div class="spell-card" id="fsSpellCard">
                 <div class="spell-hint" id="fsSpellHint"></div>
                 <div class="spell-pos-tag" id="fsSpellPos"></div>
-                <div class="spell-word-container" id="fsSpellWord"></div>
-                <div class="spell-input-area">
-                    <input type="text" class="spell-input" id="fsSpellInput" placeholder="输入缺失字母" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="latin" oninput="handleSpellInput()" onkeydown="handleSpellKey(event)">
-                </div>
-                <div class="spell-btn-row">
-                    <button class="btn btn-secondary" onclick="skipSpell()">跳过</button>
-                    <button class="btn btn-primary" onclick="submitSpell()">提交</button>
+                <div class="spell-attempts" id="fsSpellAttempts">还可尝试 3 次</div>
+                <div class="spell-word-container spell-choice-mode" id="fsSpellWord"></div>
+                <div class="spell-choice-helper" id="fsSpellChoiceHelper">点击下方字母/字母组合，依次补全挖空部分</div>
+                <div class="spell-choice-grid" id="fsSpellChoices"></div>
+                <div class="spell-btn-row spell-action-row">
+                    <button class="btn btn-secondary" onclick="clearSpellSelection(true)">重选</button>
+                    <button class="btn btn-secondary" onclick="replayCurrentSpellAudio()">朗读</button>
+                    <button class="btn btn-primary" onclick="skipSpell()">跳过</button>
                 </div>
             </div>
         </div>
@@ -1245,11 +1481,11 @@
 
     <div class="modal-overlay" id="checkinModal">
         <div class="modal">
-            <div class="modal-header">📅 打卡记录</div>
+            <div class="modal-header" id="checkinModalTitle">📅 打卡记录</div>
             <div class="modal-body">
                 <div class="checkin-summary">
                     <div class="checkin-summary-number" id="totalDays">0</div>
-                    <div style="color:#8898aa; font-size:14px; margin-top:4px;">累计打卡天数</div>
+                    <div id="checkinSummaryLabel" style="color:#8898aa; font-size:14px; margin-top:4px;">累计打卡天数</div>
                 </div>
                 <div class="checkin-calendar-card">
                     <div class="checkin-calendar-head">
@@ -1278,6 +1514,8 @@
     <script>
         const DB_KEY = 'wordBanks_v1';
         const CHECKIN_KEY = 'checkinRecords_v1';
+        const KILLED_KEY = 'killedWordKeys_v1';
+        const REVIEW_KEY = 'reviewWrongWordKeys_v1';
 
         const bankNames = {
             '7a': '七年级上册', '7b': '七年级下册',
@@ -1402,6 +1640,50 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.5);
                     osc.stop(now + i * 0.09 + 0.5);
                 });
+            } else if (type === 'kill') {
+                // 暴力斩杀音效：刀光划过 + 低频重击 + 噪声冲击
+                const master = audioCtx.createGain();
+                master.connect(audioCtx.destination);
+                master.gain.setValueAtTime(0.55, now);
+                master.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+                const slash = audioCtx.createOscillator();
+                const slashGain = audioCtx.createGain();
+                slash.type = 'sawtooth';
+                slash.frequency.setValueAtTime(1250, now);
+                slash.frequency.exponentialRampToValueAtTime(180, now + 0.18);
+                slashGain.gain.setValueAtTime(0.45, now);
+                slashGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                slash.connect(slashGain);
+                slashGain.connect(master);
+                slash.start(now);
+                slash.stop(now + 0.24);
+
+                const hit = audioCtx.createOscillator();
+                const hitGain = audioCtx.createGain();
+                hit.type = 'square';
+                hit.frequency.setValueAtTime(90, now + 0.16);
+                hit.frequency.exponentialRampToValueAtTime(42, now + 0.42);
+                hitGain.gain.setValueAtTime(0.42, now + 0.16);
+                hitGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                hit.connect(hitGain);
+                hitGain.connect(master);
+                hit.start(now + 0.16);
+                hit.stop(now + 0.52);
+
+                const bufferSize = Math.floor(audioCtx.sampleRate * 0.16);
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.26, now + 0.05);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                noise.connect(noiseGain);
+                noiseGain.connect(master);
+                noise.start(now + 0.05);
+                noise.stop(now + 0.24);
             }
         }
 
@@ -1717,6 +1999,107 @@
         let currentIndex = 0;
         let correctCount = 0;
         let wrongCount = 0;
+        let currentStudyQuantity = 50;
+        let isTestMode = false;
+        let currentStudyBankId = '7b';
+        let currentWrongKeySet = new Set();
+        let currentKilledKeySet = new Set();
+
+
+        // ===================== 斩杀与错题复习 =====================
+        function normalizeWordKeyText(text) {
+            return (text || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        }
+        function getWordKey(bankId, wordObj) {
+            const unitKey = 'unit' + (wordObj.unit || '');
+            const clean = sanitizeWord(wordObj.word || '').word;
+            return `${bankId}|${unitKey}|${normalizeWordKeyText(clean)}`;
+        }
+        function getKilledKeys() {
+            try { return JSON.parse(localStorage.getItem(KILLED_KEY) || '[]'); }
+            catch (e) { return []; }
+        }
+        function saveKilledKeys(keys) {
+            localStorage.setItem(KILLED_KEY, JSON.stringify(Array.from(new Set(keys))));
+        }
+        function isWordKilled(bankId, wordObj) {
+            return getKilledKeys().includes(getWordKey(bankId, wordObj));
+        }
+        function getReviewMap() {
+            try { return JSON.parse(localStorage.getItem(REVIEW_KEY) || '{}'); }
+            catch (e) { return {}; }
+        }
+        function saveReviewMap(map) {
+            localStorage.setItem(REVIEW_KEY, JSON.stringify(map || {}));
+        }
+        function getReviewKeysForBank(bankId) {
+            const map = getReviewMap();
+            return Array.isArray(map[bankId]) ? map[bankId] : [];
+        }
+        function saveReviewKeysForBank(bankId, keys) {
+            const map = getReviewMap();
+            map[bankId] = Array.from(new Set(keys || []));
+            saveReviewMap(map);
+        }
+        function markCurrentWordWrong(wordObj) {
+            if (!wordObj || !currentStudyBankId) return;
+            const key = getWordKey(currentStudyBankId, wordObj);
+            if (!currentKilledKeySet.has(key)) currentWrongKeySet.add(key);
+        }
+        function updateKillButton() {
+            const btn = document.getElementById('fsKillWordBtn');
+            if (!btn || !studyWords[currentIndex]) return;
+            const key = getWordKey(currentStudyBankId, studyWords[currentIndex]);
+            const killed = currentKilledKeySet.has(key);
+            btn.textContent = killed ? '已斩杀' : '斩杀';
+            btn.classList.toggle('killed', killed);
+        }
+        function killCurrentWord() {
+            if (!studyWords[currentIndex]) return;
+            clearStudyTimers();
+            initAudio();
+            playSound('kill');
+            if (navigator.vibrate) navigator.vibrate([40, 30, 70]);
+
+            const btn = document.getElementById('fsKillWordBtn');
+            if (btn) {
+                btn.classList.remove('kill-strike');
+                void btn.offsetWidth;
+                btn.classList.add('kill-strike');
+                setTimeout(() => btn.classList.remove('kill-strike'), 650);
+            }
+
+            const wordObj = studyWords[currentIndex];
+            const key = getWordKey(currentStudyBankId, wordObj);
+            currentKilledKeySet.add(key);
+            saveKilledKeys([...getKilledKeys(), key]);
+            currentWrongKeySet.delete(key);
+
+            // 从本次学习队列中直接移除当前词和后续重复项。
+            studyWords = studyWords.filter((w) => getWordKey(currentStudyBankId, w) !== key);
+            showToast('⚔️ 暴力斩杀成功，自动进入下一词');
+
+            // 当前词被删除后，currentIndex 已自然指向“下一词”的位置。
+            // 如果斩杀的是最后一个词，当前索引会等于新的长度，直接结束本阶段。
+            if (currentIndex >= studyWords.length) {
+                if (studyWords.length === 0) {
+                    // 本次学习的单词全部被斩杀：跳过拼写，直接进入打卡完成页。
+                    spellWords = [];
+                    spellCorrect = 0;
+                    spellWrong = 0;
+                    document.getElementById('fsStudyBody').style.display = 'none';
+                    document.getElementById('fsResult').classList.remove('active');
+                    document.getElementById('fsSpellBody').classList.remove('active');
+                    finishSpellTest();
+                } else {
+                    finishStudy();
+                }
+                return;
+            }
+
+            isAnswering = false;
+            setTimeout(() => showQuestion(), 260);
+        }
 
         function startStudy() {
             clearStudyTimers();
@@ -1726,8 +2109,13 @@
             initSpeech();
 
             const bankId = document.getElementById('studyBank').value;
+            currentStudyBankId = bankId;
+            currentWrongKeySet = new Set();
+            currentKilledKeySet = new Set(getKilledKeys());
             const unit = document.getElementById('studyUnit').value;
             const quantity = getSelectedQuantity();
+            currentStudyQuantity = quantity;
+            isTestMode = quantity === 1;
             const bank = getBank(bankId);
 
             let pool = [];
@@ -1742,8 +2130,16 @@
                 return;
             }
 
-            pool = pool.sort(() => Math.random() - 0.5);
-            studyWords = pool.slice(0, Math.min(quantity, pool.length));
+            // 被斩杀的单词不再进入学习池；错题优先出现在下次学习开头。
+            pool = pool.filter(w => !currentKilledKeySet.has(getWordKey(bankId, w)));
+            if (pool.length === 0) {
+                showToast('该范围内的单词已全部斩杀或暂无可学习单词');
+                return;
+            }
+            const reviewKeys = new Set(getReviewKeysForBank(bankId));
+            const reviewWords = pool.filter(w => reviewKeys.has(getWordKey(bankId, w)));
+            const newWords = pool.filter(w => !reviewKeys.has(getWordKey(bankId, w))).sort(() => Math.random() - 0.5);
+            studyWords = [...reviewWords, ...newWords].slice(0, Math.min(quantity, pool.length));
             currentIndex = 0;
             correctCount = 0;
             wrongCount = 0;
@@ -1782,6 +2178,7 @@
             card.style.animation = 'slideUp 0.4s ease';
 
             document.getElementById('fsWordMain').textContent = q.word;
+            updateKillButton();
             document.getElementById('fsWordPhonetic').textContent = q.phonetic || '';
             document.getElementById('fsWordPhonetic').style.display = q.phonetic ? 'block' : 'none';
 
@@ -1860,6 +2257,7 @@
                 el.classList.add('wrong');
                 el.innerHTML += '<span class="option-marker">✗</span>';
                 wrongCount++;
+                markCurrentWordWrong(studyWords[currentIndex]);
                 playSound('wrong');
                 options.forEach(o => {
                     if (o.dataset.correct === 'true') {
@@ -1885,12 +2283,15 @@
             document.getElementById('fsStudyBody').style.display = 'none';
             const result = document.getElementById('fsResult');
             result.classList.add('active');
-            const total = studyWords.length;
-            const accuracy = total === 0 ? 0 : Math.round(correctCount / total * 100);
+            const total = Math.max(studyWords.length, correctCount + wrongCount);
+            const accuracy = total === 0 ? 100 : Math.round(correctCount / total * 100);
             document.getElementById('resultCorrect').textContent = correctCount;
             document.getElementById('resultWrong').textContent = wrongCount;
             document.getElementById('resultAccuracy').textContent = accuracy + '%';
             document.getElementById('resultSub').textContent = `本次答对 ${correctCount} / ${total}`;
+            if (isTestMode) {
+                document.getElementById('spellResultSub').textContent = `本次拼写正确 ${spellCorrect} / ${total} · 测试模式不计入打卡`;
+            }
             if (accuracy >= 90) {
                 document.getElementById('resultEmoji').textContent = '🏆';
                 document.getElementById('resultTitle').textContent = '太棒了！';
@@ -1916,12 +2317,19 @@
         let currentSpellBlank = null;
 
         function startSpellTest() {
-            if (studyWords.length === 0) return;
+            if (studyWords.length === 0) {
+                spellWords = [];
+                spellCorrect = 0;
+                spellWrong = 0;
+                finishSpellTest();
+                return;
+            }
             clearStudyTimers();
             initAudio();
             stopSpeech();
-            spellWords = [...studyWords].sort(() => Math.random() - 0.5);
+            spellWords = [...studyWords].filter(w => !currentKilledKeySet.has(getWordKey(currentStudyBankId, w))).sort(() => Math.random() - 0.5);
             spellIndex = 0;
+            if (spellWords.length === 0) { finishSpellTest(); return; }
             spellCorrect = 0;
             spellWrong = 0;
             document.getElementById('fsResult').classList.remove('active');
@@ -2021,7 +2429,11 @@
                     else { div.className = 'spell-char correct-reveal'; div.textContent = char; }
                     container.appendChild(div);
                 });
-                studyTimeoutId = setTimeout(() => nextSpell(), 1000);
+                if (spellIndex >= spellWords.length - 1) {
+                    studyTimeoutId = setTimeout(() => finishSpellTest(), 1000);
+                } else {
+                    studyTimeoutId = setTimeout(() => nextSpell(), 1000);
+                }
             } else {
                 spellWrong++;
                 playSound('wrong');
@@ -2059,28 +2471,38 @@
         }
 
         function nextSpell() {
+            clearStudyTimers();
             spellIndex++;
-            const input = document.getElementById('fsSpellInput');
-            input.disabled = false;
-            if (spellIndex < spellWords.length) showSpellQuestion();
-            else finishSpellTest();
+            currentSpellSelected = [];
+            currentSpellLocked = false;
+            currentSpellRevealedAfterMaxWrong = false;
+            if (spellIndex >= spellWords.length) {
+                finishSpellTest();
+                return;
+            }
+            showSpellQuestion();
         }
 
         function finishSpellTest() {
             clearStudyTimers();
             stopSpeech();
-            addCheckin();
+            if (!isTestMode) addCheckin();
             playSound('complete');
             document.getElementById('fsSpellBody').classList.remove('active');
             const result = document.getElementById('fsSpellResult');
             result.classList.add('active');
             const total = spellWords.length;
-            const accuracy = total === 0 ? 0 : Math.round(spellCorrect / total * 100);
+            const accuracy = total === 0 ? 100 : Math.round(spellCorrect / total * 100);
             document.getElementById('spellResultCorrect').textContent = spellCorrect;
             document.getElementById('spellResultWrong').textContent = spellWrong;
             document.getElementById('spellResultAccuracy').textContent = accuracy + '%';
-            document.getElementById('spellResultSub').textContent = `本次拼写正确 ${spellCorrect} / ${total}`;
-            if (accuracy >= 90) {
+            document.getElementById('spellResultSub').textContent = total === 0
+                ? '本次单词已全部斩杀，已跳过拼写复习'
+                : `本次拼写正确 ${spellCorrect} / ${total}`;
+            if (total === 0) {
+                document.getElementById('spellResultEmoji').textContent = '⚔️';
+                document.getElementById('spellResultTitle').textContent = isTestMode ? '测试完成！' : '打卡成功！';
+            } else if (accuracy >= 90) {
                 document.getElementById('spellResultEmoji').textContent = '🏆';
                 document.getElementById('spellResultTitle').textContent = '拼写完美！';
             } else if (accuracy >= 70) {
@@ -2090,7 +2512,15 @@
                 document.getElementById('spellResultEmoji').textContent = '✍️';
                 document.getElementById('spellResultTitle').textContent = '继续练习拼写！';
             }
-            showToast('打卡完成！今日学习已记录');
+            if (!isTestMode) saveReviewKeysForBank(currentStudyBankId, Array.from(currentWrongKeySet).filter(k => !currentKilledKeySet.has(k)));
+            showToast(isTestMode ? '测试完成，本次不计入打卡' : '打卡完成！今日学习已记录');
+
+            if (total === 0 && !isTestMode) {
+                studyTimeoutId = setTimeout(() => {
+                    document.getElementById('fsSpellResult').classList.remove('active');
+                    showCheckinSuccessPanel();
+                }, 2000);
+            }
         }
 
         // ===================== 打卡功能 =====================
@@ -2143,9 +2573,65 @@
             renderCheckinCalendar(getCheckins());
         }
 
+
+        function calculateCheckinStreak(records) {
+            if (!records || records.length === 0) return 0;
+            const set = new Set(records);
+            const today = new Date();
+            let cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            let streak = 0;
+
+            // 如果今天未打卡，则从最近一次打卡日开始算连续天数。
+            if (!set.has(formatLocalDate(cursor))) {
+                const sorted = [...records].sort();
+                const last = sorted[sorted.length - 1];
+                if (!last) return 0;
+                const [y, m, d] = last.split('-').map(Number);
+                cursor = new Date(y, m - 1, d);
+            }
+
+            while (set.has(formatLocalDate(cursor))) {
+                streak++;
+                cursor.setDate(cursor.getDate() - 1);
+            }
+            return streak;
+        }
+
+        function showCheckinSuccessPanel() {
+            const records = getCheckins();
+            const streak = calculateCheckinStreak(records);
+            document.getElementById('checkinModalTitle').textContent = isTestMode ? '✅ 测试完成' : '✅ 打卡成功';
+            document.getElementById('totalDays').textContent = streak;
+            const label = document.getElementById('checkinSummaryLabel');
+            if (label) label.textContent = '连续打卡天数';
+            checkinCalendarDate = new Date();
+            renderCheckinCalendar(records);
+
+            let listHtml = '';
+            if (records.length === 0) {
+                listHtml = '<div style="color:#b2bec3; text-align:center; padding:20px;">暂无打卡记录</div>';
+            } else {
+                const recent = records.slice(-10).reverse();
+                recent.forEach(date => {
+                    const d = new Date(date + 'T00:00:00');
+                    const fmt = `${d.getMonth()+1}月${d.getDate()}日`;
+                    listHtml += `<div style="padding:8px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between;">
+                        <span>✅ 完成学习打卡</span>
+                        <span style="color:#8898aa;">${fmt}</span>
+                    </div>`;
+                });
+            }
+            document.getElementById('checkinList').innerHTML = listHtml;
+            document.getElementById('checkinModal').classList.add('active');
+        }
+
+
         function showCheckin() {
             const records = getCheckins();
             const total = records.length;
+            document.getElementById('checkinModalTitle').textContent = '📅 打卡记录';
+            const label = document.getElementById('checkinSummaryLabel');
+            if (label) label.textContent = '累计打卡天数';
             document.getElementById('totalDays').textContent = total;
             checkinCalendarDate = new Date();
             renderCheckinCalendar(records);
@@ -2184,6 +2670,7 @@
         async function shareCheckinImage() {
             const records = getCheckins();
             const total = records.length;
+            const streak = calculateCheckinStreak(records);
             const y = checkinCalendarDate.getFullYear();
             const m = checkinCalendarDate.getMonth();
             const recordSet = new Set(records);
@@ -2222,10 +2709,13 @@
 
             ctx.fillStyle = '#20c997';
             ctx.font = '900 96px -apple-system, BlinkMacSystemFont, Arial';
-            ctx.fillText(String(total), 540, 395);
+            ctx.fillText(String(streak), 540, 385);
             ctx.fillStyle = '#637083';
             ctx.font = '600 32px -apple-system, BlinkMacSystemFont, Arial';
-            ctx.fillText('累计打卡天数', 540, 455);
+            ctx.fillText('连续打卡天数', 540, 445);
+            ctx.fillStyle = '#8a96a8';
+            ctx.font = '500 26px -apple-system, BlinkMacSystemFont, Arial';
+            ctx.fillText(`累计打卡 ${total} 天`, 540, 488);
 
             drawRoundRect(ctx, 90, 580, 900, 700, 42);
             ctx.fillStyle = '#ffffff';
@@ -2294,43 +2784,184 @@
             }, 'image/png');
         }
 
+        // ===================== 手机端拼写体验优化 v12：点击字母/字符串补全 =====================
+        let currentSpellTryCount = 0;
+        let currentSpellSelected = [];
+        let currentSpellChoiceItems = [];
+        let currentSpellLocked = false;
+        let currentSpellRevealedAfterMaxWrong = false;
 
-        // ===================== 手机端拼写体验优化 v7：只输入缺失字母，也兼容输入完整单词 =====================
-        function normalizeSpellText(text) {
+        function normalizeSpellToken(text) {
             return (text || '').toLowerCase().replace(/[^a-z]/g, '');
         }
 
-        function generateBlank(word) {
+        function shuffleArray(arr) {
+            return [...arr].sort(() => Math.random() - 0.5);
+        }
+
+        function buildSpellPuzzle(word) {
             const chars = word.split('');
-            const letterIndices = [];
-            chars.forEach((c, i) => { if (/[a-zA-Z]/.test(c)) letterIndices.push(i); });
-            const len = letterIndices.length;
-
-            let hideCount = Math.max(1, Math.round(len * 0.42));
-            if (len <= 2) hideCount = 1;
-            if (len >= 8) hideCount = Math.max(hideCount, 4);
-            hideCount = Math.min(hideCount, len);
-
-            // 尽量保留首字母，手机上更像提示式记忆；短词仍随机挖空。
-            const candidateIndices = len >= 4 ? letterIndices.slice(1) : letterIndices;
-            const shuffled = [...candidateIndices].sort(() => Math.random() - 0.5);
-            let blanks = shuffled.slice(0, hideCount);
-            if (blanks.length < hideCount) {
-                blanks = blanks.concat(letterIndices.filter(i => !blanks.includes(i)).slice(0, hideCount - blanks.length));
+            const runs = [];
+            let i = 0;
+            while (i < chars.length) {
+                if (/[a-zA-Z]/.test(chars[i])) {
+                    let start = i;
+                    while (i < chars.length && /[a-zA-Z]/.test(chars[i])) i++;
+                    runs.push({ start, end: i - 1, len: i - start });
+                } else {
+                    i++;
+                }
             }
-            blanks.sort((a, b) => a - b);
-            const blankIndicesSet = new Set(blanks);
 
-            const displayChars = chars.map((c, i) => {
-                if (c === ' ') return { type: 'space', char: ' ' };
-                else if (blankIndicesSet.has(i)) return { type: 'blank', char: c };
-                else return { type: 'shown', char: c };
+            const segments = [];
+            runs.forEach((run, idx) => {
+                let count = 1;
+                if (run.len >= 8) count = 2;
+                if (runs.length >= 2 && run.len >= 5 && idx === 0) count = Math.min(count, 1);
+                const candidates = [];
+                for (let pos = run.start + (run.len > 3 ? 1 : 0); pos <= run.end; pos++) {
+                    for (let size of [2, 1]) {
+                        const end = pos + size - 1;
+                        if (end > run.end) continue;
+                        if (run.len > 4 && pos === run.start && size >= run.len - 1) continue;
+                        const text = chars.slice(pos, end + 1).join('');
+                        if (!/^[a-zA-Z]+$/.test(text)) continue;
+                        candidates.push({ start: pos, end, text, len: size });
+                    }
+                }
+                const chosen = [];
+                shuffleArray(candidates).forEach(c => {
+                    if (chosen.length >= count) return;
+                    if (chosen.some(s => !(c.end < s.start || c.start > s.end))) return;
+                    chosen.push(c);
+                });
+                chosen.sort((a, b) => a.start - b.start);
+                segments.push(...chosen);
             });
-            const blankLetters = blanks.map(i => chars[i]).join('');
-            return { fullWord: word, displayChars, blankIndices: blanks, blankLetters };
+
+            if (!segments.length) {
+                const letterPositions = chars.map((ch, idx) => /[a-zA-Z]/.test(ch) ? idx : -1).filter(v => v >= 0);
+                if (letterPositions.length) {
+                    const pos = letterPositions[Math.min(1, letterPositions.length - 1)];
+                    segments.push({ start: pos, end: pos, text: chars[pos], len: 1 });
+                }
+            }
+
+            segments.sort((a, b) => a.start - b.start);
+            const displayPieces = [];
+            let cursor = 0;
+            segments.forEach((seg, segIndex) => {
+                if (cursor < seg.start) {
+                    const shown = chars.slice(cursor, seg.start).join('');
+                    if (shown) displayPieces.push({ type: 'shown', text: shown });
+                }
+                displayPieces.push({ type: 'blank', text: seg.text, len: seg.text.length, segmentIndex: segIndex });
+                cursor = seg.end + 1;
+            });
+            if (cursor < chars.length) {
+                const tail = chars.slice(cursor).join('');
+                if (tail) displayPieces.push({ type: 'shown', text: tail });
+            }
+
+            const correctTokens = segments.map(s => s.text);
+            return { fullWord: word, segments, displayPieces, correctTokens };
+        }
+
+        function createChoicePool(correctTokens) {
+            const distractorBase = [
+                'a','e','i','o','u','y','an','en','in','on','ou','ar','er','ir','or','ur',
+                'al','el','le','ly','re','un','im','ic','ti','ci','st','th','sh','ch','ph',
+                'ing','ed','es','ion','ism','ment','ous','ful','less'
+            ];
+            const desired = Math.max(9, Math.min(12, correctTokens.length * 4 + 3));
+            const pool = correctTokens.map((t, idx) => ({ id: `c${idx}`, text: t, correct: true }));
+            const correctCountMap = {};
+            correctTokens.forEach(t => { correctCountMap[t] = (correctCountMap[t] || 0) + 1; });
+            let seq = 0;
+            const candidates = shuffleArray(distractorBase.concat(correctTokens.map(t => t[0]).filter(Boolean)));
+            for (const token of candidates) {
+                if (pool.length >= desired) break;
+                if (!token) continue;
+                const existingSame = pool.filter(item => item.text === token).length;
+                const allow = correctCountMap[token] || 0;
+                if (existingSame > allow) continue;
+                pool.push({ id: `d${seq++}`, text: token, correct: false });
+            }
+            while (pool.length < desired) {
+                const token = distractorBase[pool.length % distractorBase.length];
+                pool.push({ id: `dx${seq++}`, text: token, correct: false });
+            }
+            return shuffleArray(pool);
+        }
+
+        function renderSpellWord() {
+            const container = document.getElementById('fsSpellWord');
+            container.innerHTML = '';
+            currentSpellBlank.displayPieces.forEach(piece => {
+                if (piece.type === 'shown') {
+                    piece.text.split('').forEach(ch => {
+                        const div = document.createElement('div');
+                        if (ch === ' ') {
+                            div.className = 'spell-char segment space-segment';
+                            div.textContent = '';
+                        } else {
+                            div.className = 'spell-char segment shown-piece';
+                            div.textContent = ch;
+                        }
+                        container.appendChild(div);
+                    });
+                } else {
+                    const div = document.createElement('div');
+                    const filled = currentSpellSelected[piece.segmentIndex];
+                    div.className = 'spell-char segment blank-segment';
+                    if (filled) {
+                        div.classList.add('filled-segment');
+                        div.textContent = filled.text;
+                    } else {
+                        div.classList.add('pending');
+                        div.textContent = '＿'.repeat(Math.max(1, piece.len));
+                    }
+                    if (!filled && piece.segmentIndex === currentSpellSelected.length) {
+                        div.classList.add('active');
+                    }
+                    div.dataset.segmentIndex = String(piece.segmentIndex);
+                    container.appendChild(div);
+                }
+            });
+        }
+
+        function renderSpellChoices() {
+            const box = document.getElementById('fsSpellChoices');
+            box.innerHTML = '';
+            currentSpellChoiceItems.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'spell-choice-btn';
+                btn.textContent = item.text;
+                btn.dataset.choiceId = item.id;
+                if (item.used) btn.classList.add('used');
+                btn.disabled = currentSpellLocked || item.used;
+                btn.onclick = () => selectSpellChoice(item.id);
+                box.appendChild(btn);
+            });
+        }
+
+        function updateSpellAttemptsText() {
+            const left = Math.max(0, 3 - currentSpellTryCount);
+            document.getElementById('fsSpellAttempts').textContent = `还可尝试 ${left} 次`;
+        }
+
+        function replayCurrentSpellAudio() {
+            if (!currentSpellBlank) return;
+            speakOnlyWord(currentSpellBlank.fullWord);
         }
 
         function showSpellQuestion() {
+            currentSpellTryCount = 0;
+            currentSpellSelected = [];
+            currentSpellLocked = false;
+            currentSpellRevealedAfterMaxWrong = false;
+            document.getElementById('fsSpellCard').classList.remove('reveal-mode');
+
             const q = spellWords[spellIndex];
             currentSpellWord = q;
             const total = spellWords.length;
@@ -2338,8 +2969,8 @@
             document.getElementById('fsProgressFill').style.width = `${((spellIndex + 1) / total * 100)}%`;
 
             const spellWord = sanitizeWord(q.word).word;
-            const blankInfo = generateBlank(spellWord);
-            currentSpellBlank = blankInfo;
+            currentSpellBlank = buildSpellPuzzle(spellWord);
+            currentSpellChoiceItems = createChoicePool(currentSpellBlank.correctTokens).map(item => ({ ...item, used: false }));
 
             let hintText = '';
             if (q.meaning) hintText += `<strong>释义：</strong>${q.meaning}`;
@@ -2352,124 +2983,140 @@
             posEl.textContent = displayPos;
             posEl.style.display = displayPos ? 'inline-block' : 'none';
 
-            const container = document.getElementById('fsSpellWord');
-            container.innerHTML = '';
-            let blankNo = 0;
-            blankInfo.displayChars.forEach((item, charIndex) => {
-                const div = document.createElement('div');
-                if (item.type === 'space') {
-                    div.className = 'spell-char space-char';
-                    div.textContent = '';
-                } else if (item.type === 'shown') {
-                    div.className = 'spell-char filled';
-                    div.textContent = item.char;
-                } else {
-                    blankNo += 1;
-                    div.className = 'spell-char blank';
-                    div.dataset.blankOrder = String(blankNo - 1);
-                    div.dataset.charIndex = String(charIndex);
-                    div.innerHTML = `<span class="blank-index">${blankNo}</span>`;
-                }
-                container.appendChild(div);
-            });
-
+            document.getElementById('fsSpellChoiceHelper').innerHTML = `点击下方字母/字母组合，依次补全 <strong>${currentSpellBlank.correctTokens.length}</strong> 处挖空`;
+            updateSpellAttemptsText();
+            renderSpellWord();
+            renderSpellChoices();
             speakOnlyWord(spellWord);
-
-            const input = document.getElementById('fsSpellInput');
-            input.value = '';
-            input.className = 'spell-input';
-            input.disabled = false;
-            input.maxLength = Math.max(blankInfo.blankLetters.length, spellWord.length);
-            input.placeholder = `输入 ${blankInfo.blankLetters.length} 个缺失字母`;
-            input.setAttribute('aria-label', '输入挖空的缺失字母');
-
-            let helper = document.getElementById('fsSpellHelper');
-            if (!helper) {
-                helper = document.createElement('div');
-                helper.id = 'fsSpellHelper';
-                helper.className = 'spell-helper';
-                document.querySelector('.spell-input-area').insertBefore(helper, input);
-            }
-            helper.innerHTML = `按编号依次输入 <strong>${blankInfo.blankLetters.length}</strong> 个缺失字母；也可直接输入完整单词`;
-
-            handleSpellInput();
-            setTimeout(() => input.focus({ preventScroll: true }), 160);
         }
 
-        function handleSpellInput() {
-            if (!currentSpellBlank) return;
-            const input = document.getElementById('fsSpellInput');
-            const typed = normalizeSpellText(input.value);
-            const blanks = document.querySelectorAll('#fsSpellWord .spell-char.blank');
-            blanks.forEach((node, i) => {
-                const existingBadge = node.querySelector('.blank-index');
-                node.classList.toggle('typed', Boolean(typed[i]));
-                node.classList.toggle('active-blank', i === Math.min(typed.length, blanks.length - 1));
-                node.textContent = typed[i] || '';
-                if (!typed[i] && existingBadge) node.appendChild(existingBadge);
-                if (!typed[i] && !existingBadge) {
-                    const badge = document.createElement('span');
-                    badge.className = 'blank-index';
-                    badge.textContent = String(i + 1);
-                    node.appendChild(badge);
-                }
+        function selectSpellChoice(choiceId) {
+            if (currentSpellLocked) return;
+            const item = currentSpellChoiceItems.find(x => x.id === choiceId);
+            if (!item || item.used) return;
+            item.used = true;
+            currentSpellSelected.push({ id: item.id, text: item.text });
+            renderSpellWord();
+            renderSpellChoices();
+            if (currentSpellSelected.length >= currentSpellBlank.correctTokens.length) {
+                validateSpellSelection();
+            }
+        }
+
+        function clearSpellSelection(manual = false) {
+            if (currentSpellLocked && !manual) return;
+            if (manual && currentSpellRevealedAfterMaxWrong) {
+                clearStudyTimers();
+                currentSpellTryCount = 0;
+                currentSpellLocked = false;
+                currentSpellRevealedAfterMaxWrong = false;
+                document.getElementById('fsSpellCard').classList.remove('reveal-mode');
+                updateSpellAttemptsText();
+            }
+            currentSpellSelected = [];
+            currentSpellChoiceItems.forEach(item => { item.used = false; });
+            renderSpellWord();
+            renderSpellChoices();
+            if (manual) showToast('已清空本题选择');
+        }
+
+        function markWrongAttempt() {
+            document.querySelectorAll('#fsSpellWord .blank-segment').forEach(el => {
+                el.classList.add('wrong-flash');
             });
-        }
-
-        function submitSpell() {
-            const input = document.getElementById('fsSpellInput');
-            const rawAnswer = input.value.trim();
-            const lettersOnly = normalizeSpellText(rawAnswer);
-            const correctFull = normalizeSpellText(currentSpellBlank.fullWord);
-            const correctMissing = normalizeSpellText(currentSpellBlank.blankLetters);
-            if (!lettersOnly) { showToast('请输入缺失字母'); return; }
-
-            const isCorrect = lettersOnly === correctMissing || lettersOnly === correctFull;
-            input.disabled = true;
-
-            if (isCorrect) {
-                spellCorrect++;
-                playSound('correct');
-                input.classList.add('correct');
-                revealSpellWord(true);
-                studyTimeoutId = setTimeout(() => nextSpell(), 900);
-            } else {
-                spellWrong++;
-                playSound('wrong');
-                input.classList.add('wrong');
-                revealSpellWord(false);
-                showToast(`正确答案：${currentSpellBlank.fullWord}`);
-                studyTimeoutId = setTimeout(() => nextSpell(), 1800);
-            }
+            document.querySelectorAll('#fsSpellChoices .spell-choice-btn.used').forEach(el => {
+                el.classList.add('wrong-choice');
+            });
         }
 
         function revealSpellWord(isCorrect) {
+            currentSpellLocked = true;
+            document.getElementById('fsSpellCard').classList.add('reveal-mode');
             const container = document.getElementById('fsSpellWord');
             container.innerHTML = '';
-            currentSpellBlank.fullWord.split('').forEach((char, idx) => {
+            currentSpellBlank.fullWord.split('').forEach(char => {
                 const div = document.createElement('div');
-                const wasBlank = currentSpellBlank.blankIndices.includes(idx);
                 if (char === ' ') {
-                    div.className = 'spell-char space-char';
-                } else if (isCorrect || !wasBlank) {
-                    div.className = 'spell-char correct-reveal';
-                    div.textContent = char;
+                    div.className = 'spell-char segment space-segment';
+                    div.textContent = '';
                 } else {
-                    div.className = 'spell-char wrong-reveal';
+                    div.className = 'spell-char segment ' + (isCorrect ? 'correct-reveal' : 'wrong-reveal');
                     div.textContent = char;
                 }
                 container.appendChild(div);
             });
+            document.querySelectorAll('#fsSpellChoices .spell-choice-btn').forEach(btn => {
+                btn.disabled = true;
+                if (isCorrect) btn.classList.add('correct-choice');
+            });
+        }
+
+        function validateSpellSelection() {
+            currentSpellLocked = true;
+            const chosen = currentSpellSelected.map(x => normalizeSpellToken(x.text));
+            const correct = currentSpellBlank.correctTokens.map(x => normalizeSpellToken(x));
+            const isCorrect = chosen.length === correct.length && chosen.every((x, i) => x === correct[i]);
+            if (isCorrect) {
+                spellCorrect++;
+                playSound('correct');
+                revealSpellWord(true);
+                speakOnlyWord(currentSpellBlank.fullWord);
+                if (spellIndex >= spellWords.length - 1) {
+                    studyTimeoutId = setTimeout(() => finishSpellTest(), 950);
+                } else {
+                    studyTimeoutId = setTimeout(() => nextSpell(), 950);
+                }
+                return;
+            }
+
+            currentSpellTryCount++;
+            updateSpellAttemptsText();
+            playSound('wrong');
+            markWrongAttempt();
+            if (currentSpellTryCount >= 3) {
+                spellWrong++;
+                markCurrentWordWrong(currentSpellWord);
+                studyTimeoutId = setTimeout(() => {
+                    currentSpellRevealedAfterMaxWrong = true;
+                    revealSpellWord(false);
+                    showToast(`正确答案：${currentSpellBlank.fullWord}，可点“重选”再练一次，或点“跳过”进入下一题`);
+                    speakWordAndExample(currentSpellBlank.fullWord, currentSpellWord.example || '');
+                    // 三次错误后停留在本题，允许重选或跳过。
+                }, 420);
+            } else {
+                const left = 3 - currentSpellTryCount;
+                studyTimeoutId = setTimeout(() => {
+                    currentSpellLocked = false;
+                    clearSpellSelection(false);
+                    showToast(`不对哦，请重选（还剩 ${left} 次）`);
+                }, 480);
+            }
         }
 
         function skipSpell() {
+            if (!currentSpellBlank) return;
+            clearStudyTimers();
+
+            // 三次错误后已经计过错；此时“跳过”只负责切到下一题或结束学习。
+            if (currentSpellRevealedAfterMaxWrong) {
+                nextSpell();
+                return;
+            }
+
+            currentSpellLocked = true;
             spellWrong++;
+            markCurrentWordWrong(currentSpellWord);
             playSound('wrong');
-            const input = document.getElementById('fsSpellInput');
-            input.disabled = true;
             revealSpellWord(false);
-            showToast(`正确答案：${currentSpellBlank.fullWord}`);
-            studyTimeoutId = setTimeout(() => nextSpell(), 1500);
+            showToast(`已跳过：${currentSpellBlank.fullWord}`);
+            speakWordAndExample(currentSpellBlank.fullWord, currentSpellWord.example || '');
+
+            // 最后一题跳过后，直接结束并进入打卡结果页。
+            if (spellIndex >= spellWords.length - 1) {
+                studyTimeoutId = setTimeout(() => finishSpellTest(), 1400);
+            } else {
+                studyTimeoutId = setTimeout(() => nextSpell(), 1400);
+            }
         }
 
         // 初始化
