@@ -1268,12 +1268,124 @@
             box-shadow: 0 0 0 6px rgba(255, 49, 91, 0.14), 0 10px 28px rgba(255,49,91,0.35);
         }
 
+    
+        /* ===== v18 iPhone/百词斩蓝色主题加强 ===== */
+        .fullscreen-study {
+            background: radial-gradient(circle at 18% 8%, rgba(47,114,255,.18), transparent 30%),
+                        linear-gradient(180deg, #eef5ff 0%, #f7f9ff 52%, #fff 100%);
+        }
+        .study-header {
+            padding-top: max(12px, env(safe-area-inset-top));
+            background: rgba(255,255,255,.92);
+            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(15,75,216,.08);
+        }
+        .study-body, .spell-body {
+            padding: 14px 16px max(18px, env(safe-area-inset-bottom));
+            justify-content: flex-start;
+        }
+        .word-card, .spell-card {
+            width: 100%;
+            background: rgba(255,255,255,.94);
+            border: 1px solid rgba(15,75,216,.08);
+            border-radius: 28px;
+            padding: 22px 16px 18px;
+            box-shadow: 0 12px 34px rgba(15,75,216,.12);
+            margin-top: 14px;
+            margin-bottom: 18px;
+        }
+        .word-main {
+            color: #123776;
+            font-size: clamp(28px, 9vw, 42px);
+            line-height: 1.08;
+            letter-spacing: -.5px;
+        }
+        .word-phonetic { color: #7282a1; margin-top: 6px; }
+        .word-pos, .spell-pos-tag, .tag-blue { background: #e6f0ff; color: #1250cf; }
+        .word-example, .spell-hint { border-left-color: #0f4bd8; }
+        .btn-replay { border-color: rgba(15,75,216,.12); background: #edf4ff; color: #0f4bd8; }
+        .option {
+            border: 0;
+            border-radius: 20px;
+            background: #fff;
+            color: #21314d;
+            font-weight: 700;
+            box-shadow: 0 8px 22px rgba(15,75,216,.08);
+        }
+        .option:hover { transform: none; background: #fff; }
+        .option.correct { background: #e9f2ff; color: #0f4bd8; border: 2px solid #0f4bd8; }
+        .option.wrong { background: #fff0f3; color: #e33258; border: 2px solid #e33258; }
+        .btn-kill-word {
+            background: linear-gradient(135deg, #fff8e9, #eef4ff);
+            border: 1.5px solid rgba(15,75,216,.22);
+            color: #0f4bd8;
+            font-size: 12px;
+            padding: 8px 11px;
+            white-space: nowrap;
+        }
+        .btn-kill-word::before { content: '🏸 '; }
+        @keyframes smashStrike {
+            0% { transform: translateY(0) scale(1) rotate(0deg); }
+            18% { transform: translateY(-6px) scale(1.15) rotate(-7deg); background: #fff3cf; }
+            44% { transform: translateY(5px) scale(.94) rotate(8deg); background: #0f4bd8; color: #fff; }
+            72% { transform: translateY(-2px) scale(1.07) rotate(-3deg); background: #ffcf4d; color: #123776; }
+            100% { transform: translateY(0) scale(1) rotate(0deg); }
+        }
+        .btn-kill-word.kill-strike {
+            animation: smashStrike .58s cubic-bezier(.2,.8,.2,1);
+            box-shadow: 0 0 0 8px rgba(255,207,77,.18), 0 12px 28px rgba(15,75,216,.28);
+        }
+        .spell-card { max-height: calc(100dvh - 86px); overflow-y: auto; }
+        .spell-hint { font-size: 16px; line-height: 1.45; background: #fff; }
+        .spell-word-container.spell-choice-mode {
+            flex-wrap: wrap;
+            gap: 4px 5px;
+            margin: 18px 0 14px;
+            min-height: auto;
+            max-width: 100%;
+            align-content: center;
+        }
+        .spell-char.segment.shown-piece,
+        .spell-char.segment.blank-segment {
+            height: 40px;
+            min-height: 40px;
+            font-size: clamp(17px, 5vw, 25px);
+            line-height: 1;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            letter-spacing: -.8px;
+        }
+        .spell-char.segment.shown-piece { min-width: 0; padding: 0 1px; }
+        .spell-char.segment.blank-segment {
+            min-width: clamp(30px, 9vw, 48px);
+            padding: 0 6px;
+            border-bottom-width: 3px;
+        }
+        .spell-char.segment.space-segment { width: 10px; min-width: 10px; }
+        .spell-choice-grid { gap: 10px; }
+        .spell-choice-btn { min-height: 50px; font-size: 19px; border-radius: 16px; }
+        .spell-action-row {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.96) 25%);
+            padding-top: 12px;
+            padding-bottom: max(2px, env(safe-area-inset-bottom));
+        }
+        @media (max-width: 430px) {
+            .spell-card { padding: 18px 12px 14px; border-radius: 24px; }
+            .spell-hint { font-size: 15px; }
+            .spell-choice-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+            .spell-choice-btn { min-height: 48px; font-size: 18px; }
+            .spell-btn-row .btn { padding-left: 8px; padding-right: 8px; }
+        }
+
     </style>
 </head>
 <body>
     <div class="tabs">
-        <button class="tab active" onclick="switchTab(this, 'import')">导入单词</button>
-        <button class="tab" onclick="switchTab(this, 'study')">开始记忆</button>
+        <button class="tab active" data-tab="import" onclick="switchTab(this, 'import')">导入单词</button>
+        <button class="tab" data-tab="study" onclick="switchTab(this, 'study')">开始记忆</button>
     </div>
 
     <div class="container">
@@ -1333,7 +1445,7 @@
                 <div class="card-title">学习设置</div>
                 <div class="form-group">
                     <label class="form-label">选择词库</label>
-                    <select id="studyBank" onchange="updateUnitSelect()">
+                    <select id="studyBank" onchange="updateUnitSelect(); rememberCurrentStudyPrefs();">
                         <option value="7a">七年级上册</option>
                         <option value="7b" selected>七年级下册</option>
                         <option value="8a">八年级上册</option>
@@ -1344,7 +1456,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">选择单元</label>
-                    <select id="studyUnit">
+                    <select id="studyUnit" onchange="rememberCurrentStudyPrefs();">
                         <option value="all">全部单元</option>
                     </select>
                 </div>
@@ -1516,6 +1628,7 @@
         const CHECKIN_KEY = 'checkinRecords_v1';
         const KILLED_KEY = 'killedWordKeys_v1';
         const REVIEW_KEY = 'reviewWrongWordKeys_v1';
+        const PREF_KEY = 'wordStudyPrefs_v1';
 
         const bankNames = {
             '7a': '七年级上册', '7b': '七年级下册',
@@ -1602,30 +1715,36 @@
             initAudio();
             const now = audioCtx.currentTime;
             if (type === 'correct') {
-                [523.25, 659.25, 783.99].forEach((freq, i) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.type = 'sine';
-                    osc.frequency.value = freq;
-                    osc.start(now + i * 0.08);
-                    gain.gain.setValueAtTime(0.25, now + i * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.35);
-                    osc.stop(now + i * 0.08 + 0.35);
-                });
-            } else if (type === 'wrong') {
-                [220.00, 174.61].forEach((freq, i) => {
+                // 类百词斩：短促上扬“叮”声
+                const freqs = [740, 988, 1319];
+                freqs.forEach((freq, i) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.type = 'triangle';
                     osc.frequency.value = freq;
-                    osc.start(now + i * 0.12);
-                    gain.gain.setValueAtTime(0.25, now + i * 0.12);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.3);
-                    osc.stop(now + i * 0.12 + 0.3);
+                    const t = now + i * 0.045;
+                    osc.start(t);
+                    gain.gain.setValueAtTime(0.22, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+                    osc.stop(t + 0.2);
+                });
+            } else if (type === 'wrong') {
+                // 类百词斩：低频短促下坠提示音
+                [330, 220].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    const t = now + i * 0.07;
+                    osc.frequency.setValueAtTime(freq, t);
+                    osc.frequency.exponentialRampToValueAtTime(Math.max(80, freq * 0.65), t + 0.16);
+                    osc.start(t);
+                    gain.gain.setValueAtTime(0.22, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+                    osc.stop(t + 0.24);
                 });
             } else if (type === 'complete') {
                 [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
@@ -1641,49 +1760,58 @@
                     osc.stop(now + i * 0.09 + 0.5);
                 });
             } else if (type === 'kill') {
-                // 暴力斩杀音效：刀光划过 + 低频重击 + 噪声冲击
+                // 羽毛球杀球音效：清脆击球 + 空气破风 + 落点重响
                 const master = audioCtx.createGain();
                 master.connect(audioCtx.destination);
-                master.gain.setValueAtTime(0.55, now);
-                master.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+                master.gain.setValueAtTime(0.72, now);
+                master.gain.exponentialRampToValueAtTime(0.001, now + 0.72);
 
-                const slash = audioCtx.createOscillator();
-                const slashGain = audioCtx.createGain();
-                slash.type = 'sawtooth';
-                slash.frequency.setValueAtTime(1250, now);
-                slash.frequency.exponentialRampToValueAtTime(180, now + 0.18);
-                slashGain.gain.setValueAtTime(0.45, now);
-                slashGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-                slash.connect(slashGain);
-                slashGain.connect(master);
-                slash.start(now);
-                slash.stop(now + 0.24);
+                const impact = audioCtx.createOscillator();
+                const impactGain = audioCtx.createGain();
+                impact.type = 'square';
+                impact.frequency.setValueAtTime(1850, now);
+                impact.frequency.exponentialRampToValueAtTime(420, now + 0.055);
+                impactGain.gain.setValueAtTime(0.52, now);
+                impactGain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                impact.connect(impactGain);
+                impactGain.connect(master);
+                impact.start(now);
+                impact.stop(now + 0.12);
 
-                const hit = audioCtx.createOscillator();
-                const hitGain = audioCtx.createGain();
-                hit.type = 'square';
-                hit.frequency.setValueAtTime(90, now + 0.16);
-                hit.frequency.exponentialRampToValueAtTime(42, now + 0.42);
-                hitGain.gain.setValueAtTime(0.42, now + 0.16);
-                hitGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-                hit.connect(hitGain);
-                hitGain.connect(master);
-                hit.start(now + 0.16);
-                hit.stop(now + 0.52);
-
-                const bufferSize = Math.floor(audioCtx.sampleRate * 0.16);
+                const bufferSize = Math.floor(audioCtx.sampleRate * 0.22);
                 const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = buffer;
-                const noiseGain = audioCtx.createGain();
-                noiseGain.gain.setValueAtTime(0.26, now + 0.05);
-                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-                noise.connect(noiseGain);
-                noiseGain.connect(master);
-                noise.start(now + 0.05);
-                noise.stop(now + 0.24);
+                for (let i = 0; i < bufferSize; i++) {
+                    const t = i / bufferSize;
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.2);
+                }
+                const whoosh = audioCtx.createBufferSource();
+                whoosh.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(2600, now + 0.02);
+                filter.frequency.exponentialRampToValueAtTime(760, now + 0.26);
+                filter.Q.value = 1.2;
+                const whooshGain = audioCtx.createGain();
+                whooshGain.gain.setValueAtTime(0.32, now + 0.015);
+                whooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                whoosh.connect(filter);
+                filter.connect(whooshGain);
+                whooshGain.connect(master);
+                whoosh.start(now + 0.015);
+                whoosh.stop(now + 0.32);
+
+                const thump = audioCtx.createOscillator();
+                const thumpGain = audioCtx.createGain();
+                thump.type = 'sine';
+                thump.frequency.setValueAtTime(155, now + 0.12);
+                thump.frequency.exponentialRampToValueAtTime(72, now + 0.38);
+                thumpGain.gain.setValueAtTime(0.42, now + 0.12);
+                thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.46);
+                thump.connect(thumpGain);
+                thumpGain.connect(master);
+                thump.start(now + 0.12);
+                thump.stop(now + 0.48);
             }
         }
 
@@ -1830,13 +1958,63 @@
         // ===================== 答题锁 =====================
         let isAnswering = false;
 
-        // ===================== UI 交互 =====================
-        function switchTab(el, tab) {
+
+        // ===================== 用户上次位置与学习设置偏好 =====================
+        function getPrefs() {
+            try { return JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); }
+            catch (e) { return {}; }
+        }
+        function savePrefs(patch) {
+            const prefs = Object.assign({}, getPrefs(), patch || {});
+            localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
+        }
+        function rememberCurrentStudyPrefs() {
+            const q = document.querySelector('.quantity-option.selected');
+            savePrefs({
+                lastTab: 'study',
+                studyBank: document.getElementById('studyBank') ? document.getElementById('studyBank').value : '7b',
+                studyUnit: document.getElementById('studyUnit') ? document.getElementById('studyUnit').value : 'all',
+                quantity: q ? q.dataset.value : '50'
+            });
+        }
+        function switchTabTo(tab, remember = true) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('page-' + tab).classList.add('active');
+            const tabBtn = document.querySelector(`.tab[data-tab="${tab}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
+            const page = document.getElementById('page-' + tab);
+            if (page) page.classList.add('active');
             if (tab === 'study') updateUnitSelect();
+            if (remember) savePrefs({ lastTab: tab });
+        }
+        function restoreLastPrefs() {
+            const prefs = getPrefs();
+            const importBank = document.getElementById('importBank');
+            const studyBank = document.getElementById('studyBank');
+            if (prefs.studyBank) {
+                if (importBank) importBank.value = prefs.studyBank;
+                if (studyBank) studyBank.value = prefs.studyBank;
+            }
+            updateUnitSelect();
+            if (prefs.studyUnit) {
+                const unitSelect = document.getElementById('studyUnit');
+                if (unitSelect && [...unitSelect.options].some(o => o.value === prefs.studyUnit)) unitSelect.value = prefs.studyUnit;
+            }
+            if (prefs.quantity) {
+                document.querySelectorAll('.quantity-option').forEach(o => {
+                    o.classList.toggle('selected', o.dataset.value === String(prefs.quantity));
+                });
+                if (!document.querySelector('.quantity-option.selected')) {
+                    const fallback = document.querySelector('.quantity-option[data-value="50"]');
+                    if (fallback) fallback.classList.add('selected');
+                }
+            }
+            switchTabTo(prefs.lastTab || 'study', false);
+        }
+
+        // ===================== UI 交互 =====================
+        function switchTab(el, tab) {
+            switchTabTo(tab, true);
         }
         function showToast(msg) {
             const t = document.getElementById('toast');
@@ -1850,6 +2028,7 @@
         function selectQuantity(el) {
             document.querySelectorAll('.quantity-option').forEach(o => o.classList.remove('selected'));
             el.classList.add('selected');
+            rememberCurrentStudyPrefs();
         }
         function getSelectedQuantity() {
             return parseInt(document.querySelector('.quantity-option.selected').dataset.value);
@@ -2114,6 +2293,7 @@
             currentKilledKeySet = new Set(getKilledKeys());
             const unit = document.getElementById('studyUnit').value;
             const quantity = getSelectedQuantity();
+            rememberCurrentStudyPrefs();
             currentStudyQuantity = quantity;
             isTestMode = quantity === 1;
             const bank = getBank(bankId);
@@ -2155,6 +2335,7 @@
         }
 
         function exitStudy() {
+            rememberCurrentStudyPrefs();
             clearStudyTimers();
             isAnswering = false;
             stopSpeech();
@@ -2166,7 +2347,10 @@
         }
 
         function showQuestion() {
+            clearStudyTimers();
             isAnswering = false; // 新题目解锁
+            const oldOptions = document.getElementById('fsOptions');
+            if (oldOptions) oldOptions.innerHTML = '';
             const q = studyWords[currentIndex];
             const total = studyWords.length;
             document.getElementById('fsProgressText').textContent = `${currentIndex + 1} / ${total}`;
@@ -2899,14 +3083,16 @@
             container.innerHTML = '';
             currentSpellBlank.displayPieces.forEach(piece => {
                 if (piece.type === 'shown') {
-                    piece.text.split('').forEach(ch => {
+                    const parts = piece.text.split(/(\s+)/);
+                    parts.forEach(part => {
+                        if (!part) return;
                         const div = document.createElement('div');
-                        if (ch === ' ') {
+                        if (/^\s+$/.test(part)) {
                             div.className = 'spell-char segment space-segment';
                             div.textContent = '';
                         } else {
                             div.className = 'spell-char segment shown-piece';
-                            div.textContent = ch;
+                            div.textContent = part;
                         }
                         container.appendChild(div);
                     });
@@ -3121,8 +3307,8 @@
 
         // 初始化
         initBuiltinBankIfNeeded();
-        updateUnitSelect();
         initSpeech();
+        restoreLastPrefs();
     </script>
 </body>
 </html>
