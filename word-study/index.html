@@ -1380,6 +1380,42 @@
             .spell-btn-row .btn { padding-left: 8px; padding-right: 8px; }
         }
 
+    
+        /* ===== v19 拼写单词单行适配 ===== */
+        .spell-word-container.spell-choice-mode {
+            flex-wrap: nowrap !important;
+            overflow-x: hidden;
+            justify-content: center;
+            gap: 2px !important;
+            width: 100%;
+        }
+        .spell-char.segment.shown-piece,
+        .spell-char.segment.blank-segment {
+            font-size: var(--spell-font-size, 18px) !important;
+            height: calc(var(--spell-font-size, 18px) * 1.75) !important;
+            min-height: calc(var(--spell-font-size, 18px) * 1.75) !important;
+            line-height: 1 !important;
+            letter-spacing: -0.9px !important;
+        }
+        .spell-char.segment.blank-segment {
+            min-width: calc(var(--spell-font-size, 18px) * 1.35) !important;
+            padding-left: 3px !important;
+            padding-right: 3px !important;
+        }
+        .spell-char.segment.shown-piece {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .spell-char.segment.space-segment {
+            width: calc(var(--spell-font-size, 18px) * 0.38) !important;
+            min-width: calc(var(--spell-font-size, 18px) * 0.38) !important;
+        }
+        .spell-skip-note {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #8a96a8;
+        }
+
     </style>
 </head>
 <body>
@@ -1707,9 +1743,25 @@
         // ===================== 音效系统 =====================
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
+        let appAudioUnlocked = false;
         function initAudio() {
             if (!audioCtx) audioCtx = new AudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            // iPhone/Safari 需要用户手势解锁 WebAudio。这里播放一个极短静音 buffer，确保后续音效可触发。
+            if (!appAudioUnlocked && audioCtx) {
+                try {
+                    const buffer = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+                    const source = audioCtx.createBufferSource();
+                    const gain = audioCtx.createGain();
+                    gain.gain.value = 0.0001;
+                    source.buffer = buffer;
+                    source.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    source.start(0);
+                    appAudioUnlocked = true;
+                } catch (e) {}
+            }
         }
         function playSound(type) {
             initAudio();
@@ -1759,6 +1811,32 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.5);
                     osc.stop(now + i * 0.09 + 0.5);
                 });
+            } else if (type === 'celebrate') {
+                // 结算庆祝音效：上扬琶音 + 轻微闪光感
+                const seq = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
+                seq.forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = i % 2 ? 'triangle' : 'sine';
+                    const t = now + i * 0.07;
+                    osc.frequency.setValueAtTime(freq, t);
+                    osc.start(t);
+                    gain.gain.setValueAtTime(0.24, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
+                    osc.stop(t + 0.36);
+                });
+                const high = audioCtx.createOscillator();
+                const highGain = audioCtx.createGain();
+                high.type = 'sine';
+                high.frequency.setValueAtTime(2093, now + 0.42);
+                highGain.gain.setValueAtTime(0.16, now + 0.42);
+                highGain.gain.exponentialRampToValueAtTime(0.001, now + 0.82);
+                high.connect(highGain);
+                highGain.connect(audioCtx.destination);
+                high.start(now + 0.42);
+                high.stop(now + 0.84);
             } else if (type === 'kill') {
                 // 羽毛球杀球音效：清脆击球 + 空气破风 + 落点重响
                 const master = audioCtx.createGain();
@@ -2682,7 +2760,7 @@
             document.getElementById('spellResultAccuracy').textContent = accuracy + '%';
             document.getElementById('spellResultSub').textContent = total === 0
                 ? '本次单词已全部斩杀，已跳过拼写复习'
-                : `本次拼写正确 ${spellCorrect} / ${total}`;
+                : (isTestMode ? `本次拼写正确 ${spellCorrect} / ${total} · 测试不写入打卡` : `本次拼写正确 ${spellCorrect} / ${total}`);
             if (total === 0) {
                 document.getElementById('spellResultEmoji').textContent = '⚔️';
                 document.getElementById('spellResultTitle').textContent = isTestMode ? '测试完成！' : '打卡成功！';
@@ -2699,12 +2777,11 @@
             if (!isTestMode) saveReviewKeysForBank(currentStudyBankId, Array.from(currentWrongKeySet).filter(k => !currentKilledKeySet.has(k)));
             showToast(isTestMode ? '测试完成，本次不计入打卡' : '打卡完成！今日学习已记录');
 
-            if (total === 0 && !isTestMode) {
-                studyTimeoutId = setTimeout(() => {
-                    document.getElementById('fsSpellResult').classList.remove('active');
-                    showCheckinSuccessPanel();
-                }, 2000);
-            }
+            // 所有正式/测试学习完成后均弹出可分享打卡页；测试模式不写入当天打卡。
+            studyTimeoutId = setTimeout(() => {
+                document.getElementById('fsSpellResult').classList.remove('active');
+                showFinalCheckinPageAfterStudy();
+            }, total === 0 ? 2000 : 900);
         }
 
         // ===================== 打卡功能 =====================
@@ -2779,6 +2856,22 @@
                 cursor.setDate(cursor.getDate() - 1);
             }
             return streak;
+        }
+
+
+        function showFinalCheckinPageAfterStudy() {
+            playSound('celebrate');
+            const delay = 700;
+            studyTimeoutId = setTimeout(() => {
+                document.getElementById('fsSpellResult').classList.remove('active');
+                showCheckinSuccessPanel();
+                if (isTestMode) {
+                    const title = document.getElementById('checkinModalTitle');
+                    const label = document.getElementById('checkinSummaryLabel');
+                    if (title) title.textContent = '✅ 测试完成';
+                    if (label) label.textContent = '连续打卡天数（测试未写入）';
+                }
+            }, delay);
         }
 
         function showCheckinSuccessPanel() {
@@ -3116,6 +3209,26 @@
             });
         }
 
+
+        function fitSpellWordOneLine() {
+            const container = document.getElementById('fsSpellWord');
+            if (!container) return;
+            const minSize = 9;
+            const maxSize = 23;
+            let size = maxSize;
+            container.style.setProperty('--spell-font-size', size + 'px');
+
+            // 逐步缩小，确保单词/词组在 iPhone 竖屏内保持一行。
+            requestAnimationFrame(() => {
+                let guard = 0;
+                while (container.scrollWidth > container.clientWidth && size > minSize && guard < 40) {
+                    size -= 1;
+                    container.style.setProperty('--spell-font-size', size + 'px');
+                    guard++;
+                }
+            });
+        }
+
         function renderSpellChoices() {
             const box = document.getElementById('fsSpellChoices');
             box.innerHTML = '';
@@ -3304,6 +3417,15 @@
                 studyTimeoutId = setTimeout(() => nextSpell(), 1400);
             }
         }
+
+
+        function unlockAppAudioOnce() {
+            initAudio();
+            document.removeEventListener('touchstart', unlockAppAudioOnce);
+            document.removeEventListener('click', unlockAppAudioOnce);
+        }
+        document.addEventListener('touchstart', unlockAppAudioOnce, { once: true, passive: true });
+        document.addEventListener('click', unlockAppAudioOnce, { once: true });
 
         // 初始化
         initBuiltinBankIfNeeded();
