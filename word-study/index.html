@@ -1858,20 +1858,41 @@
             }
         }
 
+        function preparePriorityEffect(type) {
+            if (type === 'correct' || type === 'wrong' || type === 'kill') {
+                // 避免 iPhone / Safari 在 TTS 朗读时自动压低短音效音量。
+                clearTimeout(window.__wordExampleDelayTimer);
+                if (speechSynth) {
+                    try { speechSynth.cancel(); } catch (e) {}
+                }
+            }
+        }
+
         function playCustomSound(type) {
             const src = CUSTOM_SOUND_DATA[type];
             if (!src) return false;
             try {
-                let audio = customSoundPlayers[type];
-                if (!audio) {
+                preparePriorityEffect(type);
+
+                // correct / wrong / kill 使用独立播放实例，避免与上一段 TTS 或上一音效共享状态导致音量被压低。
+                let audio;
+                if (type === 'correct' || type === 'wrong' || type === 'kill') {
                     audio = new Audio(src);
                     audio.preload = 'auto';
                     audio.playsInline = true;
-                    customSoundPlayers[type] = audio;
+                } else {
+                    audio = customSoundPlayers[type];
+                    if (!audio) {
+                        audio = new Audio(src);
+                        audio.preload = 'auto';
+                        audio.playsInline = true;
+                        customSoundPlayers[type] = audio;
+                    }
+                    audio.pause();
+                    audio.currentTime = 0;
                 }
-                audio.pause();
-                audio.currentTime = 0;
-                audio.volume = type === 'kill' ? 1.0 : 0.95;
+
+                audio.volume = 1.0;
                 const p = audio.play();
                 if (p && typeof p.catch === 'function') p.catch(() => {});
                 return true;
@@ -1904,6 +1925,9 @@
         }
 
         function playSound(type) {
+            // correct / wrong / kill 为高优先级音效：先停止 TTS，避免音量被系统自动压低。
+            preparePriorityEffect(type);
+
             // 优先播放内置真实音效；失败时回退到 WebAudio 合成音效。
             const customPlayed = playCustomSound(type);
             if (customPlayed && (type === 'correct' || type === 'wrong' || type === 'kill')) return;
@@ -1922,7 +1946,7 @@
                     osc.frequency.value = freq;
                     const t = now + i * 0.045;
                     osc.start(t);
-                    gain.gain.setValueAtTime(0.22, t);
+                    gain.gain.setValueAtTime(0.32, t);
                     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
                     osc.stop(t + 0.2);
                 });
@@ -1938,7 +1962,7 @@
                     osc.frequency.setValueAtTime(freq, t);
                     osc.frequency.exponentialRampToValueAtTime(Math.max(80, freq * 0.65), t + 0.16);
                     osc.start(t);
-                    gain.gain.setValueAtTime(0.22, t);
+                    gain.gain.setValueAtTime(0.32, t);
                     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
                     osc.stop(t + 0.24);
                 });
