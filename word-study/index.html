@@ -2051,6 +2051,7 @@
         initSpeech();
 
         function stopSpeech() {
+            clearTimeout(window.__wordExampleDelayTimer);
             if (speechSynth) speechSynth.cancel();
         }
         function cleanTextForSpeech(text) {
@@ -2063,13 +2064,20 @@
         function speakWordAndExample(word, example) {
             if (!speechSynth || !word) return;
             speechSynth.cancel();
+            clearTimeout(window.__wordExampleDelayTimer);
             const cleanWord = cleanTextForSpeech(word);
             const cleanExample = cleanTextForSpeech(example);
             const u1 = new SpeechSynthesisUtterance(cleanWord);
             u1.lang = 'en-US'; u1.rate = 0.85; u1.pitch = 1.0;
             const u2 = cleanExample ? new SpeechSynthesisUtterance(cleanExample) : null;
             if (u2) { u2.lang = 'en-US'; u2.rate = 0.82; u2.pitch = 1.0; }
-            u1.onend = () => { if (u2) speechSynth.speak(u2); };
+            u1.onend = () => {
+                if (u2) {
+                    window.__wordExampleDelayTimer = setTimeout(() => {
+                        if (speechSynth) speechSynth.speak(u2);
+                    }, 1000);
+                }
+            };
             speechSynth.speak(u1);
         }
         function speakOnlyWord(word) {
@@ -2595,6 +2603,8 @@
             clearStudyTimers();
             isAnswering = false;
             initAudio();
+            preloadCustomSounds();
+            playSound('kill');
             if (speechSynth && speechSynth.paused) speechSynth.resume();
             initSpeech();
 
