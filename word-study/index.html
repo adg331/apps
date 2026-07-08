@@ -299,6 +299,51 @@
       padding: 12px;
     }
 
+    .word-card.meaning-mode {
+      min-height: 0;
+      padding: 12px;
+    }
+
+    .word-card.meaning-mode .word-head {
+      align-items: center;
+    }
+
+    .word-card.meaning-mode .word-title h1 {
+      font-size: clamp(28px, 8vw, 36px);
+      line-height: 1.04;
+    }
+
+    .word-card.meaning-mode .phonetic {
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .word-card.meaning-mode .icon-button {
+      width: 36px;
+      height: 36px;
+    }
+
+    .word-card.meaning-mode .visual,
+    .word-card.meaning-mode .meaning-reveal {
+      display: none;
+    }
+
+    .word-card.meaning-mode .example-panel {
+      min-height: 0;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    .word-card.meaning-mode .example-panel span {
+      font-size: 11px;
+    }
+
+    .word-card.meaning-mode .example-panel p {
+      font-size: 13px;
+      line-height: 1.32;
+      font-weight: 740;
+    }
+
     .word-card.spelling-mode .word-head {
       align-items: center;
     }
@@ -457,8 +502,8 @@
 
     .choice-grid {
       display: grid;
-      gap: 9px;
-      margin-top: 12px;
+      gap: 8px;
+      margin-top: 10px;
     }
 
     .choice {
@@ -467,8 +512,8 @@
       align-items: center;
       gap: 11px;
       width: 100%;
-      min-height: 52px;
-      padding: 9px 12px;
+      min-height: 46px;
+      padding: 7px 10px;
       border-radius: var(--radius);
       background: #ffffff;
       border: 2px solid #d3e2f7;
@@ -480,9 +525,9 @@
     .choice .letter {
       display: grid;
       place-items: center;
-      flex: 0 0 31px;
-      width: 31px;
-      height: 31px;
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: var(--soft);
       color: #003e91;
@@ -492,7 +537,7 @@
 
     .choice .text {
       min-width: 0;
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.3;
       font-weight: 760;
     }
@@ -929,12 +974,22 @@
         padding: 10px;
       }
 
+      .word-card.meaning-mode {
+        min-height: 0;
+        padding: 10px;
+      }
+
       .visual {
         height: 96px;
       }
 
       .choice .text {
-        font-size: 14px;
+        font-size: 13px;
+      }
+
+      .choice {
+        min-height: 44px;
+        padding: 6px 9px;
       }
 
       .spell-option {
@@ -1490,6 +1545,7 @@
       spellSelected = [];
       spellOptions = [];
       q("#wordCard").classList.remove("spelling-mode");
+      q("#wordCard").classList.add("meaning-mode");
       const unit = unitById(`unit-${word.unit}`);
       const stateForWord = wordState(word.id);
       const session = mode === "learn" ? ensureSession(state.activeUnit) : null;
@@ -1512,7 +1568,7 @@
       els.exampleText.textContent = word.example;
       els.meaningText.textContent = word.meaning;
       els.meaningReveal.classList.remove("visible");
-      els.visualBox.innerHTML = illustration(word, stateForWord);
+      els.visualBox.innerHTML = "";
       renderMeaningOptions(word);
 
       renderTop();
@@ -1626,6 +1682,7 @@
       spellAnswer = prompt.answer;
       spellSelected = [];
       spellOptions = spellingOptions(word, spellAnswer);
+      q("#wordCard").classList.remove("meaning-mode");
       q("#wordCard").classList.add("spelling-mode");
       els.studyModeLabel.textContent = mode === "learn" ? `${unit.title} · ${sourceArg}拼写 ${doneArg + 1}/${totalArg}` : `复习拼写 · ${currentIndex + 1}/${queue.length}`;
       els.progressMeter.style.width = `${totalArg ? Math.min(100, doneArg / totalArg * 100) : 0}%`;
