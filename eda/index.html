@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDA 数据流与 NetApp AFX 企业级存储价值演示</title>
+<style>
+:root{
+  --bg:#f3f6fb; --bg2:#ffffff; --panel:#ffffff; --panel2:#f2f6fc;
+  --line:#d8e2ef; --txt:#17293f; --txt2:#46607c; --dim:#7c90a8;
+  --blue:#0067c5; --cyan:#0e93c9; --teal:#0b9d7c; --orange:#d9871c; --red:#d64545;
+  --grad:linear-gradient(135deg,#0067c5,#19b1e6);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;background:
+  radial-gradient(ellipse 60% 40% at 70% -10%,rgba(0,103,197,.08),transparent),
+  radial-gradient(ellipse 50% 35% at 10% 110%,rgba(25,177,230,.07),transparent);pointer-events:none}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 28px 60px;position:relative}
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:38px;height:38px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;letter-spacing:-.5px}
+h1{font-size:21px;font-weight:700}
+h1 span{color:var(--blue)}
+.sub{color:var(--txt2);font-size:13px;margin:4px 0 18px}
+.badge{font-size:12px;color:var(--blue);border:1px solid rgba(0,103,197,.35);border-radius:20px;padding:5px 14px;background:rgba(0,103,197,.06)}
+/* tabs */
+.tabs{display:flex;gap:8px;margin:10px 0 22px;flex-wrap:wrap}
+.tab{padding:10px 20px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--txt2);cursor:pointer;font-size:14px;transition:.25s;user-select:none;box-shadow:0 1px 3px rgba(23,41,63,.05)}
+.tab:hover{color:var(--blue);border-color:var(--blue)}
+.tab.on{background:var(--grad);color:#fff;border-color:transparent;font-weight:600;box-shadow:0 4px 14px rgba(0,103,197,.3)}
+.page{display:none;animation:fade .4s}
+.page.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(23,41,63,.05)}
+h2{font-size:17px;margin-bottom:6px}
+h2 em{font-style:normal;color:var(--blue)}
+.hint{color:var(--dim);font-size:12.5px;margin-bottom:14px}
+/* ---------- pipeline ---------- */
+.pipe-zone{margin-bottom:16px}
+.phase-label{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--txt2);margin:14px 0 10px}
+.phase-label b{color:var(--txt);font-size:14px}
+.phase-label .tag{font-size:11px;padding:2px 10px;border-radius:12px}
+.tag.fe{background:rgba(14,147,201,.1);color:var(--cyan);border:1px solid rgba(14,147,201,.35)}
+.tag.be{background:rgba(217,135,28,.1);color:var(--orange);border:1px solid rgba(217,135,28,.35)}
+.pipe-row{display:flex;align-items:stretch;gap:0}
+.stage{flex:1;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;cursor:pointer;transition:.25s;text-align:center;position:relative;min-width:0}
+.stage:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,103,197,.12)}
+.stage.sel{border-color:var(--blue);background:linear-gradient(160deg,rgba(25,177,230,.1),rgba(0,103,197,.08));box-shadow:0 0 0 3px rgba(0,103,197,.12)}
+.stage .ico{font-size:22px;margin-bottom:6px}
+.stage .nm{font-size:13.5px;font-weight:650;line-height:1.3}
+.stage .en{font-size:10.5px;color:var(--dim);margin-top:3px;letter-spacing:.2px}
+.stage .cap{margin-top:7px;font-size:10.5px;color:var(--blue);background:rgba(0,103,197,.08);border-radius:8px;padding:2px 6px;display:inline-block}
+.conn{width:46px;flex:none;display:flex;align-items:center;justify-content:center;position:relative}
+.conn::before{content:"";position:absolute;left:4px;right:4px;top:50%;height:2px;background:#c3d2e5}
+.conn::after{content:"";position:absolute;right:2px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-left-color:#c3d2e5}
+.dot{position:absolute;top:50%;left:0;width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px rgba(0,103,197,.6);transform:translateY(-50%);animation:flow 1.6s linear infinite;opacity:0}
+.dot.d2{animation-delay:.8s}
+@keyframes flow{0%{left:2px;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:calc(100% - 10px);opacity:0}}
+.turn{display:flex;justify-content:center;margin:2px 0}
+.turn svg{opacity:.85}
+/* detail panel */
+.detail{margin-top:18px;display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+@media(max-width:900px){.detail{grid-template-columns:1fr}}
+.d-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.d-head .ico{font-size:28px}
+.d-head .t{font-size:16.5px;font-weight:700}
+.d-head .e{font-size:12px;color:var(--dim)}
+.kv{display:grid;grid-template-columns:86px 1fr;gap:8px 12px;font-size:13px}
+.kv .k{color:var(--dim);padding-top:1px}
+.kv .v{color:var(--txt);line-height:1.55}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;padding:3px 10px;border-radius:14px;background:rgba(0,103,197,.07);border:1px solid rgba(0,103,197,.25);color:#0b5aa5}
+.afx-box{background:linear-gradient(160deg,rgba(11,157,124,.06),rgba(0,103,197,.04));border:1px solid rgba(11,157,124,.35)}
+.afx-box h3{font-size:14px;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.afx-box ul{list-style:none}
+.afx-box li{font-size:13px;line-height:1.6;padding:6px 0 6px 22px;position:relative;color:var(--txt);border-bottom:1px dashed rgba(11,157,124,.2)}
+.afx-box li:last-child{border:none}
+.afx-box li::before{content:"✓";position:absolute;left:2px;color:var(--teal);font-weight:700}
+.io-meter{margin-top:14px}
+.io-meter .row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:12px}
+.io-meter .lb{width:98px;color:var(--txt2);flex:none}
+.io-meter .bar{flex:1;height:9px;background:rgba(23,41,63,.07);border-radius:6px;overflow:hidden}
+.io-meter .fill{height:100%;border-radius:6px;background:var(--grad);width:0;transition:width .8s ease}
+.io-meter .pc{width:38px;text-align:right;color:var(--blue);font-weight:600;flex:none}
+/* R/W split bar */
+.rw-wrap{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.rw-title{font-size:12px;color:var(--txt2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.rw-title b{color:var(--txt)}
+.rw-bar{display:flex;height:24px;border-radius:8px;overflow:hidden;background:rgba(23,41,63,.06)}
+.rw-bar .rd,.rw-bar .wr{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap;transition:width .8s ease;min-width:0;overflow:hidden}
+.rw-bar .rd{background:linear-gradient(90deg,#0067c5,#19b1e6)}
+.rw-bar .wr{background:linear-gradient(90deg,#0b9d7c,#3cc9a7)}
+.rw-legend{display:flex;gap:16px;margin-top:6px;font-size:11px;color:var(--dim)}
+.rw-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.rw-legend .li-r i{background:#0e83d4}.rw-legend .li-w i{background:#0b9d7c}
+.rw-note{font-size:11.5px;color:var(--dim);margin-top:6px;line-height:1.5}
+.autobtn{margin-left:auto;display:flex;gap:8px}
+button.btn{background:var(--grad);border:none;color:#fff;padding:9px 20px;border-radius:9px;font-size:13.5px;cursor:pointer;font-weight:600;transition:.2s;font-family:inherit}
+button.btn:hover{filter:brightness(1.08);box-shadow:0 4px 14px rgba(0,103,197,.35)}
+button.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt2)}
+button.btn.ghost:hover{border-color:var(--blue);color:var(--blue);box-shadow:none}
+/* ---------- tab2 data ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+@media(max-width:900px){.stat-strip{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(23,41,63,.05)}
+.stat .num{font-size:25px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lb{font-size:12px;color:var(--txt2);margin-top:5px;line-height:1.4}
+.hbar{margin:10px 0}
+.hbar .t{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
+.hbar .t b{color:var(--txt)}.hbar .t span{color:var(--blue);font-weight:600}
+.hbar .bg{height:12px;background:rgba(23,41,63,.07);border-radius:7px;overflow:hidden}
+.hbar .fg{height:100%;border-radius:7px;width:0;transition:width 1s cubic-bezier(.2,.7,.3,1)}
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.cmp-table th{background:rgba(0,103,197,.08);padding:10px 8px;font-size:12.5px;text-align:left;color:#0b5aa5}
+.cmp-table td{padding:9px 8px;border-bottom:1px solid var(--line);color:var(--txt2);line-height:1.45;vertical-align:top}
+.cmp-table td:first-child{color:var(--txt);font-weight:600;white-space:nowrap}
+.cmp-table tr:last-child td{border:none}
+.fe-c{color:var(--cyan)!important}.be-c{color:var(--orange)!important}
+/* ---------- tab3 AFX ---------- */
+.arch{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;overflow:hidden;box-shadow:0 2px 10px rgba(23,41,63,.05)}
+.arch svg{width:100%;height:auto;display:block}
+.vcards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+@media(max-width:900px){.vcards{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.vcards{grid-template-columns:1fr}}
+.vc{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;transition:.25s;cursor:default;box-shadow:0 2px 8px rgba(23,41,63,.05)}
+.vc:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 8px 20px rgba(11,157,124,.15)}
+.vc .ic{font-size:22px;margin-bottom:8px}
+.vc .tt{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--txt)}
+.vc .tt small{display:block;font-weight:400;font-size:10.5px;color:var(--dim);margin-top:2px}
+.vc p{font-size:12.5px;color:var(--txt2);line-height:1.6}
+/* ---------- tab4 race ---------- */
+.race-ctrl{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.race-ctrl label{font-size:13px;color:var(--txt2)}
+input[type=range]{accent-color:var(--blue);width:180px;vertical-align:middle}
+.lane{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-bottom:14px}
+.lane .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:14px}
+.lane .hd b{font-size:14.5px}
+.lane .hd .tm{font-variant-numeric:tabular-nums;color:var(--blue);font-weight:700}
+.lane.legacy .hd .tm{color:var(--orange)}
+.track{height:26px;background:rgba(23,41,63,.07);border-radius:8px;position:relative;overflow:hidden}
+.track .prog{position:absolute;inset:0 auto 0 0;width:0;border-radius:8px;transition:none}
+.lane.afx .prog{background:linear-gradient(90deg,#0067c5,#19b1e6)}
+.lane.legacy .prog{background:linear-gradient(90deg,#d9871c,#f2b45c)}
+.track .jobs{position:absolute;inset:0;display:flex;align-items:center;padding-left:10px;font-size:11.5px;color:#17293f;font-weight:600;text-shadow:0 1px 2px rgba(255,255,255,.6)}
+.lane .meta{display:flex;gap:22px;margin-top:9px;font-size:12px;color:var(--dim)}
+.lane .meta b{color:var(--txt2)}
+.race-note{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.6}
+.result-banner{display:none;margin-top:14px;padding:14px 18px;border-radius:12px;background:linear-gradient(135deg,rgba(11,157,124,.08),rgba(25,177,230,.06));border:1px solid rgba(11,157,124,.4);font-size:14px;line-height:1.6}
+.result-banner b{color:var(--teal)}
+footer{margin-top:34px;text-align:center;color:var(--dim);font-size:11.5px;line-height:1.7}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">
+    <div class="logo-mark">N</div>
+    <div>
+      <h1>EDA 全流程数据挑战 <span>×</span> NetApp AFX 企业级存储</h1>
+    </div>
+  </div>
+  <div class="badge">交互式客户演示 · Interactive Demo</div>
+</header>
+<div class="sub">从 RTL 到 Tapeout：看清每个阶段的数据流与 IO 特征，理解解耦式全闪存储如何加速芯片研发</div>
+
+<div class="tabs">
+  <div class="tab on" data-p="p1">① EDA 流程与数据流</div>
+  <div class="tab" data-p="p2">② 数据类型与 IO 特征</div>
+  <div class="tab" data-p="p3">③ AFX 架构与价值</div>
+  <div class="tab" data-p="p4">④ 场景对比演示</div>
+</div>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="page on" id="p1">
+  <div class="card pipe-zone">
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <h2>芯片设计全流程 <em>数据流动画</em></h2>
+        <div class="hint">点击任意阶段查看数据类型、IO 特征与 AFX 价值；数据包沿流程持续流动</div>
+      </div>
+      <div class="autobtn">
+        <button class="btn" id="autoBtn">▶ 自动讲解</button>
+      </div>
+    </div>
+
+    <div class="phase-label"><b>前端设计</b><span class="tag fe">Front-End · 海量小文件 · 元数据密集</span></div>
+    <div class="pipe-row" id="rowFE"></div>
+
+    <div class="turn">
+      <svg width="60" height="34" viewBox="0 0 60 34"><path d="M50 2 v12 a8 8 0 0 1 -8 8 H10" fill="none" stroke="#c3d2e5" stroke-width="2"/><path d="M14 16 l-6 6 6 6" fill="none" stroke="#c3d2e5" stroke-width="2"/></svg>
+    </div>
+
+    <div class="phase-label"><b>后端设计与签核</b><span class="tag be">Back-End · 大文件 · 带宽密集</span></div>
+    <div class="pipe-row" id="rowBE"></div>
+
+    <div class="detail">
+      <div class="card" id="stageDetail" style="border-color:rgba(0,103,197,.3)">
+        <div class="d-head"><div class="ico" id="dIco">🧩</div>
+          <div><div class="t" id="dName">—</div><div class="e" id="dEn">—</div></div>
+        </div>
+        <div class="kv">
+          <div class="k">核心数据</div><div class="v"><div class="chips" id="dTypes"></div></div>
+          <div class="k">文件特征</div><div class="v" id="dFiles">—</div>
+          <div class="k">IO 模式</div><div class="v" id="dIO">—</div>
+          <div class="k">典型规模</div><div class="v" id="dScale">—</div>
+          <div class="k">存储痛点</div><div class="v" id="dPain" style="color:#c14a4a">—</div>
+        </div>
+        <div class="io-meter" id="dMeters"></div>
+        <div class="rw-wrap">
+          <div class="rw-title"><b>典型 IO 读写比例</b><span id="rwLabel" style="color:var(--blue);font-weight:600">—</span></div>
+          <div class="rw-bar"><div class="rd" id="rwRead"></div><div class="wr" id="rwWrite"></div></div>
+          <div class="rw-legend"><span class="li-r"><i></i>读 Read</span><span class="li-w"><i></i>写 Write</span></div>
+          <div class="rw-note" id="rwNote"></div>
+        </div>
+      </div>
+      <div class="card afx-box">
+        <h3>🚀 NetApp AFX 在该阶段的价值</h3>
+        <ul id="dAfx"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="page" id="p2">
+  <div class="stat-strip">
+    <div class="stat"><div class="num" data-count="500000000" data-fmt="yi">—</div><div class="lb">单个大型 SoC 项目文件总数<br>可达数亿级</div></div>
+    <div class="stat"><div class="num" data-count="80" data-fmt="pct">—</div><div class="lb">前端 NFS 操作中元数据操作<br>(LOOKUP/GETATTR) 占比可达</div></div>
+    <div class="stat"><div class="num" data-count="10000" data-fmt="plus">—</div><div class="lb">回归验证并发作业数<br>计算农场核数可达数万</div></div>
+    <div class="stat"><div class="num" data-count="10" data-fmt="pb">—</div><div class="lb">先进工艺项目全生命周期<br>数据量可达 PB 级</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>文件大小分布 <em>（前端设计目录典型画像）</em></h2>
+      <div class="hint">EDA 前端以源码、脚本、日志、临时文件为主 —— 小文件占绝对主导</div>
+      <div class="hbar"><div class="t"><b>&lt; 4 KB</b><span>~45%</span></div><div class="bg"><div class="fg" data-w="45" style="background:linear-gradient(90deg,#0067c5,#19b1e6)"></div></div></div>
+      <div class="hbar"><div class="t"><b>4 KB – 128 KB</b><span>~40%</span></div><div class="bg"><div class="fg" data-w="40" style="background:linear-gradient(90deg,#0067c5,#3cc9a7)"></div></div></div>
+      <div class="hbar"><div class="t"><b>128 KB – 10 MB</b><span>~12%</span></div><div class="bg"><div class="fg" data-w="12" style="background:linear-gradient(90deg,#d9871c,#f2b45c)"></div></div></div>
+      <div class="hbar"><div class="t"><b>&gt; 10 MB（波形/DB/GDS）</b><span>~3%</span></div><div class="bg"><div class="fg" data-w="3" style="background:linear-gradient(90deg,#c14a4a,#e88585)"></div></div></div>
+      <div class="hint" style="margin-top:12px">⚠️ 文件数量多 ≠ 容量大：数亿小文件考验的是<b style="color:var(--blue)">元数据性能</b>，而非带宽</div>
+    </div>
+
+    <div class="card">
+      <h2>NFS 操作构成 <em>（回归验证高峰期）</em></h2>
+      <div class="hint">验证农场数千作业同时扫描目录、检查依赖 —— 元数据操作是第一瓶颈</div>
+      <div class="hbar"><div class="t"><b>LOOKUP / GETATTR / ACCESS</b><span>~65%</span></div><div class="bg"><div class="fg" data-w="65" style="background:linear-gradient(90deg,#0067c5,#19b1e6)"></div></div></div>
+      <div class="hbar"><div class="t"><b>READ（随机小 IO 为主）</b><span>~22%</span></div><div class="bg"><div class="fg" data-w="22" style="background:linear-gradient(90deg,#0067c5,#3cc9a7)"></div></div></div>
+      <div class="hbar"><div class="t"><b>WRITE（日志/波形/结果）</b><span>~10%</span></div><div class="bg"><div class="fg" data-w="10" style="background:linear-gradient(90deg,#d9871c,#f2b45c)"></div></div></div>
+      <div class="hbar"><div class="t"><b>其他（CREATE/REMOVE…）</b><span>~3%</span></div><div class="bg"><div class="fg" data-w="3" style="background:linear-gradient(90deg,#8a99ab,#b8c4d2)"></div></div></div>
+      <div class="hint" style="margin-top:12px">💡 传统 NAS 元数据能力不随容量扩展 → 作业排队、License 空转、farm 利用率下降</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>前端 vs 后端 <em>工作负载对比</em></h2>
+    <table class="cmp-table">
+      <tr><th style="width:120px">维度</th><th class="fe-c">前端（RTL / 仿真验证）</th><th class="be-c">后端（P&amp;R / 签核 / Tapeout）</th></tr>
+      <tr><td>数据形态</td><td class="fe-c">数百万~数亿小文件：源码、脚本、日志、Coverage DB、testbench</td><td class="be-c">GB~百 GB 级大文件：设计库 DB、GDSII/OASIS、SPEF、寄生参数</td></tr>
+      <tr><td>IO 模式</td><td class="fe-c">随机读 + 高频元数据操作，读写混合</td><td class="be-c">大块顺序读写、checkpoint 突发写入</td></tr>
+      <tr><td>并发特征</td><td class="fe-c">数千~数万个短作业（回归测试），毛刺型高并发</td><td class="be-c">少量长周期大作业（数天），单流带宽要求高</td></tr>
+      <tr><td>性能诉求</td><td class="fe-c">元数据 OPS、低时延（μs 级影响作业吞吐）</td><td class="be-c">吞吐带宽 GB/s、大内存机的稳定供数</td></tr>
+      <tr><td>存储风险</td><td class="fe-c">元数据瓶颈 → farm/License 空转，回归窗口拉长</td><td class="be-c">带宽不足 → 签核迭代变慢，tapeout 节点延期</td></tr>
+    </table>
+    <div class="hint" style="margin-top:12px">✅ 同一套存储需要同时服务两种截然不同的负载 —— 这正是 <b style="color:var(--teal)">AFX 解耦架构（性能与容量独立扩展）</b>的用武之地</div>
+  </div>
+</div>
+
+<!-- ================= PAGE 3 ================= -->
+<div class="page" id="p3">
+  <div class="card arch">
+    <h2>AFX <em>解耦式（Disaggregated）全闪架构</em></h2>
+    <div class="hint">性能层与容量层独立扩展 · 单一命名空间 · ONTAP 企业级数据管理</div>
+    <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+      <defs>
+        <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0067c5"/><stop offset="1" stop-color="#19b1e6"/></linearGradient>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#0e93c9"/></marker>
+      </defs>
+      <!-- compute farm -->
+      <rect x="60" y="18" width="880" height="86" rx="12" fill="rgba(0,103,197,.05)" stroke="#c3d2e5"/>
+      <text x="500" y="42" text-anchor="middle" fill="#17293f" font-size="15" font-weight="700">EDA 计算农场（数千台计算节点 / 数万核 · LSF / SLURM 调度）</text>
+      <g fill="rgba(14,147,201,.08)" stroke="#0e93c9" stroke-width="1">
+        <rect x="120" y="58" width="90" height="30" rx="5"/><rect x="230" y="58" width="90" height="30" rx="5"/>
+        <rect x="340" y="58" width="90" height="30" rx="5"/><rect x="450" y="58" width="90" height="30" rx="5"/>
+        <rect x="560" y="58" width="90" height="30" rx="5"/><rect x="670" y="58" width="90" height="30" rx="5"/>
+        <rect x="780" y="58" width="90" height="30" rx="5"/>
+      </g>
+      <g fill="#46607c" font-size="11" text-anchor="middle">
+        <text x="165" y="77">仿真作业</text><text x="275" y="77">回归测试</text><text x="385" y="77">综合</text>
+        <text x="495" y="77">P&amp;R</text><text x="605" y="77">DRC/LVS</text><text x="715" y="77">STA 签核</text><text x="825" y="77">AI 辅助设计</text>
+      </g>
+      <!-- network -->
+      <text x="500" y="130" text-anchor="middle" fill="#7c90a8" font-size="12">高速以太网 · NFS / pNFS / RDMA　—　pNFS 客户端自动直连数据所在节点，负载天然均衡</text>
+      <g stroke="#0e93c9" stroke-width="1.6" marker-end="url(#arr)" opacity=".8">
+        <line x1="260" y1="106" x2="260" y2="152" class="pulse"/>
+        <line x1="420" y1="106" x2="420" y2="152" class="pulse" style="animation-delay:.5s"/>
+        <line x1="580" y1="106" x2="580" y2="152" class="pulse" style="animation-delay:1s"/>
+        <line x1="740" y1="106" x2="740" y2="152" class="pulse" style="animation-delay:1.5s"/>
+      </g>
+      <!-- performance nodes -->
+      <rect x="60" y="158" width="880" height="96" rx="12" fill="rgba(14,147,201,.04)" stroke="#0e93c9"/>
+      <text x="90" y="182" fill="#0b5aa5" font-size="14" font-weight="700">性能层 · AFX 控制器节点（Scale-Out，按性能需求独立扩展）</text>
+      <g>
+        <rect x="90" y="196" width="150" height="44" rx="8" fill="url(#gBlue)"/><text x="165" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">AFX 节点 1</text>
+        <rect x="260" y="196" width="150" height="44" rx="8" fill="url(#gBlue)"/><text x="335" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">AFX 节点 2</text>
+        <rect x="430" y="196" width="150" height="44" rx="8" fill="url(#gBlue)"/><text x="505" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">AFX 节点 3</text>
+        <rect x="600" y="196" width="150" height="44" rx="8" fill="url(#gBlue)" opacity=".5"/><text x="675" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">节点 N …</text>
+        <rect x="770" y="196" width="150" height="44" rx="8" fill="rgba(11,157,124,.08)" stroke="#0b9d7c" stroke-dasharray="5 4"/><text x="845" y="217" text-anchor="middle" fill="#0b9d7c" font-size="11.5" font-weight="700">＋ 在线扩性能</text><text x="845" y="232" text-anchor="middle" fill="#0b9d7c" font-size="10">无需迁移数据</text>
+      </g>
+      <!-- fabric -->
+      <text x="500" y="278" text-anchor="middle" fill="#7c90a8" font-size="12">存储网络 Fabric（NVMe 共享访问 · 任意节点可访问任意数据）</text>
+      <g stroke="#0b9d7c" stroke-width="1.4" opacity=".7" marker-end="url(#arr)">
+        <line x1="300" y1="254" x2="300" y2="300" class="pulse" style="animation-delay:.3s"/>
+        <line x1="500" y1="254" x2="500" y2="300" class="pulse" style="animation-delay:.9s"/>
+        <line x1="700" y1="254" x2="700" y2="300" class="pulse" style="animation-delay:1.4s"/>
+      </g>
+      <!-- capacity -->
+      <rect x="60" y="306" width="880" height="96" rx="12" fill="rgba(11,157,124,.04)" stroke="#0b9d7c"/>
+      <text x="90" y="330" fill="#0b9d7c" font-size="14" font-weight="700">容量层 · NVMe 全闪存储柜（FlexGroup 单一命名空间 · 高级容量均衡自动分布数据）</text>
+      <g fill="rgba(11,157,124,.08)" stroke="#0b9d7c">
+        <rect x="90" y="344" width="185" height="44" rx="8"/><rect x="295" y="344" width="185" height="44" rx="8"/>
+        <rect x="500" y="344" width="185" height="44" rx="8"/>
+      </g>
+      <rect x="705" y="344" width="185" height="44" rx="8" fill="none" stroke="#0b9d7c" stroke-dasharray="5 4"/>
+      <g fill="#0a6e58" font-size="12" text-anchor="middle" font-weight="600">
+        <text x="182" y="370">NVMe 存储柜 1</text><text x="387" y="370">NVMe 存储柜 2</text><text x="592" y="370">NVMe 存储柜 3</text>
+      </g>
+      <text x="797" y="366" text-anchor="middle" fill="#0b9d7c" font-size="11.5" font-weight="700">＋ 在线扩容量</text>
+      <text x="797" y="381" text-anchor="middle" fill="#0b9d7c" font-size="10">PB 级扩展</text>
+    </svg>
+  </div>
+
+  <div class="vcards">
+    <div class="vc"><div class="ic">🧬</div><div class="tt">性能容量解耦扩展<small>Disaggregated Scale-Out</small></div><p>回归高峰只加性能节点，数据增长只加 NVMe 容量柜，互不绑定。告别传统 NAS "为性能买容量、为容量买性能" 的浪费。</p></div>
+    <div class="vc"><div class="ic">⚡</div><div class="tt">极致元数据性能<small>Metadata at Scale</small></div><p>全 NVMe + 集群化元数据处理，从容应对数亿小文件与数万并发作业的 LOOKUP/GETATTR 风暴，让 farm 与 EDA License 不再空转。</p></div>
+    <div class="vc"><div class="ic">🔀</div><div class="tt">pNFS 并行直连<small>Parallel NFS (NFSv4.1+)</small></div><p>计算农场客户端通过 pNFS 自动直连数据所在的性能节点，IO 路径最短、无跨节点转发；数万客户端流量天然均衡分布，无需手工规划挂载点，彻底消除单节点/单网口热点。</p></div>
+    <div class="vc"><div class="ic">⚖️</div><div class="tt">FlexGroup + 高级容量均衡<small>Advanced Capacity Balancing</small></div><p>单一 FlexGroup 承载数千亿文件并自动打散到所有节点并行处理；高级容量均衡在写入时按各成员卷实际水位智能分配新数据，避免个别成员卷写满导致作业失败，全程无需人工重平衡。</p></div>
+    <div class="vc"><div class="ic">🌐</div><div class="tt">单一命名空间<small>Single Namespace</small></div><p>前端后端、多个项目共享统一数据平面，无数据孤岛、无手工搬移；容量与性能在集群内自动均衡。</p></div>
+    <div class="vc"><div class="ic">🛰️</div><div class="tt">FlexCache 多站点协同<small>Global Collaboration</small></div><p>跨地域研发中心秒级看到同一份"唯一真相"数据，热数据就近缓存加速本地 farm，广域链路占用大幅下降。</p></div>
+    <div class="vc"><div class="ic">🧪</div><div class="tt">FlexClone 秒级克隆<small>Instant Workspaces</small></div><p>为每位工程师/每次回归秒级克隆完整项目工作区，几乎零空间开销 —— 并行验证、bug 复现、what-if 实验不再等待拷贝。</p></div>
+    <div class="vc"><div class="ic">🛡️</div><div class="tt">IP 资产安全<small>Snapshot · ARP 勒索防护</small></div><p>芯片设计数据即核心 IP。不可变 Snapshot 快速回滚误删/损坏，内置自主勒索软件防护（ARP/AI）实时侦测异常加密行为。</p></div>
+    <div class="vc"><div class="ic">🎚️</div><div class="tt">QoS 多项目隔离<small>Multi-Tenancy</small></div><p>多项目、多团队共享集群时按项目设定性能保障与上限，关键 tapeout 项目永远优先，避免"吵闹邻居"。</p></div>
+    <div class="vc"><div class="ic">📦</div><div class="tt">数据缩减与分层<small>Efficiency &amp; Tiering</small></div><p>重删/压缩降低全闪成本；冷项目数据可自动分层至对象存储/云端，在线归档历史版本，释放高性能层空间。</p></div>
+    <div class="vc"><div class="ic">🤖</div><div class="tt">面向 AI 时代<small>AI-Ready Infrastructure</small></div><p>同一平台支撑 AI 辅助设计（ML 驱动的 PPA 优化、日志分析）所需的高吞吐数据管道，EDA 与 AI 负载共享数据、统一治理。</p></div>
+  </div>
+</div>
+
+<!-- ================= PAGE 4 ================= -->
+<div class="page" id="p4">
+  <div class="card">
+    <h2>回归验证场景 <em>传统 NAS vs NetApp AFX</em></h2>
+    <div class="hint">模拟一次夜间回归：数千个仿真作业并发提交，观察存储元数据/IO 能力对完成时间的影响（示意演示，非实测数据）</div>
+    <div class="race-ctrl">
+      <label>并发作业数：<b id="jobsLbl" style="color:var(--blue)">5000</b></label>
+      <input type="range" id="jobsRange" min="1000" max="20000" step="1000" value="5000">
+      <button class="btn" id="raceBtn">▶ 开始演示</button>
+      <button class="btn ghost" id="raceReset">重置</button>
+    </div>
+
+    <div class="lane legacy">
+      <div class="hd"><b>🗄️ 传统双控 NAS</b><span class="tm" id="tLegacy">00:00</span></div>
+      <div class="track"><div class="prog" id="pLegacy"></div><div class="jobs" id="jLegacy">等待开始…</div></div>
+      <div class="meta"><span>元数据瓶颈：<b>并发越高越拥塞</b></span><span>farm 利用率：<b id="uLegacy">—</b></span><span>License 空转：<b id="lLegacy">—</b></span></div>
+    </div>
+
+    <div class="lane afx">
+      <div class="hd"><b>🚀 NetApp AFX（解耦全闪）</b><span class="tm" id="tAfx">00:00</span></div>
+      <div class="track"><div class="prog" id="pAfx"></div><div class="jobs" id="jAfx">等待开始…</div></div>
+      <div class="meta"><span>元数据性能：<b>随节点线性扩展</b></span><span>farm 利用率：<b id="uAfx">—</b></span><span>License 空转：<b id="lAfx">—</b></span></div>
+    </div>
+
+    <div class="result-banner" id="raceResult"></div>
+    <div class="race-note">💡 讲解要点：EDA 环境中最贵的不是存储，而是 <b style="color:var(--txt)">EDA License 与工程师时间</b>。存储每拖慢 1 小时回归，意味着数千份 License 与整个计算农场同步空转。AFX 通过解耦扩展的元数据与 IO 能力，直接缩短回归窗口、加快设计迭代节奏（本演示为示意模型，实际收益以 POC 实测为准）。</div>
+  </div>
+</div>
+
+<footer>NetApp AFX × EDA 场景交互演示 · 仅供客户交流使用 · 性能数据为示意，实际以 POC 测试为准</footer>
+</div>
+
+<script>
+/* ================= stage data ================= */
+const STAGES=[
+ {id:"spec",row:"fe",ico:"📐",nm:"规格与架构",en:"Spec & Architecture",cap:"GB 级",
+  types:["需求文档","架构模型","SystemC/TLM","算法参考模型"],
+  files:"文档与模型为主，文件数量少、体积小，版本迭代频繁",
+  io:"低强度随机读写，协作共享访问为主",
+  scale:"数 GB ~ 数十 GB；数千~数万个文件",
+  pain:"多团队协作的版本一致性；与后续阶段共享同一命名空间",
+  meters:[["元数据压力",15],["随机小 IO",20],["顺序带宽",5],["并发规模",10]],
+  rw:[60,40],rwNote:"文档/模型协作编辑，读写较均衡，读略多（评审、引用参考模型）",
+  afx:["单一命名空间：架构文档与设计数据统一管理，全流程可追溯","Snapshot 保护关键规格基线版本","多协议访问（NFS/SMB），设计与文档团队无缝协作"]},
+ {id:"rtl",row:"fe",ico:"⌨️",nm:"RTL 设计",en:"RTL Coding",cap:"数百 GB",
+  types:["Verilog/VHDL 源码","头文件/宏","Makefile/脚本","Git/版本库"],
+  files:"数十万~数百万个 KB 级小文件，目录层级深，编辑与编译高频",
+  io:"高频元数据操作 + 随机小块读写；工作目录热点明显",
+  scale:"数百 GB；文件数百万级；数百名工程师并发",
+  pain:"目录遍历慢、编译 IO 等待、工程师工作区拷贝耗时",
+  meters:[["元数据压力",60],["随机小 IO",55],["顺序带宽",10],["并发规模",40]],
+  rw:[70,30],rwNote:"编译/lint 反复读取源码与头文件，写主要是编辑保存与编译产物",
+  afx:["NVMe 级低时延加速编译与 lint 检查","FlexGroup 将数百万源码小文件自动分布到全部节点，目录遍历不再卡顿","FlexClone 秒级克隆个人工作区，零等待开工","Snapshot 定时保护源码，误删秒级恢复"]},
+ {id:"sim",row:"fe",ico:"🔬",nm:"仿真与验证",en:"Simulation & Verification",cap:"数十~百 TB",
+  types:["Testbench/UVM","波形 FSDB/VCD","仿真日志","Coverage DB","回归结果"],
+  files:"存储压力最大的阶段：数千万小文件（日志/脚本）+ 大波形文件（GB 级）混合",
+  io:"数千~数万作业并发：元数据风暴（LOOKUP/GETATTR 占 60-80%）+ 随机读 + 日志/波形突发写",
+  scale:"数十~上百 TB；单次回归产生百万级文件；farm 数万核并发",
+  pain:"元数据瓶颈导致作业排队 → farm 与 License 空转 → 回归窗口拉长、迭代变慢",
+  meters:[["元数据压力",95],["随机小 IO",85],["顺序带宽",55],["并发规模",98]],
+  rw:[55,45],rwNote:"读设计/testbench + 大量写日志、波形、覆盖率数据，写占比全流程最高的阶段之一",
+  afx:["解耦架构：回归高峰按需增加性能节点，元数据能力线性扩展","pNFS 让数万 farm 客户端自动直连数据所在节点，流量均衡无热点","FlexGroup 自动打散百万级小文件，高级容量均衡避免成员卷写满导致作业失败","FlexClone 为每次回归秒级克隆环境，并行验证","FlexCache 将热点设计数据缓存到 farm 附近，跨站点协同验证"]},
+ {id:"syn",row:"fe",ico:"🧮",nm:"逻辑综合",en:"Synthesis",cap:"TB 级",
+  types:["门级网表 Netlist","标准单元库 .lib/.db","SDC 约束","综合报告"],
+  files:"读密集：反复加载 GB 级工艺库与 IP 库；输出网表与报告",
+  io:"高并发共享读（库文件热点）+ 阶段性结果写入",
+  scale:"TB 级；库文件被数百作业同时读取",
+  pain:"库文件读取热点拥塞；多版本工艺库管理复杂",
+  meters:[["元数据压力",45],["随机小 IO",50],["顺序带宽",45],["并发规模",55]],
+  rw:[85,15],rwNote:"典型读密集：工艺库/IP 库被反复共享读取，仅阶段性写出网表与报告",
+  afx:["全闪高并发共享读，消除库文件热点","FlexCache 分发只读库到多站点/多集群","重删压缩显著降低多版本库的空间占用"]},
+ {id:"pnr",row:"be",ico:"🗺️",nm:"布局布线 P&R",en:"Place & Route",cap:"数 TB/块",
+  types:["DEF/LEF","设计数据库(ICC2/Innovus DB)","中间 GDSII","Checkpoint"],
+  files:"单文件大（GB~数十 GB），设计数据库目录结构复杂",
+  io:"大块顺序读写为主；长周期作业周期性 checkpoint 突发写",
+  scale:"单 block 数 TB；作业运行数小时~数天",
+  pain:"checkpoint 写入慢拖长作业；作业失败重跑代价巨大",
+  meters:[["元数据压力",30],["随机小 IO",35],["顺序带宽",85],["并发规模",45]],
+  rw:[60,40],rwNote:"读设计库与网表，周期性 checkpoint/DB 保存带来大块突发写",
+  afx:["NVMe 高带宽吞吐，checkpoint 写入不再是瓶颈","Snapshot 保护关键设计数据库，失败快速回退","解耦扩展：带宽需求增长时在线扩性能节点"]},
+ {id:"drc",row:"be",ico:"🔍",nm:"物理验证",en:"DRC / LVS",cap:"数 TB",
+  types:["GDSII/OASIS","Rule Deck 规则文件","验证结果 DB","错误报告"],
+  files:"读取超大版图文件 + 规则文件；多进程分布式验证",
+  io:"大文件并行分块读取，带宽密集；结果汇聚写入",
+  scale:"单次全芯片验证读取数百 GB~TB 级数据",
+  pain:"版图读取时间直接拉长验证迭代周期",
+  meters:[["元数据压力",25],["随机小 IO",30],["顺序带宽",90],["并发规模",60]],
+  rw:[80,20],rwNote:"以并行读取超大 GDSII/规则文件为主，写仅为结果 DB 与报告",
+  afx:["多节点聚合带宽，分布式验证供数无瓶颈","pNFS/多路径将大文件读流量分散到多个性能节点","QoS 确保验证任务与其他负载互不干扰"]},
+ {id:"signoff",row:"be",ico:"✅",nm:"签核 Signoff",en:"STA · EM/IR · 功耗",cap:"数 TB",
+  types:["SPEF 寄生参数","SDF 时序","多 Corner 时序库","功耗/IR 分析 DB"],
+  files:"多 corner × 多 mode 并发分析，大文件密集读取",
+  io:"大内存机高速供数；顺序读为主 + 报告写入",
+  scale:"数十个 corner 并发；单 corner 数据数百 GB",
+  pain:"tapeout 前迭代最密集，任何 IO 等待都在消耗流片窗口",
+  meters:[["元数据压力",30],["随机小 IO",35],["顺序带宽",80],["并发规模",65]],
+  rw:[85,15],rwNote:"多 corner 并行加载 SPEF/时序库，读密集；写以分析报告为主",
+  afx:["稳定低时延大带宽，支撑多 corner 并行签核","关键期 QoS 最高优先级保障","FlexClone 快速复制签核数据集做 what-if 分析"]},
+ {id:"tape",row:"be",ico:"🏭",nm:"Tapeout 交付",en:"Tapeout & Archive",cap:"数百 GB~TB",
+  types:["最终 GDSII/OASIS","交付清单","全项目归档","IP 库沉淀"],
+  files:"数十~数百 GB 最终版图；整个项目数据进入归档生命周期",
+  io:"大文件顺序写 + 校验读；归档批量迁移",
+  scale:"最终交付数百 GB；项目归档数十~数百 TB",
+  pain:"IP 资产长期保全、合规审计、下个项目快速复用",
+  meters:[["元数据压力",15],["随机小 IO",15],["顺序带宽",70],["并发规模",20]],
+  rw:[35,65],rwNote:"写为主：最终版图落盘与全项目归档批量写入，读为交付校验",
+  afx:["不可变 Snapshot + ARP 勒索防护，守护流片版本与 IP 资产","冷数据自动分层至对象存储/云，降低归档成本","历史项目在线可查，新项目 FlexClone 秒级复用 IP"]}
+];
+
+/* build pipeline */
+function buildRow(rowId,ids){
+  const row=document.getElementById(rowId);
+  ids.forEach((s,i)=>{
+    if(i>0){const c=document.createElement("div");c.className="conn";c.innerHTML='<div class="dot"></div><div class="dot d2"></div>';row.appendChild(c);}
+    const d=document.createElement("div");d.className="stage";d.dataset.id=s.id;
+    d.innerHTML=`<div class="ico">${s.ico}</div><div class="nm">${s.nm}</div><div class="en">${s.en}</div><div class="cap">${s.cap}</div>`;
+    d.onclick=()=>{stopAuto();select(s.id);};
+    row.appendChild(d);
+  });
+}
+buildRow("rowFE",STAGES.filter(s=>s.row==="fe"));
+buildRow("rowBE",STAGES.filter(s=>s.row==="be"));
+
+function select(id){
+  const s=STAGES.find(x=>x.id===id);
+  document.querySelectorAll(".stage").forEach(e=>e.classList.toggle("sel",e.dataset.id===id));
+  dIco.textContent=s.ico;dName.textContent=s.nm;dEn.textContent=s.en;
+  dTypes.innerHTML=s.types.map(t=>`<span class="chip">${t}</span>`).join("");
+  dFiles.textContent=s.files;dIO.textContent=s.io;dScale.textContent=s.scale;dPain.textContent=s.pain;
+  dAfx.innerHTML=s.afx.map(a=>`<li>${a}</li>`).join("");
+  dMeters.innerHTML=s.meters.map(m=>`<div class="row"><div class="lb">${m[0]}</div><div class="bar"><div class="fill" data-w="${m[1]}"></div></div><div class="pc">${m[1]}%</div></div>`).join("");
+  /* R/W ratio */
+  const[r,w]=s.rw;
+  rwLabel.textContent=`读 ${r}% : 写 ${w}%`;
+  rwRead.style.width="0%";rwWrite.style.width="0%";
+  rwRead.textContent=`读 ${r}%`;rwWrite.textContent=`写 ${w}%`;
+  rwNote.textContent=s.rwNote;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    dMeters.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%");
+    rwRead.style.width=r+"%";rwWrite.style.width=w+"%";
+  }));
+}
+select("sim");
+
+/* auto tour */
+let autoTimer=null,autoIdx=0;
+const autoBtn=document.getElementById("autoBtn");
+function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;autoBtn.textContent="▶ 自动讲解";}}
+autoBtn.onclick=()=>{
+  if(autoTimer){stopAuto();return;}
+  autoIdx=0;select(STAGES[0].id);autoBtn.textContent="⏸ 停止讲解";
+  autoTimer=setInterval(()=>{autoIdx=(autoIdx+1)%STAGES.length;select(STAGES[autoIdx].id);},4500);
+};
+
+/* tabs */
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("on"));
+  t.classList.add("on");document.getElementById(t.dataset.p).classList.add("on");
+  if(t.dataset.p==="p2")animatePage2();
+  if(t.dataset.p!=="p1")stopAuto();
+});
+
+/* page2 anim */
+let p2done=false;
+function animatePage2(){
+  document.querySelectorAll("#p2 .fg").forEach(f=>{f.style.width="0";requestAnimationFrame(()=>requestAnimationFrame(()=>f.style.width=f.dataset.w+"%"));});
+  if(p2done)return;p2done=true;
+  document.querySelectorAll("#p2 .num").forEach(n=>{
+    const target=+n.dataset.count,fmt=n.dataset.fmt,t0=performance.now(),dur=1400;
+    function tick(t){
+      const p=Math.min(1,(t-t0)/dur),v=Math.round(target*(1-Math.pow(1-p,3)));
+      n.textContent=fmt==="yi"?(v/100000000).toFixed(v>=100000000?0:1)+" 亿+":fmt==="pct"?v+"%":fmt==="plus"?v.toLocaleString()+"+":v+" PB+";
+      if(p<1)requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+/* ============ race demo ============ */
+const jobsRange=document.getElementById("jobsRange"),jobsLbl=document.getElementById("jobsLbl");
+jobsRange.oninput=()=>jobsLbl.textContent=(+jobsRange.value).toLocaleString();
+let raceRAF=null;
+function fmt(sec){const m=Math.floor(sec/60),s=Math.floor(sec%60);return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");}
+function resetRace(){
+  if(raceRAF)cancelAnimationFrame(raceRAF);raceRAF=null;
+  pLegacy.style.width=pAfx.style.width="0";
+  jLegacy.textContent=jAfx.textContent="等待开始…";
+  tLegacy.textContent=tAfx.textContent="00:00";
+  uLegacy.textContent=lLegacy.textContent=uAfx.textContent=lAfx.textContent="—";
+  raceResult.style.display="none";
+  raceBtn.textContent="▶ 开始演示";
+}
+document.getElementById("raceReset").onclick=resetRace;
+document.getElementById("raceBtn").onclick=()=>{
+  if(raceRAF){resetRace();return;}
+  resetRace();raceBtn.textContent="■ 停止";
+  const jobs=+jobsRange.value;
+  const afxTime=8+jobs/20000*6;
+  const legFactor=1.8+Math.pow(jobs/5000,1.35)*0.9;
+  const legTime=afxTime*legFactor;
+  const wallScale=3600/afxTime*1.0;
+  const t0=performance.now();
+  uAfx.textContent="92%";lAfx.textContent="极低";
+  uLegacy.textContent=Math.max(20,Math.round(92/legFactor))+"%";
+  lLegacy.textContent="严重（排队等待 IO）";
+  function step(t){
+    const el=(t-t0)/1000;
+    const pa=Math.min(1,el/afxTime);
+    const pl=Math.min(1,1-Math.pow(1-Math.min(1,el/legTime),0.62));
+    pAfx.style.width=(pa*100).toFixed(1)+"%";
+    pLegacy.style.width=(pl*100).toFixed(1)+"%";
+    jAfx.textContent=`已完成 ${Math.round(pa*jobs).toLocaleString()} / ${jobs.toLocaleString()} 作业`;
+    jLegacy.textContent=`已完成 ${Math.round(pl*jobs).toLocaleString()} / ${jobs.toLocaleString()} 作业${pl<1&&pa>=1?"（仍在排队…）":""}`;
+    tAfx.textContent=fmt(Math.min(el,afxTime)*wallScale/60);
+    tLegacy.textContent=fmt(Math.min(el,legTime)*wallScale/60);
+    if(pa>=1&&pl>=1){
+      raceBtn.textContent="▶ 重新演示";raceRAF=null;
+      const speedup=(legTime/afxTime).toFixed(1);
+      raceResult.style.display="block";
+      raceResult.innerHTML=`🏁 <b>AFX 提前完成回归</b>：相同 ${jobs.toLocaleString()} 个并发作业下，示意完成时间缩短约 <b>${speedup}×</b>。回归窗口缩短 = 每天多一轮设计迭代 = <b>License 与计算农场投资价值最大化</b>。`;
+      return;
+    }
+    raceRAF=requestAnimationFrame(step);
+  }
+  raceRAF=requestAnimationFrame(step);
+};
+</script>
+</body>
+</html>
