@@ -1,1 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>制造业 AI 推理数据平台 · NetApp AIDE + AFX 演示</title>
+<style>
+:root{
+  --bg:#f4f7fc;
+  --bg2:#ffffff;
+  --panel:#ffffff;
+  --panel2:#eef3fb;
+  --line:#d9e3f2;
+  --cyan:#0067c5;
+  --blue:#2563eb;
+  --nblue:#0f6fff;
+  --green:#059669;
+  --amber:#b45309;
+  --violet:#7c3aed;
+  --rose:#e11d48;
+  --txt:#16213c;
+  --txt2:#5b6b8a;
+  --mono:'SF Mono','Cascadia Code',Consolas,'Courier New',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse 800px 500px at 15% -5%, rgba(15,111,255,.07), transparent),
+    radial-gradient(ellipse 700px 450px at 85% 105%, rgba(0,103,197,.05), transparent),
+    var(--bg);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(rgba(15,111,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(15,111,255,.045) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
 
+/* ===== top nav ===== */
+nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+nav .wrap{display:flex;align-items:center;gap:8px;height:58px}
+.brand{font-weight:700;font-size:15px;letter-spacing:.5px;margin-right:auto;display:flex;align-items:center;gap:10px}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(0,103,197,.6)}
+.navlink{
+  color:var(--txt2);text-decoration:none;font-size:13.5px;padding:7px 14px;border-radius:8px;transition:.2s;
+}
+.navlink:hover{color:var(--txt);background:var(--panel2)}
+
+/* ===== hero ===== */
+.hero{padding:64px 0 40px;text-align:center}
+.hero .tag{
+  display:inline-block;font-size:12.5px;letter-spacing:2px;color:var(--cyan);
+  border:1px solid rgba(0,103,197,.35);border-radius:99px;padding:5px 16px;margin-bottom:22px;
+  background:rgba(0,103,197,.06);font-family:var(--mono);
+}
+.hero h1{font-size:40px;font-weight:800;line-height:1.25;letter-spacing:.5px}
+.hero h1 .grad{background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--txt2);font-size:16px;max-width:760px;margin:18px auto 0}
+.hero .stats{display:flex;justify-content:center;gap:14px;margin-top:34px;flex-wrap:wrap}
+.stat{
+  background:var(--panel);box-shadow:0 4px 16px rgba(22,33,60,.06);
+  border:1px solid var(--line);border-radius:14px;padding:16px 26px;min-width:170px;
+}
+.stat b{display:block;font-size:26px;font-family:var(--mono);color:var(--cyan)}
+.stat span{font-size:12.5px;color:var(--txt2)}
+
+/* ===== sections ===== */
+section{padding:56px 0}
+.sec-head{margin-bottom:28px}
+.sec-head .kicker{font-family:var(--mono);font-size:12.5px;color:var(--cyan);letter-spacing:2px;margin-bottom:8px}
+.sec-head h2{font-size:27px;font-weight:750}
+.sec-head p{color:var(--txt2);font-size:14.5px;margin-top:6px;max-width:820px}
+
+/* ===== flow diagram ===== */
+.flow-board{
+  background:linear-gradient(180deg,#ffffff,#f6f9fe);box-shadow:0 8px 30px rgba(22,33,60,.06);
+  border:1px solid var(--line);border-radius:18px;padding:28px 24px 22px;
+  position:relative;overflow:hidden;
+}
+.flow-controls{display:flex;gap:10px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
+.btn{
+  cursor:pointer;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:650;
+  background:linear-gradient(90deg,var(--nblue),var(--cyan));color:#fff;transition:.2s;
+}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--txt2);border:1px solid var(--line)}
+.btn.ghost:hover{color:var(--txt);border-color:var(--cyan)}
+.flow-hint{font-size:12.5px;color:var(--txt2);margin-left:auto;font-family:var(--mono)}
+
+.mod-legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px}
+.mod-legend .lg-t{font-size:12.5px;font-weight:700;margin-right:4px}
+.mod-legend .mbadge{font-size:10.5px;padding:3px 12px;cursor:help}
+
+.flow-lane{display:flex;align-items:stretch;gap:0;justify-content:space-between}
+.fnode{
+  flex:1;min-width:0;cursor:pointer;position:relative;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:16px 10px 14px;text-align:center;transition:.25s;z-index:2;
+}
+.fnode:hover{border-color:rgba(0,103,197,.5);transform:translateY(-3px)}
+.fnode.active{
+  border-color:var(--cyan);background:linear-gradient(180deg,rgba(0,103,197,.08),var(--panel));
+  box-shadow:0 0 24px rgba(0,103,197,.18),inset 0 0 20px rgba(0,103,197,.04);
+  transform:translateY(-3px);
+}
+.fnode .ico{font-size:26px;display:block;margin-bottom:8px}
+.fnode .ico svg{width:30px;height:30px;display:block;margin:0 auto}
+.fd-title svg{width:24px;height:24px;flex:none}
+.fnode .nm{font-size:14px;font-weight:700;line-height:1.3}
+.fnode .sub{font-size:11px;color:var(--txt2);margin-top:4px;font-family:var(--mono)}
+.fnode .mods{display:flex;gap:4px;justify-content:center;margin-top:7px;flex-wrap:wrap}
+.mbadge{font-size:9px;font-family:var(--mono);font-weight:700;border-radius:99px;padding:1px 7px;letter-spacing:.4px;white-space:nowrap}
+.m-meta{color:#0067c5;background:rgba(0,103,197,.08);border:1px solid rgba(0,103,197,.3)}
+.m-sync{color:#059669;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.3)}
+.m-guard{color:#b45309;background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.3)}
+.m-cur{color:#7c3aed;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.3)}
+.fnode .idx{
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  background:var(--bg);border:1px solid var(--line);color:var(--cyan);
+  font-family:var(--mono);font-size:11px;border-radius:99px;padding:1px 10px;transition:.25s;
+}
+.fnode.active .idx{border-color:var(--cyan);background:var(--cyan);color:#fff}
+.fconn{
+  width:56px;flex:none;position:relative;align-self:center;height:4px;margin:0 -2px;z-index:1;
+}
+.fconn::before{
+  content:'';position:absolute;inset:1px 0;
+  background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 12px);
+}
+.fconn .pk{
+  position:absolute;top:50%;left:0;width:9px;height:9px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 10px rgba(0,103,197,.6),0 0 20px rgba(0,103,197,.35);
+  transform:translate(-4px,-50%);opacity:0;
+}
+.fconn.flowing .pk{animation:pkmove 1.1s linear infinite;opacity:1}
+@keyframes pkmove{from{left:0;opacity:0}12%{opacity:1}88%{opacity:1}to{left:100%;opacity:0}}
+
+.flow-detail{
+  margin-top:26px;border-top:1px solid var(--line);padding-top:22px;
+  display:grid;grid-template-columns:1.25fr 1fr;gap:26px;min-height:190px;
+}
+.fd-title{font-size:18px;font-weight:750;display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.fd-title .chip{font-size:11px;font-family:var(--mono);color:var(--cyan);border:1px solid rgba(0,103,197,.4);border-radius:99px;padding:2px 10px}
+.fd-desc{color:var(--txt2);font-size:14px}
+.fd-points{list-style:none;margin-top:12px}
+.fd-points li{
+  font-size:13.5px;padding:6px 0 6px 22px;position:relative;color:var(--txt);
+}
+.fd-points li::before{content:'▸';position:absolute;left:4px;color:var(--cyan)}
+.fd-side{
+  background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+}
+.fd-side h4{font-size:12px;letter-spacing:1.5px;color:var(--txt2);font-family:var(--mono);margin-bottom:10px}
+.fd-kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.fd-kv:last-child{border-bottom:none}
+.fd-kv .k{color:var(--txt2)}
+.fd-kv .v{font-family:var(--mono);color:var(--cyan);text-align:right}
+
+/* ===== data types ===== */
+.dt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.dt-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;
+  cursor:pointer;transition:.25s;position:relative;overflow:hidden;
+}
+.dt-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--ac,var(--cyan)),transparent);opacity:.7;
+}
+.dt-card:hover{transform:translateY(-3px);border-color:var(--ac,var(--cyan));box-shadow:0 8px 30px rgba(22,33,60,.12)}
+.dt-card .top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.dt-card .ico{font-size:24px}
+.dt-card h3{font-size:15.5px;font-weight:720}
+.dt-card .fmt{font-family:var(--mono);font-size:11px;color:var(--ac,var(--cyan));margin-bottom:8px}
+.dt-card p{font-size:13px;color:var(--txt2)}
+.dt-card .io{
+  margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);
+  display:none;font-size:12.5px;
+}
+.dt-card.open .io{display:block}
+.dt-card .io b{color:var(--ac,var(--cyan));font-weight:650}
+.dt-card .io div{padding:3px 0}
+.dt-card .more{font-size:11.5px;color:var(--txt2);margin-top:10px;font-family:var(--mono)}
+.dt-card.open .more{display:none}
+
+/* ===== value / compare ===== */
+.cmp-toggle{display:flex;gap:0;margin-bottom:22px;border:1px solid var(--line);border-radius:12px;overflow:hidden;width:fit-content}
+.cmp-toggle button{
+  cursor:pointer;border:none;background:transparent;color:var(--txt2);
+  padding:11px 26px;font-size:14px;font-weight:650;transition:.2s;
+}
+.cmp-toggle button.on{background:linear-gradient(90deg,var(--nblue),var(--cyan));color:#fff}
+.cmp-table{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+}
+.cmp-row{
+  display:grid;grid-template-columns:200px 1fr 90px;gap:16px;align-items:center;
+  padding:15px 22px;border-bottom:1px solid var(--line);transition:.3s;
+}
+.cmp-row:last-child{border-bottom:none}
+.cmp-row .dim{font-weight:700;font-size:14px}
+.cmp-row .dim small{display:block;font-weight:400;color:var(--txt2);font-size:11.5px;font-family:var(--mono)}
+.cmp-row .desc{font-size:13.5px;color:var(--txt2)}
+.cmp-row .badge{
+  text-align:center;font-family:var(--mono);font-size:12px;font-weight:700;
+  border-radius:8px;padding:5px 0;
+}
+.badge.bad{color:var(--rose);background:rgba(225,29,72,.07);border:1px solid rgba(225,29,72,.28)}
+.badge.good{color:var(--green);background:rgba(5,150,105,.07);border:1px solid rgba(5,150,105,.28)}
+
+/* ===== data placement ===== */
+.dp-board{margin-top:30px;background:linear-gradient(180deg,#ffffff,#f6f9fe);border:1px solid var(--line);border-radius:16px;padding:24px}
+.dp-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.dp-head h3{font-size:17px;font-weight:750}
+.dp-head span{font-size:12.5px;color:var(--txt2)}
+.dp-zones{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.dp-zone{border-radius:14px;padding:18px;border:1px solid var(--line)}
+.dp-zone.afx{border-color:rgba(0,103,197,.35);background:rgba(0,103,197,.04)}
+.dp-zone.dcn{background:var(--panel2)}
+.dp-zone h4{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:4px;flex-wrap:wrap}
+.dp-zone .zt{font-size:10.5px;font-family:var(--mono);font-weight:700;border-radius:99px;padding:2px 10px}
+.dp-zone.afx .zt{color:#fff;background:linear-gradient(90deg,#0f6fff,#0067c5)}
+.dp-zone.dcn .zt{color:#5b6b8a;border:1px solid var(--line);background:#fff}
+.dp-sub{font-size:12px;color:var(--txt2);margin-bottom:12px}
+.dp-item{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.dp-item:last-child{margin-bottom:0}
+.dp-item small{display:block;color:var(--txt2);font-size:11.5px;font-weight:400}
+.dp-tag{font-size:10px;font-family:var(--mono);white-space:nowrap;border-radius:99px;padding:2px 9px;flex:none}
+.tag-p{color:#0067c5;background:rgba(0,103,197,.07);border:1px solid rgba(0,103,197,.3)}
+.tag-v{color:#5b6b8a;background:#fff;border:1px solid var(--line)}
+.dp-note{margin-top:16px;text-align:center;font-size:13.5px;font-weight:700;color:var(--cyan)}
+.dp-fn{margin-top:8px;font-size:11px;color:var(--txt2);text-align:right}
+
+.val-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px}
+.val-card{
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:14px;padding:22px;transition:.25s;
+}
+.val-card:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:0 8px 24px rgba(22,33,60,.08)}
+.val-card .ico{font-size:24px;margin-bottom:10px;display:block}
+.val-card h3{font-size:15.5px;margin-bottom:8px}
+.val-card p{font-size:13px;color:var(--txt2)}
+.val-card .metric{font-family:var(--mono);color:var(--cyan);font-size:12px;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+
+/* ===== RAG demo ===== */
+.demo-box{
+  background:linear-gradient(180deg,#ffffff,#f6f9fe);box-shadow:0 8px 30px rgba(22,33,60,.06);
+  border:1px solid var(--line);border-radius:18px;padding:26px;
+  display:grid;grid-template-columns:300px 1fr;gap:26px;
+}
+.q-list h4{font-size:12px;font-family:var(--mono);letter-spacing:1.5px;color:var(--txt2);margin-bottom:12px}
+.q-item{
+  cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:13px 15px;font-size:13.5px;margin-bottom:10px;transition:.2s;
+}
+.q-item:hover{border-color:rgba(0,103,197,.5)}
+.q-item.active{border-color:var(--cyan);background:linear-gradient(180deg,rgba(0,103,197,.07),var(--panel))}
+.q-item .role{font-family:var(--mono);font-size:10.5px;color:var(--amber);display:block;margin-bottom:3px}
+.q-item .qmods{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.val-note{margin-top:12px;padding:10px 14px;border-left:3px solid var(--cyan);background:rgba(0,103,197,.05);border-radius:0 10px 10px 0;font-size:12.5px;color:var(--txt2);animation:fadeup .4s ease}
+.val-note b{color:var(--cyan);display:block;margin-bottom:3px;font-size:12px}
+.chat{
+  background:#f6f9fe;border:1px solid var(--line);border-radius:14px;
+  padding:20px;min-height:380px;display:flex;flex-direction:column;gap:14px;
+}
+.msg{max-width:88%;border-radius:12px;padding:12px 16px;font-size:13.5px;animation:fadeup .4s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;background:linear-gradient(90deg,#0f6fff,#0067c5);border:none;color:#fff}
+.msg.sys{align-self:flex-start;background:var(--panel);border:1px solid var(--line);width:88%}
+.msg.sys .steps{font-family:var(--mono);font-size:11.5px;color:var(--txt2)}
+.msg.sys .steps div{padding:3px 0;opacity:0;animation:fadeup .35s ease forwards}
+.msg.sys .steps .ok{color:var(--green)}
+.src-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.src-chip{
+  font-size:11.5px;font-family:var(--mono);color:var(--cyan);
+  border:1px solid rgba(0,103,197,.35);background:rgba(0,103,197,.06);
+  border-radius:99px;padding:3px 12px;opacity:0;animation:fadeup .35s ease forwards;
+}
+.src-chip.guard{color:var(--amber);border-color:rgba(180,83,9,.4);background:rgba(180,83,9,.06)}
+.answer{white-space:pre-wrap;line-height:1.75}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--cyan);vertical-align:-2px;animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.empty-chat{margin:auto;text-align:center;color:var(--txt2);font-size:13.5px}
+.empty-chat .big{font-size:34px;margin-bottom:10px}
+
+/* ===== call chain ===== */
+.cc-ents{display:flex;gap:14px;position:relative;padding:14px 0 32px;margin-bottom:16px}
+.cc-ents::after{content:'';position:absolute;left:6%;right:6%;bottom:13px;border-top:2px dashed var(--line)}
+.cc-ent{flex:1;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 10px 12px;transition:.25s;position:relative}
+.cc-ent .zone{position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:10px;font-family:var(--mono);font-weight:700;border-radius:99px;padding:1px 10px;white-space:nowrap;background:var(--bg2)}
+.cc-ent .z-user{color:#5b6b8a;border:1px solid var(--line)}
+.cc-ent .z-app{color:#0067c5;border:1px solid rgba(0,103,197,.35)}
+.cc-ent .z-aide{color:#fff;background:linear-gradient(90deg,#0f6fff,#0067c5);border:none}
+.cc-ent .z-llm{color:#7c3aed;border:1px solid rgba(124,58,237,.35)}
+.cc-ent.aide{border-color:rgba(0,103,197,.45);background:linear-gradient(180deg,rgba(0,103,197,.05),var(--panel))}
+.cc-ent.llm{border-color:rgba(124,58,237,.35)}
+.cc-ent .eico{font-size:24px;margin-bottom:6px}
+.cc-ent .enm{font-size:14px;font-weight:700}
+.cc-ent .esub{font-size:10.5px;font-family:var(--mono);color:var(--txt2);margin-top:3px}
+.cc-ent.hot{border-color:var(--cyan);box-shadow:0 0 18px rgba(0,103,197,.18);transform:translateY(-2px)}
+.cc-pk{position:absolute;bottom:8px;left:0;width:13px;height:13px;border-radius:50%;background:#0f6fff;box-shadow:0 0 10px rgba(15,111,255,.6);opacity:0;z-index:3}
+.cc-pk.resp{background:#059669;box-shadow:0 0 10px rgba(5,150,105,.6)}
+.cc-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.cc-step{cursor:pointer;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:12px;color:var(--txt2);background:var(--panel);transition:.2s}
+.cc-step b{display:block;font-size:12.5px;color:var(--txt);margin-bottom:4px}
+.cc-step.active{border-color:var(--cyan);background:rgba(0,103,197,.06)}
+.cc-step.resp-s.active{border-color:#059669;background:rgba(5,150,105,.06)}
+.pl-head{margin:22px 0 12px;font-size:12.5px;font-weight:750;letter-spacing:1.5px;color:var(--txt2);font-family:var(--mono);border-top:1px solid var(--line);padding-top:18px}
+.pl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pl-card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 16px;font-size:12.5px;color:var(--txt2);line-height:1.6}
+.pl-card .lv{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;padding:2px 9px;margin-bottom:8px}
+.pl-card b{display:block;color:var(--txt);font-size:13.5px;margin-bottom:5px}
+.lv1{color:#0067c5;background:rgba(0,103,197,.07);border:1px solid rgba(0,103,197,.3)}
+.lv2{color:#b45309;background:rgba(180,83,9,.06);border:1px solid rgba(180,83,9,.35)}
+.lv3{color:#7c3aed;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.3)}
+.pl-fn{margin-top:8px;font-size:11px;color:var(--txt2);text-align:right}
+
+/* ===== kv cache tiers ===== */
+.kv-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:26px}
+.kv-stack{position:relative;padding:6px 0 6px 30px}
+.kv-stack::before{content:'';position:absolute;left:10px;top:16px;bottom:16px;border-left:2px dashed var(--line)}
+.kv-pk{position:absolute;left:4px;width:14px;height:14px;border-radius:50%;background:#0f6fff;box-shadow:0 0 10px rgba(15,111,255,.6);opacity:0;z-index:3;transition:top 1s cubic-bezier(.4,0,.2,1)}
+.kv-pk.up{background:#059669;box-shadow:0 0 10px rgba(5,150,105,.6)}
+.kv-tier{margin:0 auto 10px;border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:var(--panel);transition:.25s;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.kv-tier:last-child{margin-bottom:0}
+.kv-tier b{font-size:14px;display:block}
+.kv-tier small{display:block;color:var(--txt2);font-size:11.5px;font-weight:400}
+.kv-tier .bw{font-family:var(--mono);font-size:11px;color:var(--cyan);white-space:nowrap;text-align:right;flex:none}
+.kv-tier.hot{border-color:var(--cyan);background:linear-gradient(180deg,rgba(0,103,197,.07),var(--panel));box-shadow:0 0 16px rgba(0,103,197,.15)}
+.kv-tier.afxt{border-color:rgba(0,103,197,.4);background:rgba(0,103,197,.04)}
+.kv-side h4{font-size:12px;letter-spacing:1.5px;color:var(--txt2);font-family:var(--mono);margin-bottom:10px}
+.kv-step{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:12.5px;color:var(--txt2);background:var(--panel);transition:.2s}
+.kv-step.active{border-color:var(--cyan);background:rgba(0,103,197,.06);color:var(--txt)}
+.kv-step.active.up-s{border-color:#059669;background:rgba(5,150,105,.06)}
+.kv-ledger{margin-top:14px;border:1px dashed rgba(0,103,197,.4);border-radius:10px;padding:12px 14px;font-size:12.5px;background:rgba(0,103,197,.03)}
+.kv-ledger b{color:var(--cyan)}
+.kv-fw{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.kv-fw span{font-size:10.5px;font-family:var(--mono);color:var(--txt2);border:1px solid var(--line);border-radius:99px;padding:2px 10px;background:#fff}
+.kv-fn{margin-top:10px;font-size:11px;color:var(--txt2)}
+
+footer{border-top:1px solid var(--line);padding:30px 0 40px;color:var(--txt2);font-size:12.5px;text-align:center}
+footer .mono{font-family:var(--mono);color:var(--cyan)}
+
+@media(max-width:960px){
+  .flow-lane{flex-direction:column;gap:8px}
+  .fconn{width:4px;height:36px;align-self:center;margin:-2px 0}
+  .fconn::before{background:repeating-linear-gradient(180deg,var(--line) 0 6px,transparent 6px 12px)}
+  .fconn.flowing .pk{animation:pkmoveV 1.1s linear infinite}
+  @keyframes pkmoveV{from{top:0;left:50%;opacity:0}12%{opacity:1}88%{opacity:1}to{top:100%;left:50%;opacity:0}}
+  .flow-detail,.demo-box{grid-template-columns:1fr}
+  .cc-ents{flex-wrap:wrap}
+  .cc-ent{flex:1 1 40%}
+  .cc-pk,.cc-ents::after{display:none}
+  .cc-steps{grid-template-columns:1fr 1fr}
+  .dp-zones{grid-template-columns:1fr}
+  .pl-grid{grid-template-columns:1fr}
+  .kv-grid{grid-template-columns:1fr}
+  .kv-tier{width:100%!important}
+  .dt-grid,.val-grid{grid-template-columns:1fr 1fr}
+  .cmp-row{grid-template-columns:130px 1fr 74px}
+  .hero h1{font-size:30px}
+}
+@media(max-width:620px){.dt-grid,.val-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span>制造业 AI 推理数据平台</div>
+    <a class="navlink" href="#flow">数据流</a>
+    <a class="navlink" href="#types">数据类型</a>
+    <a class="navlink" href="#value">存储价值</a>
+    <a class="navlink" href="#demo">场景演示</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div class="tag">NetApp AIDE × AFX · MANUFACTURING RAG</div>
+  <h1>让工厂知识<span class="grad">流向每一次 AI 推理</span></h1>
+  <p>基于 NetApp AFX 分离式全闪存储与 AI Data Engine（AIDE），把分散在设备手册、工艺文档、质检记录与 MES 系统中的企业知识，转化为安全、常新、可检索的 AI 就绪数据，支撑产线知识库与 RAG 推理场景。</p>
+  <div class="stats">
+    <div class="stat"><b>128</b><span>AFX 集群最大节点数，线性扩展</span></div>
+    <div class="stat"><b>TB/s 级</b><span>聚合带宽，喂饱 GPU 推理集群</span></div>
+    <div class="stat"><b>EB 级</b><span>容量上限，性能容量独立扩展</span></div>
+    <div class="stat"><b>1 套数据</b><span>数据就地 AI，无需迁移复制</span></div>
+  </div>
+</header>
+
+<section id="flow" class="wrap">
+  <div class="sec-head">
+    <div class="kicker">01 / DATA FLOW</div>
+    <h2>端到端数据流：从车间文档到推理答案</h2>
+    <p>点击任意节点查看该环节的职责与存储要求；点击「播放数据流」观看一条知识从落盘到被 AI 引用的完整旅程。</p>
+  </div>
+  <div class="flow-board">
+    <div class="flow-controls">
+      <button class="btn" id="playBtn" onclick="playFlow()">▶ 播放数据流</button>
+      <button class="btn ghost" onclick="stopFlow()">■ 停止</button>
+      <span class="flow-hint" id="flowHint">STANDBY · 点击节点查看详情</span>
+    </div>
+    <div class="mod-legend">
+      <span class="lg-t">AIDE 四大模块</span>
+      <span class="mbadge m-meta" title="自动编目全数据源元数据，形成全局可交互视图">METADATA ENGINE · 全局编目</span>
+      <span class="mbadge m-sync" title="SnapMirror 自动同步 + SnapDiff 变更检测，目录与向量常新">DATA SYNC · 数据常新</span>
+      <span class="mbadge m-guard" title="持续扫描分类，敏感数据策略化脱敏与访问限制">DATA GUARDRAILS · 安全护栏</span>
+      <span class="mbadge m-cur" title="数据集策划、向量化、语义检索与重排，提供安全检索端点">DATA CURATOR · 策展检索</span>
+    </div>
+    <div class="flow-lane" id="flowLane"></div>
+    <div class="flow-detail">
+      <div>
+        <div class="fd-title" id="fdTitle"></div>
+        <div class="fd-desc" id="fdDesc"></div>
+        <ul class="fd-points" id="fdPoints"></ul>
+      </div>
+      <div class="fd-side">
+        <h4>KEY FACTS</h4>
+        <div id="fdFacts"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-board" style="margin-top:26px">
+    <div class="flow-controls">
+      <span style="font-weight:750;font-size:15px">推理时 · 典型调用链</span>
+      <button class="btn" onclick="ccPlay()">▶ 播放调用链</button>
+      <span class="flow-hint" id="ccHint">RUNTIME · 蓝色=请求 / 绿色=响应</span>
+    </div>
+    <div class="cc-ents" id="ccEnts">
+      <div class="cc-ent" id="ce0"><div class="zone z-user">用户侧</div><div class="eico">👷</div><div class="enm">一线用户</div><div class="esub">工艺 / 设备 / 质量</div></div>
+      <div class="cc-ent" id="ce1"><div class="zone z-app">应用侧</div><div class="eico">🧩</div><div class="enm">RAG 应用 / Agent</div><div class="esub">知识助手 · 编排逻辑</div></div>
+      <div class="cc-ent aide" id="ce2"><div class="zone z-aide">AIDE 平台边界</div><div class="eico">🔍</div><div class="enm">检索端点</div><div class="esub">OIDC · 语义检索 + 重排</div></div>
+      <div class="cc-ent llm" id="ce3"><div class="zone z-llm">外部 GPU 算力</div><div class="eico">⚡</div><div class="enm">推理大模型</div><div class="esub">NIM / 私有 LLM · 独立扩容</div></div>
+      <div class="cc-pk" id="ccPk"></div>
+    </div>
+    <div class="cc-steps" id="ccSteps"></div>
+    <div class="pl-head">ACCESS CONTROL · 权限分级三层实现</div>
+    <div class="pl-grid">
+      <div class="pl-card">
+        <span class="lv lv1">L1 · 端点级隔离</span>
+        <b>RBAC + OIDC 拦截在 API 层</b>
+        数据集按 Workspace 授权、发布为独立检索端点。总监可调用的集合，操作员的令牌根本请求不到——对应调用链第 ② 步。
+      </div>
+      <div class="pl-card">
+        <span class="lv lv2">L2 · 摄取时脱敏</span>
+        <b>护栏在向量化之前执行</b>
+        分类器检出敏感内容后先脱敏再入库——低权限集合的向量库里本就没有 PII，而非查询时过滤；查看原文走文件协议，由文件 ACL 把关。
+      </div>
+      <div class="pl-card">
+        <span class="lv lv3">L3 · 元数据关联 <sup>※</sup></span>
+        <b>编目携带属主与权限属性</b>
+        元数据目录采集文件属主/权限信息，切片始终携带源文件引用，支撑引用溯源与按元数据过滤检索结果。
+      </div>
+    </div>
+    <div class="pl-fn">※ L3 细粒度过滤能力根据架构推断</div>
+  </div>
+
+  <div class="flow-board" style="margin-top:26px">
+    <div class="flow-controls">
+      <span style="font-weight:750;font-size:15px">推理加速 · KV Cache 分层卸载</span>
+      <button class="btn" onclick="kvPlay(0)">▶ 会话转冷 · 逐级卸载</button>
+      <button class="btn" style="background:linear-gradient(90deg,#059669,#10b981)" onclick="kvPlay(1)">▶ 前缀命中 · 秒级回填</button>
+      <span class="flow-hint" id="kvHint">MEMORY HIERARCHY · 蓝=卸载 / 绿=回填</span>
+    </div>
+    <div class="kv-grid">
+      <div class="kv-stack" id="kvStack">
+        <div class="kv-tier" id="kvt0" style="width:58%"><div><b>HBM · GPU 显存</b><small>活跃会话工作集，解码每 token 都要读全部 KV</small></div><div class="bw">~TB/s · 80–192 GB<br>延时 ~百 ns</div></div>
+        <div class="kv-tier" id="kvt1" style="width:72%"><div><b>CPU DRAM</b><small>温数据——用户输入间隙的会话暂存（PCIe/NVLink）</small></div><div class="bw">~百 GB/s · 数百 GB<br>延时 ~μs 级（跨 PCIe）</div></div>
+        <div class="kv-tier" id="kvt2" style="width:86%"><div><b>本地 NVMe</b><small>GDS 直读入显存，分钟级可复用的前缀块</small></div><div class="bw">~数十 GB/s · TB 级<br>延时 ~百 μs</div></div>
+        <div class="kv-tier afxt" id="kvt3" style="width:100%"><div><b>外部共享存储 · AFX</b><small>跨节点共享与会话持久化——真正的"推理记忆"层</small></div><div class="bw">TB/s 聚合 · PB 级<br>延时 亚 ms（RDMA）</div></div>
+        <div class="kv-pk" id="kvPk"></div>
+      </div>
+      <div class="kv-side">
+        <h4 id="kvSideTitle">SCENARIO · 选择上方场景播放</h4>
+        <div id="kvSteps"></div>
+        <div class="kv-ledger">⚖️ <b>回读与重算的量化对比</b>：以 40 GB/s 带宽回读 20 GB KV Cache 约需 <b>0.5 秒</b>；重新计算同等上下文的 prefill 需<b>数十秒</b> GPU 时间。结论：存储带宽足够高时，回读始终优于重算。</div>
+        <div class="kv-fw">
+          <span>vLLM PagedAttention</span><span>NVIDIA Dynamo · NIXL</span><span>LMCache</span><span>Mooncake</span><span>前缀哈希索引</span><span>RDMA / GDS</span>
+        </div>
+        <div class="kv-fn">注：分层调度由上述开源/NVIDIA 框架完成，AIDE 当前无原生 KV 管理器；AFX 以高带宽 NFS/RDMA 充当框架的共享持久层（基于公开信息，截至 2026-07）。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="types" class="wrap">
+  <div class="sec-head">
+    <div class="kicker">02 / DATA TYPES</div>
+    <h2>推理场景涉及的数据类型与存储特征</h2>
+    <p>RAG 推理不只是"文档进、答案出"——每类数据对存储的吞吐、延迟、协议要求不同。点击卡片展开 I/O 特征。</p>
+  </div>
+  <div class="dt-grid" id="dtGrid"></div>
+</section>
+
+<section id="value" class="wrap">
+  <div class="sec-head">
+    <div class="kicker">03 / STORAGE VALUE</div>
+    <h2>企业级外部存储带来的价值</h2>
+    <p>切换对比：通用服务器本地盘 + 自建开源数据管道 vs. AFX + AIDE 企业级数据平台。</p>
+  </div>
+  <div class="cmp-toggle">
+    <button id="cmpA" class="on" onclick="setCmp(0)">自建方案 · 本地盘</button>
+    <button id="cmpB" onclick="setCmp(1)">AFX + AIDE 平台</button>
+  </div>
+  <div class="cmp-table" id="cmpTable"></div>
+
+  <div class="dp-board">
+    <div class="dp-head"><h3>📦 数据落盘蓝图</h3><span>AIDE 部署产生的 6 类数据分别放在哪里</span></div>
+    <div class="dp-zones">
+      <div class="dp-zone afx">
+        <h4><span class="zt">AFX 外部存储</span>持久资产 · 高价值状态</h4>
+        <div class="dp-sub">全部继承 ONTAP 企业级数据保护</div>
+        <div class="dp-item"><div><b>① 源数据副本</b><small>SnapMirror 同步汇聚的各厂区数据卷</small></div><span class="dp-tag tag-p">快照·复制·防勒索</span></div>
+        <div class="dp-item"><div><b>② 向量与索引</b><small>存储层向量化，向量库持久数据随存储受保护</small></div><span class="dp-tag tag-p">快照·复制·防勒索</span></div>
+        <div class="dp-item"><div><b>③ 元数据目录</b><small>数十亿级文件编目与索引的持久层</small></div><span class="dp-tag tag-p">快照·复制·防勒索</span></div>
+        <div class="dp-item"><div><b>④ 系统状态与审计 <sup>※</sup></b><small>工作区/数据集定义、护栏策略、分类标签、审计日志</small></div><span class="dp-tag tag-p">快照·复制·防勒索</span></div>
+      </div>
+      <div class="dp-zone dcn">
+        <h4><span class="zt">DCN 本地</span>易失数据 · 可重建</h4>
+        <div class="dp-sub">DCN 接近无状态，坏一台换一台</div>
+        <div class="dp-item"><div><b>⑤ 运行时环境</b><small>OS · Kubernetes · 容器镜像 · NIM 模型权重缓存</small></div><span class="dp-tag tag-v">可重建</span></div>
+        <div class="dp-item"><div><b>⑥ 处理中间产物</b><small>文档解析/切片临时数据 · 批处理队列 · 检索热缓存</small></div><span class="dp-tag tag-v">易失·无状态</span></div>
+      </div>
+    </div>
+    <div class="dp-note">重建代价高的资产全部落在企业级外部存储 —— DCN 故障更换，零数据丢失</div>
+    <div class="dp-fn">※ 第 ④ 类落盘位置根据架构推断</div>
+  </div>
+
+  <div class="val-grid" id="valGrid"></div>
+</section>
+
+<section id="demo" class="wrap">
+  <div class="sec-head">
+    <div class="kicker">04 / LIVE SCENARIO</div>
+    <h2>产线知识助手 · 模拟问答</h2>
+    <p>点击左侧问题，观看 RAG 全链路：语义检索 → 权限护栏 → 引用溯源 → 生成回答。每题主打一个 AIDE 模块价值；五个角色覆盖设备/工艺/质量/生产/EHS——一套数据平台服务全厂。（演示为预置脚本，用于讲解原理）</p>
+  </div>
+  <div class="demo-box">
+    <div class="q-list">
+      <h4>SELECT A QUESTION</h4>
+      <div id="qList"></div>
+    </div>
+    <div class="chat" id="chat">
+      <div class="empty-chat"><div class="big">🤖</div>请选择左侧问题开始演示<br>助手将展示检索来源与安全护栏</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    制造业 AI 推理场景演示页 · 基于 <span class="mono">NetApp AFX</span> 分离式全闪架构与 <span class="mono">AI Data Engine (AIDE)</span> 公开资料整理 · 仅用于客户交流与现场演示
+  </div>
+</footer>
+
+<script>
+/* ================= FLOW ================= */
+const AFX_ICO='<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="2.5" width="18" height="19" rx="2.5" stroke="#0067c5" stroke-width="1.6" fill="rgba(15,111,255,.07)"/><rect x="6" y="5.6" width="8.5" height="2.4" rx="1.2" fill="#0f6fff" opacity=".85"/><rect x="6" y="10.8" width="8.5" height="2.4" rx="1.2" fill="#0f6fff" opacity=".55"/><rect x="6" y="16" width="8.5" height="2.4" rx="1.2" fill="#0f6fff" opacity=".35"/><circle cx="17.8" cy="6.8" r="1.2" fill="#059669"><animate attributeName="opacity" values="1;.25;1" dur="1.4s" repeatCount="indefinite"/></circle><circle cx="17.8" cy="12" r="1.2" fill="#0f6fff"><animate attributeName="opacity" values=".3;1;.3" dur="1.8s" repeatCount="indefinite"/></circle><circle cx="17.8" cy="17.2" r="1.2" fill="#0067c5"><animate attributeName="opacity" values="1;.4;1" dur="2.2s" repeatCount="indefinite"/></circle></svg>';
+const STAGES=[
+ {ico:'🏭',nm:'车间数据源',sub:'DMS / MES / QMS',
+  desc:'知识分散在文档系统、MES/SCADA、质量系统与设备台账中，格式多样且持续更新。',
+  points:['设备手册、SOP、工艺规程、变更单','质检报告、8D 报告、维修工单','MES 工单与 SCADA 时序数据导出'],
+  facts:[['数据形态','非结构化为主'],['更新频率','持续/每班次'],['痛点','分散·多格式·难检索']]},
+ {ico:AFX_ICO,nm:'AFX 统一存储',sub:'NFS / SMB 摄取',mods:[['sync','SYNC']],
+  desc:'ONTAP 分离式全闪架构：数据经标准协议写入；远端 ONTAP 集群数据通过 SnapMirror 同步到本地 AFX，形成统一数据底座。',
+  points:['性能与容量独立扩展，按需加节点','SnapMirror 汇聚多厂区/远端数据','快照、防勒索、多租户安全内建'],
+  facts:[['扩展性','最高 128 节点'],['带宽','TB/s 级聚合'],['协议','NFS · SMB · S3']]},
+ {ico:'🗂️',nm:'AIDE 元数据编目',sub:'Metadata Engine',mods:[['meta','METADATA']],
+  desc:'自动扫描工作区内的卷与文件，提取类型、大小、时间戳、自定义属性入目录，并持续追踪变更。',
+  points:['全局元数据目录，秒级筛选定位','变更数据自动捕获，目录常新','按项目/团队划分工作区与权限'],
+  facts:[['扫描方式','自动·增量'],['组织单元','Workspace'],['管理入口','System Manager']]},
+ {ico:'🛡️',nm:'分类与数据护栏',sub:'Guardrails · RBAC',mods:[['guard','GUARDRAILS']],
+  desc:'分类器识别敏感信息（个人信息、财务、配方参数），护栏策略自动执行脱敏或访问限制。',
+  points:['敏感数据自动识别与脱敏','策略化访问控制，全程审计','防止机密工艺参数流入模型上下文'],
+  facts:[['识别对象','PII / 财务 / 机密'],['执行方式','策略自动化'],['合规','加密 + RBAC + 审计']]},
+ {ico:'🧬',nm:'数据集与向量化',sub:'Embedding Pipeline',mods:[['cur','CURATOR'],['sync','SYNC']],
+  desc:'工程师在 AIDE Console 中按元数据筛选组装数据集；选定嵌入模型自动生成向量，写入向量库。',
+  points:['按产品线/设备型号策划数据集','嵌入生成与向量库自动管理','源文件变更后向量自动更新'],
+  facts:[['产物','Embeddings + 索引'],['算力','内置 DCN GPU 节点'],['特性','数据变更感知']]},
+ {ico:'🔍',nm:'RAG 检索端点',sub:'Semantic Search API',mods:[['cur','CURATOR']],
+  desc:'对外提供安全检索端点：语义搜索 + 重排序，供知识助手、Agent 框架等上层应用调用。',
+  points:['向量语义检索 + Re-ranking','REST API 对接推理应用','检索时同样受护栏与权限约束'],
+  facts:[['接口','安全 RAG Endpoint'],['能力','检索 + 重排'],['生态','兼容 Agent 框架']]},
+ {ico:'⚡',nm:'GPU 推理',sub:'LLM / NVIDIA NIM',
+  desc:'大模型结合检索到的上下文生成回答。AIDE 与 NVIDIA AI Data Platform 参考设计原生集成。',
+  points:['检索上下文注入提示词','高带宽存储支撑模型/缓存快速加载','GPU 不再等数据，利用率更高'],
+  facts:[['集成','NVIDIA AI 数据平台'],['模型','私有 LLM / NIM'],['关键','低延迟取数']]},
+ {ico:'👷',nm:'一线应用',sub:'工程师 · 操作员',
+  desc:'工艺、设备、质量人员用自然语言提问，得到附带引用来源的可信答案，直达文档原文。',
+  points:['答案附引用，可追溯到原始文档','新人培训、故障处置效率提升','知识沉淀不再依赖老师傅个人经验'],
+  facts:[['用户','工艺/设备/质量'],['形态','问答 · Agent'],['价值','知识普惠一线']]}
+];
+
+const lane=document.getElementById('flowLane');
+STAGES.forEach((s,i)=>{
+  const n=document.createElement('div');
+  n.className='fnode';n.id='fn'+i;n.onclick=()=>selectStage(i,true);
+  const mods=(s.mods||[]).map(m=>`<span class="mbadge m-${m[0]}">${m[1]}</span>`).join('');
+  n.innerHTML=`<span class="idx">0${i+1}</span><span class="ico">${s.ico}</span><div class="nm">${s.nm}</div><div class="sub">${s.sub}</div>`+(mods?`<div class="mods">${mods}</div>`:'');
+  lane.appendChild(n);
+  if(i<STAGES.length-1){
+    const c=document.createElement('div');
+    c.className='fconn';c.id='fc'+i;c.innerHTML='<span class="pk"></span>';
+    lane.appendChild(c);
+  }
+});
+
+function selectStage(i,manual){
+  document.querySelectorAll('.fnode').forEach(n=>n.classList.remove('active'));
+  document.getElementById('fn'+i).classList.add('active');
+  const s=STAGES[i];
+  const tmods=(s.mods||[]).map(m=>`<span class="mbadge m-${m[0]}">${m[1]}</span>`).join('');
+  document.getElementById('fdTitle').innerHTML=`${s.ico} ${s.nm} <span class="chip">STAGE 0${i+1}/0${STAGES.length}</span>${tmods}`;
+  document.getElementById('fdDesc').textContent=s.desc;
+  document.getElementById('fdPoints').innerHTML=s.points.map(p=>`<li>${p}</li>`).join('');
+  document.getElementById('fdFacts').innerHTML=s.facts.map(f=>`<div class="fd-kv"><span class="k">${f[0]}</span><span class="v">${f[1]}</span></div>`).join('');
+  if(manual)stopFlow();
+}
+
+let flowTimer=null,flowStep=0;
+function playFlow(){
+  stopFlow();
+  document.getElementById('flowHint').textContent='PLAYING · 数据流演示中…';
+  flowStep=0;
+  const tick=()=>{
+    document.querySelectorAll('.fconn').forEach(c=>c.classList.remove('flowing'));
+    if(flowStep>=STAGES.length){
+      document.getElementById('flowHint').textContent='COMPLETE · 一条知识完成全链路 ✓';
+      flowTimer=null;return;
+    }
+    selectStage(flowStep,false);
+    if(flowStep<STAGES.length-1)document.getElementById('fc'+flowStep).classList.add('flowing');
+    flowStep++;
+    flowTimer=setTimeout(tick,2200);
+  };
+  tick();
+}
+function stopFlow(){
+  if(flowTimer){clearTimeout(flowTimer);flowTimer=null}
+  document.querySelectorAll('.fconn').forEach(c=>c.classList.remove('flowing'));
+  document.getElementById('flowHint').textContent='STANDBY · 点击节点查看详情';
+}
+selectStage(0,false);
+
+/* ================= CALL CHAIN ================= */
+const CCSTEPS=[
+ {f:0,t:1,tt:'① 提问',d:'用户自然语言提问，进入知识助手',resp:false},
+ {f:1,t:2,tt:'② 检索请求',d:'应用携 OIDC 令牌调用 AIDE 检索端点 URI',resp:false},
+ {f:2,t:1,tt:'③ 返回 Top-K',d:'语义检索+重排，护栏过滤后返回上下文与引用',resp:true},
+ {f:1,t:3,tt:'④ 调用 LLM',d:'问题+上下文注入提示词，发送外部大模型',resp:false},
+ {f:3,t:0,tt:'⑤ 答案返回',d:'LLM 生成答案，经应用附引用送达用户',resp:true}
+];
+document.getElementById('ccSteps').innerHTML=CCSTEPS.map((s,i)=>`
+ <div class="cc-step${s.resp?' resp-s':''}" id="ccs${i}" onclick="ccStop();ccGo(${i})"><b>${s.tt}</b>${s.d}</div>`).join('');
+let ccTimer=null;
+function ccEntX(idx){
+  const e=document.getElementById('ce'+idx);
+  return e.offsetLeft+e.offsetWidth/2-7;
+}
+function ccGo(i){
+  const s=CCSTEPS[i],pk=document.getElementById('ccPk');
+  document.querySelectorAll('.cc-step').forEach(n=>n.classList.remove('active'));
+  document.getElementById('ccs'+i).classList.add('active');
+  document.querySelectorAll('.cc-ent').forEach(n=>n.classList.remove('hot'));
+  document.getElementById('ce'+s.f).classList.add('hot');
+  document.getElementById('ce'+s.t).classList.add('hot');
+  pk.classList.toggle('resp',s.resp);
+  pk.style.transition='none';
+  pk.style.left=ccEntX(s.f)+'px';
+  pk.style.opacity='1';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    pk.style.transition='left 1.1s cubic-bezier(.4,0,.2,1)';
+    pk.style.left=ccEntX(s.t)+'px';
+  }));
+}
+function ccPlay(){
+  ccStop();
+  document.getElementById('ccHint').textContent='PLAYING · 一次问答的完整旅程…';
+  let i=0;
+  const tick=()=>{
+    if(i>=CCSTEPS.length){
+      document.getElementById('ccHint').textContent='COMPLETE · 答案已送达用户 ✓';
+      document.getElementById('ccPk').style.opacity='0';
+      document.querySelectorAll('.cc-ent').forEach(n=>n.classList.remove('hot'));
+      ccTimer=null;return;
+    }
+    ccGo(i);i++;
+    ccTimer=setTimeout(tick,1700);
+  };
+  tick();
+}
+function ccStop(){
+  if(ccTimer){clearTimeout(ccTimer);ccTimer=null}
+  document.getElementById('ccHint').textContent='RUNTIME · 蓝色=请求 / 绿色=响应';
+}
+
+/* ================= KV CACHE TIERS ================= */
+const KVSC=[
+ {title:'OFFLOAD · 会话转冷，逐级卸载',hops:[[0,1],[1,2],[2,3]],up:false,
+  steps:['① 用户停止输入，会话转冷：PagedAttention 将 KV 页从 HBM 逐出到 DRAM，为活跃会话腾显存',
+         '② 持续降温：KV 块异步刷写本地 NVMe，DRAM 只保留最热前缀',
+         '③ 长期留存：块落入共享存储并登记前缀哈希——跨节点可见，会话可在任意 GPU 上恢复']},
+ {title:'RELOAD · 前缀命中，秒级回填',hops:[[3,0]],up:true,
+  steps:['① 用户次日继续对话：调度器按前缀哈希在共享存储命中历史 KV 块',
+         '② RDMA/GDS 直读回填 HBM，逐层流水——加载第 N 层的同时计算第 N-1 层，延迟被计算隐藏',
+         '③ 免重算 prefill：TTFT 从数十秒降到秒级，GPU 算力留给真正的生成']}
+];
+let kvTimer=null;
+function kvTierY(i){
+  const t=document.getElementById('kvt'+i);
+  return t.offsetTop+t.offsetHeight/2-7;
+}
+function kvHop(f,t,up){
+  const pk=document.getElementById('kvPk');
+  document.querySelectorAll('.kv-tier').forEach(n=>n.classList.remove('hot'));
+  document.getElementById('kvt'+f).classList.add('hot');
+  document.getElementById('kvt'+t).classList.add('hot');
+  pk.classList.toggle('up',up);
+  pk.style.transition='none';
+  pk.style.top=kvTierY(f)+'px';
+  pk.style.opacity='1';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    pk.style.transition='top 1.1s cubic-bezier(.4,0,.2,1)';
+    pk.style.top=kvTierY(t)+'px';
+  }));
+}
+function kvPlay(mode){
+  if(kvTimer){clearTimeout(kvTimer);kvTimer=null}
+  const sc=KVSC[mode];
+  document.getElementById('kvHint').textContent='PLAYING · '+(mode===0?'逐级卸载中…':'命中回填中…');
+  document.getElementById('kvSideTitle').textContent=sc.title;
+  document.getElementById('kvSteps').innerHTML=sc.steps.map((s,i)=>`<div class="kv-step${sc.up?' up-s':''}" id="kvs${i}">${s}</div>`).join('');
+  let i=0;
+  const tick=()=>{
+    if(i>=sc.steps.length){
+      document.getElementById('kvHint').textContent=mode===0?'COMPLETE · KV 已持久化，跨节点可复用 ✓':'COMPLETE · 免重算，TTFT 秒级 ✓';
+      document.getElementById('kvPk').style.opacity='0';
+      document.querySelectorAll('.kv-tier').forEach(n=>n.classList.remove('hot'));
+      kvTimer=null;return;
+    }
+    document.querySelectorAll('.kv-step').forEach(n=>n.classList.remove('active'));
+    document.getElementById('kvs'+i).classList.add('active');
+    const hop=sc.hops[Math.min(i,sc.hops.length-1)];
+    kvHop(hop[0],hop[1],sc.up);
+    i++;
+    kvTimer=setTimeout(tick,1900);
+  };
+  tick();
+}
+
+/* ================= DATA TYPES ================= */
+const DTYPES=[
+ {ico:'📘',ac:'#0067c5',nm:'设备手册 / SOP / 工艺文档',fmt:'PDF · DOCX · PPTX',
+  p:'RAG 知识库的核心语料：作业指导书、维护手册、工艺规程、变更记录。',
+  io:[['访问模式','多协议共享读（NFS/SMB），全厂多系统并发访问'],['关键需求','版本管理与快照——答案必须来自"现行有效"版本'],['典型体量','数十万份文档，GB～TB 级']]},
+ {ico:'🖼️',ac:'#7c3aed',nm:'质检图像 / 工程图纸',fmt:'JPEG · TIFF · DWG · STEP',
+  p:'AOI 质检图片、缺陷样本库、CAD 图纸——多模态检索与视觉问答的数据基础。',
+  io:[['访问模式','大文件顺序读为主，批量向量化时高吞吐'],['关键需求','高聚合带宽；长期留存以满足质量追溯'],['典型体量','单厂每日 TB 级增量']]},
+ {ico:'📈',ac:'#059669',nm:'传感器时序数据',fmt:'CSV · Parquet · InfluxDB 导出',
+  p:'温度、振动、压力曲线等 SCADA 采集数据，为故障问答提供实时上下文。',
+  io:[['访问模式','高并发小 IO 写入 + 按时间窗口批量读'],['关键需求','低延迟；冷热分层控制成本'],['典型体量','数万测点 × 秒级采样']]},
+ {ico:'🗄️',ac:'#b45309',nm:'MES / ERP 结构化数据',fmt:'SQL 导出 · JSON · API',
+  p:'工单、批次、物料、排产信息——让答案能关联"这台设备正在生产什么"。',
+  io:[['访问模式','定期批量导出 + 变更同步'],['关键需求','与非结构化数据统一编目、统一权限'],['典型体量','GB 级但业务价值密度高']]},
+ {ico:'🧬',ac:'#e11d48',nm:'向量与索引（派生数据）',fmt:'Embeddings · Vector Index',
+  p:'由 AIDE 自动生成并管理的向量库——检索质量直接决定回答质量。',
+  io:[['访问模式','低延迟随机读，每次提问触发检索'],['关键需求','亚毫秒级延迟；随源数据变更自动更新'],['典型体量','与语料等比增长，需高 IOPS']]},
+ {ico:'🧠',ac:'#2563eb',nm:'模型与推理缓存',fmt:'Model Weights · KV Cache',
+  p:'大模型权重加载与 KV Cache 卸载/复用——直接影响推理成本与响应速度。',
+  io:[['访问模式','模型冷启动大带宽顺序读；KV Cache 高频读写'],['关键需求','TB/s 级带宽缩短加载时间，提升 GPU 利用率'],['典型体量','单模型数十至数百 GB']]}
+];
+document.getElementById('dtGrid').innerHTML=DTYPES.map((d,i)=>`
+ <div class="dt-card" style="--ac:${d.ac}" onclick="this.classList.toggle('open')">
+   <div class="top"><span class="ico">${d.ico}</span><h3>${d.nm}</h3></div>
+   <div class="fmt">${d.fmt}</div>
+   <p>${d.p}</p>
+   <div class="io">${d.io.map(x=>`<div><b>${x[0]}：</b>${x[1]}</div>`).join('')}</div>
+   <div class="more">▾ 点击查看 I/O 特征</div>
+ </div>`).join('');
+
+/* ================= COMPARE + VALUE ================= */
+const CMP=[
+ {dim:'数据准备',mono:'DATA PREP',
+  a:['工程师手写脚本爬取、清洗、切分文档，管道脆弱，源文件一变就要重跑。','bad','人工/脚本'],
+  b:['AIDE 自动编目 + 变更捕获 + 自动向量化，数据管道策略化、免运维。','good','自动化']},
+ {dim:'GPU 利用率',mono:'GPU UTIL',
+  a:['本地盘带宽有限，模型加载慢、批量向量化排队，GPU 大量时间在等数据。','bad','等数据'],
+  b:['AFX TB/s 级聚合带宽直供 GPU 集群，与 NVIDIA AI 数据平台参考设计集成。','good','喂饱 GPU']},
+ {dim:'数据新鲜度',mono:'FRESHNESS',
+  a:['知识库靠定期人工导出更新，答案常引用过期版本 SOP，存在质量风险。','bad','易过期'],
+  b:['SnapMirror 同步 + 变更自动感知，向量随源文件更新，答案始终"现行有效"。','good','常新']},
+ {dim:'安全与合规',mono:'SECURITY',
+  a:['数据复制多份散落各服务器，权限失控；敏感工艺参数可能进入模型上下文。','bad','失控'],
+  b:['分类器 + 护栏自动脱敏限权，RBAC + 加密 + 审计贯穿存储到检索端点。','good','全程护栏']},
+ {dim:'扩展性',mono:'SCALE',
+  a:['容量与算力绑死在单机，扩容即搬数据；多副本成本随场景数线性膨胀。','bad','搬家式'],
+  b:['性能/容量独立扩展至 128 节点、EB 级；一份数据支撑多个 AI 应用。','good','原地扩']},
+ {dim:'可靠性',mono:'RESILIENCE',
+  a:['本地盘故障即服务中断；无快照防勒索，知识库损毁需数周重建。','bad','单点'],
+  b:['ONTAP 企业级高可用、快照秒级回滚、防勒索侦测，产线助手不掉线。','good','企业级']}
+];
+let cmpMode=0;
+function setCmp(m){
+  cmpMode=m;
+  document.getElementById('cmpA').classList.toggle('on',m===0);
+  document.getElementById('cmpB').classList.toggle('on',m===1);
+  renderCmp();
+}
+function renderCmp(){
+  document.getElementById('cmpTable').innerHTML=CMP.map(r=>{
+    const s=cmpMode===0?r.a:r.b;
+    return `<div class="cmp-row">
+      <div class="dim">${r.dim}<small>${r.mono}</small></div>
+      <div class="desc">${s[0]}</div>
+      <div class="badge ${s[1]}">${s[2]}</div></div>`;
+  }).join('');
+}
+renderCmp();
+
+const VALS=[
+ {ico:'🚀',nm:'性能直达推理',p:'高带宽低延迟支撑模型加载、向量检索与批量嵌入，缩短响应时间。',m:'TB/s 带宽 · GPU 不空转'},
+ {ico:'🧩',nm:'数据就地 AI',p:'编目、向量化、检索都在数据所在处完成，无需把数据搬进第二套 AI 栈。',m:'0 次数据迁移 · 1 份数据多用'},
+ {ico:'🔐',nm:'内生安全护栏',p:'敏感识别、脱敏、RBAC 与审计在数据层执行，AI 应用天然继承合规能力。',m:'存储层护栏 · 全链路审计'},
+ {ico:'🔄',nm:'知识常新',p:'变更数据自动捕获、向量自动刷新，多厂区数据经 SnapMirror 持续汇聚。',m:'变更感知 · 自动再向量化'},
+ {ico:'📐',nm:'独立弹性扩展',p:'分离式架构让性能与容量各自按需增长，从试点平滑长到全厂规模。',m:'128 节点 · EB 级容量'},
+ {ico:'🛟',nm:'企业级可靠',p:'高可用、快照、防勒索与灾备继承自 ONTAP，知识资产与产线服务双保险。',m:'秒级快照 · 防勒索侦测'}
+];
+document.getElementById('valGrid').innerHTML=VALS.map(v=>`
+ <div class="val-card"><span class="ico">${v.ico}</span><h3>${v.nm}</h3><p>${v.p}</p><div class="metric">${v.m}</div></div>`).join('');
+
+/* ================= RAG DEMO ================= */
+const QA=[
+ {role:'设备维修工程师',q:'3 号注塑机报警代码 E77，怎么处理？',
+  mods:[['meta','METADATA'],['cur','CURATOR']],
+  val:'统一编目把手册、维修工单、点检 SOP 三个系统的知识拼成一个数据集；语义检索盘活了历史工单里的老师傅经验——"同型号曾因滤网堵塞触发同一报警"，关键词搜索做不到。',
+  srcs:['📘 注塑机维护手册 v4.1 · p.132','🔧 历史维修工单 #4521','📋 点检SOP-IM-007 §3.2'],
+  a:'E77 为液压油温过高保护性停机。建议处理步骤：\n1. 确认冷却水阀开度与流量（参考维护手册 p.132）；\n2. 检查油冷器滤网——工单 #4521 记录同型号设备曾因滤网堵塞触发同一报警；\n3. 油温降至 45℃ 以下后复位报警，按 SOP-IM-007 §3.2 完成再启动点检。\n如 30 分钟内复发，请升级至设备科并留存油样送检。'},
+ {role:'新入职工艺员',q:'回流焊炉温曲线超上限，应执行哪份 SOP？',
+  mods:[['sync','SYNC']],
+  val:'答案明确锁定"现行有效版本 v3.2、旧版容差已作废"——SnapDiff 变更感知 + 向量自动更新：文档改版后知识库立即跟上，AI 永远不会引用作废工艺。新人无需求人即可查到对的 SOP。',
+  srcs:['📘 回流焊作业指导书 v3.2 §4.5','🧾 质量事件 QA-2213 处置记录','📊 炉温监控周报 W27'],
+  a:'应执行《回流焊作业指导书 v3.2》§4.5「炉温异常响应」：\n1. 立即暂停投板，对已过炉批次做标识隔离；\n2. 复核热电偶校准状态，重新跑炉温测试板；\n3. 若峰值温度超上限 >5℃，参照质量事件 QA-2213：该批次需 100% 外观 + 抽样切片检验。\n注意：当前生效版本为 v3.2（2026-05 更新），旧版 v3.1 的容差已作废。'},
+ {role:'质量主管',q:'查一下 A 客户投诉批次 LOT-8802 的相关记录和责任工序。',
+  guard:true,
+  mods:[['guard','GUARDRAILS']],
+  val:'权限三层的活例子：L2 摄取时脱敏——当班人员 PII 在入库前已抹除；L1 端点级隔离——完整人事信息需总监令牌。同时 MES 结构化数据 + 8D 报告 + AOI 图像跨类型统一治理。',
+  srcs:['🗄️ MES 批次追溯 LOT-8802','📋 8D 报告 D-2026-031','🖼️ AOI 缺陷图像 (37 张)'],
+  a:'LOT-8802 追溯结果：\n· 生产时间 2026-06-28 夜班，SMT-2 线；\n· 8D 报告 D-2026-031 判定根因为钢网张力衰减导致锡膏印刷偏移，责任工序为印刷段；\n· AOI 已留存 37 张缺陷图像可供复核。\n⚠ 数据护栏提示：追溯记录中涉及的当班人员个人信息已按策略自动脱敏；完整人事信息需质量总监权限另行申请。'},
+ {role:'产线班组长',q:'今晚要换型生产 P-330，SMT 换线步骤和标准工时是多少？',
+  mods:[['sync','SYNC'],['cur','CURATOR']],
+  val:'MES 排产数据同步保鲜，AI 知道"今晚生产什么"并给出对应钢网与 BOM；重排序从历史换线记录中主动提炼预防性建议（上次超时 12 分钟的根因）——检索质量直接决定答案质量。',
+  srcs:['📘 换线作业 SOP-SMT-012 v2.4','🗄️ MES 排产计划 W29','🧾 上次换线记录 CO-1187'],
+  a:'P-330 换线按《SOP-SMT-012 v2.4》执行，标准工时 45 分钟：\n1. 提前 30 分钟核对钢网（编号 ST-P330-03）与程序版本，锡膏回温；\n2. 尾数清线 → 换料站台按 MES W29 排产 BOM 上料并双人复核；\n3. 更换钢网与轨道宽度，运行首件 3 pcs 送 SPI + AOI 全检；\n4. 首件合格并经工艺确认后批量投产。\n提示：上次换线记录 CO-1187 显示 2 号贴片机吸嘴库位偏移导致超时 12 分钟，建议本次提前做吸嘴检查。'},
+ {role:'EHS 专员',q:'焊接车间的助焊剂废液应如何暂存和申报处置？',
+  mods:[['meta','METADATA'],['guard','GUARDRAILS']],
+  val:'规程、SDS、危废台账三源聚合，台账动态数据保鲜（"暂存量已达 78%"）；EHS 是审计最严的领域——全程审计日志 + 答案可溯源到规程条款，正是 AIDE 的合规基因。',
+  srcs:['📘 危废管理规程 EHS-09 §5','⚗️ 助焊剂安全数据表 (SDS)','🗄️ 危废台账 2026-Q2'],
+  a:'助焊剂废液属 HW49 类危险废物，按《EHS-09》§5 执行：\n1. 使用专用防腐蚀密闭容器收集，粘贴危废标签（名称/类别/产生日期）；\n2. 存入危废暂存间 B 区，远离氧化剂，暂存不超过规定期限；\n3. 每次转移当日在危废台账登记重量与批次，Q2 台账显示当前暂存量已达 78%，建议本月内安排转运；\n4. 委托有资质单位处置并留存转移联单。\n依据 SDS：作业时需佩戴耐化学手套与护目镜，泄漏时用惰性吸附材料处理。'}
+];
+document.getElementById('qList').innerHTML=QA.map((x,i)=>`
+ <div class="q-item" id="qi${i}" onclick="runQA(${i})"><span class="role">${x.role}</span>${x.q}<div class="qmods">${(x.mods||[]).map(m=>`<span class="mbadge m-${m[0]}">${m[1]}</span>`).join('')}</div></div>`).join('');
+
+let qaBusy=false,qaTimers=[];
+function qaWait(fn,ms){qaTimers.push(setTimeout(fn,ms))}
+function runQA(i){
+  qaTimers.forEach(clearTimeout);qaTimers=[];
+  document.querySelectorAll('.q-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('qi'+i).classList.add('active');
+  const x=QA[i],chat=document.getElementById('chat');
+  chat.innerHTML=`<div class="msg user">${x.q}</div>`;
+  const sys=document.createElement('div');
+  sys.className='msg sys';
+  sys.innerHTML=`<div class="steps" id="steps"></div><div class="src-wrap"></div><div class="answer" id="ans"></div>`;
+  chat.appendChild(sys);
+  const steps=[
+    '→ 语义检索：向量库匹配相关片段…',
+    '→ 权限护栏：校验提问者数据访问范围…',
+    '→ 重排序：筛选 Top-K 最相关来源…',
+    '✓ 上下文注入完成，调用 LLM 生成回答'
+  ];
+  const stepBox=sys.querySelector('#steps');
+  steps.forEach((s,k)=>{
+    qaWait(()=>{
+      const d=document.createElement('div');
+      if(k===steps.length-1)d.className='ok';
+      d.textContent=s;d.style.animationDelay='0s';stepBox.appendChild(d);
+      chat.scrollTop=chat.scrollHeight;
+    },400+k*550);
+  });
+  qaWait(()=>{
+    const w=sys.querySelector('.src-wrap');
+    w.innerHTML='<div class="src-chips">'+
+      x.srcs.map((s,k)=>`<span class="src-chip" style="animation-delay:${k*.15}s">${s}</span>`).join('')+
+      (x.guard?'<span class="src-chip guard" style="animation-delay:.5s">🛡 护栏：PII 已脱敏（机制见权限三层 L2）</span>':'')+
+      '</div>';
+    chat.scrollTop=chat.scrollHeight;
+  },400+steps.length*550+200);
+  qaWait(()=>{
+    typeAnswer(x.a,sys.querySelector('#ans'),chat,x.val);
+  },400+steps.length*550+900);
+}
+function typeAnswer(text,el,chat,val){
+  let i=0;
+  el.innerHTML='<span class="cursor"></span>';
+  const t=setInterval(()=>{
+    i+=2;
+    el.innerHTML=text.slice(0,i)+'<span class="cursor"></span>';
+    chat.scrollTop=chat.scrollHeight;
+    if(i>=text.length){
+      clearInterval(t);el.textContent=text;
+      if(val){
+        const v=document.createElement('div');
+        v.className='val-note';
+        v.innerHTML='<b>💡 本题演示的 AIDE 价值</b>'+val;
+        el.parentNode.appendChild(v);
+        chat.scrollTop=chat.scrollHeight;
+      }
+    }
+  },22);
+  qaTimers.push(t);
+}
+</script>
+</body>
+</html>
