@@ -3,40 +3,373 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>我的小工具</title>
+  <meta name="description" content="ADG331 的网页应用与交互演示入口">
+  <title>ADG331 · Apps</title>
   <style>
-    :root { color-scheme: light; --blue:#0067c5; --dark:#003f7d; --ink:#102331; --muted:#637786; }
+    :root {
+      color-scheme: light;
+      --bg: #f6f9fd;
+      --surface: #ffffff;
+      --surface-soft: #eef5fc;
+      --ink: #13213b;
+      --muted: #60708e;
+      --line: #d8e3f1;
+      --blue: #066ac9;
+      --blue-strong: #0057ad;
+      --cyan: #00a7b5;
+      --shadow: 0 16px 44px rgba(24, 58, 102, .10);
+    }
+
     * { box-sizing: border-box; }
-    body { margin:0; min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; color:var(--ink); background:linear-gradient(145deg,#0070d8 0,var(--blue) 48%,var(--dark) 100%); }
-    main { width:min(920px,calc(100% - 32px)); margin:0 auto; padding:64px 0; }
-    header { color:#fff; margin-bottom:28px; }
-    .eyebrow { font-size:12px; font-weight:850; letter-spacing:.13em; color:#d7efff; text-transform:uppercase; }
-    h1 { font-size:clamp(34px,7vw,60px); line-height:1.05; letter-spacing:-.045em; margin:10px 0 8px; }
-    header p { margin:0; color:rgba(255,255,255,.82); }
-    .apps { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
-    .app { display:block; padding:24px; border:1px solid rgba(255,255,255,.65); border-radius:16px; background:#fff; color:inherit; text-decoration:none; box-shadow:0 18px 48px rgba(0,31,70,.24); transition:transform .16s ease,box-shadow .16s ease; }
-    .app:hover { transform:translateY(-2px); box-shadow:0 22px 58px rgba(0,31,70,.32); }
-    .app-tag { display:inline-block; padding:5px 9px; border-radius:999px; background:#e8f3fc; color:var(--blue); font-size:12px; font-weight:800; }
-    .app h2 { margin:15px 0 7px; font-size:23px; letter-spacing:-.025em; }
-    .app p { margin:0; color:var(--muted); font-size:14px; line-height:1.55; }
-    .open { display:block; margin-top:20px; color:var(--blue); font-size:14px; font-weight:800; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 0%, rgba(6, 106, 201, .08), transparent 30rem),
+        linear-gradient(rgba(6, 106, 201, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6, 106, 201, .035) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, 40px 40px, 40px 40px, auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+
+    .topbar {
+      height: 58px;
+      border-bottom: 1px solid rgba(216, 227, 241, .8);
+      background: rgba(255, 255, 255, .78);
+      backdrop-filter: blur(14px) saturate(140%);
+    }
+
+    .topbar-inner,
+    main,
+    footer {
+      width: min(1120px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .topbar-inner {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 760;
+      letter-spacing: .04em;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 10px;
+      height: 10px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 0 4px rgba(6, 106, 201, .12), 0 0 14px rgba(6, 106, 201, .45);
+    }
+
+    .topbar-note {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      letter-spacing: .12em;
+    }
+
+    main { padding: 78px 0 72px; }
+
+    .intro {
+      max-width: 760px;
+      margin-bottom: 38px;
+    }
+
+    .eyebrow {
+      margin: 0 0 13px;
+      color: var(--blue);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 720px;
+      font-size: clamp(38px, 6vw, 66px);
+      font-weight: 750;
+      line-height: 1.05;
+      letter-spacing: -.055em;
+      text-wrap: balance;
+    }
+
+    .intro p {
+      max-width: 610px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: clamp(15px, 2vw, 17px);
+      line-height: 1.75;
+      text-wrap: pretty;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -.02em;
+    }
+
+    .count {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      letter-spacing: .12em;
+    }
+
+    .apps {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .app {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: 0 8px 28px rgba(24, 58, 102, .06);
+      color: inherit;
+      text-decoration: none;
+      transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+
+    .app:hover {
+      transform: translateY(-4px);
+      border-color: #adc8e7;
+      box-shadow: var(--shadow);
+    }
+
+    .app:focus-visible {
+      outline: 3px solid rgba(6, 106, 201, .28);
+      outline-offset: 4px;
+    }
+
+    .visual {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    .visual::after {
+      position: absolute;
+      inset: auto 0 0;
+      height: 28%;
+      content: "";
+      background: linear-gradient(to bottom, transparent, rgba(19, 33, 59, .04));
+      pointer-events: none;
+    }
+
+    .visual img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .35s ease;
+    }
+
+    .app:hover .visual img { transform: scale(1.018); }
+
+    .app-body { padding: 24px 25px 25px; }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .app-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 27px;
+      padding: 5px 10px;
+      border: 1px solid #c9ddf2;
+      border-radius: 999px;
+      background: #f2f8ff;
+      color: var(--blue-strong);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .02em;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .status::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #16a085;
+      box-shadow: 0 0 0 3px rgba(22, 160, 133, .11);
+      content: "";
+    }
+
+    .app h3 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.2;
+      letter-spacing: -.035em;
+    }
+
+    .app p {
+      min-height: 52px;
+      margin: 11px 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+      text-wrap: pretty;
+    }
+
+    .open {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .open::after {
+      content: "↗";
+      font-size: 16px;
+      transition: transform .2s ease;
+    }
+
+    .app:hover .open::after { transform: translate(2px, -2px); }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px 0 34px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    footer span:last-child {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: .08em;
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner,
+      main,
+      footer { width: min(100% - 28px, 560px); }
+      .topbar-note { display: none; }
+      main { padding: 54px 0 56px; }
+      .intro { margin-bottom: 32px; }
+      .apps { grid-template-columns: 1fr; gap: 18px; }
+      .app-body { padding: 21px; }
+      .app p { min-height: 0; }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <header>
-      <div class="eyebrow">adg331 · Apps</div>
-      <h1>我的小工具</h1>
-      <p>个人网页应用入口</p>
-    </header>
-    <section class="apps" aria-label="应用列表">
-      <a class="app" href="./fusion/">
-        <span class="app-tag">NetApp Fusion</span>
-        <h2>Fusion 容量查询</h2>
-        <p>基于Fusion历史实测数据，支持精确配置查询、可用容量反查及加密截图查看。</p>
-        <span class="open">密码登录后进入 →</span>
+  <nav class="topbar" aria-label="页面导航">
+    <div class="topbar-inner">
+      <a class="brand" href="./" aria-label="ADG331 Apps 首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>ADG331 · APPS</span>
       </a>
+      <span class="topbar-note">WEB TOOLS / INTERACTIVE DEMOS</span>
+    </div>
+  </nav>
+
+  <main>
+    <header class="intro">
+      <p class="eyebrow">Personal Application Lab</p>
+      <h1>把复杂工作，做成简单工具。</h1>
+      <p>面向存储架构与制造业 AI 场景的网页应用和交互演示。无需安装，打开浏览器即可使用。</p>
+    </header>
+
+    <section aria-labelledby="apps-title">
+      <div class="section-head">
+        <h2 id="apps-title">应用与演示</h2>
+        <span class="count">02 AVAILABLE</span>
+      </div>
+
+      <div class="apps">
+        <a class="app" href="./fusion/" aria-label="打开 Fusion 容量查询">
+          <div class="visual">
+            <img src="./assets/fusion-preview.svg" alt="Fusion 容量查询界面示意图" width="800" height="450">
+          </div>
+          <div class="app-body">
+            <div class="meta">
+              <span class="app-tag">NETAPP FUSION</span>
+              <span class="status">可用</span>
+            </div>
+            <h3>Fusion 容量查询</h3>
+            <p>基于 Fusion 历史实测数据，支持精确配置查询、可用容量反查及加密截图查看。</p>
+            <span class="open">密码登录后进入</span>
+          </div>
+        </a>
+
+        <a class="app" href="./ntap-aide/" aria-label="打开制造业 AI 推理数据平台演示">
+          <div class="visual">
+            <img src="./assets/aide-preview.svg" alt="AIDE 与 AFX 制造业 AI 数据流示意图" width="800" height="450">
+          </div>
+          <div class="app-body">
+            <div class="meta">
+              <span class="app-tag">AIDE + AFX</span>
+              <span class="status">可用</span>
+            </div>
+            <h3>制造业 AI 推理数据平台</h3>
+            <p>交互展示从车间数据、AIDE 编目与检索，到 GPU 推理和产线知识助手的完整数据链路。</p>
+            <span class="open">进入交互演示</span>
+          </div>
+        </a>
+      </div>
     </section>
   </main>
+
+  <footer>
+    <span>为实际工作而构建的小工具。</span>
+    <span>ADG331 / 2026</span>
+  </footer>
 </body>
 </html>

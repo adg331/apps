@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">AIDE 与 AFX 制造业 AI 数据流示意图</title>
+  <desc id="desc">从工厂数据源经过 AFX、AIDE 编目检索到 GPU 推理与一线应用的数据链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf5ff"/>
+      <stop offset="1" stop-color="#f8f6ff"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0672ce"/>
+      <stop offset=".55" stop-color="#00a7b5"/>
+      <stop offset="1" stop-color="#7559e8"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#365b84" flood-opacity=".13"/>
+    </filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#4d88c2" stroke-opacity=".10"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <rect width="800" height="450" fill="url(#grid)"/>
+  <circle cx="671" cy="42" r="132" fill="#7559e8" opacity=".045"/>
+  <circle cx="127" cy="425" r="160" fill="#00a7b5" opacity=".045"/>
+
+  <text x="64" y="65" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#0672ce">MANUFACTURING AI DATA FLOW</text>
+  <text x="64" y="101" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="750" fill="#172b49">让工厂知识流向每一次 AI 推理</text>
+  <text x="64" y="128" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12" fill="#607493">AIDE 编目 · 安全护栏 · 策展检索 · AFX 企业级数据底座</text>
+
+  <path d="M113 236H690" fill="none" stroke="#b9cce1" stroke-width="2" stroke-dasharray="5 7"/>
+  <path d="M119 236H678" fill="none" stroke="url(#flow)" stroke-width="3" stroke-linecap="round" opacity=".28"/>
+
+  <g filter="url(#shadow)">
+    <g transform="translate(62 178)">
+      <rect width="102" height="118" rx="14" fill="#fff" stroke="#bed6ec"/>
+      <rect x="1" y="1" width="100" height="5" rx="3" fill="#0672ce"/>
+      <g transform="translate(30 22)" fill="none" stroke="#0672ce" stroke-width="2">
+        <path d="M2 27V9l11-6v8l10-5v9l10-5v17z"/>
+        <path d="M8 20h4m6 0h4m6 0h4"/>
+      </g>
+      <text x="51" y="75" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="700" fill="#17304c">车间数据</text>
+      <text x="51" y="95" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" fill="#6e829a">MES / DOCS</text>
+    </g>
+
+    <g transform="translate(202 178)">
+      <rect width="102" height="118" rx="14" fill="#fff" stroke="#bed6ec"/>
+      <rect x="1" y="1" width="100" height="5" rx="3" fill="#168bc1"/>
+      <g transform="translate(33 23)" fill="none" stroke="#168bc1" stroke-width="2">
+        <ellipse cx="18" cy="5" rx="17" ry="5"/><path d="M1 5v22c0 3 8 5 17 5s17-2 17-5V5M1 16c0 3 8 5 17 5s17-2 17-5"/>
+      </g>
+      <text x="51" y="75" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="700" fill="#17304c">AFX 存储</text>
+      <text x="51" y="95" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" fill="#6e829a">NFS / S3</text>
+    </g>
+
+    <g transform="translate(342 164)">
+      <rect width="116" height="146" rx="16" fill="#fafdff" stroke="#5da7df" stroke-width="1.5"/>
+      <rect x="1" y="1" width="114" height="6" rx="3" fill="#00a7b5"/>
+      <g transform="translate(38 22)" fill="none" stroke="#00a7b5" stroke-width="2">
+        <circle cx="20" cy="20" r="7"/><circle cx="5" cy="7" r="5"/><circle cx="38" cy="6" r="5"/>
+        <path d="m9 11 7 5m10-1 8-6m-14 18v8"/><circle cx="20" cy="39" r="4"/>
+      </g>
+      <text x="58" y="85" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="750" fill="#17304c">AIDE</text>
+      <text x="58" y="105" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" fill="#54708c">编目 · 策展 · 护栏</text>
+      <rect x="21" y="119" width="74" height="16" rx="8" fill="#e4f7f5"/>
+      <text x="58" y="130.5" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8" font-weight="700" fill="#078478">RETRIEVAL</text>
+    </g>
+
+    <g transform="translate(496 178)">
+      <rect width="102" height="118" rx="14" fill="#fff" stroke="#cfc5f4"/>
+      <rect x="1" y="1" width="100" height="5" rx="3" fill="#7559e8"/>
+      <g transform="translate(31 21)" fill="none" stroke="#7559e8" stroke-width="2">
+        <rect x="4" y="4" width="34" height="28" rx="5"/><path d="M13 0v4m8-4v4m8-4v4M13 32v4m8-4v4m8-4v4M0 12h4m-4 8h4m34-8h4m-4 8h4"/>
+      </g>
+      <text x="51" y="75" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="700" fill="#17304c">GPU 推理</text>
+      <text x="51" y="95" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" fill="#6e829a">LLM / NIM</text>
+    </g>
+
+    <g transform="translate(636 178)">
+      <rect width="102" height="118" rx="14" fill="#fff" stroke="#cfc5f4"/>
+      <rect x="1" y="1" width="100" height="5" rx="3" fill="#9277ed"/>
+      <g transform="translate(32 23)" fill="none" stroke="#7559e8" stroke-width="2">
+        <path d="M3 4h34v24H20l-9 7v-7H3z"/><path d="M11 13h18m-18 7h12"/>
+      </g>
+      <text x="51" y="75" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="700" fill="#17304c">知识助手</text>
+      <text x="51" y="95" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" fill="#6e829a">FACTORY AGENT</text>
+    </g>
+  </g>
+
+  <g fill="#fff" stroke-width="2">
+    <circle cx="183" cy="236" r="10" stroke="#168bc1"/><path d="m180 232 6 4-6 4z" fill="#168bc1" stroke="none"/>
+    <circle cx="323" cy="236" r="10" stroke="#00a7b5"/><path d="m320 232 6 4-6 4z" fill="#00a7b5" stroke="none"/>
+    <circle cx="477" cy="236" r="10" stroke="#4a91c9"/><path d="m474 232 6 4-6 4z" fill="#4a91c9" stroke="none"/>
+    <circle cx="617" cy="236" r="10" stroke="#7559e8"/><path d="m614 232 6 4-6 4z" fill="#7559e8" stroke="none"/>
+  </g>
+
+  <g transform="translate(62 338)">
+    <rect width="676" height="58" rx="12" fill="#fff" fill-opacity=".72" stroke="#cbdced"/>
+    <text x="22" y="24" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" font-weight="700" fill="#607493">LIVE PIPELINE</text>
+    <rect x="22" y="34" width="632" height="7" rx="3.5" fill="#e3edf7"/>
+    <rect x="22" y="34" width="487" height="7" rx="3.5" fill="url(#flow)"/>
+    <circle cx="509" cy="37.5" r="8" fill="#fff" stroke="#7559e8" stroke-width="3"/>
+  </g>
+</svg>
