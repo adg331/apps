@@ -8,16 +8,17 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f9fd;
+      --bg: #0067c5;
       --surface: #ffffff;
-      --surface-soft: #eef5fc;
-      --ink: #13213b;
-      --muted: #60708e;
-      --line: #d8e3f1;
-      --blue: #066ac9;
-      --blue-strong: #0057ad;
+      --surface-soft: #edf4fa;
+      --ink: #102331;
+      --muted: #637786;
+      --line: #d7e3ed;
+      --blue: #0067c5;
+      --blue-strong: #003f7d;
       --cyan: #00a7b5;
-      --shadow: 0 16px 44px rgba(24, 58, 102, .10);
+      --page-muted: #d7efff;
+      --shadow: 0 24px 64px rgba(0, 31, 70, .34);
     }
 
     * { box-sizing: border-box; }
@@ -26,22 +27,32 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      background:
-        radial-gradient(circle at 16% 0%, rgba(6, 106, 201, .08), transparent 30rem),
-        linear-gradient(rgba(6, 106, 201, .035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(6, 106, 201, .035) 1px, transparent 1px),
-        var(--bg);
-      background-size: auto, 40px 40px, 40px 40px, auto;
+      background: linear-gradient(145deg, #0070d8 0, var(--blue) 48%, #003f7d 100%);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       -webkit-font-smoothing: antialiased;
+    }
+
+    #network-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: .72;
+    }
+
+    body > *:not(#network-bg) {
+      position: relative;
+      z-index: 1;
     }
 
     a { color: inherit; }
 
     .topbar {
       height: 58px;
-      border-bottom: 1px solid rgba(216, 227, 241, .8);
-      background: rgba(255, 255, 255, .78);
+      border-bottom: 1px solid rgba(255, 255, 255, .16);
+      background: rgba(0, 63, 125, .48);
       backdrop-filter: blur(14px) saturate(140%);
     }
 
@@ -67,6 +78,7 @@
       font-size: 14px;
       font-weight: 760;
       letter-spacing: .04em;
+      color: #fff;
       text-decoration: none;
     }
 
@@ -75,12 +87,12 @@
       height: 10px;
       border: 2px solid #fff;
       border-radius: 50%;
-      background: var(--blue);
-      box-shadow: 0 0 0 4px rgba(6, 106, 201, .12), 0 0 14px rgba(6, 106, 201, .45);
+      background: #61d5ff;
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, .12), 0 0 14px rgba(97, 213, 255, .72);
     }
 
     .topbar-note {
-      color: var(--muted);
+      color: rgba(255, 255, 255, .72);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 11px;
       letter-spacing: .12em;
@@ -95,7 +107,7 @@
 
     .eyebrow {
       margin: 0 0 13px;
-      color: var(--blue);
+      color: var(--page-muted);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12px;
       font-weight: 700;
@@ -110,13 +122,15 @@
       font-weight: 750;
       line-height: 1.05;
       letter-spacing: -.055em;
+      color: #fff;
+      text-shadow: 0 4px 22px rgba(0, 37, 83, .18);
       text-wrap: balance;
     }
 
-    .intro p {
+    .intro > p:not(.eyebrow) {
       max-width: 610px;
       margin: 20px 0 0;
-      color: var(--muted);
+      color: rgba(255, 255, 255, .82);
       font-size: clamp(15px, 2vw, 17px);
       line-height: 1.75;
       text-wrap: pretty;
@@ -132,12 +146,13 @@
 
     .section-head h2 {
       margin: 0;
+      color: #fff;
       font-size: 18px;
       letter-spacing: -.02em;
     }
 
     .count {
-      color: var(--muted);
+      color: var(--page-muted);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 11px;
       letter-spacing: .12em;
@@ -146,16 +161,16 @@
     .apps {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 22px;
+      gap: 24px;
     }
 
     .app {
       min-width: 0;
       overflow: hidden;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, .72);
       border-radius: 18px;
       background: var(--surface);
-      box-shadow: 0 8px 28px rgba(24, 58, 102, .06);
+      box-shadow: 0 20px 54px rgba(0, 31, 70, .28);
       color: inherit;
       text-decoration: none;
       transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
@@ -163,7 +178,7 @@
 
     .app:hover {
       transform: translateY(-4px);
-      border-color: #adc8e7;
+      border-color: #fff;
       box-shadow: var(--shadow);
     }
 
@@ -278,8 +293,8 @@
       justify-content: space-between;
       gap: 20px;
       padding: 22px 0 34px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
+      border-top: 1px solid rgba(255, 255, 255, .22);
+      color: rgba(255, 255, 255, .72);
       font-size: 12px;
     }
 
@@ -310,6 +325,7 @@
   </style>
 </head>
 <body>
+  <canvas id="network-bg" aria-hidden="true"></canvas>
   <nav class="topbar" aria-label="页面导航">
     <div class="topbar-inner">
       <a class="brand" href="./" aria-label="ADG331 Apps 首页">
@@ -323,8 +339,7 @@
   <main>
     <header class="intro">
       <p class="eyebrow">Personal Application Lab</p>
-      <h1>把复杂工作，做成简单工具。</h1>
-      <p>AI重构工作流</p>
+      <h1>AI重构工作流</h1>
     </header>
 
     <section aria-labelledby="apps-title">
@@ -368,8 +383,9 @@
   </main>
 
   <footer>
-    <span>为实际工作而构建的小工具。</span>
+    <span>密码索取请联系enyang.fu@lenovonetapp.com</span>
     <span>ADG331 / 2026</span>
   </footer>
+  <script type="module" src="./assets/network-background.js"></script>
 </body>
 </html>
