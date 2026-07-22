@@ -1,9 +1,42 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的小工具</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的小工具</title>
+  <style>
+    :root { color-scheme: light; --blue:#0067c5; --dark:#003f7d; --ink:#102331; --muted:#637786; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; color:var(--ink); background:linear-gradient(145deg,#0070d8 0,var(--blue) 48%,var(--dark) 100%); }
+    main { width:min(920px,calc(100% - 32px)); margin:0 auto; padding:64px 0; }
+    header { color:#fff; margin-bottom:28px; }
+    .eyebrow { font-size:12px; font-weight:850; letter-spacing:.13em; color:#d7efff; text-transform:uppercase; }
+    h1 { font-size:clamp(34px,7vw,60px); line-height:1.05; letter-spacing:-.045em; margin:10px 0 8px; }
+    header p { margin:0; color:rgba(255,255,255,.82); }
+    .apps { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
+    .app { display:block; padding:24px; border:1px solid rgba(255,255,255,.65); border-radius:16px; background:#fff; color:inherit; text-decoration:none; box-shadow:0 18px 48px rgba(0,31,70,.24); transition:transform .16s ease,box-shadow .16s ease; }
+    .app:hover { transform:translateY(-2px); box-shadow:0 22px 58px rgba(0,31,70,.32); }
+    .app-tag { display:inline-block; padding:5px 9px; border-radius:999px; background:#e8f3fc; color:var(--blue); font-size:12px; font-weight:800; }
+    .app h2 { margin:15px 0 7px; font-size:23px; letter-spacing:-.025em; }
+    .app p { margin:0; color:var(--muted); font-size:14px; line-height:1.55; }
+    .open { display:block; margin-top:20px; color:var(--blue); font-size:14px; font-weight:800; }
+  </style>
 </head>
-
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">adg331 · Apps</div>
+      <h1>我的小工具</h1>
+      <p>个人网页应用入口</p>
+    </header>
+    <section class="apps" aria-label="应用列表">
+      <a class="app" href="./fusion/">
+        <span class="app-tag">NetApp Fusion</span>
+        <h2>Fusion 容量查询</h2>
+        <p>基于Fusion历史实测数据，支持精确配置查询、可用容量反查及加密截图查看。</p>
+        <span class="open">密码登录后进入 →</span>
+      </a>
+    </section>
+  </main>
+</body>
 </html>
