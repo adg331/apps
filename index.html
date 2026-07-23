@@ -8,7 +8,7 @@
 <style>
   :root{
     color-scheme: dark;
-    --void:#07131c;
+    --void:#050e16;
     --panel:#0d1e29;
     --panel-2:#122736;
     --line:#1d3849;
@@ -42,19 +42,17 @@
     text-transform:uppercase;
   }
 
-  /* ── 顶部区（压缩版）───────────────────────────── */
+  /* ── 顶部区 ─────────────────────────────────────── */
   .band{
     position:relative;
     overflow:hidden;
     border-bottom:1px solid var(--line);
-    /* WebGL 起不来时这层渐变兜底 */
     background:
-      radial-gradient(110% 150% at 86% 10%, rgba(15,143,224,.20) 0%, transparent 60%),
-      linear-gradient(180deg,#0a1a25 0%, var(--void) 100%);
+      radial-gradient(120% 160% at 82% 20%, rgba(15,143,224,.16) 0%, transparent 55%),
+      linear-gradient(180deg,#081724 0%, var(--void) 100%);
   }
 
-  /* three.js 画布：容量分配点阵 */
-  #lattice{
+  #stream{
     position:absolute;
     inset:0;
     width:100%;
@@ -62,15 +60,13 @@
     display:block;
     pointer-events:none;
     opacity:0;
-    transition:opacity .9s ease;
-    -webkit-mask-image:linear-gradient(96deg,transparent 4%,rgba(0,0,0,.55) 40%,#000 90%);
-    mask-image:linear-gradient(96deg,transparent 4%,rgba(0,0,0,.55) 40%,#000 90%);
+    transition:opacity 1.1s ease;
   }
-  #lattice.ready{opacity:1}
+  #stream.ready{opacity:1}
 
-  .band > *:not(#lattice){position:relative;z-index:1}
+  .band > *:not(#stream){position:relative;z-index:1}
 
-  .topbar{border-bottom:1px solid var(--line-soft)}
+  .topbar{border-bottom:1px solid rgba(29,56,73,.55)}
   .topbar .wrap{
     height:52px;
     display:flex;
@@ -96,7 +92,7 @@
   }
   .topbar .mono{color:var(--ink-3)}
 
-  .hero{padding:42px 0 46px}
+  .hero{padding:44px 0 48px}
   h1{
     margin:0;
     max-width:16ch;
@@ -105,6 +101,7 @@
     line-height:1.08;
     letter-spacing:-.02em;
     color:#f2fafd;
+    text-shadow:0 0 44px rgba(97,213,255,.22);
   }
   .lede{
     max-width:52ch;
@@ -150,7 +147,7 @@
     text-decoration:none;
     color:inherit;
     overflow:hidden;
-    transition:border-color .22s ease, background .22s ease, transform .22s ease;
+    transition:border-color .22s ease, background .22s ease, transform .22s ease, box-shadow .22s ease;
   }
   a.slot::before{
     content:"";
@@ -165,6 +162,7 @@
     transform:translateY(-3px);
     border-color:#2a5470;
     background:var(--panel-2);
+    box-shadow:0 0 0 1px rgba(97,213,255,.06), 0 18px 44px rgba(2,10,18,.6);
   }
   a.slot:hover::before{
     background:var(--cyan);
@@ -190,7 +188,6 @@
     box-shadow:0 0 9px rgba(47,214,166,.7);
   }
 
-  /* 预览屏：默认压暗，指到才亮 */
   .visual{
     position:relative;
     aspect-ratio:16/9;
@@ -290,10 +287,9 @@
 
   @media (max-width:820px){
     .wrap{width:min(100% - 30px,600px)}
-    .hero{padding:34px 0 36px}
+    .hero{padding:36px 0 38px}
     .topbar .mono{display:none}
     .bay{grid-template-columns:1fr;gap:14px}
-    #lattice{-webkit-mask-image:linear-gradient(180deg,transparent 20%,#000 100%);mask-image:linear-gradient(180deg,transparent 20%,#000 100%)}
     .visual img{filter:saturate(.85) brightness(.9)}
   }
 
@@ -306,7 +302,7 @@
 <body>
 
 <div class="band">
-  <canvas id="lattice" aria-hidden="true"></canvas>
+  <canvas id="stream" aria-hidden="true"></canvas>
 
   <nav class="topbar" aria-label="页面导航">
     <div class="wrap">
@@ -391,102 +387,169 @@
 <script type="module">
 import * as THREE from './assets/vendor/three.module.min.js';
 
-const canvas = document.getElementById('lattice');
+// ─────────────────────────────────────────────────────────
+// 数据入湖：左侧散乱的原始数据粒子，向右逐渐汇入整齐的
+// 通道流；一条明亮的主干在中部脉冲。加法混色 + 视差。
+// ─────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('stream');
 const band = canvas.parentElement;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 let renderer;
 try {
   renderer = new THREE.WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: false,
-    powerPreference: 'low-power'
+    canvas, alpha: true, antialias: false, powerPreference: 'low-power'
   });
 } catch (e) {
-  canvas.hidden = true;           // WebGL 不可用时退回 CSS 渐变
+  canvas.hidden = true; // 退回 CSS 渐变
 }
 
 if (renderer) {
   renderer.setClearColor(0x000000, 0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
-  camera.position.set(0, 5.4, 16);
-  camera.lookAt(0, 0, -6);
+  const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 300);
+  const CAM = { x: 0, y: 1.2, z: 30 };
+  camera.position.set(CAM.x, CAM.y, CAM.z);
 
-  // ── 分配点阵：一片向远处递进的方块场 ──
+  // 圆形光点贴图（加法混色的关键，否则是方块）
+  const dotTex = (() => {
+    const s = 64, cv = document.createElement('canvas');
+    cv.width = cv.height = s;
+    const g = cv.getContext('2d');
+    const grad = g.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,.6)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, s, s);
+    const t = new THREE.CanvasTexture(cv);
+    return t;
+  })();
+
   const compact = window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
-  const COLS = compact ? 28 : 52;
-  const ROWS = compact ? 12 : 20;
-  const STEP = 0.62;
-  const COUNT = COLS * ROWS;
+  const COUNT = compact ? 1400 : 3200;
+  const X_MIN = -34, X_MAX = 34;      // 世界坐标横向范围
+  const LANES = 9;                     // 右侧通道数
+  const LANE_GAP = 1.15;
 
-  const geo = new THREE.PlaneGeometry(0.4, 0.4);
-  const mat = new THREE.MeshBasicMaterial({
-    transparent: true,
-    opacity: 0.95,
-    depthWrite: false
-  });
-  const mesh = new THREE.InstancedMesh(geo, mat, COUNT);
-  mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-  mesh.rotation.x = -Math.PI / 2.35;
-  scene.add(mesh);
+  const pos = new Float32Array(COUNT * 3);
+  const col = new Float32Array(COUNT * 3);
+  const meta = new Float32Array(COUNT * 4); // speed, laneY, laneZ, phase
 
-  const dummy = new THREE.Object3D();
-  const phase = new Float32Array(COUNT);   // 每格自己的相位，避免整齐划一
-  const gx = new Float32Array(COUNT);
-  const gy = new Float32Array(COUNT);
+  const cDim  = new THREE.Color(0x1d5f86);
+  const cMid  = new THREE.Color(0x37a9e0);
+  const cHot  = new THREE.Color(0xaef0ff);
+  const tmp   = new THREE.Color();
 
-  for (let r = 0, i = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++, i++) {
-      const x = (c - COLS / 2) * STEP;
-      const y = (r - ROWS / 2) * STEP;
-      gx[i] = c / COLS;
-      gy[i] = r / ROWS;
-      phase[i] = Math.random() * Math.PI * 2;
-      dummy.position.set(x, y, 0);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
-    }
+  function seed(i, fromLeft) {
+    const lane = Math.floor(Math.random() * LANES);
+    meta[i*4]   = 2.6 + Math.random() * 3.4;                    // speed
+    meta[i*4+1] = (lane - (LANES - 1) / 2) * LANE_GAP;          // laneY
+    meta[i*4+2] = (Math.random() - 0.5) * 1.6;                  // laneZ
+    meta[i*4+3] = Math.random() * Math.PI * 2;                  // phase
+    pos[i*3]   = fromLeft ? X_MIN - Math.random() * 6
+                          : X_MIN + Math.random() * (X_MAX - X_MIN);
+    pos[i*3+1] = meta[i*4+1] + (Math.random() - 0.5) * 10;
+    pos[i*3+2] = meta[i*4+2] + (Math.random() - 0.5) * 10;
   }
-  mesh.instanceMatrix.needsUpdate = true;
+  for (let i = 0; i < COUNT; i++) seed(i, false);
 
-  const colors = new Float32Array(COUNT * 3);
-  mesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
 
-  const BASE = new THREE.Color(0x18384c);  // 未分配
-  const ON   = new THREE.Color(0x2f9fd4);  // 已分配
-  const HOT  = new THREE.Color(0x9ee8ff);  // 正在写入
-  const tmp  = new THREE.Color();
+  const mat = new THREE.PointsMaterial({
+    size: compact ? 0.34 : 0.28,
+    map: dotTex,
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true
+  });
+  scene.add(new THREE.Points(geo, mat));
 
-  function shade(t) {
+  // 主干光轨：三条贯穿的细线，中间那条脉冲
+  const railMat = new THREE.LineBasicMaterial({
+    color: 0x2f9fd4, transparent: true, opacity: 0.22,
+    blending: THREE.AdditiveBlending
+  });
+  const railGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(X_MIN, 0, 0), new THREE.Vector3(X_MAX, 0, 0)
+  ]);
+  for (let k = -1; k <= 1; k++) {
+    const l = new THREE.Line(railGeo, railMat.clone());
+    l.position.y = k * LANE_GAP * 2;
+    l.userData.k = k;
+    scene.add(l);
+  }
+
+  // 鼠标视差
+  const par = { x: 0, y: 0, tx: 0, ty: 0 };
+  if (!compact) {
+    band.addEventListener('pointermove', (e) => {
+      const r = band.getBoundingClientRect();
+      par.tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+      par.ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
+    });
+    band.addEventListener('pointerleave', () => { par.tx = 0; par.ty = 0; });
+  }
+
+  function step(t, dt) {
     for (let i = 0; i < COUNT; i++) {
-      // 一条缓慢横扫的写入带
-      const head = (t * 0.055) % 1.6 - 0.3;
-      const d = Math.abs(gx[i] - head);
-      const sweep = Math.exp(-(d * d) / 0.0032);
+      let x = pos[i*3] + meta[i*4] * dt;
+      if (x > X_MAX + 2) { seed(i, true); x = pos[i*3]; }
 
-      // 底噪：右侧写得更满
-      const fill = 0.10 + gx[i] * 0.42;
-      const flick = 0.5 + 0.5 * Math.sin(t * 0.9 + phase[i] + gy[i] * 3.1);
-      const allocated = flick < fill ? 1 : 0;
+      // 0 → 1：从散乱到汇入通道
+      const f = Math.min(Math.max((x - X_MIN) / (X_MAX - X_MIN), 0), 1);
+      const order = f * f * (3 - 2 * f); // smoothstep
 
-      tmp.copy(BASE);
-      if (allocated) tmp.lerp(ON, 0.55 + 0.25 * flick);
-      if (sweep > 0.02) tmp.lerp(HOT, Math.min(sweep, 1) * (allocated ? 0.9 : 0.35));
+      const ph = meta[i*4+3];
+      const wanderY = Math.sin(t * 0.7 + ph) * 4.5 * (1 - order);
+      const wanderZ = Math.cos(t * 0.55 + ph * 1.3) * 4.5 * (1 - order);
+      const jitter = Math.sin(t * 3.1 + ph * 7) * 0.06 * order;
 
-      colors[i * 3] = tmp.r;
-      colors[i * 3 + 1] = tmp.g;
-      colors[i * 3 + 2] = tmp.b;
+      pos[i*3]   = x;
+      pos[i*3+1] = meta[i*4+1] * order + wanderY + jitter;
+      pos[i*3+2] = meta[i*4+2] * order + wanderZ;
+
+      // 颜色：散乱时暗蓝，入流后转亮；主干附近提亮
+      tmp.copy(cDim).lerp(cMid, order);
+      const nearRail = Math.exp(-Math.pow(pos[i*3+1], 2) / 1.4);
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.6 - x * 0.35);
+      tmp.lerp(cHot, nearRail * pulse * 0.7 * order);
+
+      const a = 0.35 + order * 0.65;
+      col[i*3]   = tmp.r * a;
+      col[i*3+1] = tmp.g * a;
+      col[i*3+2] = tmp.b * a;
     }
-    mesh.instanceColor.needsUpdate = true;
+    geo.attributes.position.needsUpdate = true;
+    geo.attributes.color.needsUpdate = true;
+
+    // 主干脉冲
+    scene.traverse(o => {
+      if (o.isLine) {
+        const k = o.userData.k;
+        o.material.opacity = k === 0
+          ? 0.16 + 0.18 * (0.5 + 0.5 * Math.sin(t * 1.6))
+          : 0.10;
+      }
+    });
+
+    // 视差缓动
+    par.x += (par.tx - par.x) * 0.05;
+    par.y += (par.ty - par.y) * 0.05;
+    camera.position.x = CAM.x + par.x * 2.2;
+    camera.position.y = CAM.y - par.y * 1.4;
+    camera.lookAt(4, 0, 0);
   }
 
   function resize() {
-    const w = band.clientWidth;
-    const h = band.clientHeight;
+    const w = band.clientWidth, h = band.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
@@ -495,16 +558,18 @@ if (renderer) {
 
   let raf = null;
   const clock = new THREE.Clock();
+  let last = 0;
 
   function frame() {
     const t = clock.getElapsedTime();
-    shade(t);
+    const dt = Math.min(t - last, 0.05);
+    last = t;
+    step(t, dt);
     renderer.render(scene, camera);
     raf = requestAnimationFrame(frame);
   }
-
   function start() {
-    if (raf === null) { clock.start(); raf = requestAnimationFrame(frame); }
+    if (raf === null) { last = clock.getElapsedTime(); raf = requestAnimationFrame(frame); }
   }
   function stop() {
     if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
@@ -514,7 +579,8 @@ if (renderer) {
   canvas.classList.add('ready');
 
   if (reduceMotion.matches) {
-    shade(6);                    // 静止的一帧
+    // 静止一帧：把粒子推进几秒再定格
+    for (let s = 0; s < 180; s++) step(s / 30, 1 / 30);
     renderer.render(scene, camera);
   } else {
     start();
