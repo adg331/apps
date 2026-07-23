@@ -7,16 +7,17 @@
 <title>ADG331 · Apps</title>
 <style>
   :root{
-    color-scheme: light;
-    --paper:#eef1f5;
-    --card:#ffffff;
-    --ink:#0a1a24;
-    --ink-2:#566875;
-    --rule:#dbe2ea;
-    --blue:#0067c5;
-    --blue-deep:#002e58;
+    color-scheme: dark;
+    --void:#07131c;
+    --panel:#0d1e29;
+    --panel-2:#122736;
+    --line:#1d3849;
+    --line-soft:#162c3a;
+    --ink:#e4f0f7;
+    --ink-2:#7b97a8;
+    --ink-3:#4f6a7b;
     --cyan:#61d5ff;
-    --live:#0f9c7d;
+    --live:#2fd6a6;
     --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   }
@@ -25,16 +26,15 @@
   html{scroll-behavior:smooth}
   body{
     margin:0;
-    background:var(--paper);
+    background:var(--void);
     color:var(--ink);
     font-family:var(--sans);
     -webkit-font-smoothing:antialiased;
   }
   a{color:inherit}
 
-  .wrap{width:min(1160px,calc(100% - 48px));margin-inline:auto}
+  .wrap{width:min(1080px,calc(100% - 44px));margin-inline:auto}
 
-  /* ── 标签 / 计量文字：整站统一的“仪表”字体 ───────────── */
   .mono{
     font-family:var(--mono);
     font-size:11px;
@@ -42,41 +42,37 @@
     text-transform:uppercase;
   }
 
-  /* ── 顶部深色区 ─────────────────────────────────── */
+  /* ── 顶部区（压缩版）───────────────────────────── */
   .band{
     position:relative;
     overflow:hidden;
-    background:var(--blue-deep);
-    background-image:linear-gradient(120deg,#00223f 0%,var(--blue-deep) 46%,#004e94 100%);
-    color:#fff;
+    border-bottom:1px solid var(--line);
+    /* WebGL 起不来时这层渐变兜底 */
+    background:
+      radial-gradient(110% 150% at 86% 10%, rgba(15,143,224,.20) 0%, transparent 60%),
+      linear-gradient(180deg,#0a1a25 0%, var(--void) 100%);
   }
 
-  /* 容量分配图：本页的签名元素，取自存储系统里的 block map */
-  .blockmap{
+  /* three.js 画布：容量分配点阵 */
+  #lattice{
     position:absolute;
     inset:0;
-    display:grid;
-    grid-template-columns:repeat(auto-fill,13px);
-    grid-auto-rows:13px;
-    gap:3px;
-    padding:10px;
+    width:100%;
+    height:100%;
+    display:block;
     pointer-events:none;
-    -webkit-mask-image:linear-gradient(100deg,transparent 8%,rgba(0,0,0,.45) 46%,#000 92%);
-    mask-image:linear-gradient(100deg,transparent 8%,rgba(0,0,0,.45) 46%,#000 92%);
+    opacity:0;
+    transition:opacity .9s ease;
+    -webkit-mask-image:linear-gradient(96deg,transparent 4%,rgba(0,0,0,.55) 40%,#000 90%);
+    mask-image:linear-gradient(96deg,transparent 4%,rgba(0,0,0,.55) 40%,#000 90%);
   }
-  .blockmap i{
-    border-radius:1px;
-    background:rgba(255,255,255,.055);
-    transition:background .5s ease;
-  }
-  .blockmap i.on{background:rgba(97,213,255,.32)}
-  .blockmap i.hot{background:rgba(97,213,255,.62)}
+  #lattice.ready{opacity:1}
 
-  .band > *:not(.blockmap){position:relative;z-index:1}
+  .band > *:not(#lattice){position:relative;z-index:1}
 
-  .topbar{border-bottom:1px solid rgba(255,255,255,.14)}
+  .topbar{border-bottom:1px solid var(--line-soft)}
   .topbar .wrap{
-    height:60px;
+    height:52px;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -85,170 +81,161 @@
   .brand{
     display:inline-flex;
     align-items:center;
-    gap:11px;
+    gap:10px;
     font-family:var(--mono);
     font-size:12px;
     font-weight:600;
     letter-spacing:.2em;
     text-decoration:none;
-    color:#fff;
+    color:var(--ink);
   }
   .led{
     width:8px;height:8px;border-radius:50%;
     background:var(--cyan);
-    box-shadow:0 0 0 3px rgba(97,213,255,.16),0 0 12px rgba(97,213,255,.8);
+    box-shadow:0 0 0 3px rgba(97,213,255,.12),0 0 14px rgba(97,213,255,.85);
   }
-  .topbar .mono{color:rgba(255,255,255,.6)}
+  .topbar .mono{color:var(--ink-3)}
 
-  .hero{padding:96px 0 84px}
-  .kicker{
-    margin:0 0 22px;
-    color:rgba(255,255,255,.62);
-  }
+  .hero{padding:42px 0 46px}
   h1{
     margin:0;
-    max-width:15ch;
-    font-size:clamp(42px,7vw,80px);
+    max-width:16ch;
+    font-size:clamp(30px,4.6vw,54px);
     font-weight:800;
-    line-height:1.06;
+    line-height:1.08;
     letter-spacing:-.02em;
+    color:#f2fafd;
   }
   .lede{
-    max-width:46ch;
-    margin:26px 0 0;
-    color:rgba(255,255,255,.76);
-    font-size:clamp(15px,1.6vw,17px);
-    line-height:1.8;
+    max-width:52ch;
+    margin:14px 0 0;
+    color:var(--ink-2);
+    font-size:clamp(14px,1.5vw,16px);
+    line-height:1.65;
     text-wrap:pretty;
   }
 
-  /* 顶部读数条 */
-  .readout{
-    display:flex;
-    flex-wrap:wrap;
-    gap:0;
-    margin-top:52px;
-    border-top:1px solid rgba(255,255,255,.16);
-  }
-  .readout div{
-    flex:0 0 auto;
-    padding:18px 34px 0 0;
-    margin-right:34px;
-    border-right:1px solid rgba(255,255,255,.14);
-  }
-  .readout div:last-child{border-right:0;margin-right:0}
-  .readout dt{
-    margin:0 0 7px;
-    font-family:var(--mono);
-    font-size:10px;
-    letter-spacing:.18em;
-    text-transform:uppercase;
-    color:rgba(255,255,255,.5);
-  }
-  .readout dd{
-    margin:0;
-    font-family:var(--mono);
-    font-size:22px;
-    font-weight:600;
-    letter-spacing:-.01em;
-    color:#fff;
-  }
-  .readout dd small{font-size:12px;font-weight:400;letter-spacing:.06em;color:rgba(255,255,255,.6);margin-left:5px}
-
   /* ── 应用位 ─────────────────────────────────────── */
-  main{padding:64px 0 0}
+  main{padding:34px 0 0}
 
   .sec-head{
     display:flex;
     align-items:baseline;
     justify-content:space-between;
     gap:20px;
-    padding-bottom:14px;
-    margin-bottom:26px;
-    border-bottom:1px solid var(--rule);
+    padding-bottom:12px;
+    margin-bottom:20px;
+    border-bottom:1px solid var(--line);
   }
-  .sec-head h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em}
-  .sec-head .mono{color:var(--ink-2)}
+  .sec-head h2{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .sec-head .mono{color:var(--ink-3)}
 
   .bay{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:22px;
+    gap:20px;
   }
 
   .slot{
+    position:relative;
     display:flex;
     flex-direction:column;
     min-width:0;
-    border:1px solid var(--rule);
+    border:1px solid var(--line);
     border-radius:4px;
-    background:var(--card);
+    background:var(--panel);
   }
 
   a.slot{
     text-decoration:none;
     color:inherit;
     overflow:hidden;
-    box-shadow:0 1px 2px rgba(10,26,36,.05);
-    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    transition:border-color .22s ease, background .22s ease, transform .22s ease;
+  }
+  a.slot::before{
+    content:"";
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:2px;
+    background:var(--line);
+    transition:background .22s ease, box-shadow .22s ease;
+    z-index:2;
   }
   a.slot:hover{
     transform:translateY(-3px);
-    border-color:#c4d3e2;
-    box-shadow:0 18px 40px rgba(10,40,70,.12);
+    border-color:#2a5470;
+    background:var(--panel-2);
   }
-  a.slot:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+  a.slot:hover::before{
+    background:var(--cyan);
+    box-shadow:0 0 14px rgba(97,213,255,.55);
+  }
+  a.slot:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 
-  /* 位号条 */
   .addr{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:12px;
-    padding:11px 16px;
-    border-bottom:1px solid var(--rule);
-    background:#f7f9fc;
-    color:var(--ink-2);
+    padding:10px 15px;
+    border-bottom:1px solid var(--line-soft);
+    background:rgba(255,255,255,.015);
+    color:var(--ink-3);
   }
-  .addr b{font-weight:600;color:var(--ink);letter-spacing:.16em}
-  .state{display:inline-flex;align-items:center;gap:7px;letter-spacing:.1em}
+  .addr b{font-weight:600;color:var(--ink-2);letter-spacing:.16em}
+  .state{display:inline-flex;align-items:center;gap:7px;letter-spacing:.1em;color:var(--ink-2)}
   .state::before{
     content:"";width:6px;height:6px;border-radius:50%;
     background:var(--live);
-    box-shadow:0 0 0 3px rgba(15,156,125,.14);
+    box-shadow:0 0 9px rgba(47,214,166,.7);
   }
 
+  /* 预览屏：默认压暗，指到才亮 */
   .visual{
     position:relative;
     aspect-ratio:16/9;
     overflow:hidden;
-    border-bottom:1px solid var(--rule);
-    background:#eef4fa;
+    border-bottom:1px solid var(--line-soft);
+    background:#0a1720;
   }
-  .visual img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
-  a.slot:hover .visual img{transform:scale(1.02)}
+  .visual img{
+    display:block;width:100%;height:100%;object-fit:cover;
+    filter:saturate(.55) brightness(.62) contrast(1.05);
+    transition:filter .35s ease, transform .45s ease;
+  }
+  .visual::after{
+    content:"";
+    position:absolute;inset:0;
+    pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(7,19,28,.34) 0%, rgba(7,19,28,.06) 40%, rgba(7,19,28,.5) 100%),
+      repeating-linear-gradient(180deg, rgba(97,213,255,.045) 0 1px, transparent 1px 3px);
+    transition:opacity .35s ease;
+  }
+  a.slot:hover .visual img{filter:none;transform:scale(1.015)}
+  a.slot:hover .visual::after{opacity:.28}
 
-  .body{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
+  .body{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1}
   .tag{
     display:inline-block;
-    margin:0 0 14px;
+    margin:0 0 12px;
     padding:4px 9px;
-    border:1px solid #cfe0f2;
+    border:1px solid #1f4460;
     border-radius:3px;
-    background:#f1f7ff;
-    color:#004b91;
+    background:rgba(15,143,224,.10);
+    color:var(--cyan);
     font-family:var(--mono);
     font-size:10px;
     font-weight:600;
     letter-spacing:.14em;
     text-transform:uppercase;
   }
-  .body h3{margin:0;font-size:23px;font-weight:700;line-height:1.25;letter-spacing:-.02em}
+  .body h3{margin:0;font-size:22px;font-weight:700;line-height:1.25;letter-spacing:-.02em;color:#f2fafd}
   .body p{
-    margin:11px 0 20px;
+    margin:10px 0 18px;
     color:var(--ink-2);
     font-size:14px;
-    line-height:1.72;
+    line-height:1.7;
     text-wrap:pretty;
   }
   .go{
@@ -256,38 +243,38 @@
     align-items:center;
     gap:8px;
     margin-top:auto;
-    color:var(--blue);
+    color:var(--cyan);
     font-size:13px;
     font-weight:700;
   }
   .go::after{content:"→";font-size:15px;transition:transform .2s ease}
   a.slot:hover .go::after{transform:translateX(4px)}
 
-  /* 空位 */
   .slot.empty{
     border-style:dashed;
-    border-color:#c9d4df;
-    background:transparent;
-    min-height:168px;
+    border-color:#1a3446;
+    background:rgba(255,255,255,.012);
+    min-height:160px;
   }
   .slot.empty .addr{
     background:transparent;
-    border-bottom-color:#dbe3ea;
+    border-bottom-color:#162c3a;
     border-bottom-style:dashed;
   }
+  .slot.empty .state{color:var(--ink-3)}
   .slot.empty .state::before{
     background:transparent;
-    border:1px solid #9fb1c0;
+    border:1px solid var(--ink-3);
     box-shadow:none;
   }
-  .slot.empty .body{justify-content:center;padding:22px 24px}
-  .slot.empty h3{font-size:17px;font-weight:600;color:#71838f}
-  .slot.empty p{margin:8px 0 0;font-size:13px;color:#8c9ba6}
+  .slot.empty .body{justify-content:center}
+  .slot.empty h3{font-size:17px;font-weight:600;color:#5f7d8f}
+  .slot.empty p{margin:8px 0 0;font-size:13px;color:#4f6a7b}
 
   footer{
-    margin-top:72px;
-    padding:22px 0 40px;
-    border-top:1px solid var(--rule);
+    margin-top:60px;
+    padding:20px 0 36px;
+    border-top:1px solid var(--line);
   }
   footer .wrap{
     display:flex;
@@ -297,18 +284,17 @@
     color:var(--ink-2);
     font-size:13px;
   }
-  footer a{color:var(--blue);text-decoration:none}
+  footer a{color:var(--cyan);text-decoration:none}
   footer a:hover{text-decoration:underline}
-  footer .mono{color:#8496a3}
+  footer .mono{color:var(--ink-3)}
 
   @media (max-width:820px){
-    .wrap{width:min(100% - 32px,600px)}
-    .hero{padding:64px 0 56px}
+    .wrap{width:min(100% - 30px,600px)}
+    .hero{padding:34px 0 36px}
     .topbar .mono{display:none}
-    .readout{margin-top:38px}
-    .readout div{padding-right:24px;margin-right:24px}
-    .bay{grid-template-columns:1fr;gap:16px}
-    .blockmap{-webkit-mask-image:linear-gradient(180deg,transparent 30%,#000 100%);mask-image:linear-gradient(180deg,transparent 30%,#000 100%)}
+    .bay{grid-template-columns:1fr;gap:14px}
+    #lattice{-webkit-mask-image:linear-gradient(180deg,transparent 20%,#000 100%);mask-image:linear-gradient(180deg,transparent 20%,#000 100%)}
+    .visual img{filter:saturate(.85) brightness(.9)}
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -320,7 +306,7 @@
 <body>
 
 <div class="band">
-  <div class="blockmap" id="blockmap" aria-hidden="true"></div>
+  <canvas id="lattice" aria-hidden="true"></canvas>
 
   <nav class="topbar" aria-label="页面导航">
     <div class="wrap">
@@ -334,15 +320,8 @@
 
   <header class="hero">
     <div class="wrap">
-      <p class="kicker mono">Personal Application Lab</p>
       <h1>AI 重构工作流</h1>
-      <p class="lede">面向客户的NetApp存储技术与AI数据管理平台演示</p>
-
-      <dl class="readout">
-        <div><dt>在线</dt><dd>02</dd></div>
-        <div><dt>规划中</dt><dd>02</dd></div>
-        <div><dt>最近更新</dt><dd>2026.07</dd></div>
-      </dl>
+      <p class="lede">面向客户的 NetApp 存储技术 &amp; AI 数据管理平台演示</p>
     </div>
   </header>
 </div>
@@ -409,51 +388,148 @@
   </div>
 </footer>
 
-<script>
-(function () {
-  var el = document.getElementById('blockmap');
-  if (!el) return;
+<script type="module">
+import * as THREE from './assets/vendor/three.module.min.js';
 
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canvas = document.getElementById('lattice');
+const band = canvas.parentElement;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  function paint() {
-    var cell = 16; // 13px block + 3px gap
-    var cols = Math.ceil(el.clientWidth / cell);
-    var rows = Math.ceil(el.clientHeight / cell);
-    var total = cols * rows;
-    if (!total || total > 4000) total = Math.min(total, 4000);
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({
+    canvas,
+    alpha: true,
+    antialias: false,
+    powerPreference: 'low-power'
+  });
+} catch (e) {
+  canvas.hidden = true;           // WebGL 不可用时退回 CSS 渐变
+}
 
-    el.textContent = '';
-    var frag = document.createDocumentFragment();
-    var picked = [];
+if (renderer) {
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
-    for (var i = 0; i < total; i++) {
-      var b = document.createElement('i');
-      // 右侧越密，像一块逐渐写满的分配图
-      var x = (i % cols) / cols;
-      var r = Math.random();
-      if (r < 0.05 + x * 0.30) { picked.push(b); b.dataset.hot = (r < 0.03 + x * 0.06) ? '1' : ''; }
-      frag.appendChild(b);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+  camera.position.set(0, 5.4, 16);
+  camera.lookAt(0, 0, -6);
+
+  // ── 分配点阵：一片向远处递进的方块场 ──
+  const compact = window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+  const COLS = compact ? 28 : 52;
+  const ROWS = compact ? 12 : 20;
+  const STEP = 0.62;
+  const COUNT = COLS * ROWS;
+
+  const geo = new THREE.PlaneGeometry(0.4, 0.4);
+  const mat = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0.95,
+    depthWrite: false
+  });
+  const mesh = new THREE.InstancedMesh(geo, mat, COUNT);
+  mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  mesh.rotation.x = -Math.PI / 2.35;
+  scene.add(mesh);
+
+  const dummy = new THREE.Object3D();
+  const phase = new Float32Array(COUNT);   // 每格自己的相位，避免整齐划一
+  const gx = new Float32Array(COUNT);
+  const gy = new Float32Array(COUNT);
+
+  for (let r = 0, i = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++, i++) {
+      const x = (c - COLS / 2) * STEP;
+      const y = (r - ROWS / 2) * STEP;
+      gx[i] = c / COLS;
+      gy[i] = r / ROWS;
+      phase[i] = Math.random() * Math.PI * 2;
+      dummy.position.set(x, y, 0);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
     }
-    el.appendChild(frag);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
 
-    if (reduce) {
-      picked.forEach(function (b) { b.className = b.dataset.hot ? 'hot' : 'on'; });
-      return;
+  const colors = new Float32Array(COUNT * 3);
+  mesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+
+  const BASE = new THREE.Color(0x18384c);  // 未分配
+  const ON   = new THREE.Color(0x2f9fd4);  // 已分配
+  const HOT  = new THREE.Color(0x9ee8ff);  // 正在写入
+  const tmp  = new THREE.Color();
+
+  function shade(t) {
+    for (let i = 0; i < COUNT; i++) {
+      // 一条缓慢横扫的写入带
+      const head = (t * 0.055) % 1.6 - 0.3;
+      const d = Math.abs(gx[i] - head);
+      const sweep = Math.exp(-(d * d) / 0.0032);
+
+      // 底噪：右侧写得更满
+      const fill = 0.10 + gx[i] * 0.42;
+      const flick = 0.5 + 0.5 * Math.sin(t * 0.9 + phase[i] + gy[i] * 3.1);
+      const allocated = flick < fill ? 1 : 0;
+
+      tmp.copy(BASE);
+      if (allocated) tmp.lerp(ON, 0.55 + 0.25 * flick);
+      if (sweep > 0.02) tmp.lerp(HOT, Math.min(sweep, 1) * (allocated ? 0.9 : 0.35));
+
+      colors[i * 3] = tmp.r;
+      colors[i * 3 + 1] = tmp.g;
+      colors[i * 3 + 2] = tmp.b;
     }
-    picked.forEach(function (b, i) {
-      setTimeout(function () { b.className = b.dataset.hot ? 'hot' : 'on'; }, 120 + i * 4);
-    });
+    mesh.instanceColor.needsUpdate = true;
   }
 
-  paint();
+  function resize() {
+    const w = band.clientWidth;
+    const h = band.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
 
-  var t;
-  window.addEventListener('resize', function () {
-    clearTimeout(t);
-    t = setTimeout(paint, 220);
+  let raf = null;
+  const clock = new THREE.Clock();
+
+  function frame() {
+    const t = clock.getElapsedTime();
+    shade(t);
+    renderer.render(scene, camera);
+    raf = requestAnimationFrame(frame);
+  }
+
+  function start() {
+    if (raf === null) { clock.start(); raf = requestAnimationFrame(frame); }
+  }
+  function stop() {
+    if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
+  }
+
+  resize();
+  canvas.classList.add('ready');
+
+  if (reduceMotion.matches) {
+    shade(6);                    // 静止的一帧
+    renderer.render(scene, camera);
+  } else {
+    start();
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || reduceMotion.matches) stop(); else start();
   });
-})();
+
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(resize, 180);
+  });
+}
 </script>
 </body>
 </html>
