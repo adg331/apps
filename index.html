@@ -431,7 +431,7 @@ if (renderer) {
 
   const compact = window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
   const COUNT = compact ? 1400 : 3200;
-  const X_MIN = -34, X_MAX = 34;      // 世界坐标横向范围
+  let X_MIN = -34, X_MAX = 34;        // 会在 resize 时按视锥可见宽度重算
   const LANES = 9;                     // 右侧通道数
   const LANE_GAP = 1.15;
 
@@ -446,7 +446,8 @@ if (renderer) {
 
   function seed(i, fromLeft) {
     const lane = Math.floor(Math.random() * LANES);
-    meta[i*4]   = 2.6 + Math.random() * 3.4;                    // speed
+    const spanK = (X_MAX - X_MIN) / 68;                         // 跨度变宽则等比提速
+    meta[i*4]   = (2.6 + Math.random() * 3.4) * spanK;          // speed
     meta[i*4+1] = (lane - (LANES - 1) / 2) * LANE_GAP;          // laneY
     meta[i*4+2] = (Math.random() - 0.5) * 1.6;                  // laneZ
     meta[i*4+3] = Math.random() * Math.PI * 2;                  // phase
@@ -485,6 +486,12 @@ if (renderer) {
     l.position.y = k * LANE_GAP * 2;
     l.userData.k = k;
     scene.add(l);
+  }
+
+  function updateRails() {
+    const p = railGeo.attributes.position;
+    p.setX(0, X_MIN); p.setX(1, X_MAX);
+    p.needsUpdate = true;
   }
 
   // 鼠标视差
@@ -545,7 +552,7 @@ if (renderer) {
     par.y += (par.ty - par.y) * 0.05;
     camera.position.x = CAM.x + par.x * 2.2;
     camera.position.y = CAM.y - par.y * 1.4;
-    camera.lookAt(4, 0, 0);
+    camera.lookAt(0, 0, 0);
   }
 
   function resize() {
@@ -554,6 +561,13 @@ if (renderer) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+
+    // 按视锥在 z=0 平面的可见宽度重算横向范围，铺满整个头图区
+    const halfW = Math.tan((camera.fov * Math.PI) / 360) * CAM.z * camera.aspect;
+    X_MIN = -halfW - 4;
+    X_MAX =  halfW + 4;
+    updateRails();
+    for (let i = 0; i < COUNT; i++) seed(i, false);
   }
 
   let raf = null;
