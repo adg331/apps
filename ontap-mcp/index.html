@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp ONTAP MCP 交互式演示</title>
+<style>
+  :root{
+    --navy:#0b1526; --navy2:#101d33; --panel:#16243d; --panel2:#1c2d4a;
+    --blue:#0067C5; --blue2:#2f9bff; --cyan:#00c2b3; --amber:#f5a623;
+    --text:#e8eef7; --muted:#9db0c9; --line:#2a3d5e;
+    --green:#3fd68f; --red:#ff6b6b; --mono:'SF Mono','Cascadia Code',Consolas,Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--navy);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;line-height:1.6}
+  a{color:var(--blue2)}
+  /* ---------- header ---------- */
+  header{position:sticky;top:0;z-index:100;background:rgba(11,21,38,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .hwrap{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:24px;padding:12px 24px;flex-wrap:wrap}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;white-space:nowrap}
+  .logo .mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav button{background:none;border:none;color:var(--muted);font-size:14px;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;transition:.2s}
+  nav button:hover{color:var(--text);background:var(--panel)}
+  nav button.active{color:#fff;background:var(--blue)}
+  /* ---------- layout ---------- */
+  main{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+  section.page{display:none}
+  section.page.show{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  h1{font-size:34px;line-height:1.25;margin-bottom:12px}
+  h2{font-size:22px;margin:36px 0 14px}
+  .sub{color:var(--muted);font-size:16px;max-width:820px}
+  .accent{background:linear-gradient(90deg,var(--blue2),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-right:6px;margin-bottom:6px}
+  .tag.hl{border-color:var(--blue);color:var(--blue2)}
+  /* ---------- cards ---------- */
+  .grid{display:grid;gap:16px;margin-top:20px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;transition:.2s}
+  .card:hover{border-color:var(--blue);transform:translateY(-2px)}
+  .card .ic{font-size:24px;margin-bottom:10px}
+  .card h3{font-size:16px;margin-bottom:6px}
+  .card p{font-size:13.5px;color:var(--muted)}
+  /* ---------- hero flow ---------- */
+  .flow{display:flex;align-items:center;justify-content:center;gap:14px;margin:34px 0 8px;flex-wrap:wrap}
+  .flow .node{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 20px;text-align:center;min-width:150px}
+  .flow .node b{display:block;font-size:14.5px}
+  .flow .node span{font-size:12px;color:var(--muted)}
+  .flow .arr{color:var(--cyan);font-size:20px}
+  /* ---------- compare table ---------- */
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+  th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:13px}
+  td:first-child{color:var(--muted)}
+  /* ---------- architecture ---------- */
+  .arch-wrap{display:grid;grid-template-columns:1fr 320px;gap:20px;margin-top:20px}
+  @media(max-width:900px){.arch-wrap{grid-template-columns:1fr}}
+  .arch-svg{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px}
+  .arch-svg svg{width:100%;height:auto;display:block}
+  .arch-node{cursor:pointer}
+  .arch-node rect{transition:.2s}
+  .arch-node:hover rect{filter:brightness(1.3)}
+  .arch-node.sel rect{stroke:var(--cyan);stroke-width:2.5}
+  #archDetail{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;min-height:200px}
+  #archDetail h3{font-size:16px;margin-bottom:10px;color:var(--blue2)}
+  #archDetail ul{margin:8px 0 0 18px;font-size:13.5px;color:var(--muted)}
+  #archDetail li{margin-bottom:6px}
+  .dash{stroke-dasharray:6 5;animation:dashmove 1.2s linear infinite}
+  @keyframes dashmove{to{stroke-dashoffset:-11}}
+  /* ---------- tools ---------- */
+  .toolcat{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .toolcat .head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer}
+  .toolcat .head:hover{background:var(--panel2)}
+  .toolcat .head .cnt{margin-left:auto;font-size:12px;color:var(--muted);background:var(--navy2);border:1px solid var(--line);padding:2px 10px;border-radius:999px}
+  .toolcat .head .chev{color:var(--muted);transition:.25s;font-size:12px}
+  .toolcat.open .chev{transform:rotate(90deg)}
+  .toolcat .body{display:none;padding:0 18px 16px;border-top:1px solid var(--line)}
+  .toolcat.open .body{display:block}
+  .toolchips{display:flex;flex-wrap:wrap;gap:8px;padding-top:14px}
+  .toolchips code{font-family:var(--mono);font-size:12px;background:var(--navy2);border:1px solid var(--line);padding:4px 10px;border-radius:7px;color:var(--cyan)}
+  .toolchips code.w{color:var(--amber)}
+  .legend{font-size:12.5px;color:var(--muted);margin-top:14px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 5px 0 12px}
+  /* ---------- scenarios ---------- */
+  .scen .card{display:flex;flex-direction:column}
+  .scen .card .btn{margin-top:auto;align-self:flex-start}
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 16px;font-size:13.5px;cursor:pointer;font-family:inherit;margin-top:14px;transition:.2s}
+  .btn:hover{background:var(--blue2)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .btn.ghost:hover{border-color:var(--blue2);color:var(--text)}
+  /* ---------- demo ---------- */
+  .demo-wrap{display:grid;grid-template-columns:280px 1fr;gap:20px;margin-top:20px}
+  @media(max-width:900px){.demo-wrap{grid-template-columns:1fr}}
+  .demo-side{display:flex;flex-direction:column;gap:10px}
+  .demo-side .sc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;transition:.2s}
+  .demo-side .sc:hover{border-color:var(--blue)}
+  .demo-side .sc.active{border-color:var(--cyan);background:var(--panel2)}
+  .demo-side .sc b{font-size:14px;display:block}
+  .demo-side .sc span{font-size:12px;color:var(--muted)}
+  .chat{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:640px}
+  .chat-head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .chat-head .st{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .chat-head b{font-size:14px}
+  .chat-head span{font-size:12px;color:var(--muted)}
+  .chat-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+  .chat-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
+  .chat-foot .hint{font-size:12.5px;color:var(--muted)}
+  .msg{max-width:88%;border-radius:12px;padding:12px 16px;font-size:14px;animation:fade .3s ease}
+  .msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+  .msg.ai{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.ai .who,.msg.user .who{font-size:11px;opacity:.75;margin-bottom:4px}
+  .msg.tool{align-self:flex-start;width:88%;background:var(--navy2);border:1px solid var(--line);border-left:3px solid var(--cyan);font-family:var(--mono);font-size:12.5px}
+  .msg.tool .tl{display:flex;align-items:center;gap:8px;color:var(--cyan);margin-bottom:8px;font-size:12px}
+  .msg.tool pre{white-space:pre-wrap;word-break:break-all;color:#c7d6ec;margin:0}
+  .msg.result{align-self:flex-start;width:88%;background:var(--navy2);border:1px solid var(--line);border-left:3px solid var(--green);font-family:var(--mono);font-size:12.5px}
+  .msg.result .tl{color:var(--green);margin-bottom:8px;font-size:12px}
+  .msg.result pre{white-space:pre-wrap;word-break:break-all;color:#c7d6ec;margin:0}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--cyan);border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  .typing{align-self:flex-start;color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center}
+  .kw{color:var(--blue2)}
+  /* ---------- deploy ---------- */
+  .step{display:flex;gap:16px;margin-top:22px}
+  .step .num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+  .step h3{font-size:16px;margin-bottom:8px;padding-top:4px}
+  pre.code{background:var(--navy2);border:1px solid var(--line);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12.5px;color:#c7d6ec;overflow-x:auto;margin-top:10px;line-height:1.7}
+  pre.code .c{color:#5d7397}
+  pre.code .k{color:var(--cyan)}
+  pre.code .s{color:var(--amber)}
+  footer{border-top:1px solid var(--line);margin-top:20px}
+  .fwrap{max-width:1200px;margin:0 auto;padding:24px;font-size:12.5px;color:var(--muted)}
+  .fwrap a{margin-right:16px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="logo"><div class="mark">◤</div>NetApp ONTAP <span class="accent">MCP</span></div>
+    <nav id="nav">
+      <button data-p="overview" class="active">概述</button>
+      <button data-p="arch">架构</button>
+      <button data-p="tools">工具能力</button>
+      <button data-p="scenarios">使用场景</button>
+      <button data-p="demo">交互演示</button>
+      <button data-p="deploy">快速部署</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= 概述 ================= -->
+<section class="page show" id="p-overview">
+  <div class="tag hl">开源 · Apache 2.0</div><div class="tag">Go 语言</div><div class="tag">Streamable HTTP</div><div class="tag">多集群</div>
+  <h1>用自然语言，<span class="accent">管理你的 ONTAP 存储</span></h1>
+  <p class="sub">ONTAP MCP Server 基于开放标准 <b>Model Context Protocol（MCP）</b>，让 Claude、GitHub Copilot 等 AI 助手安全地查询和操作 NetApp ONTAP 存储系统——从卷开通、数据保护到多集群管理，一句话完成。</p>
+
+  <div class="flow">
+    <div class="node"><b>💬 自然语言</b><span>"创建一个 5GB 的 NFS 卷"</span></div>
+    <div class="arr">→</div>
+    <div class="node"><b>🤖 AI 助手</b><span>Claude / Copilot</span></div>
+    <div class="arr">→</div>
+    <div class="node"><b>🔧 MCP 工具调用</b><span>参数校验 · 护栏</span></div>
+    <div class="arr">→</div>
+    <div class="node"><b>🗄️ ONTAP REST API</b><span>安全执行 · 结构化返回</span></div>
+  </div>
+
+  <h2>什么是 MCP？</h2>
+  <p class="sub">Model Context Protocol 是连接 AI 模型与外部系统的开放标准，好比 AI 世界的 "USB-C 接口"。ONTAP MCP Server 把 ONTAP 管理操作封装为一组<b>显式定义、参数受校验</b>的工具（Tools），AI 不再"猜测"如何管理存储，而是调用结构化接口——可预测、可审计、有护栏。</p>
+
+  <h2>核心价值</h2>
+  <div class="grid g3">
+    <div class="card"><div class="ic">🗣️</div><h3>AI 辅助存储管理</h3><p>通过 MCP 与 AI 助手直接集成，用对话方式完成日常存储运维，大幅降低操作门槛。</p></div>
+    <div class="card"><div class="ic">⚡</div><h3>自助服务开通</h3><p>应用团队用自然语言即可申请和管理存储资源（卷、共享、导出策略），无需等待工单。</p></div>
+    <div class="card"><div class="ic">🛡️</div><h3>数据保护自动化</h3><p>快照策略、SnapMirror 复制关系的创建与管理全部工具化，策略驱动、结果可预期。</p></div>
+    <div class="card"><div class="ic">🌐</div><h3>多集群统一管理</h3><p>单一 MCP 端点纳管多个 ONTAP 集群，凭证集中管理，AI 客户端跨环境一致操作。</p></div>
+    <div class="card"><div class="ic">🧩</div><h3>自定义工作流</h3><p>AI 可将多个工具链式编排成多步工作流，贴合企业自身的存储运维流程。</p></div>
+    <div class="card"><div class="ic">🔒</div><h3>安全护栏</h3><p>工具带 readOnly / destructive 提示元数据，支持只读模式启动，危险操作可控。</p></div>
+  </div>
+
+  <h2>从"观察"到"操作"：与 Harvest MCP 互补</h2>
+  <table>
+    <tr><th></th><th>Harvest MCP（观察）</th><th>ONTAP MCP（操作）</th></tr>
+    <tr><td>定位</td><td>会话式可观测性：指标、容量、性能</td><td>会话式运维：开通、保护、变更</td></tr>
+    <tr><td>典型问题</td><td>"哪些卷容量快满了？延迟在上升吗？"</td><td>"扩容这个卷 / 调整导出策略 / 建立容灾复制"</td></tr>
+    <tr><td>覆盖范围</td><td>ONTAP、StorageGRID、E-Series、Cisco</td><td>ONTAP 集群（多集群）</td></tr>
+    <tr><td>协同</td><td colspan="2">同一 MCP 模型、同一对话流：一个发现问题，另一个解决问题</td></tr>
+  </table>
+  <button class="btn" onclick="go('arch')">查看架构 →</button>
+</section>
+
+<!-- ================= 架构 ================= -->
+<section class="page" id="p-arch">
+  <h1>系统<span class="accent">架构</span></h1>
+  <p class="sub">刻意保持简洁：一个轻量 Go 服务，作为 MCP 工具与 ONTAP REST API 之间的干净桥梁——没有新的抽象层需要学习。<b>点击图中组件</b>查看详细说明。</p>
+
+  <div class="arch-wrap">
+    <div class="arch-svg">
+      <svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#00c2b3"/></marker>
+        </defs>
+        <!-- clients -->
+        <g class="arch-node" data-k="clients">
+          <rect x="20" y="30" width="200" height="160" rx="12" fill="#1c2d4a" stroke="#2a3d5e"/>
+          <text x="120" y="58" text-anchor="middle" fill="#e8eef7" font-size="15" font-weight="700">MCP 客户端</text>
+          <rect x="40" y="74" width="160" height="30" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="120" y="94" text-anchor="middle" fill="#9db0c9" font-size="12">Claude Desktop / Code</text>
+          <rect x="40" y="112" width="160" height="30" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="120" y="132" text-anchor="middle" fill="#9db0c9" font-size="12">GitHub Copilot / IDE</text>
+          <rect x="40" y="150" width="160" height="30" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="120" y="170" text-anchor="middle" fill="#9db0c9" font-size="12">自研 AI Agent</text>
+        </g>
+        <!-- protocol arrow -->
+        <line x1="220" y1="110" x2="290" y2="110" stroke="#00c2b3" stroke-width="2" marker-end="url(#ah)" class="dash"/>
+        <text x="255" y="95" text-anchor="middle" fill="#00c2b3" font-size="11">MCP 协议</text>
+        <text x="255" y="135" text-anchor="middle" fill="#5d7397" font-size="10">Streamable HTTP</text>
+        <!-- server -->
+        <g class="arch-node" data-k="server">
+          <rect x="290" y="20" width="220" height="270" rx="12" fill="#16305c" stroke="#0067C5"/>
+          <text x="400" y="50" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">ONTAP MCP Server</text>
+          <text x="400" y="68" text-anchor="middle" fill="#7fb6ff" font-size="11">Go · Docker · 开源</text>
+          <rect x="310" y="84" width="180" height="34" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="400" y="106" text-anchor="middle" fill="#c7d6ec" font-size="12">工具 Schema 注册与托管</text>
+          <rect x="310" y="126" width="180" height="34" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="400" y="148" text-anchor="middle" fill="#c7d6ec" font-size="12">参数校验 · 安全护栏</text>
+          <rect x="310" y="168" width="180" height="34" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="400" y="190" text-anchor="middle" fill="#c7d6ec" font-size="12">集中凭证管理 (ontap.yaml)</text>
+          <rect x="310" y="210" width="180" height="34" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="400" y="232" text-anchor="middle" fill="#c7d6ec" font-size="12">多集群路由</text>
+          <rect x="310" y="252" width="180" height="26" rx="7" fill="#101d33" stroke="#2a3d5e"/>
+          <text x="400" y="270" text-anchor="middle" fill="#9db0c9" font-size="11">--read-only / --stateless</text>
+        </g>
+        <!-- REST arrows -->
+        <line x1="510" y1="90" x2="580" y2="70" stroke="#00c2b3" stroke-width="2" marker-end="url(#ah)" class="dash"/>
+        <line x1="510" y1="155" x2="580" y2="155" stroke="#00c2b3" stroke-width="2" marker-end="url(#ah)" class="dash"/>
+        <line x1="510" y1="220" x2="580" y2="240" stroke="#00c2b3" stroke-width="2" marker-end="url(#ah)" class="dash"/>
+        <text x="545" y="135" text-anchor="middle" fill="#00c2b3" font-size="11">REST API</text>
+        <!-- clusters -->
+        <g class="arch-node" data-k="cluster">
+          <rect x="585" y="40" width="155" height="55" rx="10" fill="#1c2d4a" stroke="#2a3d5e"/>
+          <text x="662" y="63" text-anchor="middle" fill="#e8eef7" font-size="13" font-weight="600">ONTAP 集群 1</text>
+          <text x="662" y="81" text-anchor="middle" fill="#9db0c9" font-size="11">生产 · AFF</text>
+          <rect x="585" y="125" width="155" height="55" rx="10" fill="#1c2d4a" stroke="#2a3d5e"/>
+          <text x="662" y="148" text-anchor="middle" fill="#e8eef7" font-size="13" font-weight="600">ONTAP 集群 2</text>
+          <text x="662" y="166" text-anchor="middle" fill="#9db0c9" font-size="11">容灾站点</text>
+          <rect x="585" y="210" width="155" height="55" rx="10" fill="#1c2d4a" stroke="#2a3d5e"/>
+          <text x="662" y="233" text-anchor="middle" fill="#e8eef7" font-size="13" font-weight="600">ONTAP 集群 N</text>
+          <text x="662" y="251" text-anchor="middle" fill="#9db0c9" font-size="11">FAS / Cloud Volumes</text>
+        </g>
+        <!-- harvest complement -->
+        <g class="arch-node" data-k="harvest">
+          <rect x="290" y="330" width="220" height="70" rx="12" fill="#1c2d4a" stroke="#2a3d5e" stroke-dasharray="5 4"/>
+          <text x="400" y="360" text-anchor="middle" fill="#e8eef7" font-size="14" font-weight="600">Harvest MCP（可选）</text>
+          <text x="400" y="382" text-anchor="middle" fill="#9db0c9" font-size="11">可观测性 · 指标与容量查询</text>
+        </g>
+        <line x1="400" y1="330" x2="400" y2="295" stroke="#5d7397" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <text x="380" y="445" text-anchor="middle" fill="#5d7397" font-size="11">观察（Harvest MCP）+ 操作（ONTAP MCP）= 完整的 AI 存储运维闭环</text>
+      </svg>
+    </div>
+    <div id="archDetail">
+      <h3>👆 点击组件查看详情</h3>
+      <p style="font-size:13.5px;color:var(--muted)">架构中每个组件都可以点击。数据流向：MCP 客户端通过 Streamable HTTP 与 MCP Server 通信，Server 将工具调用翻译为 ONTAP REST API 请求并路由到目标集群。</p>
+    </div>
+  </div>
+
+  <h2>关键设计要点</h2>
+  <div class="grid g3">
+    <div class="card"><div class="ic">🔁</div><h3>Streamable HTTP</h3><p>支持多客户端并发连接；--stateless 模式可兼容剥离会话头的代理环境。</p></div>
+    <div class="card"><div class="ic">🔑</div><h3>集中凭证</h3><p>集群凭证在 ontap.yaml 中一次注册，工具调用无需携带凭证——更安全、更简单。</p></div>
+    <div class="card"><div class="ic">🏷️</div><h3>工具提示元数据</h3><p>每个工具标注 readOnlyHint / idempotentHint / destructiveHint，--read-only 模式仅暴露只读工具。</p></div>
+  </div>
+</section>
+
+<!-- ================= 工具 ================= -->
+<section class="page" id="p-tools">
+  <h1>MCP <span class="accent">工具能力</span></h1>
+  <p class="sub">每个工具对应一个定义良好的 ONTAP REST API 工作流，覆盖 NAS、SAN、数据保护与多集群管理。点击分类展开工具列表。</p>
+  <div class="legend"><span class="dot" style="background:var(--cyan)"></span>青色 = 只读/查询类　<span class="dot" style="background:var(--amber)"></span>橙色 = 写入/变更类（带 destructiveHint 护栏）</div>
+  <div id="toolList" style="margin-top:18px"></div>
+</section>
+
+<!-- ================= 场景 ================= -->
+<section class="page" id="p-scenarios">
+  <h1>典型<span class="accent">使用场景</span></h1>
+  <p class="sub">以下场景均可在"交互演示"页中模拟运行，直观展示 AI 助手 → MCP 工具 → ONTAP 的完整链路。</p>
+  <div class="grid g3 scen" id="scenCards"></div>
+</section>
+
+<!-- ================= 演示 ================= -->
+<section class="page" id="p-demo">
+  <h1>交互式<span class="accent">演示</span></h1>
+  <p class="sub">模拟 AI 助手通过 ONTAP MCP Server 执行存储运维任务的真实交互过程（演示数据，未连接真实集群）。选择左侧场景开始播放。</p>
+  <div class="demo-wrap">
+    <div class="demo-side" id="demoSide"></div>
+    <div class="chat">
+      <div class="chat-head">
+        <div class="st"></div><b>AI 存储助手</b><span>已连接 ontap-mcp · 3 个集群已注册</span>
+        <button class="btn ghost" style="margin:0 0 0 auto;padding:5px 12px" onclick="replayScen()">↻ 重播</button>
+      </div>
+      <div class="chat-body" id="chatBody">
+        <div class="msg ai"><div class="who">AI 助手</div>你好！我已通过 MCP 连接到你的 ONTAP 环境。请从左侧选择一个演示场景，或想象你直接输入了自然语言指令。</div>
+      </div>
+      <div class="chat-foot"><span class="hint">💡 演示模式：消息将自动逐步播放，展示工具调用与返回结果</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 部署 ================= -->
+<section class="page" id="p-deploy">
+  <h1>三步<span class="accent">快速部署</span></h1>
+  <p class="sub">前提条件：ONTAP 集群及管理员凭证 · Docker 运行环境 · MCP Server 到集群的网络连通。</p>
+
+  <div class="step"><div class="num">1</div><div style="flex:1">
+    <h3>启动 ONTAP MCP Server 容器</h3>
+    <pre class="code">docker run -d \
+  --name <span class="s">ontap-mcp-server</span> \
+  -p 8083:8083 \
+  -v /path/to/your/ontap.yaml:/opt/mcp/ontap.yaml \
+  ghcr.io/netapp/ontap-mcp:latest \
+  start --port 8083 --host 0.0.0.0   <span class="c"># 可加 --read-only 只读模式</span></pre>
+    <pre class="code"><span class="c"># ontap.yaml — 集中注册集群凭证</span>
+<span class="k">Pollers:</span>
+  <span class="k">cluster1:</span>
+    addr: <span class="s">10.0.0.1</span>
+    username: <span class="s">admin</span>
+    password: <span class="s">********</span>
+    use_insecure_tls: true</pre>
+  </div></div>
+
+  <div class="step"><div class="num">2</div><div style="flex:1">
+    <h3>在 AI 客户端配置 mcp.json</h3>
+    <pre class="code">{
+  <span class="k">"servers"</span>: {
+    <span class="k">"ontap-mcp"</span>: {
+      <span class="k">"type"</span>: <span class="s">"http"</span>,
+      <span class="k">"url"</span>: <span class="s">"http://your-server-ip:8083"</span>
+    }
+  }
+}</pre>
+  </div></div>
+
+  <div class="step"><div class="num">3</div><div style="flex:1">
+    <h3>开始对话</h3>
+    <pre class="code"><span class="c"># 在 Claude Desktop / Copilot 聊天窗口中直接输入：</span>
+<span class="s">"create a volume of 5 gb with name demo_vol01
+ in svm demo_svm01 and aggregate agg_data_tme_1"</span></pre>
+    <p style="font-size:13.5px;color:var(--muted);margin-top:10px">AI 负责编排，ONTAP MCP 确保操作安全、可预测地执行。</p>
+    <button class="btn" onclick="go('demo')">回到交互演示 →</button>
+  </div></div>
+</section>
+
+</main>
+
+<footer><div class="fwrap">
+  资料来源：
+  <a href="https://github.com/NetApp/ontap-mcp" target="_blank">GitHub · NetApp/ontap-mcp</a>
+  <a href="https://netapp.github.io/ontap-mcp/latest/" target="_blank">官方文档</a>
+  <a href="https://community.netapp.com/t5/Tech-ONTAP-Blogs/New-ONTAP-MCP-AI-that-Modernizes-Your-Storage-Operations/ba-p/465968" target="_blank">NetApp Tech ONTAP 博客</a>
+  <br>本页面为客户交流演示用途，聊天内容为模拟数据。NetApp、ONTAP、SnapMirror 为 NetApp, Inc. 的商标。
+</div></footer>
+
+<script>
+/* ============ navigation ============ */
+function go(p){
+  document.querySelectorAll('section.page').forEach(s=>s.classList.remove('show'));
+  document.getElementById('p-'+p).classList.add('show');
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.p));
+
+/* ============ architecture detail ============ */
+const archInfo={
+  clients:{t:'MCP 客户端',d:'任何支持 MCP 标准的 AI 助手都可以接入：',li:['Claude Desktop / Claude Code：对话式存储运维','GitHub Copilot（VS Code 等 IDE）：开发场景内直接申请存储','自研 Agent：基于 MCP SDK 构建企业专属存储机器人','客户端只需在 mcp.json 中配置 Server 地址即可接入']},
+  server:{t:'ONTAP MCP Server',d:'轻量 Go 服务，以 Docker 容器交付，是整套方案的核心：',li:['托管工具 Schema：每个工具对应一个明确的管理动作','参数校验与护栏：动作可预测、结果结构化','集中凭证管理：ontap.yaml 一次注册，调用无需带凭证','多集群路由：单一端点纳管全部集群','支持 --read-only（只读）与 --stateless（代理兼容）启动']},
+  cluster:{t:'ONTAP 集群',d:'MCP Server 通过 ONTAP REST API 与集群通信：',li:['支持 AFF / FAS / ONTAP Select / Cloud Volumes ONTAP','需要集群管理员凭证与网络连通','所有操作最终都是标准 REST API 调用，可审计','返回结果被规范化后交给 AI 继续编排后续步骤']},
+  harvest:{t:'Harvest MCP（互补组件）',d:'与 ONTAP MCP 配合形成"观察 + 操作"闭环：',li:['Harvest MCP 回答"哪些卷快满了？延迟趋势如何？"','ONTAP MCP 执行"扩容、调整导出、建立复制"','同一 MCP 模型、同一对话流，无缝衔接','覆盖 ONTAP、StorageGRID、E-Series、Cisco 环境']}
+};
+document.querySelectorAll('.arch-node').forEach(n=>{
+  n.addEventListener('click',()=>{
+    document.querySelectorAll('.arch-node').forEach(x=>x.classList.remove('sel'));
+    n.classList.add('sel');
+    const i=archInfo[n.dataset.k];
+    document.getElementById('archDetail').innerHTML=
+      '<h3>'+i.t+'</h3><p style="font-size:13.5px;color:var(--muted)">'+i.d+'</p><ul>'+i.li.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+  });
+});
+
+/* ============ tools ============ */
+const toolCats=[
+  {ic:'🔍',name:'API 发现',desc:'探索与查询 ONTAP REST API，只读安全',tools:[['list_ontap_endpoints',0],['search_ontap_endpoints',0],['describe_ontap_endpoint',0],['ontap_get',0]]},
+  {ic:'💾',name:'卷管理',desc:'卷的全生命周期：创建、修改、删除',tools:[['create_volume',1],['update_volume',1],['delete_volume',1]]},
+  {ic:'🛡️',name:'数据保护（快照）',desc:'快照与快照策略、计划管理',tools:[['create_snapshot',1],['delete_snapshot',1],['restore_snapshot',1],['create_snapshot_policy',1],['update_snapshot_policy',1],['delete_snapshot_policy',1],['create_schedule',1],['add_schedule_in_snapshot_policy',1],['update_schedule_in_snapshot_policy',1],['remove_schedule_in_snapshot_policy',1]]},
+  {ic:'🔄',name:'SnapMirror 复制/容灾',desc:'复制关系创建、初始化、切换与回切',tools:[['create_snapmirror',1],['update_snapmirror',1],['delete_snapmirror',1],['initialize_snapmirror',1],['update_snapmirror_transfer',1],['break_snapmirror',1],['resync_snapmirror',1]]},
+  {ic:'📁',name:'CIFS/SMB 共享',desc:'Windows 文件共享管理',tools:[['create_cifs_share',1],['update_cifs_share',1],['delete_cifs_share',1]]},
+  {ic:'📤',name:'NFS 导出策略',desc:'导出策略与规则的访问控制',tools:[['create_nfs_export_policies',1],['update_nfs_export_policies',1],['delete_nfs_export_policies',1],['create_nfs_export_policies_rules',1],['update_nfs_export_policies_rules',1],['delete_nfs_export_policies_rules',1]]},
+  {ic:'📈',name:'性能管理（QoS）',desc:'QoS 策略查询与管理',tools:[['list_qos_policies',0],['create_qos_policy',1],['update_qos_policy',1],['delete_qos_policy',1]]},
+  {ic:'🏢',name:'SVM 管理',desc:'Storage VM 的创建与管理',tools:[['create_svm',1],['update_svm',1],['delete_svm',1]]},
+  {ic:'🗂️',name:'Qtree 管理',desc:'Qtree 子目录级管理',tools:[['create_qtree',1],['update_qtree',1],['delete_qtree',1]]},
+  {ic:'🌐',name:'网络接口',desc:'IP 逻辑接口（LIF）管理',tools:[['create_network_ip_interface',1],['update_network_ip_interface',1],['delete_network_ip_interface',1]]},
+  {ic:'🧱',name:'LUN 与 igroup（SAN）',desc:'块存储 LUN、启动器组与映射',tools:[['create_lun',1],['update_lun',1],['delete_lun',1],['create_igroup',1],['update_igroup',1],['delete_igroup',1],['add_igroup_initiator',1],['remove_igroup_initiator',1],['create_lun_map',1],['delete_lun_map',1]]},
+  {ic:'🔗',name:'iSCSI / FCP 服务',desc:'iSCSI 与光纤通道协议服务',tools:[['create_iscsi_service',1],['update_iscsi_service',1],['delete_iscsi_service',1],['create_fcp_service',1],['update_fcp_service',1],['delete_fcp_service',1],['create_fc_interface',1],['update_fc_interface',1],['delete_fc_interface',1]]},
+  {ic:'⚡',name:'NVMe',desc:'NVMe 服务、子系统、命名空间',tools:[['create_nvme_service',1],['update_nvme_service',1],['delete_nvme_service',1],['create_nvme_subsystem',1],['update_nvme_subsystem',1],['delete_nvme_subsystem',1],['add_nvme_subsystem_host',1],['remove_nvme_subsystem_host',1],['create_nvme_namespace',1],['update_nvme_namespace',1],['delete_nvme_namespace',1],['create_nvme_subsystem_map',1],['delete_nvme_subsystem_map',1]]},
+  {ic:'🌍',name:'多集群管理',desc:'已注册集群的统一视图',tools:[['list_registered_clusters',0]]}
+];
+document.getElementById('toolList').innerHTML=toolCats.map((c,i)=>
+  '<div class="toolcat" id="tc'+i+'"><div class="head" onclick="document.getElementById(\'tc'+i+'\').classList.toggle(\'open\')">'+
+  '<span>'+c.ic+'</span><div><b style="font-size:14.5px">'+c.name+'</b><div style="font-size:12.5px;color:var(--muted)">'+c.desc+'</div></div>'+
+  '<span class="cnt">'+c.tools.length+' 个工具</span><span class="chev">▶</span></div>'+
+  '<div class="body"><div class="toolchips">'+c.tools.map(t=>'<code class="'+(t[1]?'w':'')+'">'+t[0]+'</code>').join('')+'</div></div></div>'
+).join('');
+
+/* ============ demo scenarios ============ */
+const T=(tool,args)=>({type:'tool',tool,args});
+const R=res=>({type:'result',res});
+const scenarios=[
+  {id:'vol',ic:'💾',name:'自助开通 NFS 卷',brief:'自然语言创建卷并配置导出策略',
+   card:'应用团队直接对 AI 说"给我一个 5GB 的卷"，AI 调用 create_volume 与导出策略工具完成开通——从工单排队到秒级自助。',
+   steps:[
+    {type:'user',text:'帮我在 svm demo_svm01 上创建一个 5GB 的卷，名字叫 demo_vol01，放在聚合 agg_data_tme_1，并允许 10.10.20.0/24 网段通过 NFS 读写访问。'},
+    {type:'ai',text:'好的，我将分三步执行：① 创建卷 → ② 创建导出策略与规则 → ③ 将策略应用到卷。开始执行第一步。'},
+    T('create_volume',{cluster:'cluster1',svm:'demo_svm01',name:'demo_vol01',size:'5GB',aggregate:'agg_data_tme_1'}),
+    R({status:'success',volume:{name:'demo_vol01',uuid:'f3a1…9c2e',size:'5GB',state:'online',junction_path:'/demo_vol01'}}),
+    T('create_nfs_export_policies',{cluster:'cluster1',svm:'demo_svm01',policy:'demo_vol01_policy'}),
+    R({status:'success',policy:'demo_vol01_policy'}),
+    T('create_nfs_export_policies_rules',{policy:'demo_vol01_policy',clients:'10.10.20.0/24',protocols:['nfs3','nfs4'],rw_rule:'sys',ro_rule:'sys'}),
+    R({status:'success',rule_index:1}),
+    T('update_volume',{cluster:'cluster1',volume:'demo_vol01',export_policy:'demo_vol01_policy'}),
+    R({status:'success',message:'export policy attached'}),
+    {type:'ai',text:'✅ 完成！卷 <span class="kw">demo_vol01</span>（5GB）已在 cluster1 / demo_svm01 上线，挂载路径 <span class="kw">/demo_vol01</span>，已允许 10.10.20.0/24 网段 NFSv3/v4 读写访问。客户端可执行：<br><code style="font-family:var(--mono);font-size:12px">mount -t nfs demo_svm01:/demo_vol01 /mnt/data</code>'}
+   ]},
+  {id:'snap',ic:'🛡️',name:'配置快照保护策略',brief:'为关键卷建立自动快照计划',
+   card:'一句话为数据库卷配置"每小时快照保留 24 份、每天保留 7 份"的保护策略，数据保护不再依赖人工记忆。',
+   steps:[
+    {type:'user',text:'为 cluster1 上的 db_vol 配置快照保护：每小时一次保留 24 份，每天一次保留 7 份。'},
+    {type:'ai',text:'我将创建一个包含 hourly 与 daily 两个计划的快照策略，并应用到 db_vol。'},
+    T('create_snapshot_policy',{cluster:'cluster1',svm:'demo_svm01',name:'db_protect',schedules:[{schedule:'hourly',count:24},{schedule:'daily',count:7}]}),
+    R({status:'success',policy:{name:'db_protect',enabled:true,copies:[{schedule:'hourly',count:24},{schedule:'daily',count:7}]}}),
+    T('update_volume',{cluster:'cluster1',volume:'db_vol',snapshot_policy:'db_protect'}),
+    R({status:'success',message:'snapshot policy db_protect applied to db_vol'}),
+    T('create_snapshot',{cluster:'cluster1',volume:'db_vol',name:'baseline_20260710'}),
+    R({status:'success',snapshot:{name:'baseline_20260710',create_time:'2026-07-10T10:32:05+08:00'}}),
+    {type:'ai',text:'✅ 保护策略 <span class="kw">db_protect</span> 已生效：每小时快照保留 24 份 + 每日快照保留 7 份，并已额外创建基线快照 <span class="kw">baseline_20260710</span>。后续如需恢复，直接说"把 db_vol 恢复到某个快照"即可。'}
+   ]},
+  {id:'dr',ic:'🔄',name:'SnapMirror 容灾建立',brief:'跨集群建立复制关系并初始化',
+   card:'向容灾集群建立 SnapMirror 复制关系、完成基线初始化，甚至执行容灾演练（break / resync），全程对话式完成。',
+   steps:[
+    {type:'user',text:'把 cluster1 上的 demo_vol01 复制到容灾集群 cluster2，建立 SnapMirror 关系并初始化。'},
+    {type:'ai',text:'收到。我将在 cluster2 创建目标卷关系并启动基线传输。'},
+    T('create_snapmirror',{source:'cluster1://demo_svm01/demo_vol01',destination:'cluster2://dr_svm01/demo_vol01_dst',policy:'MirrorAllSnapshots'}),
+    R({status:'success',relationship:{uuid:'8d2c…41af',state:'uninitialized',policy:'MirrorAllSnapshots'}}),
+    T('initialize_snapmirror',{relationship_uuid:'8d2c…41af'}),
+    R({status:'success',transfer:{state:'transferring',bytes_transferred:'1.2 GiB / 4.8 GiB'}}),
+    {type:'ai',text:'基线传输进行中（约 25%），我会在完成后确认状态。'},
+    R({status:'success',relationship:{state:'snapmirrored',healthy:true,lag_time:'PT0M42S'}}),
+    {type:'ai',text:'✅ SnapMirror 关系已建立并完成初始化：<span class="kw">cluster1:demo_vol01 → cluster2:demo_vol01_dst</span>，当前状态 snapmirrored，复制延迟 42 秒。如需容灾演练，可继续说"执行 break 切换到 DR 站点"，演练结束后我会用 <span class="kw">resync_snapmirror</span> 回切。'}
+   ]},
+  {id:'san',ic:'🧱',name:'SAN / iSCSI 块存储开通',brief:'LUN + igroup + 映射一次完成',
+   card:'为虚拟化或数据库主机开通块存储：创建 LUN、igroup、添加启动器并完成映射，多步 SAN 流程由 AI 链式编排。',
+   steps:[
+    {type:'user',text:'给 ESXi 主机 esx-01（iqn.1998-01.com.vmware:esx-01）开通一个 500GB 的 iSCSI LUN。'},
+    {type:'ai',text:'我将执行 SAN 开通四步曲：创建 LUN → 创建 igroup → 添加启动器 → 建立映射。'},
+    T('create_lun',{cluster:'cluster1',svm:'san_svm01',path:'/vol/vmware_ds01/lun0',size:'500GB',os_type:'vmware'}),
+    R({status:'success',lun:{path:'/vol/vmware_ds01/lun0',size:'500GB',state:'online'}}),
+    T('create_igroup',{cluster:'cluster1',svm:'san_svm01',name:'esx01_ig',protocol:'iscsi',os_type:'vmware'}),
+    R({status:'success',igroup:'esx01_ig'}),
+    T('add_igroup_initiator',{igroup:'esx01_ig',initiator:'iqn.1998-01.com.vmware:esx-01'}),
+    R({status:'success'}),
+    T('create_lun_map',{path:'/vol/vmware_ds01/lun0',igroup:'esx01_ig'}),
+    R({status:'success',lun_id:0}),
+    {type:'ai',text:'✅ 500GB LUN 已开通并映射给 <span class="kw">esx-01</span>（LUN ID 0）。在 vSphere 中重新扫描存储适配器即可发现新设备并创建数据存储。'}
+   ]},
+  {id:'multi',ic:'🌍',name:'多集群巡检 + 联动扩容',brief:'与 Harvest MCP 协同的运维闭环',
+   card:'"观察 + 操作"组合拳：Harvest MCP 发现容量告急的卷，ONTAP MCP 立即扩容——一个对话流内完成发现到修复。',
+   steps:[
+    {type:'user',text:'检查所有集群里容量使用超过 90% 的卷，并把它们扩容 20%。'},
+    {type:'ai',text:'我先列出已注册集群，再通过 Harvest MCP 查询容量指标，最后对超限卷执行扩容。'},
+    T('list_registered_clusters',{}),
+    R({clusters:[{name:'cluster1',addr:'10.0.0.1',status:'connected'},{name:'cluster2',addr:'10.0.0.2',status:'connected'},{name:'cluster3',addr:'10.0.0.3',status:'connected'}]}),
+    T('harvest-mcp: query_volume_capacity',{filter:'percent_used > 90'}),
+    R({volumes:[{cluster:'cluster1',volume:'app_logs',used:'94%',size:'2TB'},{cluster:'cluster3',volume:'ai_dataset',used:'92%',size:'10TB'}]}),
+    {type:'ai',text:'发现 2 个卷超过 90%：cluster1/app_logs（94%）和 cluster3/ai_dataset（92%）。开始扩容 20%。'},
+    T('update_volume',{cluster:'cluster1',volume:'app_logs',size:'2.4TB'}),
+    R({status:'success',volume:{name:'app_logs',size:'2.4TB',used:'78%'}}),
+    T('update_volume',{cluster:'cluster3',volume:'ai_dataset',size:'12TB'}),
+    R({status:'success',volume:{name:'ai_dataset',size:'12TB',used:'77%'}}),
+    {type:'ai',text:'✅ 巡检并处理完毕：<br>• cluster1/<span class="kw">app_logs</span>：2TB → 2.4TB（使用率降至 78%）<br>• cluster3/<span class="kw">ai_dataset</span>：10TB → 12TB（使用率降至 77%）<br>建议：可以让我每天早上自动执行这个巡检，异常时再通知你。'}
+   ]},
+  {id:'qos',ic:'📈',name:'QoS 性能保障',brief:'为关键业务卷设置性能上限/下限',
+   card:'为核心数据库设置 QoS 保底、为测试环境设置上限，防止"吵闹邻居"，性能治理同样一句话搞定。',
+   steps:[
+    {type:'user',text:'测试环境的 test_vol 最近 IO 太高影响生产，帮我限制它最多 5000 IOPS。'},
+    {type:'ai',text:'我先查看现有 QoS 策略，然后创建限速策略并应用到 test_vol。'},
+    T('list_qos_policies',{cluster:'cluster1',svm:'demo_svm01'}),
+    R({policies:[{name:'prod_guarantee',fixed:{min_throughput_iops:10000}},{name:'default',fixed:{}}]}),
+    T('create_qos_policy',{cluster:'cluster1',svm:'demo_svm01',name:'test_limit_5k',fixed:{max_throughput_iops:5000}}),
+    R({status:'success',policy:'test_limit_5k'}),
+    T('update_volume',{cluster:'cluster1',volume:'test_vol',qos_policy:'test_limit_5k'}),
+    R({status:'success',message:'qos policy test_limit_5k applied'}),
+    {type:'ai',text:'✅ 已创建 QoS 策略 <span class="kw">test_limit_5k</span>（上限 5000 IOPS）并应用到 test_vol。生产卷的 <span class="kw">prod_guarantee</span>（保底 10000 IOPS）不受影响。可随时让我调整或移除该限制。'}
+   ]}
+];
+
+/* scenario cards */
+document.getElementById('scenCards').innerHTML=scenarios.map(s=>
+  '<div class="card"><div class="ic">'+s.ic+'</div><h3>'+s.name+'</h3><p>'+s.card+'</p>'+
+  '<button class="btn" onclick="runScen(\''+s.id+'\')">▶ 在演示中运行</button></div>'
+).join('');
+
+/* demo sidebar */
+document.getElementById('demoSide').innerHTML=scenarios.map(s=>
+  '<div class="sc" id="sc-'+s.id+'" onclick="runScen(\''+s.id+'\')"><b>'+s.ic+' '+s.name+'</b><span>'+s.brief+'</span></div>'
+).join('');
+
+/* ============ demo player ============ */
+let curScen=null, playToken=0;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const body=()=>document.getElementById('chatBody');
+function scrollDown(){const b=body();b.scrollTop=b.scrollHeight;}
+function el(html){const d=document.createElement('div');d.innerHTML=html;return d.firstElementChild;}
+function fmt(o){return JSON.stringify(o,null,2);}
+
+async function typeText(node,text,token,speed){
+  // supports simple html: type plain, then set innerHTML at end
+  const plain=text.replace(/<[^>]+>/g,'');
+  for(let i=0;i<=plain.length;i+=3){
+    if(token!==playToken)return false;
+    node.textContent=plain.slice(0,i);
+    scrollDown();
+    await sleep(speed||14);
+  }
+  node.innerHTML=text;
+  return true;
+}
+
+async function runScen(id){
+  go('demo');
+  const s=scenarios.find(x=>x.id===id);
+  curScen=id;
+  playToken++;
+  const token=playToken;
+  document.querySelectorAll('.demo-side .sc').forEach(x=>x.classList.toggle('active',x.id==='sc-'+id));
+  const b=body();
+  b.innerHTML='';
+  await sleep(200);
+  for(const st of s.steps){
+    if(token!==playToken)return;
+    if(st.type==='user'){
+      const m=el('<div class="msg user"><div class="who">存储管理员</div><div class="tx"></div></div>');
+      b.appendChild(m);scrollDown();
+      if(!await typeText(m.querySelector('.tx'),st.text,token,10))return;
+      await sleep(500);
+    }else if(st.type==='ai'){
+      const t=el('<div class="typing"><span class="spin"></span>AI 正在思考…</div>');
+      b.appendChild(t);scrollDown();
+      await sleep(700);if(token!==playToken)return;
+      t.remove();
+      const m=el('<div class="msg ai"><div class="who">AI 助手</div><div class="tx"></div></div>');
+      b.appendChild(m);scrollDown();
+      if(!await typeText(m.querySelector('.tx'),st.text,token,9))return;
+      await sleep(450);
+    }else if(st.type==='tool'){
+      const m=el('<div class="msg tool"><div class="tl"><span class="spin"></span>调用 MCP 工具：<b>'+st.tool+'</b></div><pre>'+fmt(st.args)+'</pre></div>');
+      b.appendChild(m);scrollDown();
+      await sleep(900);if(token!==playToken)return;
+      m.querySelector('.spin').outerHTML='🔧';
+      await sleep(200);
+    }else if(st.type==='result'){
+      const m=el('<div class="msg result"><div class="tl">✓ ONTAP 返回</div><pre>'+fmt(st.res)+'</pre></div>');
+      b.appendChild(m);scrollDown();
+      await sleep(650);
+    }
+  }
+}
+function replayScen(){ if(curScen)runScen(curScen); }
+</script>
+</body>
+</html>
