@@ -1,0 +1,2217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#061a3a">
+  <title>万词斩</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #061a3a;
+      --panel: #ffffff;
+      --ink: #061427;
+      --muted: #52647d;
+      --line: #bdd1ee;
+      --soft: #e7f0ff;
+      --green: #00b884;
+      --green-dark: #005fbe;
+      --blue: #0b5fff;
+      --blue-dark: #061a3a;
+      --coral: #e3344b;
+      --yellow: #ffc845;
+      --shadow: 0 18px 42px rgba(1, 12, 34, .24);
+      --radius: 8px;
+      --bottom-nav: 78px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #020b1c;
+      color: var(--ink);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      font-size: 16px;
+      letter-spacing: 0;
+      overscroll-behavior: none;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100dvh;
+      background:
+        linear-gradient(180deg, #0b3a82 0%, #061a3a 44%, #020b1c 100%);
+      overflow: hidden;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: calc(env(safe-area-inset-top) + 12px) 16px 10px;
+      background: rgba(6, 26, 58, .94);
+      border-bottom: 1px solid rgba(189, 209, 238, .28);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .brand strong {
+      color: #ffffff;
+      font-size: 19px;
+      line-height: 1.1;
+      font-weight: 850;
+    }
+
+    .brand span {
+      color: #c9dcff;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #052050;
+      border: 1px solid rgba(255, 255, 255, .72);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2.15;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex: 0 0 auto;
+    }
+
+    .content {
+      min-height: calc(100dvh - var(--bottom-nav));
+      padding: 12px 14px calc(var(--bottom-nav) + env(safe-area-inset-bottom) + 18px);
+    }
+
+    .screen {
+      display: none;
+      animation: rise .2s ease-out both;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 4px 0 12px;
+      color: #ffffff;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    .section-head p {
+      margin: 4px 0 0;
+      color: #c9dcff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .unit-panel,
+    .word-row,
+    .stat-box {
+      border-radius: var(--radius);
+      background: #ffffff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .unit-panel {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .unit-select-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .unit-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .unit-select {
+      width: 100%;
+      height: 50px;
+      padding: 0 38px 0 13px;
+      border-radius: var(--radius);
+      border: 2px solid #0b5fff;
+      color: #061427;
+      background: #ffffff;
+      outline: none;
+      font-size: 17px;
+      font-weight: 900;
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #0b5fff 50%),
+        linear-gradient(135deg, #0b5fff 50%, transparent 50%);
+      background-position:
+        calc(100% - 21px) 21px,
+        calc(100% - 14px) 21px;
+      background-size: 7px 7px, 7px 7px;
+      background-repeat: no-repeat;
+    }
+
+    .unit-select:focus {
+      box-shadow: 0 0 0 4px rgba(255, 200, 69, .42);
+      border-color: var(--yellow);
+    }
+
+    .unit-meta {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .mini-meter {
+      position: relative;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #d9e6fb;
+    }
+
+    .mini-meter i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--yellow));
+    }
+
+    .study-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 2px 0 10px;
+    }
+
+    .meter {
+      position: relative;
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .26);
+    }
+
+    .meter span {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--yellow), #31d2ff 48%, var(--green));
+      transition: width .22s ease;
+    }
+
+    .word-card {
+      position: relative;
+      min-height: 336px;
+      padding: 16px;
+      border-radius: var(--radius);
+      background: var(--panel);
+      border: 1px solid rgba(189, 209, 238, .95);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .word-card.spelling-mode {
+      min-height: 0;
+      padding: 12px;
+    }
+
+    .word-card.meaning-mode {
+      min-height: 0;
+      padding: 12px;
+    }
+
+    .word-card.meaning-mode .word-head {
+      align-items: center;
+    }
+
+    .word-card.meaning-mode .word-title h1 {
+      font-size: clamp(28px, 8vw, 36px);
+      line-height: 1.04;
+    }
+
+    .word-card.meaning-mode .phonetic {
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .word-card.meaning-mode .icon-button {
+      width: 36px;
+      height: 36px;
+    }
+
+    .word-card.meaning-mode .visual,
+    .word-card.meaning-mode .meaning-reveal {
+      display: none;
+    }
+
+    .word-card.meaning-mode .example-panel {
+      min-height: 0;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    .word-card.meaning-mode .example-panel span {
+      font-size: 11px;
+    }
+
+    .word-card.meaning-mode .example-panel p {
+      font-size: 13px;
+      line-height: 1.32;
+      font-weight: 740;
+    }
+
+    .word-card.spelling-mode .word-head {
+      align-items: center;
+    }
+
+    .word-card.spelling-mode .word-title h1 {
+      font-size: 25px;
+      line-height: 1.05;
+    }
+
+    .word-card.spelling-mode .phonetic {
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .word-card.spelling-mode .icon-button,
+    .word-card.spelling-mode .visual,
+    .word-card.spelling-mode .meaning-reveal {
+      display: none;
+    }
+
+    .word-card.spelling-mode .example-panel {
+      min-height: 0;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    .word-card.spelling-mode .example-panel p {
+      font-size: 14px;
+      line-height: 1.34;
+      font-weight: 760;
+    }
+
+    .word-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .word-title {
+      min-width: 0;
+    }
+
+    .word-title h1 {
+      margin: 0;
+      font-size: clamp(32px, 10vw, 45px);
+      line-height: 1.02;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .phonetic {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .icon-button {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--blue);
+      border: 1px solid rgba(11, 95, 255, .28);
+    }
+
+    .icon-button:active,
+    .primary:active,
+    .secondary:active,
+    .danger-lite:active,
+    .choice:active {
+      transform: scale(.98);
+    }
+
+    .visual {
+      height: 118px;
+      margin: 12px -2px 10px;
+      overflow: hidden;
+    }
+
+    .visual svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .example-panel {
+      display: grid;
+      gap: 7px;
+      min-height: 76px;
+      padding: 10px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .example-panel span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .example-panel p {
+      margin: 0;
+      color: #2f3d3a;
+      font-size: 15px;
+      line-height: 1.42;
+      font-weight: 680;
+    }
+
+    .meaning-reveal {
+      min-height: 58px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      opacity: 0;
+      transform: translateY(5px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .meaning-reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .meaning-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 20px;
+      line-height: 1.25;
+      font-weight: 850;
+    }
+
+    .meaning-main > span:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .tag {
+      flex: 0 0 auto;
+      min-width: 42px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #e7f0ff;
+      color: #003e91;
+      font-size: 12px;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .choice-grid {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .choice {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      min-height: 46px;
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      background: #ffffff;
+      border: 2px solid #d3e2f7;
+      color: #24302e;
+      text-align: left;
+      box-shadow: 0 6px 16px rgba(27, 42, 38, .05);
+    }
+
+    .choice .letter {
+      display: grid;
+      place-items: center;
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--soft);
+      color: #003e91;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .choice .text {
+      min-width: 0;
+      font-size: 14px;
+      line-height: 1.3;
+      font-weight: 760;
+    }
+
+    .choice.correct {
+      border-color: #00b884;
+      background: #d9fff2;
+    }
+
+    .choice.correct .letter {
+      background: var(--green);
+      color: #ffffff;
+    }
+
+    .choice.wrong {
+      border-color: #e3344b;
+      background: #ffe5e9;
+    }
+
+    .choice.wrong .letter {
+      background: var(--coral);
+      color: #ffffff;
+    }
+
+    .choice:disabled {
+      opacity: 1;
+    }
+
+    .spell-panel {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .cloze-line {
+      padding: 12px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .16);
+      color: #ffffff;
+      font-size: 16px;
+      line-height: 1.45;
+      font-weight: 850;
+    }
+
+    .spell-blank {
+      display: inline-flex;
+      min-width: 92px;
+      justify-content: center;
+      padding: 0 8px 2px;
+      border-bottom: 3px solid var(--yellow);
+      color: var(--yellow);
+      font-weight: 950;
+    }
+
+    .spell-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .spell-slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      min-height: 40px;
+      padding: 8px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .14);
+      border: 1px solid rgba(255, 255, 255, .28);
+    }
+
+    .spell-slot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      min-height: 31px;
+      padding: 0 10px;
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: #061427;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(1, 12, 34, .16);
+    }
+
+    .spell-slot.hint {
+      background: #fff4c7;
+      color: #061427;
+      border: 1px solid rgba(255, 200, 69, .8);
+    }
+
+    .spell-slot.empty {
+      background: rgba(255, 255, 255, .22);
+      color: #d8e7ff;
+      border: 1px dashed rgba(255, 255, 255, .44);
+      box-shadow: none;
+    }
+
+    .spell-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .spell-option {
+      min-height: 44px;
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: #061427;
+      border: 2px solid #bdd1ee;
+      font-size: 17px;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(1, 12, 34, .14);
+    }
+
+    .spell-option:disabled {
+      color: #697891;
+      background: #d9e6fb;
+      box-shadow: none;
+    }
+
+    .spell-panel.wrong .spell-slots {
+      border-color: #ff7a8a;
+      background: rgba(227, 52, 75, .22);
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .primary,
+    .secondary,
+    .danger-lite {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 13px;
+      border-radius: var(--radius);
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .primary {
+      background: var(--yellow);
+      color: #061427;
+      box-shadow: 0 10px 22px rgba(255, 200, 69, .28);
+    }
+
+    .secondary {
+      background: #ffffff;
+      color: #003e91;
+      border: 2px solid rgba(11, 95, 255, .4);
+    }
+
+    .danger-lite {
+      background: #ffe5e9;
+      color: #9d1025;
+      border: 2px solid rgba(227, 52, 75, .44);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 10px 0 14px;
+    }
+
+    .stat-box {
+      min-height: 76px;
+      padding: 12px 10px;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 23px;
+      line-height: 1;
+      font-weight: 850;
+    }
+
+    .stat-box span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 0 -14px 12px;
+      padding: 0 14px 2px;
+      scrollbar-width: none;
+    }
+
+    .filter-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      color: #003e91;
+      font-size: 13px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .chip.active {
+      color: #061427;
+      border-color: var(--yellow);
+      background: #fff4c7;
+    }
+
+    .search {
+      width: 100%;
+      height: 46px;
+      margin: 0 0 12px;
+      padding: 0 14px;
+      border-radius: var(--radius);
+      border: 2px solid #bdd1ee;
+      background: #ffffff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .search:focus {
+      border-color: var(--yellow);
+      box-shadow: 0 0 0 4px rgba(255, 200, 69, .32);
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .word-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 66px;
+      padding: 12px;
+      color: inherit;
+      text-align: left;
+    }
+
+    .word-row strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .word-row span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .row-tags {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      min-width: 74px;
+      flex-wrap: wrap;
+    }
+
+    .tiny-tag {
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: #e7f0ff;
+      color: #003e91;
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .tiny-tag.killed {
+      background: #ffe5e9;
+      color: #9d1025;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 180px;
+      padding: 22px;
+      border: 1px dashed rgba(255, 255, 255, .44);
+      border-radius: var(--radius);
+      color: #c9dcff;
+      text-align: center;
+      line-height: 1.45;
+      background: rgba(255, 255, 255, .1);
+      font-weight: 750;
+    }
+
+    .checkin-card {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border-radius: var(--radius);
+      background: #ffffff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .success-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: #d9fff2;
+      color: #00563f;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .checkin-title {
+      margin: 0;
+      font-size: 31px;
+      line-height: 1.08;
+      font-weight: 900;
+    }
+
+    .checkin-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .checkin-image {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: #061a3a;
+      object-fit: cover;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      width: min(100%, 430px);
+      min-height: calc(var(--bottom-nav) + env(safe-area-inset-bottom));
+      padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: rgba(3, 16, 40, .96);
+      border-top: 1px solid rgba(189, 209, 238, .28);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-btn {
+      display: grid;
+      place-items: center;
+      gap: 3px;
+      min-height: 52px;
+      border-radius: var(--radius);
+      color: #c9dcff;
+      background: transparent;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .nav-btn.active {
+      color: #061427;
+      background: var(--yellow);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom) + 12px);
+      z-index: 30;
+      max-width: min(360px, calc(100% - 36px));
+      padding: 11px 14px;
+      border-radius: 999px;
+      background: rgba(24, 32, 31, .92);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 760;
+      transform: translate(-50%, 14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 360px) {
+      .content {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .word-card {
+        min-height: 322px;
+        padding: 14px;
+      }
+
+      .word-card.spelling-mode {
+        min-height: 0;
+        padding: 10px;
+      }
+
+      .word-card.meaning-mode {
+        min-height: 0;
+        padding: 10px;
+      }
+
+      .visual {
+        height: 96px;
+      }
+
+      .choice .text {
+        font-size: 13px;
+      }
+
+      .choice {
+        min-height: 44px;
+        padding: 6px 9px;
+      }
+
+      .spell-option {
+        min-height: 42px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <strong>万词斩</strong>
+        <span id="topSubtitle">八年级上册词库</span>
+      </div>
+      <span class="pill" id="daysPill">累计 0 天</span>
+    </header>
+
+    <div class="content">
+      <section class="screen active" id="learnScreen">
+        <div id="unitPicker">
+          <div class="section-head">
+            <div>
+              <h2>顺序学习</h2>
+              <p id="unitSummary">完整词库，共 267 词</p>
+            </div>
+          </div>
+          <div class="unit-panel">
+            <div class="unit-select-row">
+              <button class="primary" id="startUnitBtn" type="button">开始 25 词</button>
+            </div>
+            <div class="unit-meta" id="unitStats"></div>
+            <div class="mini-meter" aria-hidden="true"><i id="unitProgress"></i></div>
+          </div>
+        </div>
+
+        <div id="studyPanel" class="hidden">
+          <div class="study-toolbar">
+            <span class="pill" id="studyModeLabel">顺序学习</span>
+            <button class="secondary" id="changeUnitBtn" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+              返回
+            </button>
+          </div>
+          <div class="meter" aria-hidden="true"><span id="progressMeter"></span></div>
+
+          <article class="word-card" id="wordCard">
+            <div class="word-head">
+              <div class="word-title">
+                <h1 id="wordText">ready</h1>
+                <div class="phonetic">
+                  <span id="phoneticText">/ready/</span>
+                  <button class="icon-button" id="speakBtn" type="button" aria-label="朗读单词和例句">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>
+                  </button>
+                </div>
+              </div>
+              <span class="tag" id="partText">n.</span>
+            </div>
+
+            <div class="visual" id="visualBox" aria-hidden="true"></div>
+
+            <div class="example-panel">
+              <span>例句</span>
+              <p id="exampleText">The example sentence appears here.</p>
+            </div>
+
+            <div class="meaning-reveal" id="meaningReveal">
+              <div class="meaning-main">
+                <span id="meaningText">中文释义</span>
+                <span class="tag" id="unitTag">词库</span>
+              </div>
+            </div>
+          </article>
+
+          <div class="choice-grid" id="choiceGrid" aria-label="释义选择"></div>
+
+          <div class="action-row">
+            <button class="danger-lite" id="killBtn" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="m16 22 6-6"/><path d="M14 5l5 5"/></svg>
+              斩杀
+            </button>
+            <button class="secondary" id="replayBtn" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3"/><path d="M18.5 3.5v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3"/><path d="M5.5 20.5v-5h5"/></svg>
+              重读
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="reviewScreen">
+        <div class="section-head">
+          <div>
+            <h2>复习</h2>
+            <p>斩杀词不会进入复习队列</p>
+          </div>
+          <button class="primary" id="startReviewBtn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.7 9.7 0 0 1 6.8 2.8"/><path d="M21 3v6h-6"/><path d="M21 12a9 9 0 0 1-9 9 9.7 9.7 0 0 1-6.8-2.8"/><path d="M3 21v-6h6"/></svg>
+            开始
+          </button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box"><strong id="dueCount">0</strong><span>待复习</span></div>
+          <div class="stat-box"><strong id="weakCount">0</strong><span>错词</span></div>
+          <div class="stat-box"><strong id="killedCount">0</strong><span>已斩杀</span></div>
+        </div>
+        <div class="list" id="reviewList"></div>
+      </section>
+
+      <section class="screen" id="bankScreen">
+        <div class="section-head">
+          <div>
+            <h2>词库</h2>
+            <p id="bankHint">完整词库 · 267 词</p>
+          </div>
+        </div>
+        <input class="search" id="searchInput" type="search" placeholder="搜索单词、释义或例句" autocomplete="off">
+        <div class="list" id="bankList"></div>
+      </section>
+
+      <section class="screen" id="checkinScreen">
+        <div class="checkin-card">
+          <span class="success-badge" id="checkinBadge">今日未打卡</span>
+          <h2 class="checkin-title" id="checkinTitle">完成任务后点亮打卡</h2>
+          <p class="checkin-copy" id="checkinCopy">累计打卡天数会保存在本机浏览器里。</p>
+          <img class="checkin-image" id="checkinImage" alt="打卡分享图">
+          <button class="primary" id="saveImageBtn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            保存到相册
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <nav class="bottom-nav" aria-label="底部导航">
+      <button class="nav-btn active" data-tab="learn" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h10.5"/><path d="M20 7.5v12a1.5 1.5 0 0 1-1.5 1.5H6a2 2 0 0 1 0-4h12.5A1.5 1.5 0 0 0 20 15.5V7.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
+        学习
+      </button>
+      <button class="nav-btn" data-tab="review" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.7 9.7 0 0 1 6.8 2.8"/><path d="M21 3v6h-6"/><path d="M21 12a9 9 0 0 1-9 9 9.7 9.7 0 0 1-6.8-2.8"/><path d="M3 21v-6h6"/></svg>
+        复习
+      </button>
+      <button class="nav-btn" data-tab="bank" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 4v16"/><path d="M4 9h16"/><path d="M4 14h16"/></svg>
+        词库
+      </button>
+      <button class="nav-btn" data-tab="checkin" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 9h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="m8 15 2.5 2.5L16 12"/></svg>
+        打卡
+      </button>
+    </nav>
+    <div class="toast" id="toast"></div>
+  </main>
+
+  <script type="application/json" id="vocab-data">[{"id":"unit-1","unit":1,"title":"Unit 1","words":[{"id":"u1-01-dinosaur","unit":1,"word":"dinosaur","phonetic":"/'daɪnəsɔː(r)/","part":"n.","meaning":"恐龙","example":"Dinosaurs lived on Earth millions of years ago.","order":1},{"id":"u1-02-intelligent","unit":1,"word":"intelligent","phonetic":"/ɪn'telɪdʒənt/","part":"adj.","meaning":"有才智的；聪明的","example":"Dolphins are intelligent animals and can learn quickly.","order":2},{"id":"u1-03-talented","unit":1,"word":"talented","phonetic":"/'tæləntɪd/","part":"adj.","meaning":"有才能的；天才的","example":"She is a talented young artist.","order":3},{"id":"u1-04-artistic","unit":1,"word":"artistic","phonetic":"/ɑː'tɪstɪk/","part":"adj.","meaning":"有艺术天赋的；有美术才能的","example":"My sister is artistic and enjoys painting.","order":4},{"id":"u1-05-perhaps","unit":1,"word":"perhaps","phonetic":"/pə'hæps/","part":"adv.","meaning":"可能；大概；也许","example":"Perhaps we can visit the museum tomorrow.","order":5},{"id":"u1-06-notebook","unit":1,"word":"notebook","phonetic":"/'nəʊtbʊk/","part":"n.","meaning":"笔记本","example":"Please write the new words in your notebook.","order":6},{"id":"u1-07-vehicle","unit":1,"word":"vehicle","phonetic":"/'viːəkl/","part":"n.","meaning":"交通工具；车辆","example":"A bike is a simple vehicle for short trips.","order":7},{"id":"u1-08-prehistoric","unit":1,"word":"prehistoric","phonetic":"/ˌpriːhɪ'stɒrɪk/","part":"adj.","meaning":"史前的","example":"We learned about prehistoric animals in science class.","order":8},{"id":"u1-09-completely","unit":1,"word":"completely","phonetic":"/kəm'pliːtli/","part":"adv.","meaning":"完全地；彻底地","example":"I completely agree with your idea.","order":9},{"id":"u1-10-original","unit":1,"word":"original","phonetic":"/ə'rɪdʒənl/","part":"adj.","meaning":"原来的；起初的","example":"This is the original story, not the movie version.","order":10},{"id":"u1-11-birth","unit":1,"word":"birth","phonetic":"/bɜːθ/","part":"n.","meaning":"出生","example":"The baby was healthy at birth.","order":11},{"id":"u1-12-suffering","unit":1,"word":"suffering","phonetic":"/'sʌfərɪŋ/","part":"n.","meaning":"苦难；疼痛","example":"The medicine helped reduce his suffering.","order":12},{"id":"u1-13-artist","unit":1,"word":"artist","phonetic":"/'ɑːtɪst/","part":"n.","meaning":"艺术家；画家","example":"The artist drew a picture of the old town.","order":13},{"id":"u1-14-death","unit":1,"word":"death","phonetic":"/deθ/","part":"n.","meaning":"死；死亡","example":"The death of the hero made many readers sad.","order":14},{"id":"u1-15-whole","unit":1,"word":"whole","phonetic":"/həʊl/","part":"adj.","meaning":"全部的；所有的","example":"We spent the whole afternoon reading.","order":15},{"id":"u1-16-piece","unit":1,"word":"piece","phonetic":"/piːs/","part":"n.","meaning":"一首；一篇（作品）","example":"I played a short piece on the piano.","order":16},{"id":"u1-17-editor","unit":1,"word":"editor","phonetic":"/'edɪtə(r)/","part":"n.","meaning":"（书籍的）编辑","example":"The editor checked the story before it was printed.","order":17},{"id":"u1-18-organize","unit":1,"word":"organize","phonetic":"/'ɔːɡənaɪz/","part":"v.","meaning":"安排；组织","example":"Our class will organize a book fair next week.","order":18},{"id":"u1-19-order","unit":1,"word":"order","phonetic":"/'ɔːdə(r)/","part":"n.","meaning":"顺序","example":"Put the names in alphabetical order.","order":19},{"id":"u1-20-record","unit":1,"word":"record","phonetic":"/rɪ'kɔːd/","part":"v.","meaning":"记录","example":"Please record your reading time every day.","order":20},{"id":"u1-21-die-out","unit":1,"word":"die out","phonetic":"—","part":"短语","meaning":"灭绝","example":"Some old customs may die out over time.","order":21},{"id":"u1-22-a-type-of","unit":1,"word":"a type of","phonetic":"—","part":"短语","meaning":"一种","example":"This is a type of bird that lives near lakes.","order":22},{"id":"u1-23-be-related-to","unit":1,"word":"be related to","phonetic":"—","part":"短语","meaning":"与……属于同一种类","example":"Tigers are related to cats.","order":23},{"id":"u1-24-general-education","unit":1,"word":"general education","phonetic":"—","part":"短语","meaning":"通识教育","example":"General education helps students learn about many subjects.","order":24},{"id":"u1-25-go-back-a-long-way","unit":1,"word":"go back a long way","phonetic":"—","part":"短语","meaning":"历史悠久","example":"Chinese tea culture goes back a long way.","order":25},{"id":"u1-26-be-similar-to","unit":1,"word":"be similar to","phonetic":"—","part":"短语","meaning":"与……相似","example":"My answer is similar to yours.","order":26},{"id":"u1-27-alphabetical-order","unit":1,"word":"alphabetical order","phonetic":"—","part":"短语","meaning":"字母顺序","example":"The words are listed in alphabetical order.","order":27},{"id":"u1-28-play-an-important-role","unit":1,"word":"play an important role","phonetic":"—","part":"短语","meaning":"起到重要作用","example":"Parents play an important role in children's growth.","order":28}]},{"id":"unit-2","unit":2,"title":"Unit 2","words":[{"id":"u2-01-flight","unit":2,"word":"flight","phonetic":"/flaɪt/","part":"n.","meaning":"（尤指乘飞机的）航程","example":"Our flight to Shanghai took two hours.","order":1},{"id":"u2-02-schedule","unit":2,"word":"schedule","phonetic":"/'ʃedjuːl/","part":"n.","meaning":"日程安排","example":"Please check the schedule before the trip.","order":2},{"id":"u2-03-everywhere","unit":2,"word":"everywhere","phonetic":"/'evriweə(r)/","part":"adv.","meaning":"到处；各个地方","example":"Flowers are everywhere in the park.","order":3},{"id":"u2-04-challenge","unit":2,"word":"challenge","phonetic":"/'tʃælɪndʒ/","part":"v.","meaning":"向（某人）挑战","example":"He challenged me to a chess game.","order":4},{"id":"u2-05-prize","unit":2,"word":"prize","phonetic":"/praɪz/","part":"n.","meaning":"奖赏；奖励","example":"She won first prize in the competition.","order":5},{"id":"u2-06-promise","unit":2,"word":"promise","phonetic":"/'prɒmɪs/","part":"v.","meaning":"承诺；保证","example":"I promise to finish my homework on time.","order":6},{"id":"u2-07-chessboard","unit":2,"word":"chessboard","phonetic":"/'tʃesbɔːd/","part":"n.","meaning":"国际象棋棋盘","example":"The chessboard has sixty-four squares.","order":7},{"id":"u2-08-silver","unit":2,"word":"silver","phonetic":"/'sɪlvə(r)/","part":"n.","meaning":"银","example":"This ring is made of silver.","order":8},{"id":"u2-09-reply","unit":2,"word":"reply","phonetic":"/rɪ'plaɪ/","part":"v.","meaning":"回复；答复","example":"Please reply to my message soon.","order":9},{"id":"u2-10-hesitation","unit":2,"word":"hesitation","phonetic":"/ˌhezɪ'teɪʃn/","part":"n.","meaning":"犹豫","example":"She answered the question without hesitation.","order":10},{"id":"u2-11-wonder","unit":2,"word":"wonder","phonetic":"/'wʌndə(r)/","part":"v.","meaning":"想知道；琢磨","example":"I wonder why he was late today.","order":11},{"id":"u2-12-agree","unit":2,"word":"agree","phonetic":"/ə'ɡriː/","part":"v.","meaning":"同意；赞成","example":"I agree with your plan.","order":12},{"id":"u2-13-per-cent","unit":2,"word":"per cent","phonetic":"/pə 'sent/","part":"n.","meaning":"百分之……","example":"About fifty per cent of the students walk to school.","order":13},{"id":"u2-14-currently","unit":2,"word":"currently","phonetic":"/'kʌrəntli/","part":"adv.","meaning":"目前；当前","example":"She is currently working on a science project.","order":14},{"id":"u2-15-check","unit":2,"word":"check","phonetic":"/tʃek/","part":"v.","meaning":"检查；核查","example":"Please check your answers carefully.","order":15},{"id":"u2-16-budget","unit":2,"word":"budget","phonetic":"/'bʌdʒɪt/","part":"n.","meaning":"预算","example":"We need to make a budget for the trip.","order":16},{"id":"u2-17-province","unit":2,"word":"province","phonetic":"/'prɒvɪns/","part":"n.","meaning":"省份","example":"Zhejiang is a province in eastern China.","order":17},{"id":"u2-18-sharply","unit":2,"word":"sharply","phonetic":"/'ʃɑːpli/","part":"adv.","meaning":"急剧地；突然大幅度地","example":"The temperature dropped sharply last night.","order":18},{"id":"u2-19-count","unit":2,"word":"count","phonetic":"/kaʊnt/","part":"v.","meaning":"计算（或清点）总数","example":"Can you count the books on the desk?","order":19},{"id":"u2-20-system","unit":2,"word":"system","phonetic":"/'sɪstəm/","part":"n.","meaning":"系统","example":"The school has a new computer system.","order":20},{"id":"u2-21-symbol","unit":2,"word":"symbol","phonetic":"/'sɪmbl/","part":"n.","meaning":"符号；记号","example":"A heart is often a symbol of love.","order":21},{"id":"u2-22-represent","unit":2,"word":"represent","phonetic":"/ˌreprɪ'zent/","part":"v.","meaning":"代表","example":"This picture represents peace.","order":22},{"id":"u2-23-exactly","unit":2,"word":"exactly","phonetic":"/ɪɡ'zæktli/","part":"adv.","meaning":"准确地；确切地","example":"That is exactly what I wanted to say.","order":23},{"id":"u2-24-flight-schedule","unit":2,"word":"flight schedule","phonetic":"—","part":"短语","meaning":"航班时刻表","example":"We checked the flight schedule before leaving home.","order":24},{"id":"u2-25-price-tag","unit":2,"word":"price tag","phonetic":"—","part":"短语","meaning":"价格标签","example":"The price tag shows that the bag is expensive.","order":25},{"id":"u2-26-for-a-moment","unit":2,"word":"for a moment","phonetic":"—","part":"短语","meaning":"片刻；一会儿","example":"Please wait here for a moment.","order":26},{"id":"u2-27-without-hesitation","unit":2,"word":"without hesitation","phonetic":"—","part":"短语","meaning":"毫不犹豫","example":"He helped the old man without hesitation.","order":27},{"id":"u2-28-go-up","unit":2,"word":"go up","phonetic":"—","part":"短语","meaning":"上升","example":"The price of vegetables may go up in winter.","order":28},{"id":"u2-29-go-down","unit":2,"word":"go down","phonetic":"—","part":"短语","meaning":"下降","example":"The number of mistakes went down after practice.","order":29},{"id":"u2-30-write-down","unit":2,"word":"write down","phonetic":"—","part":"短语","meaning":"写下；记下","example":"Write down your ideas in your notebook.","order":30},{"id":"u2-31-instead-of","unit":2,"word":"instead of","phonetic":"—","part":"短语","meaning":"代替；作为……的替换","example":"I drank water instead of juice.","order":31}]},{"id":"unit-3","unit":3,"title":"Unit 3","words":[{"id":"u3-01-network","unit":3,"word":"network","phonetic":"/'netwɜːk/","part":"n.","meaning":"网络","example":"A network can connect many computers.","order":1},{"id":"u3-02-flood","unit":3,"word":"flood","phonetic":"/flʌd/","part":"n.","meaning":"洪水；水灾","example":"The flood damaged many houses.","order":2},{"id":"u3-03-multimedia","unit":3,"word":"multimedia","phonetic":"/ˌmʌlti'miːdiə/","part":"n.","meaning":"多媒体","example":"Our teacher used multimedia in class.","order":3},{"id":"u3-04-expert","unit":3,"word":"expert","phonetic":"/'ekspɜːt/","part":"n.","meaning":"专家","example":"The expert gave us useful advice.","order":4},{"id":"u3-05-mobile","unit":3,"word":"mobile","phonetic":"/'məʊbaɪl/","part":"adj.","meaning":"可移动的","example":"Mobile phones are common in daily life.","order":5},{"id":"u3-06-payment","unit":3,"word":"payment","phonetic":"/'peɪmənt/","part":"n.","meaning":"付款；支付","example":"Mobile payment is popular in China.","order":6},{"id":"u3-07-warn","unit":3,"word":"warn","phonetic":"/wɔːn/","part":"v.","meaning":"提醒注意；警告","example":"The sign warns people not to swim here.","order":7},{"id":"u3-08-treatment","unit":3,"word":"treatment","phonetic":"/'triːtmənt/","part":"n.","meaning":"治疗；疗法","example":"He needs treatment for his injured leg.","order":8},{"id":"u3-09-data","unit":3,"word":"data","phonetic":"/'deɪtə/","part":"n.","meaning":"数据","example":"The scientist collected data for the study.","order":9},{"id":"u3-10-company","unit":3,"word":"company","phonetic":"/'kʌmpəni/","part":"n.","meaning":"公司","example":"My uncle works for a computer company.","order":10},{"id":"u3-11-traffic","unit":3,"word":"traffic","phonetic":"/'træfɪk/","part":"n.","meaning":"路上行驶的车辆；交通","example":"There is heavy traffic on rainy days.","order":11},{"id":"u3-12-flow","unit":3,"word":"flow","phonetic":"/fləʊ/","part":"v.","meaning":"（人或事物）涌流；流动","example":"People flowed into the station after the concert.","order":12},{"id":"u3-13-smoothly","unit":3,"word":"smoothly","phonetic":"/'smuːðli/","part":"adv.","meaning":"平稳地；连续而流畅地","example":"The meeting went smoothly.","order":13},{"id":"u3-14-laptop","unit":3,"word":"laptop","phonetic":"/'læptɒp/","part":"n.","meaning":"笔记本电脑","example":"I use a laptop to do my homework.","order":14},{"id":"u3-15-screen","unit":3,"word":"screen","phonetic":"/skriːn/","part":"n.","meaning":"屏幕","example":"The screen of my phone is too small.","order":15},{"id":"u3-16-weight","unit":3,"word":"weight","phonetic":"/weɪt/","part":"n.","meaning":"重量","example":"The weight of the box is about five kilos.","order":16},{"id":"u3-17-digital","unit":3,"word":"digital","phonetic":"/'dɪdʒɪtl/","part":"adj.","meaning":"数码的","example":"Digital cameras are easy to use.","order":17},{"id":"u3-18-social","unit":3,"word":"social","phonetic":"/'səʊʃl/","part":"adj.","meaning":"社交的","example":"Social activities help us make friends.","order":18},{"id":"u3-19-message","unit":3,"word":"message","phonetic":"/'mesɪdʒ/","part":"n.","meaning":"（书面或口头的）信息","example":"I sent a message to my teacher.","order":19},{"id":"u3-20-interview","unit":3,"word":"interview","phonetic":"/'ɪntəvjuː/","part":"v.","meaning":"采访","example":"The reporter will interview the famous writer.","order":20},{"id":"u3-21-positive","unit":3,"word":"positive","phonetic":"/'pɒzətɪv/","part":"adj.","meaning":"正面的；积极的","example":"A positive attitude helps you face problems.","order":21},{"id":"u3-22-negative","unit":3,"word":"negative","phonetic":"/'neɡətɪv/","part":"adj.","meaning":"消极的","example":"Don't let negative thoughts stop you.","order":22},{"id":"u3-23-effect","unit":3,"word":"effect","phonetic":"/ɪ'fekt/","part":"n.","meaning":"影响","example":"Exercise has a good effect on health.","order":23},{"id":"u3-24-opinion","unit":3,"word":"opinion","phonetic":"/ə'pɪnjən/","part":"n.","meaning":"意见；看法","example":"What is your opinion about online learning?","order":24},{"id":"u3-25-novel","unit":3,"word":"novel","phonetic":"/'nɒvl/","part":"n.","meaning":"（长篇）小说","example":"I finished reading a long novel last week.","order":25},{"id":"u3-26-comment","unit":3,"word":"comment","phonetic":"/'kɒment/","part":"n.","meaning":"评论","example":"She wrote a comment under the video.","order":26},{"id":"u3-27-basis","unit":3,"word":"basis","phonetic":"/'beɪsɪs/","part":"n.","meaning":"基础","example":"Trust is the basis of friendship.","order":27},{"id":"u3-28-microprocessor","unit":3,"word":"microprocessor","phonetic":"/ˌmaɪkrəʊ'prəʊsesə(r)/","part":"n.","meaning":"微处理器","example":"A microprocessor is an important part of a computer.","order":28},{"id":"u3-29-microchip","unit":3,"word":"microchip","phonetic":"/'maɪkrəʊtʃɪp/","part":"n.","meaning":"微芯片；芯片","example":"The tiny microchip can store a lot of information.","order":29},{"id":"u3-30-major","unit":3,"word":"major","phonetic":"/'meɪdʒə(r)/","part":"adj.","meaning":"主要的；重要的","example":"This is a major problem for the team.","order":30},{"id":"u3-31-breakthrough","unit":3,"word":"breakthrough","phonetic":"/'breɪkθruː/","part":"n.","meaning":"突破；重大进展","example":"The new medicine is a major breakthrough.","order":31},{"id":"u3-32-electronic","unit":3,"word":"electronic","phonetic":"/ɪˌlek'trɒnɪk/","part":"adj.","meaning":"电子的","example":"We read books on electronic devices.","order":32},{"id":"u3-33-software","unit":3,"word":"software","phonetic":"/'sɒftweə(r)/","part":"n.","meaning":"软件","example":"This software helps us edit photos.","order":33},{"id":"u3-34-app","unit":3,"word":"app","phonetic":"/æp/","part":"n.","meaning":"应用程序；应用软件","example":"I use an app to learn English.","order":34},{"id":"u3-35-era","unit":3,"word":"era","phonetic":"/'ɪərə/","part":"n.","meaning":"时代；纪元","example":"We live in the digital era.","order":35},{"id":"u3-36-download","unit":3,"word":"download","phonetic":"/ˌdaʊn'ləʊd/","part":"v.","meaning":"下载","example":"You can download the file from the website.","order":36},{"id":"u3-37-tiny","unit":3,"word":"tiny","phonetic":"/'taɪni/","part":"adj.","meaning":"微小的","example":"The baby bird is tiny but strong.","order":37},{"id":"u3-38-connect-to","unit":3,"word":"connect to","phonetic":"—","part":"短语","meaning":"连接","example":"Please connect the printer to the computer.","order":38},{"id":"u3-39-bring-big-changes-to","unit":3,"word":"bring big changes to","phonetic":"—","part":"短语","meaning":"给……带来重大变化","example":"The Internet brings big changes to our lives.","order":39},{"id":"u3-40-mobile-payment","unit":3,"word":"mobile payment","phonetic":"—","part":"短语","meaning":"移动支付","example":"Mobile payment makes shopping easier.","order":40},{"id":"u3-41-take-for-example","unit":3,"word":"take ... for example","phonetic":"—","part":"短语","meaning":"以……为例","example":"Take this app for example; it is easy to use.","order":41},{"id":"u3-42-rubbish-bin","unit":3,"word":"rubbish bin","phonetic":"—","part":"短语","meaning":"垃圾箱","example":"Please throw the paper into the rubbish bin.","order":42},{"id":"u3-43-social-media","unit":3,"word":"social media","phonetic":"—","part":"短语","meaning":"社交媒体","example":"Many students use social media to share photos.","order":43},{"id":"u3-44-in-person","unit":3,"word":"in person","phonetic":"—","part":"短语","meaning":"亲自；亲身","example":"You should talk to him in person.","order":44},{"id":"u3-45-the-general-public","unit":3,"word":"the general public","phonetic":"—","part":"短语","meaning":"公众；大众","example":"The museum is open to the general public.","order":45}]},{"id":"unit-4","unit":4,"title":"Unit 4","words":[{"id":"u4-01-balloon","unit":4,"word":"balloon","phonetic":"/bə'luːn/","part":"n.","meaning":"气球","example":"The red balloon flew into the sky.","order":1},{"id":"u4-02-wheel","unit":4,"word":"wheel","phonetic":"/wiːl/","part":"n.","meaning":"轮；车轮","example":"One wheel of the bike is broken.","order":2},{"id":"u4-03-central","unit":4,"word":"central","phonetic":"/'sentrəl/","part":"adj.","meaning":"在中心的","example":"The hotel is in the central part of the city.","order":3},{"id":"u4-04-although","unit":4,"word":"although","phonetic":"/ɔːl'ðəʊ/","part":"conj.","meaning":"虽然；尽管；即使","example":"Although it rained, we still went out.","order":4},{"id":"u4-05-attach","unit":4,"word":"attach","phonetic":"/ə'tætʃ/","part":"v.","meaning":"把……固定；把……附在……上","example":"Attach the photo to the form.","order":5},{"id":"u4-06-pull","unit":4,"word":"pull","phonetic":"/pʊl/","part":"v.","meaning":"拉；拽；扯；拖","example":"Pull the door, and it will open.","order":6},{"id":"u4-07-international","unit":4,"word":"international","phonetic":"/ˌɪntə'næʃnəl/","part":"adj.","meaning":"国际的","example":"This is an international trade meeting.","order":7},{"id":"u4-08-path","unit":4,"word":"path","phonetic":"/pɑːθ/","part":"n.","meaning":"小路；小径","example":"We walked along a narrow path.","order":8},{"id":"u4-09-technique","unit":4,"word":"technique","phonetic":"/tek'niːk/","part":"n.","meaning":"技巧；技艺","example":"This technique makes printing easier.","order":9},{"id":"u4-10-depend","unit":4,"word":"depend","phonetic":"/dɪ'pend/","part":"v.","meaning":"需要；依靠","example":"Children depend on their parents.","order":10},{"id":"u4-11-doubt","unit":4,"word":"doubt","phonetic":"/daʊt/","part":"n.","meaning":"疑惑；疑问","example":"I have no doubt about his honesty.","order":11},{"id":"u4-12-personally","unit":4,"word":"personally","phonetic":"/'pɜːsənəli/","part":"adv.","meaning":"就个人意见","example":"Personally, I think the plan is useful.","order":12},{"id":"u4-13-prediction","unit":4,"word":"prediction","phonetic":"/prɪ'dɪkʃn/","part":"n.","meaning":"预言；预测","example":"His prediction about the weather was right.","order":13},{"id":"u4-14-statement","unit":4,"word":"statement","phonetic":"/'steɪtmənt/","part":"n.","meaning":"说明","example":"The teacher asked us to read the statement.","order":14},{"id":"u4-15-benefit","unit":4,"word":"benefit","phonetic":"/'benɪfɪt/","part":"n.","meaning":"益处；优势","example":"Reading has many benefits.","order":15},{"id":"u4-16-wing","unit":4,"word":"wing","phonetic":"/wɪŋ/","part":"n.","meaning":"（飞行器的）翅膀；机翼","example":"The wing of the plane is very long.","order":16},{"id":"u4-17-distance","unit":4,"word":"distance","phonetic":"/'dɪstəns/","part":"n.","meaning":"距离","example":"The distance from my home to school is two kilometers.","order":17},{"id":"u4-18-petrol","unit":4,"word":"petrol","phonetic":"/'petrəl/","part":"n.","meaning":"汽油","example":"The car needs more petrol.","order":18},{"id":"u4-19-avoid","unit":4,"word":"avoid","phonetic":"/ə'vɔɪd/","part":"v.","meaning":"避免；防止","example":"We should avoid making the same mistake.","order":19},{"id":"u4-20-anywhere","unit":4,"word":"anywhere","phonetic":"/'eniweə(r)/","part":"adv.","meaning":"在（或去）任何地方","example":"You can sit anywhere you like.","order":20},{"id":"u4-21-notice","unit":4,"word":"notice","phonetic":"/'nəʊtɪs/","part":"v.","meaning":"看（或听）到；注意到","example":"Did you notice the new picture on the wall?","order":21},{"id":"u4-22-type","unit":4,"word":"type","phonetic":"/taɪp/","part":"n.","meaning":"（印刷用的）活字","example":"People used metal type to print books.","order":22},{"id":"u4-23-mixture","unit":4,"word":"mixture","phonetic":"/'mɪkstʃə(r)/","part":"n.","meaning":"混合物","example":"This drink is a mixture of fruit and milk.","order":23},{"id":"u4-24-heat","unit":4,"word":"heat","phonetic":"/hiːt/","part":"v.","meaning":"加热；变热","example":"Heat the water before you add the tea.","order":24},{"id":"u4-25-press","unit":4,"word":"press","phonetic":"/pres/","part":"v.","meaning":"（被）压","example":"Press this button to start the machine.","order":25},{"id":"u4-26-metal","unit":4,"word":"metal","phonetic":"/'metl/","part":"n.","meaning":"金属","example":"The bridge is made of metal.","order":26},{"id":"u4-27-steam-locomotive","unit":4,"word":"steam locomotive","phonetic":"—","part":"短语","meaning":"蒸汽机车","example":"A steam locomotive was important in the past.","order":27},{"id":"u4-28-crewed-spacecraft","unit":4,"word":"crewed spacecraft","phonetic":"—","part":"短语","meaning":"载人航天器","example":"China has sent crewed spacecraft into space.","order":28},{"id":"u4-29-on-foot","unit":4,"word":"on foot","phonetic":"—","part":"短语","meaning":"步行","example":"I usually go to school on foot.","order":29},{"id":"u4-30-a-number-of","unit":4,"word":"a number of","phonetic":"—","part":"短语","meaning":"几个；若干","example":"A number of students joined the club.","order":30},{"id":"u4-31-take-place","unit":4,"word":"take place","phonetic":"—","part":"短语","meaning":"发生；进行","example":"The sports meeting will take place next Friday.","order":31},{"id":"u4-32-for-instance","unit":4,"word":"for instance","phonetic":"—","part":"短语","meaning":"例如；比如","example":"For instance, bikes are good for short trips.","order":32},{"id":"u4-33-large-amounts-of","unit":4,"word":"large amounts of","phonetic":"—","part":"短语","meaning":"大量","example":"The factory uses large amounts of water.","order":33},{"id":"u4-34-international-trade","unit":4,"word":"international trade","phonetic":"—","part":"短语","meaning":"国际贸易","example":"International trade brings products from different countries.","order":34},{"id":"u4-35-depend-on","unit":4,"word":"depend on","phonetic":"—","part":"短语","meaning":"依靠；依赖","example":"We depend on the Internet for information.","order":35},{"id":"u4-36-3d-printer-3d","unit":4,"word":"3D printer 3D","phonetic":"—","part":"短语","meaning":"打印机","example":"A 3D printer can make small models.","order":36},{"id":"u4-37-without-doubt","unit":4,"word":"without doubt","phonetic":"—","part":"短语","meaning":"毫无疑问","example":"Without doubt, he is the best player on our team.","order":37},{"id":"u4-38-of-all-time","unit":4,"word":"of all time","phonetic":"—","part":"短语","meaning":"自古以来；有史以来","example":"This is one of the greatest inventions of all time.","order":38},{"id":"u4-39-make-fun-of","unit":4,"word":"make fun of","phonetic":"—","part":"短语","meaning":"取笑；拿……开玩笑","example":"Don't make fun of others.","order":39},{"id":"u4-40-traffic-jam","unit":4,"word":"traffic jam","phonetic":"—","part":"短语","meaning":"堵车；交通阻塞","example":"We were late because of a traffic jam.","order":40}]},{"id":"unit-5","unit":5,"title":"Unit 5","words":[{"id":"u5-01-exchange","unit":5,"word":"exchange","phonetic":"/ɪks'tʃeɪndʒ/","part":"n.","meaning":"交流","example":"Student exchange can help us learn about other cultures.","order":1},{"id":"u5-02-nervous","unit":5,"word":"nervous","phonetic":"/'nɜːvəs/","part":"adj.","meaning":"焦虑的；担忧的","example":"I felt nervous before the speech.","order":2},{"id":"u5-03-grateful","unit":5,"word":"grateful","phonetic":"/'ɡreɪtfl/","part":"adj.","meaning":"感激的","example":"I am grateful for your help.","order":3},{"id":"u5-04-chopstick","unit":5,"word":"chopstick","phonetic":"/'tʃɒpstɪk/","part":"n.","meaning":"筷子","example":"Can you use chopsticks to eat noodles?","order":4},{"id":"u5-05-tour","unit":5,"word":"tour","phonetic":"/tʊə(r)/","part":"n.","meaning":"旅行；旅游","example":"We went on a tour of Beijing.","order":5},{"id":"u5-06-tai-chi","unit":5,"word":"tai chi","phonetic":"/ˌtaɪ 'tʃiː/","part":"n.","meaning":"太极（拳）","example":"My grandfather does tai chi every morning.","order":6},{"id":"u5-07-yet","unit":5,"word":"yet","phonetic":"/jet/","part":"adv.","meaning":"尚（未）；还；仍","example":"I haven't finished the book yet.","order":7},{"id":"u5-08-independent","unit":5,"word":"independent","phonetic":"/ˌɪndɪ'pendənt/","part":"adj.","meaning":"自主的","example":"Teenagers should learn to be independent.","order":8},{"id":"u5-09-content","unit":5,"word":"content","phonetic":"/'kɒntent/","part":"n.","meaning":"内容","example":"The content of the lesson is interesting.","order":9},{"id":"u5-10-feeling","unit":5,"word":"feeling","phonetic":"/'fiːlɪŋ/","part":"n.","meaning":"感觉；感情","example":"I had a strange feeling when I entered the room.","order":10},{"id":"u5-11-shock","unit":5,"word":"shock","phonetic":"/ʃɒk/","part":"n.","meaning":"震惊；令人震惊的事","example":"The news came as a shock to us.","order":11},{"id":"u5-12-foreign","unit":5,"word":"foreign","phonetic":"/'fɒrən/","part":"adj.","meaning":"外国的","example":"It is useful to learn a foreign language.","order":12},{"id":"u5-13-confused","unit":5,"word":"confused","phonetic":"/kən'fjuːzd/","part":"adj.","meaning":"糊涂的；迷惑的","example":"I was confused by the difficult question.","order":13},{"id":"u5-14-anxious","unit":5,"word":"anxious","phonetic":"/'æŋkʃəs/","part":"adj.","meaning":"焦虑的；忧虑的","example":"She was anxious about the exam.","order":14},{"id":"u5-15-phase","unit":5,"word":"phase","phonetic":"/feɪz/","part":"n.","meaning":"阶段；时期","example":"The first phase of the project is over.","order":15},{"id":"u5-16-honeymoon","unit":5,"word":"honeymoon","phonetic":"/'hʌnimuːn/","part":"n.","meaning":"蜜月","example":"They went to Sanya for their honeymoon.","order":16},{"id":"u5-17-unfamiliar","unit":5,"word":"unfamiliar","phonetic":"/ˌʌnfə'mɪliə(r)/","part":"adj.","meaning":"陌生的；不熟悉的","example":"The city was unfamiliar to me.","order":17},{"id":"u5-18-homesick","unit":5,"word":"homesick","phonetic":"/'həʊmsɪk/","part":"adj.","meaning":"想家的","example":"She felt homesick during her first week abroad.","order":18},{"id":"u5-19-lonely","unit":5,"word":"lonely","phonetic":"/'ləʊnli/","part":"adj.","meaning":"孤独的","example":"He felt lonely in the new school.","order":19},{"id":"u5-20-deal","unit":5,"word":"deal","phonetic":"/diːl/","part":"v.","meaning":"对付；应付","example":"We must learn to deal with problems.","order":20},{"id":"u5-21-expect","unit":5,"word":"expect","phonetic":"/ɪk'spekt/","part":"v.","meaning":"期待；盼望","example":"I expect to see you at the party.","order":21},{"id":"u5-22-situation","unit":5,"word":"situation","phonetic":"/ˌsɪtʃu'eɪʃn/","part":"n.","meaning":"情况","example":"This is a difficult situation for everyone.","order":22},{"id":"u5-23-accept","unit":5,"word":"accept","phonetic":"/ək'sept/","part":"v.","meaning":"接受","example":"She accepted my invitation.","order":23},{"id":"u5-24-adaptation","unit":5,"word":"adaptation","phonetic":"/ˌædæp'teɪʃn/","part":"n.","meaning":"适应","example":"Adaptation to a new school takes time.","order":24},{"id":"u5-25-beijing-opera","unit":5,"word":"Beijing opera","phonetic":"—","part":"短语","meaning":"京剧","example":"Beijing opera is a traditional Chinese art.","order":25},{"id":"u5-26-host-family","unit":5,"word":"host family","phonetic":"—","part":"短语","meaning":"寄宿家庭","example":"My host family was kind to me.","order":26},{"id":"u5-27-snake-its-way","unit":5,"word":"snake its way","phonetic":"—","part":"短语","meaning":"蜿蜒","example":"The river snakes its way through the valley.","order":27},{"id":"u5-28-culture-shock","unit":5,"word":"culture shock","phonetic":"—","part":"短语","meaning":"文化冲击","example":"Many students feel culture shock when they go abroad.","order":28},{"id":"u5-29-deal-with","unit":5,"word":"deal with","phonetic":"—","part":"短语","meaning":"解决；处理","example":"We need to deal with this problem together.","order":29},{"id":"u5-30-feel-at-home","unit":5,"word":"feel at home","phonetic":"—","part":"短语","meaning":"感到舒适自在","example":"My friends made me feel at home.","order":30}]},{"id":"unit-6","unit":6,"title":"Unit 6","words":[{"id":"u6-01-author","unit":6,"word":"author","phonetic":"/'ɔːθə(r)/","part":"n.","meaning":"作者；作家","example":"The author wrote many books for children.","order":1},{"id":"u6-02-remains","unit":6,"word":"remains","phonetic":"/rɪ'meɪnz/","part":"n.","meaning":"遗迹；遗址","example":"We visited the remains of an old city.","order":2},{"id":"u6-03-locate","unit":6,"word":"locate","phonetic":"/ləʊ'keɪt/","part":"v.","meaning":"把……安置在（或建造于）","example":"The school is located near a river.","order":3},{"id":"u6-04-soldier","unit":6,"word":"soldier","phonetic":"/'səʊldʒə(r)/","part":"n.","meaning":"士兵","example":"The soldier stood at the gate.","order":4},{"id":"u6-05-captain","unit":6,"word":"captain","phonetic":"/'kæptɪn/","part":"n.","meaning":"首领；领导者","example":"The captain led his team bravely.","order":5},{"id":"u6-06-empty","unit":6,"word":"empty","phonetic":"/'empti/","part":"adj.","meaning":"空的","example":"The room was empty when I arrived.","order":6},{"id":"u6-07-victory","unit":6,"word":"victory","phonetic":"/'vɪktəri/","part":"n.","meaning":"胜利；成功","example":"The team celebrated its victory.","order":7},{"id":"u6-08-joke","unit":6,"word":"joke","phonetic":"/dʒəʊk/","part":"n.","meaning":"笑话；玩笑","example":"He told a funny joke at lunch.","order":8},{"id":"u6-09-midnight","unit":6,"word":"midnight","phonetic":"/'mɪdnaɪt/","part":"n.","meaning":"午夜","example":"I was still awake at midnight.","order":9},{"id":"u6-10-except","unit":6,"word":"except","phonetic":"/ɪk'sept/","part":"prep.","meaning":"除……之外","example":"Everyone came to the meeting except Tom.","order":10},{"id":"u6-11-hide","unit":6,"word":"hide","phonetic":"/haɪd/","part":"v.","meaning":"藏；隐藏","example":"The cat likes to hide under the bed.","order":11},{"id":"u6-12-secretly","unit":6,"word":"secretly","phonetic":"/'siːkrətli/","part":"adv.","meaning":"秘密地","example":"They secretly opened the gate at night.","order":12},{"id":"u6-13-enter","unit":6,"word":"enter","phonetic":"/'entə(r)/","part":"v.","meaning":"进来；进入","example":"Please knock before you enter the room.","order":13},{"id":"u6-14-succeed","unit":6,"word":"succeed","phonetic":"/sək'siːd/","part":"v.","meaning":"达到目的；成功","example":"If you work hard, you will succeed.","order":14},{"id":"u6-15-trick","unit":6,"word":"trick","phonetic":"/trɪk/","part":"n.","meaning":"诡计","example":"The trick fooled many people.","order":15},{"id":"u6-16-fight","unit":6,"word":"fight","phonetic":"/faɪt/","part":"v.","meaning":"打仗；战斗","example":"The soldiers had to fight for their city.","order":16},{"id":"u6-17-beat","unit":6,"word":"beat","phonetic":"/biːt/","part":"v.","meaning":"打败（某人）；敲打","example":"Our team beat theirs by two points.","order":17},{"id":"u6-18-pretend","unit":6,"word":"pretend","phonetic":"/prɪ'tend/","part":"v.","meaning":"假装；佯装","example":"He pretended to be asleep.","order":18},{"id":"u6-19-enemy","unit":6,"word":"enemy","phonetic":"/'enəmi/","part":"n.","meaning":"敌人","example":"The enemy ran away in the dark.","order":19},{"id":"u6-20-fail","unit":6,"word":"fail","phonetic":"/feɪl/","part":"v.","meaning":"失败；未能（做到）","example":"Don't give up if you fail once.","order":20},{"id":"u6-21-therefore","unit":6,"word":"therefore","phonetic":"/'ðeəfɔː(r)/","part":"adv.","meaning":"因此；所以","example":"It rained hard; therefore, we stayed at home.","order":21},{"id":"u6-22-within","unit":6,"word":"within","phonetic":"/wɪ'ðɪn/","part":"prep.","meaning":"在（某段时间）之内","example":"Please finish the work within two days.","order":22},{"id":"u6-23-fill","unit":6,"word":"fill","phonetic":"/fɪl/","part":"v.","meaning":"（使）充满；（使）装满","example":"Fill the bottle with water.","order":23},{"id":"u6-24-towards","unit":6,"word":"towards","phonetic":"/tə'wɔːdz/","part":"prep.","meaning":"向；朝；对着","example":"She walked towards the bus stop.","order":24},{"id":"u6-25-attack","unit":6,"word":"attack","phonetic":"/ə'tæk/","part":"n.","meaning":"袭击；攻击","example":"The city was under attack.","order":25},{"id":"u6-26-fog","unit":6,"word":"fog","phonetic":"/fɒɡ/","part":"n.","meaning":"雾","example":"The heavy fog made driving difficult.","order":26},{"id":"u6-27-make-jokes-about","unit":6,"word":"make jokes about","phonetic":"—","part":"短语","meaning":"开……的玩笑","example":"It is not polite to make jokes about others.","order":27},{"id":"u6-28-succeed-in","unit":6,"word":"succeed in","phonetic":"—","part":"短语","meaning":"在……方面成功","example":"He succeeded in solving the problem.","order":28},{"id":"u6-29-be-tired-of","unit":6,"word":"be tired of","phonetic":"—","part":"短语","meaning":"厌烦","example":"I am tired of eating the same food every day.","order":29},{"id":"u6-30-go-on-board","unit":6,"word":"go on board","phonetic":"—","part":"短语","meaning":"上船","example":"The passengers went on board before noon.","order":30},{"id":"u6-31-be-jealous-of","unit":6,"word":"be jealous of","phonetic":"—","part":"短语","meaning":"嫉妒","example":"Don't be jealous of your friend's success.","order":31},{"id":"u6-32-be-full-of","unit":6,"word":"be full of","phonetic":"—","part":"短语","meaning":"装满；充满","example":"The box is full of old books.","order":32}]},{"id":"unit-7","unit":7,"title":"Unit 7","words":[{"id":"u7-01-regularly","unit":7,"word":"regularly","phonetic":"/'reɡjələli/","part":"adv.","meaning":"有规律地","example":"He exercises regularly to keep fit.","order":1},{"id":"u7-02-repeat","unit":7,"word":"repeat","phonetic":"/rɪ'piːt/","part":"v.","meaning":"重复","example":"Could you repeat the sentence, please?","order":2},{"id":"u7-03-note","unit":7,"word":"note","phonetic":"/nəʊt/","part":"n.","meaning":"笔记；记录","example":"I made a note of the important dates.","order":3},{"id":"u7-04-visual","unit":7,"word":"visual","phonetic":"/'vɪʒuəl/","part":"adj.","meaning":"视觉的","example":"Pictures give us visual information.","order":4},{"id":"u7-05-mentally","unit":7,"word":"mentally","phonetic":"/'mentəli/","part":"adv.","meaning":"精神上","example":"Rest can help you feel better mentally.","order":5},{"id":"u7-06-link","unit":7,"word":"link","phonetic":"/lɪŋk/","part":"v.","meaning":"联系；相联系","example":"The story links the past with the present.","order":6},{"id":"u7-07-list","unit":7,"word":"list","phonetic":"/lɪst/","part":"n.","meaning":"清单","example":"I made a shopping list for my mother.","order":7},{"id":"u7-08-especially","unit":7,"word":"especially","phonetic":"/ɪ'speʃəli/","part":"adv.","meaning":"尤其","example":"I like fruit, especially apples.","order":8},{"id":"u7-09-diet","unit":7,"word":"diet","phonetic":"/'daɪət/","part":"n.","meaning":"日常饮食","example":"A healthy diet is important for students.","order":9},{"id":"u7-10-maintain","unit":7,"word":"maintain","phonetic":"/meɪn'teɪn/","part":"v.","meaning":"维持；保持","example":"We should maintain good study habits.","order":10},{"id":"u7-11-nut","unit":7,"word":"nut","phonetic":"/nʌt/","part":"n.","meaning":"坚果","example":"Nuts are good for your health.","order":11},{"id":"u7-12-relax","unit":7,"word":"relax","phonetic":"/rɪ'læks/","part":"v.","meaning":"放松；休息","example":"I listen to music to relax.","order":12},{"id":"u7-13-stressed","unit":7,"word":"stressed","phonetic":"/strest/","part":"adj.","meaning":"心力交瘁的；焦虑不安的","example":"She felt stressed before the exam.","order":13},{"id":"u7-14-tend","unit":7,"word":"tend","phonetic":"/tend/","part":"v.","meaning":"往往会；常常就","example":"People tend to forget small details.","order":14},{"id":"u7-15-normal","unit":7,"word":"normal","phonetic":"/'nɔːml/","part":"adj.","meaning":"正常的","example":"It is normal to feel nervous before a test.","order":15},{"id":"u7-16-loss","unit":7,"word":"loss","phonetic":"/lɒs/","part":"n.","meaning":"丧失；损失","example":"The loss of sleep can affect your study.","order":16},{"id":"u7-17-fork","unit":7,"word":"fork","phonetic":"/fɔːk/","part":"n.","meaning":"餐叉","example":"We use a fork to eat salad.","order":17},{"id":"u7-18-onion","unit":7,"word":"onion","phonetic":"/'ʌnjən/","part":"n.","meaning":"洋葱","example":"My mother put an onion in the soup.","order":18},{"id":"u7-19-ant","unit":7,"word":"ant","phonetic":"/ænt/","part":"n.","meaning":"蚂蚁","example":"An ant is carrying a small piece of food.","order":19},{"id":"u7-20-context","unit":7,"word":"context","phonetic":"/'kɒntekst/","part":"n.","meaning":"上下文；语境","example":"Guess the meaning from the context.","order":20},{"id":"u7-21-image","unit":7,"word":"image","phonetic":"/'ɪmɪdʒ/","part":"n.","meaning":"图像","example":"The image on the screen is clear.","order":21},{"id":"u7-22-sense","unit":7,"word":"sense","phonetic":"/sens/","part":"n.","meaning":"感觉官能","example":"Smell is an important sense.","order":22},{"id":"u7-23-summary","unit":7,"word":"summary","phonetic":"/'sʌməri/","part":"n.","meaning":"总结；概括","example":"Write a short summary of the passage.","order":23},{"id":"u7-24-contain","unit":7,"word":"contain","phonetic":"/kən'teɪn/","part":"v.","meaning":"包含；含有","example":"This box contains five books.","order":24},{"id":"u7-25-particular","unit":7,"word":"particular","phonetic":"/pə'tɪkjələ(r)/","part":"adj.","meaning":"专指的；特指的","example":"I am looking for a particular book.","order":25},{"id":"u7-26-chemistry","unit":7,"word":"chemistry","phonetic":"/'kemɪstri/","part":"n.","meaning":"化学性质；化学","example":"Chemistry is one of my favorite subjects.","order":26},{"id":"u7-27-flash-card","unit":7,"word":"flash card","phonetic":"—","part":"短语","meaning":"识字卡片","example":"Flash cards can help you remember new words.","order":27},{"id":"u7-28-make-a-point-of-doing-something","unit":7,"word":"make a point of doing something","phonetic":"—","part":"短语","meaning":"因重要或必要而保证做","example":"She makes a point of reading English every day.","order":28},{"id":"u7-29-last-but-not-least","unit":7,"word":"last but not least","phonetic":"—","part":"短语","meaning":"最后但同样重要的","example":"Last but not least, drink enough water.","order":29},{"id":"u7-30-natural-disaster","unit":7,"word":"natural disaster","phonetic":"—","part":"短语","meaning":"自然灾害","example":"A flood is a natural disaster.","order":30},{"id":"u7-31-figure-out","unit":7,"word":"figure out","phonetic":"—","part":"短语","meaning":"弄懂；弄清楚","example":"I finally figured out the answer.","order":31}]},{"id":"unit-8","unit":8,"title":"Unit 8","words":[{"id":"u8-01-attack","unit":8,"word":"attack","phonetic":"/ə'tæk/","part":"v.","meaning":"袭击；攻击","example":"The dog did not attack anyone.","order":1},{"id":"u8-02-faithful","unit":8,"word":"faithful","phonetic":"/'feɪθfl/","part":"adj.","meaning":"忠实的；忠诚的","example":"The dog is a faithful friend.","order":2},{"id":"u8-03-hold","unit":8,"word":"hold","phonetic":"/həʊld/","part":"v.","meaning":"抱着；拿着","example":"Please hold the baby carefully.","order":3},{"id":"u8-04-responsible","unit":8,"word":"responsible","phonetic":"/rɪ'spɒnsəbl/","part":"adj.","meaning":"可信任的；可靠的","example":"He is responsible and always keeps his promises.","order":4},{"id":"u8-05-awake","unit":8,"word":"awake","phonetic":"/ə'weɪk/","part":"adj.","meaning":"醒着","example":"I was still awake at ten o'clock.","order":5},{"id":"u8-06-flat","unit":8,"word":"flat","phonetic":"/flæt/","part":"n.","meaning":"公寓","example":"They live in a small flat near the park.","order":6},{"id":"u8-07-choice","unit":8,"word":"choice","phonetic":"/tʃɔɪs/","part":"n.","meaning":"选择","example":"You made the right choice.","order":7},{"id":"u8-08-advise","unit":8,"word":"advise","phonetic":"/əd'vaɪz/","part":"v.","meaning":"劝告；建议","example":"The doctor advised him to rest.","order":8},{"id":"u8-09-cause","unit":8,"word":"cause","phonetic":"/kɔːz/","part":"v.","meaning":"引起；造成；导致","example":"Too much noise can cause stress.","order":9},{"id":"u8-10-complain","unit":8,"word":"complain","phonetic":"/kəm'pleɪn/","part":"v.","meaning":"抱怨；投诉","example":"Don't complain about every small problem.","order":10},{"id":"u8-11-litter","unit":8,"word":"litter","phonetic":"/'lɪtə/","part":"n.","meaning":"垃圾","example":"Please pick up the litter on the ground.","order":11},{"id":"u8-12-unlikely","unit":8,"word":"unlikely","phonetic":"/ʌn'laɪkli/","part":"adj.","meaning":"不大可能发生的","example":"It is unlikely to snow in summer.","order":12},{"id":"u8-13-relieve","unit":8,"word":"relieve","phonetic":"/rɪ'liːv/","part":"v.","meaning":"方便；解手","example":"The dog needs to go outside to relieve itself.","order":13},{"id":"u8-14-indoors","unit":8,"word":"indoors","phonetic":"/ˌɪn'dɔːz/","part":"adv.","meaning":"在室内","example":"We stayed indoors because of the rain.","order":14},{"id":"u8-15-magical","unit":8,"word":"magical","phonetic":"/'mædʒɪkl/","part":"adj.","meaning":"有魔力的","example":"The story is full of magical animals.","order":15},{"id":"u8-16-wealth","unit":8,"word":"wealth","phonetic":"/welθ/","part":"n.","meaning":"钱财；财富","example":"Health is more important than wealth.","order":16},{"id":"u8-17-queen","unit":8,"word":"queen","phonetic":"/kwiːn/","part":"n.","meaning":"女王；王后","example":"The queen lived in a beautiful palace.","order":17},{"id":"u8-18-servant","unit":8,"word":"servant","phonetic":"/'sɜːvənt/","part":"n.","meaning":"仆人；佣人","example":"The servant brought food to the room.","order":18},{"id":"u8-19-pride","unit":8,"word":"pride","phonetic":"/praɪd/","part":"n.","meaning":"自豪；骄傲","example":"His parents felt pride in his success.","order":19},{"id":"u8-20-among","unit":8,"word":"among","phonetic":"/ə'mʌŋ/","part":"prep.","meaning":"在……中","example":"She is popular among her classmates.","order":20},{"id":"u8-21-relationship","unit":8,"word":"relationship","phonetic":"/rɪ'leɪʃnʃɪp/","part":"n.","meaning":"关系","example":"A good relationship needs trust.","order":21},{"id":"u8-22-grow-up","unit":8,"word":"grow up","phonetic":"—","part":"短语","meaning":"长大；成熟","example":"I want to be a teacher when I grow up.","order":22},{"id":"u8-23-care-for","unit":8,"word":"care for","phonetic":"—","part":"短语","meaning":"照顾；照料","example":"We should care for old people.","order":23},{"id":"u8-24-in-short","unit":8,"word":"in short","phonetic":"—","part":"短语","meaning":"总之；简言之","example":"In short, the trip was wonderful.","order":24},{"id":"u8-25-have-no-choice-but-to-do","unit":8,"word":"have no choice but to do","phonetic":"—","part":"短语","meaning":"别无选择；只能……","example":"We had no choice but to wait.","order":25},{"id":"u8-26-run-free","unit":8,"word":"run free","phonetic":"—","part":"短语","meaning":"四处自由走动","example":"Animals should run free in nature.","order":26},{"id":"u8-27-lie-around","unit":8,"word":"lie around","phonetic":"—","part":"短语","meaning":"懒散度日；游手好闲","example":"Don't lie around all day.","order":27},{"id":"u8-28-complain-about","unit":8,"word":"complain about","phonetic":"—","part":"短语","meaning":"抱怨","example":"She often complains about the weather.","order":28},{"id":"u8-29-in-addition","unit":8,"word":"in addition","phonetic":"—","part":"短语","meaning":"除……以外（还）","example":"In addition, we need to bring some water.","order":29},{"id":"u8-30-catch-the-eye-of-somebody","unit":8,"word":"catch the eye of somebody","phonetic":"—","part":"短语","meaning":"引起某人的注意","example":"The bright poster caught the eye of many students.","order":30}]}]</script>
+  <script>
+    const UNITS = JSON.parse(document.getElementById("vocab-data").textContent);
+    const ALL_WORDS = UNITS.flatMap(unit => unit.words);
+    const STORE_KEY = "baicika.docx.units.v4";
+    const CORPUS_ID = "all-words";
+    const TASK_SIZE = 25;
+    const DAY = 24 * 60 * 60 * 1000;
+    const SCHEDULE_DAYS = [0, 1, 2, 7, 14, 30, 60];
+
+    const q = selector => document.querySelector(selector);
+    const els = {
+      topSubtitle: q("#topSubtitle"),
+      daysPill: q("#daysPill"),
+      unitSummary: q("#unitSummary"),
+      startUnitBtn: q("#startUnitBtn"),
+      unitStats: q("#unitStats"),
+      unitProgress: q("#unitProgress"),
+      unitPicker: q("#unitPicker"),
+      studyPanel: q("#studyPanel"),
+      studyModeLabel: q("#studyModeLabel"),
+      changeUnitBtn: q("#changeUnitBtn"),
+      progressMeter: q("#progressMeter"),
+      wordText: q("#wordText"),
+      phoneticText: q("#phoneticText"),
+      partText: q("#partText"),
+      unitTag: q("#unitTag"),
+      exampleText: q("#exampleText"),
+      meaningText: q("#meaningText"),
+      meaningReveal: q("#meaningReveal"),
+      visualBox: q("#visualBox"),
+      choiceGrid: q("#choiceGrid"),
+      speakBtn: q("#speakBtn"),
+      replayBtn: q("#replayBtn"),
+      killBtn: q("#killBtn"),
+      startReviewBtn: q("#startReviewBtn"),
+      dueCount: q("#dueCount"),
+      weakCount: q("#weakCount"),
+      killedCount: q("#killedCount"),
+      reviewList: q("#reviewList"),
+      searchInput: q("#searchInput"),
+      bankHint: q("#bankHint"),
+      bankList: q("#bankList"),
+      checkinBadge: q("#checkinBadge"),
+      checkinTitle: q("#checkinTitle"),
+      checkinCopy: q("#checkinCopy"),
+      checkinImage: q("#checkinImage"),
+      saveImageBtn: q("#saveImageBtn"),
+      toast: q("#toast")
+    };
+
+    let state = loadState();
+
+    let mode = "learn";
+    let queue = [];
+    let currentIndex = 0;
+    let locked = false;
+    let attemptStarted = false;
+    let studyStarted = false;
+    let stage = "meaning";
+    let spellFull = [];
+    let spellPrompt = [];
+    let spellAnswer = [];
+    let spellSelected = [];
+    let spellOptions = [];
+    let toastTimer = 0;
+    let audioCtx = null;
+    let voices = [];
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function todayKey(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function loadState() {
+      const fallback = {
+        activeUnit: CORPUS_ID,
+        words: {},
+        sessions: {},
+        checkinDays: [],
+        totals: { correct: 0, wrong: 0 }
+      };
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+        const loaded = raw && typeof raw === "object" ? raw : {};
+        return {
+          ...fallback,
+          ...loaded,
+          activeUnit: CORPUS_ID,
+          words: loaded.words || {},
+          sessions: loaded.sessions || {},
+          checkinDays: Array.isArray(loaded.checkinDays) ? loaded.checkinDays : [],
+          totals: { ...fallback.totals, ...(loaded.totals || {}) }
+        };
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    }
+
+    function unitById(unitId) {
+      return UNITS.find(unit => unit.id === unitId) || UNITS[0];
+    }
+
+    function wordById(wordId) {
+      return ALL_WORDS.find(word => word.id === wordId);
+    }
+
+    function wordState(wordId) {
+      if (!state.words[wordId]) {
+        state.words[wordId] = { seen: 0, correct: 0, wrong: 0, level: 0, due: 0, killed: false };
+      }
+      return state.words[wordId];
+    }
+
+    function sessionKey() {
+      return `${todayKey()}|${CORPUS_ID}`;
+    }
+
+    function learningCandidates(excludeIds = new Set()) {
+      return ALL_WORDS.filter(word => {
+        const s = wordState(word.id);
+        return !s.killed && (s.correct || 0) === 0 && !excludeIds.has(word.id);
+      });
+    }
+
+    function reviewWords(excludeIds = new Set()) {
+      const now = Date.now();
+      return ALL_WORDS
+        .filter(word => {
+          const s = wordState(word.id);
+          return !s.killed && s.seen && !excludeIds.has(word.id);
+        })
+        .map(word => {
+          const s = wordState(word.id);
+          const due = s.due || 0;
+          const overdueDays = due ? Math.max(0, Math.floor((now - due) / DAY)) : 0;
+          const futureDays = due > now ? Math.ceil((due - now) / DAY) : 0;
+          const score =
+            (due && due <= now ? -10000 : 0) +
+            (s.wrong > s.correct ? -2800 : 0) -
+            overdueDays * 120 +
+            futureDays * 80 +
+            s.level * 45 -
+            s.wrong * 90 +
+            word.unit / 10 +
+            word.order / 1000;
+          return { word, score };
+        })
+        .sort((a, b) => a.score - b.score)
+        .map(item => item.word);
+    }
+
+    function createDailyTask(excludeIds = new Set()) {
+      return learningCandidates(excludeIds).slice(0, TASK_SIZE).map(word => word.id);
+    }
+
+    function ensureSession() {
+      const key = sessionKey();
+      const liveIds = new Set(ALL_WORDS.filter(word => !wordState(word.id).killed).map(word => word.id));
+      let session = state.sessions[key];
+      if (!session || session.day !== todayKey() || session.corpusId !== CORPUS_ID) {
+        session = { day: todayKey(), corpusId: CORPUS_ID, taskIds: [], meaningCompleted: [], completed: [], phase: "meaning", finished: false };
+      }
+
+      session.taskIds = (session.taskIds || []).filter(id => liveIds.has(id));
+      session.completed = (session.completed || []).filter(id => session.taskIds.includes(id));
+      session.meaningCompleted = (session.meaningCompleted || session.completed || []).filter(id => session.taskIds.includes(id));
+
+      const remaining = learningCandidates(new Set(session.taskIds));
+      const target = Math.min(TASK_SIZE, session.taskIds.length + remaining.length);
+      if (session.taskIds.length < target) {
+        session.taskIds.push(...createDailyTask(new Set(session.taskIds)).slice(0, target - session.taskIds.length));
+      }
+
+      if (!["meaning", "spelling"].includes(session.phase)) session.phase = "meaning";
+      if (session.taskIds.length && session.completed.length >= session.taskIds.length) {
+        session.finished = true;
+        session.phase = "spelling";
+      } else if (session.taskIds.length && session.meaningCompleted.length >= session.taskIds.length) {
+        session.phase = "spelling";
+        session.finished = false;
+      } else {
+        session.phase = "meaning";
+        session.finished = false;
+      }
+
+      state.sessions[key] = session;
+      return session;
+    }
+
+    function beginLearning() {
+      ensureAudio();
+      if (!learningCandidates().length) {
+        showToast("词库已全部学完或斩杀");
+        return;
+      }
+      const previous = state.sessions[sessionKey()];
+      if (previous?.finished) delete state.sessions[sessionKey()];
+      state.activeUnit = CORPUS_ID;
+      mode = "learn";
+      studyStarted = true;
+      saveState();
+      switchTab("learn");
+      renderLearn();
+      buildLearnQueue();
+    }
+
+    function buildLearnQueue() {
+      const session = ensureSession();
+      saveState();
+      if (session.finished) {
+        completeTask();
+        return;
+      }
+      const doneIds = session.phase === "meaning" ? session.meaningCompleted : session.completed;
+      queue = session.taskIds
+        .filter(id => !doneIds.includes(id))
+        .map(wordById)
+        .filter(Boolean)
+        .filter(word => !wordState(word.id).killed);
+      currentIndex = 0;
+
+      if (!queue.length) {
+        if (session.phase === "meaning") {
+          session.phase = "spelling";
+          saveState();
+          buildLearnQueue();
+          return;
+        }
+        completeTask();
+        return;
+      }
+      renderCard();
+    }
+
+    function buildReviewQueue() {
+      ensureAudio();
+      const now = Date.now();
+      queue = ALL_WORDS
+        .filter(word => {
+          const s = wordState(word.id);
+          return !s.killed && s.seen && (s.due <= now || s.wrong > s.correct || s.level < 2);
+        })
+        .sort((a, b) => {
+          const as = wordState(a.id);
+          const bs = wordState(b.id);
+          return (as.level - bs.level) || (bs.wrong - as.wrong) || (a.unit - b.unit) || (a.order - b.order);
+        })
+        .slice(0, 24);
+
+      if (!queue.length) {
+        showToast("暂时没有需要复习的词");
+        renderReview();
+        return;
+      }
+
+      mode = "review";
+      currentIndex = 0;
+      state.activeUnit = CORPUS_ID;
+      studyStarted = true;
+      saveState();
+      switchTab("learn");
+      renderLearn();
+      renderCard();
+    }
+
+    function renderLearn() {
+      renderTop();
+      renderUnitSelector();
+      if (!studyStarted) {
+        els.unitPicker.classList.remove("hidden");
+        els.studyPanel.classList.add("hidden");
+      } else {
+        els.unitPicker.classList.add("hidden");
+        els.studyPanel.classList.remove("hidden");
+      }
+    }
+
+    function renderTop() {
+      els.topSubtitle.textContent = `完整词库 · ${ALL_WORDS.length} 词`;
+      els.daysPill.textContent = `累计 ${state.checkinDays.length} 天`;
+    }
+
+    function renderUnitSelector() {
+      const total = ALL_WORDS.length;
+      const killed = ALL_WORDS.filter(word => wordState(word.id).killed).length;
+      const learned = ALL_WORDS.filter(word => wordState(word.id).correct > 0 || wordState(word.id).killed).length;
+      const target = Math.min(TASK_SIZE, learningCandidates().length);
+      const pct = total ? Math.round(learned / total * 100) : 0;
+      els.unitSummary.textContent = `完整词库，共 ${ALL_WORDS.length} 词`;
+      els.unitStats.innerHTML = `
+        <span>已完成 ${learned} / ${total}，已斩杀 ${killed}</span>
+        <span>按词库顺序学习接下来的 ${target} 个词</span>
+      `;
+      els.unitProgress.style.width = `${pct}%`;
+      els.startUnitBtn.disabled = target === 0;
+      els.startUnitBtn.textContent = target ? `开始 ${target} 词` : "已全部学完";
+    }
+
+    function renderCard() {
+      const word = queue[currentIndex];
+      if (!word) {
+        if (mode === "learn") completeTask();
+        else {
+          showToast("复习完成");
+          switchTab("review");
+        }
+        return;
+      }
+
+      locked = false;
+      attemptStarted = false;
+      stage = "meaning";
+      spellFull = [];
+      spellPrompt = [];
+      spellAnswer = [];
+      spellSelected = [];
+      spellOptions = [];
+      q("#wordCard").classList.remove("spelling-mode");
+      q("#wordCard").classList.add("meaning-mode");
+      const unit = unitById(`unit-${word.unit}`);
+      const session = mode === "learn" ? ensureSession() : null;
+      const activePhase = session ? session.phase : "meaning";
+      const done = session ? (activePhase === "meaning" ? session.meaningCompleted.length : session.completed.length) : currentIndex;
+      const total = session ? session.taskIds.length : queue.length;
+      const sourceLabel = "顺序";
+
+      if (mode === "learn" && activePhase === "spelling") {
+        renderSpellingTest(word, unit, done, total, sourceLabel);
+        return;
+      }
+
+      els.studyModeLabel.textContent = mode === "learn" ? `${sourceLabel}学习 · 释义 ${done + 1}/${total}` : `复习 · ${currentIndex + 1}/${queue.length}`;
+      els.progressMeter.style.width = `${total ? Math.min(100, done / total * 100) : 0}%`;
+      els.wordText.textContent = word.word;
+      els.phoneticText.textContent = word.phonetic;
+      els.partText.textContent = word.part;
+      els.unitTag.textContent = "词库";
+      els.exampleText.textContent = word.example;
+      els.meaningText.textContent = word.meaning;
+      els.meaningReveal.classList.remove("visible");
+      els.visualBox.innerHTML = "";
+      renderMeaningOptions(word);
+
+      renderTop();
+      speakWordThenExample(word);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderMeaningOptions(word) {
+      stage = "meaning";
+      els.choiceGrid.innerHTML = optionsFor(word).map((option, index) => `
+        <button class="choice" type="button" data-id="${esc(option.id)}">
+          <span class="letter">${String.fromCharCode(65 + index)}</span>
+          <span class="text">${esc(option.meaning)}</span>
+        </button>
+      `).join("");
+
+      for (const btn of els.choiceGrid.querySelectorAll(".choice")) {
+        btn.addEventListener("click", () => chooseOption(btn));
+      }
+    }
+
+    function optionsFor(word) {
+      const sameUnit = unitById(`unit-${word.unit}`).words.filter(item => item.id !== word.id);
+      const others = ALL_WORDS.filter(item => item.id !== word.id && item.unit !== word.unit);
+      const pool = seededShuffle([...sameUnit, ...others], `${word.id}-pool`);
+      const picked = [];
+      const seenMeanings = new Set([word.meaning]);
+      for (const item of pool) {
+        if (picked.length >= 3) break;
+        if (seenMeanings.has(item.meaning)) continue;
+        picked.push(item);
+        seenMeanings.add(item.meaning);
+      }
+      return seededShuffle([word, ...picked], `${word.id}-${currentIndex}-${mode}`);
+    }
+
+    function seededShuffle(items, seedText) {
+      let seed = 0;
+      for (let i = 0; i < seedText.length; i += 1) seed = (seed * 31 + seedText.charCodeAt(i)) >>> 0;
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        seed = (1664525 * seed + 1013904223) >>> 0;
+        const j = seed % (i + 1);
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function chooseOption(button) {
+      if (locked || stage !== "meaning") return;
+      ensureAudio();
+      const word = queue[currentIndex];
+      const selectedId = button.dataset.id;
+      const correct = selectedId === word.id;
+
+      if (!attemptStarted) {
+        wordState(word.id).seen += 1;
+        attemptStarted = true;
+      }
+
+      if (!correct) {
+        button.classList.add("wrong");
+        button.disabled = true;
+        const s = wordState(word.id);
+        s.wrong += 1;
+        s.level = Math.max(0, s.level - 1);
+        s.due = Date.now();
+        state.totals.wrong += 1;
+        saveState();
+        playWrongSound();
+        vibrate(35);
+        showToast("再试一次");
+        renderReview();
+        return;
+      }
+
+      for (const btn of els.choiceGrid.querySelectorAll(".choice")) {
+        btn.disabled = true;
+        if (btn.dataset.id === word.id) btn.classList.add("correct");
+      }
+      els.meaningReveal.classList.add("visible");
+      playCorrectSound();
+      vibrate(18);
+      if (mode === "learn") {
+        markMeaningCorrect(word);
+        showToast("释义通过");
+        setTimeout(nextCard, 520);
+      } else {
+        showToast("释义通过，开始拼写");
+        setTimeout(() => renderSpellingTest(word), 620);
+      }
+    }
+
+    function markMeaningCorrect(word) {
+      if (mode !== "learn") return;
+      const session = ensureSession();
+      if (!session.meaningCompleted.includes(word.id)) session.meaningCompleted.push(word.id);
+      if (session.meaningCompleted.length >= session.taskIds.length) session.phase = "spelling";
+      saveState();
+      renderReview();
+      renderBank();
+    }
+
+    function renderSpellingTest(word, unitArg = null, doneArg = currentIndex, totalArg = queue.length, sourceArg = "复习") {
+      stage = "spelling";
+      locked = false;
+      const unit = unitArg || unitById(`unit-${word.unit}`);
+      spellFull = spellingChunks(word.word);
+      const prompt = spellingPrompt(word, spellFull);
+      spellPrompt = prompt.prompt;
+      spellAnswer = prompt.answer;
+      spellSelected = [];
+      spellOptions = spellingOptions(word, spellAnswer);
+      q("#wordCard").classList.remove("meaning-mode");
+      q("#wordCard").classList.add("spelling-mode");
+      els.studyModeLabel.textContent = mode === "learn" ? `顺序学习 · 拼写 ${doneArg + 1}/${totalArg}` : `复习拼写 · ${currentIndex + 1}/${queue.length}`;
+      els.progressMeter.style.width = `${totalArg ? Math.min(100, doneArg / totalArg * 100) : 0}%`;
+      els.wordText.textContent = "挖空填词";
+      els.phoneticText.textContent = `${word.part} · ${word.meaning}`;
+      els.partText.textContent = word.part;
+      els.unitTag.textContent = "词库";
+      els.exampleText.innerHTML = clozeExample(word);
+      els.meaningText.textContent = word.meaning;
+      els.meaningReveal.classList.add("visible");
+      els.visualBox.innerHTML = "";
+      els.choiceGrid.innerHTML = spellingMarkup();
+      wireSpellingButtons();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function spellingChunks(text) {
+      const clean = text.trim().replace(/\s+/g, " ");
+      if (clean.includes(" ")) return clean.split(" ");
+      if (clean.includes("-")) return clean.split("-").filter(Boolean);
+      if (clean.length <= 4) return [...clean];
+      const chunks = [];
+      let index = 0;
+      while (index < clean.length) {
+        const left = clean.length - index;
+        const size = left <= 4 ? left : left === 5 ? 2 : 3;
+        chunks.push(clean.slice(index, index + size));
+        index += size;
+      }
+      return chunks;
+    }
+
+    function spellingPrompt(word, chunks) {
+      if (chunks.length <= 1) {
+        return { prompt: chunks.map(() => null), answer: chunks };
+      }
+      const hintCount = Math.min(chunks.length - 1, Math.max(1, Math.ceil(chunks.length / 2)));
+      const hintIndexes = new Set(
+        seededShuffle(chunks.map((_, index) => index), `${word.id}-spell-hints`).slice(0, hintCount)
+      );
+      const prompt = chunks.map((part, index) => hintIndexes.has(index) ? part : null);
+      const answer = chunks.filter((_, index) => !hintIndexes.has(index));
+      return { prompt, answer };
+    }
+
+    function escapeRegExp(text) {
+      return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function clozeCandidates(text) {
+      const clean = text.trim().replace(/\s+/g, " ");
+      const candidates = [clean];
+      const lower = clean.toLowerCase();
+      for (const lead of ["be ", "a ", "an ", "the "]) {
+        if (lower.startsWith(lead)) candidates.push(clean.slice(lead.length));
+      }
+      if (clean.includes(" ")) candidates.push(clean.split(" ").slice(1).join(" "));
+      return [...new Set(candidates.filter(Boolean))];
+    }
+
+    function clozeExample(word) {
+      const source = word.example || "";
+      const blankText = spellPrompt.map(part => part || "____").join(" ");
+      const blank = `<span class="spell-blank">${esc(blankText)}</span>`;
+      const marker = "[[BAICIKA_BLANK]]";
+      for (const candidate of clozeCandidates(word.word)) {
+        const escaped = escapeRegExp(candidate).replace(/\s+/g, "\\s+");
+        const suffix = /^[A-Za-z]+$/.test(candidate) ? "(?:s|es|d|ed|ing)?" : "";
+        const re = new RegExp(`\\b${escaped}${suffix}\\b`, "i");
+        if (re.test(source)) return esc(source.replace(re, marker)).replace(marker, blank);
+      }
+      return `${blank} ${esc(source)}`;
+    }
+
+    function spellingOptions(word, answer) {
+      const used = new Set(spellFull.map(part => part.toLowerCase()));
+      const distractors = [];
+      for (const other of seededShuffle(ALL_WORDS.filter(item => item.id !== word.id), `${word.id}-spell`)) {
+        for (const part of spellingChunks(other.word)) {
+          const normalized = part.toLowerCase();
+          if (!/^[a-z]+$/i.test(part) || used.has(normalized) || distractors.includes(part)) continue;
+          distractors.push(part);
+          if (distractors.length >= Math.min(5, Math.max(3, answer.length))) break;
+        }
+        if (distractors.length >= Math.min(5, Math.max(3, answer.length))) break;
+      }
+      return seededShuffle([...answer, ...distractors], `${word.id}-spell-options`);
+    }
+
+    function spellingMarkup(isWrong = false) {
+      let selectedIndex = 0;
+      const slots = spellPrompt.map(part => {
+        if (part) return `<span class="spell-slot hint">${esc(part)}</span>`;
+        const value = spellSelected[selectedIndex++];
+        return `<span class="spell-slot${value ? "" : " empty"}">${esc(value || "___")}</span>`;
+      }).join("");
+      const usedCounts = {};
+      for (const part of spellSelected) usedCounts[part] = (usedCounts[part] || 0) + 1;
+      const options = spellOptions.map((part, index) => {
+        const used = (usedCounts[part] || 0) > 0;
+        if (used) usedCounts[part] -= 1;
+        return `<button class="spell-option" type="button" data-spell-index="${index}"${used ? " disabled" : ""}>${esc(part)}</button>`;
+      }).join("");
+      return `
+        <div class="spell-panel${isWrong ? " wrong" : ""}">
+          <div class="spell-title">
+            <span>已提示约 50%，补全空缺</span>
+            <span>${spellSelected.length}/${spellAnswer.length}</span>
+          </div>
+          <div class="spell-slots">${slots}</div>
+          <div class="spell-options">${options}</div>
+        </div>
+      `;
+    }
+
+    function wireSpellingButtons() {
+      for (const btn of els.choiceGrid.querySelectorAll(".spell-option")) {
+        btn.addEventListener("click", () => chooseSpell(btn));
+      }
+    }
+
+    function chooseSpell(button) {
+      if (locked || stage !== "spelling") return;
+      ensureAudio();
+      const index = Number(button.dataset.spellIndex);
+      const part = spellOptions[index];
+      if (!part) return;
+      spellSelected.push(part);
+      els.choiceGrid.innerHTML = spellingMarkup();
+      wireSpellingButtons();
+
+      if (spellSelected.length < spellAnswer.length) return;
+
+      const correct = spellSelected.join("|").toLowerCase() === spellAnswer.join("|").toLowerCase();
+      if (!correct) {
+        locked = true;
+        const word = queue[currentIndex];
+        const s = wordState(word.id);
+        s.wrong += 1;
+        s.level = Math.max(0, s.level - 1);
+        s.due = Date.now();
+        state.totals.wrong += 1;
+        saveState();
+        playWrongSound();
+        vibrate(35);
+        showToast("拼写不对，再试一次");
+        els.choiceGrid.innerHTML = spellingMarkup(true);
+        setTimeout(() => {
+          spellSelected = [];
+          locked = false;
+          els.choiceGrid.innerHTML = spellingMarkup();
+          wireSpellingButtons();
+        }, 700);
+        return;
+      }
+
+      locked = true;
+      const word = queue[currentIndex];
+      markCorrect(word);
+      playCorrectSound();
+      vibrate(18);
+      showToast("拼写通过");
+      setTimeout(nextCard, 850);
+    }
+
+    function markCorrect(word) {
+      const s = wordState(word.id);
+      s.correct += 1;
+      s.level = Math.min(6, s.level + 1);
+      s.due = Date.now() + SCHEDULE_DAYS[Math.min(SCHEDULE_DAYS.length - 1, s.level)] * DAY;
+      state.totals.correct += 1;
+
+      if (mode === "learn") {
+        const session = ensureSession();
+        if (!session.completed.includes(word.id)) session.completed.push(word.id);
+        if (session.completed.length >= session.taskIds.length) session.finished = true;
+      }
+      saveState();
+      renderReview();
+      renderBank();
+    }
+
+    function nextCard() {
+      if (mode === "learn") {
+        buildLearnQueue();
+        return;
+      }
+
+      currentIndex += 1;
+      if (currentIndex >= queue.length) {
+        showToast("复习完成");
+        switchTab("review");
+      } else {
+        renderCard();
+      }
+    }
+
+    function killCurrentWord() {
+      ensureAudio();
+      const word = queue[currentIndex];
+      if (!word) return;
+      const s = wordState(word.id);
+      s.killed = true;
+      s.level = 6;
+      s.due = Number.MAX_SAFE_INTEGER;
+      s.seen += s.seen ? 0 : 1;
+
+      if (mode === "learn") {
+        const session = ensureSession();
+        if (!session.completed.includes(word.id)) session.completed.push(word.id);
+        if (session.completed.length >= session.taskIds.length) session.finished = true;
+      }
+
+      saveState();
+      playKillSound();
+      vibrate(22);
+      showToast("已斩杀，不再进入复习");
+      renderReview();
+      renderBank();
+      setTimeout(nextCard, 450);
+    }
+
+    function completeTask() {
+      const key = sessionKey();
+      if (state.sessions[key]) state.sessions[key].finished = true;
+      const today = todayKey();
+      if (!state.checkinDays.includes(today)) state.checkinDays.push(today);
+      saveState();
+      renderTop();
+      renderCheckin();
+      switchTab("checkin");
+      playCheckinSound();
+      showToast("今日打卡成功");
+    }
+
+    function renderReview() {
+      const now = Date.now();
+      const due = ALL_WORDS.filter(word => {
+        const s = wordState(word.id);
+        return !s.killed && s.seen && s.due <= now;
+      });
+      const weak = ALL_WORDS.filter(word => {
+        const s = wordState(word.id);
+        return !s.killed && s.seen && s.wrong > 0 && s.level < 3;
+      });
+      const killed = ALL_WORDS.filter(word => wordState(word.id).killed);
+      const list = [...new Map([...weak, ...due].map(word => [word.id, word])).values()].slice(0, 14);
+
+      els.dueCount.textContent = due.length;
+      els.weakCount.textContent = weak.length;
+      els.killedCount.textContent = killed.length;
+      els.reviewList.innerHTML = list.length ? list.map(wordRow).join("") : `<div class="empty">当前没有需要复习的词。</div>`;
+    }
+
+    function renderBank() {
+      const query = els.searchInput.value.trim().toLowerCase();
+      const words = ALL_WORDS.filter(word => {
+        const text = `${word.word} ${word.meaning} ${word.example} ${word.part}`.toLowerCase();
+        return text.includes(query);
+      });
+
+      els.bankHint.textContent = `完整词库 · ${ALL_WORDS.length} 词`;
+      els.bankList.innerHTML = words.length ? words.map(wordRow).join("") : `<div class="empty">没有找到匹配的单词。</div>`;
+    }
+
+    function wordRow(word) {
+      const s = wordState(word.id);
+      const status = s.killed ? `<span class="tiny-tag killed">已斩杀</span>` : `<span class="tiny-tag">L${s.level}</span>`;
+      return `
+        <button class="word-row" type="button" data-open-word="${esc(word.id)}">
+          <span>
+            <strong>${esc(word.word)}</strong>
+            <span>${esc(word.part)} ${esc(word.meaning)}</span>
+          </span>
+          <span class="row-tags">${status}</span>
+        </button>
+      `;
+    }
+
+    function openWord(wordId) {
+      const word = wordById(wordId);
+      if (!word) return;
+      state.activeUnit = CORPUS_ID;
+      mode = "review";
+      studyStarted = true;
+      queue = [word];
+      currentIndex = 0;
+      saveState();
+      switchTab("learn");
+      renderLearn();
+      renderCard();
+    }
+
+    function renderCheckin() {
+      const today = todayKey();
+      const success = state.checkinDays.includes(today);
+      const days = state.checkinDays.length;
+      const taskTitle = "顺序学习 25 词";
+      els.checkinBadge.textContent = success ? "今日打卡成功" : "今日未打卡";
+      els.checkinTitle.textContent = success ? "今天的词已斩下" : "完成任务后点亮打卡";
+      els.checkinCopy.textContent = success
+        ? `${taskTitle} 已完成。累计打卡 ${days} 天。`
+        : `完成一组顺序学习任务后，会自动生成打卡图。`;
+      els.saveImageBtn.disabled = !success;
+      els.saveImageBtn.style.opacity = success ? "1" : ".48";
+      els.checkinImage.src = makeCheckinImage(success, taskTitle, days);
+      renderTop();
+    }
+
+    function makeCheckinImage(success, unitTitle, days) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1080;
+      canvas.height = 1440;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#061a3a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      roundRect(ctx, 90, 110, 900, 1220, 28);
+      ctx.fill();
+      ctx.strokeStyle = "#bdd1ee";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.fillStyle = success ? "#ffc845" : "#52647d";
+      roundRect(ctx, 150, 180, success ? 360 : 320, 82, 41);
+      ctx.fill();
+      ctx.fillStyle = success ? "#061427" : "#ffffff";
+      ctx.font = "700 38px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(success ? "今日打卡成功" : "今日未打卡", 190, 233);
+
+      ctx.fillStyle = "#18201f";
+      ctx.font = "900 88px -apple-system, BlinkMacSystemFont, sans-serif";
+      wrapCanvasText(ctx, success ? "万词斩学习完成" : "万词斩待完成", 150, 380, 780, 104);
+
+      ctx.fillStyle = "#66706d";
+      ctx.font = "600 36px -apple-system, BlinkMacSystemFont, sans-serif";
+      wrapCanvasText(ctx, `${unitTitle} · 八年级上册文档词库`, 150, 610, 780, 48);
+
+      ctx.fillStyle = "#e7f0ff";
+      roundRect(ctx, 150, 750, 780, 260, 24);
+      ctx.fill();
+      ctx.fillStyle = "#0b5fff";
+      ctx.font = "900 124px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(String(days), 190, 910);
+      ctx.font = "800 42px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText("累计打卡天数", 190, 970);
+
+      const date = new Date();
+      ctx.fillStyle = "#18201f";
+      ctx.font = "800 42px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`, 150, 1148);
+      ctx.fillStyle = "#66706d";
+      ctx.font = "600 30px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText("万词斩 · 离线背词", 150, 1210);
+
+      ctx.strokeStyle = "#00b884";
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.moveTo(742, 1110);
+      ctx.lineTo(805, 1174);
+      ctx.lineTo(930, 1036);
+      ctx.stroke();
+      return canvas.toDataURL("image/png");
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+      const chars = [...text];
+      let line = "";
+      let currentY = y;
+      for (const char of chars) {
+        const test = line + char;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          ctx.fillText(line, x, currentY);
+          line = char;
+          currentY += lineHeight;
+        } else {
+          line = test;
+        }
+      }
+      if (line) ctx.fillText(line, x, currentY);
+    }
+
+    async function saveCheckinImage() {
+      const dataUrl = els.checkinImage.src;
+      if (!dataUrl || !dataUrl.startsWith("data:image/png")) return;
+      try {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], `baicika-${todayKey()}.png`, { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "万词斩打卡" });
+          showToast("已打开保存菜单");
+          return;
+        }
+      } catch {
+        // Fall through to download.
+      }
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `baicika-${todayKey()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      showToast("打卡图已生成");
+    }
+
+    function refreshVoices() {
+      voices = "speechSynthesis" in window ? speechSynthesis.getVoices() : [];
+    }
+
+    function preferredVoice() {
+      refreshVoices();
+      const preferredNames = [
+        "Samantha", "Ava", "Allison", "Serena", "Daniel", "Moira",
+        "Google US English", "Google UK English Female",
+        "Microsoft Aria", "Microsoft Jenny", "Microsoft Sonia"
+      ];
+      for (const name of preferredNames) {
+        const voice = voices.find(v => v.name.toLowerCase().includes(name.toLowerCase()));
+        if (voice) return voice;
+      }
+      return voices.find(v => /^en[-_]/i.test(v.lang) && /natural|premium|enhanced/i.test(v.name))
+        || voices.find(v => /^en-US/i.test(v.lang))
+        || voices.find(v => /^en[-_]/i.test(v.lang))
+        || null;
+    }
+
+    function speakWordThenExample(word = queue[currentIndex]) {
+      if (!word || !("speechSynthesis" in window)) return;
+      refreshVoices();
+      speechSynthesis.cancel();
+      const voice = preferredVoice();
+      const first = new SpeechSynthesisUtterance(word.word);
+      first.lang = "en-US";
+      first.rate = .82;
+      first.pitch = 1.04;
+      if (voice) first.voice = voice;
+      first.onend = () => {
+        setTimeout(() => {
+          const current = queue[currentIndex];
+          if (!current || current.id !== word.id) return;
+          const second = new SpeechSynthesisUtterance(word.example);
+          second.lang = "en-US";
+          second.rate = .9;
+          second.pitch = 1.02;
+          if (voice) second.voice = voice;
+          speechSynthesis.speak(second);
+        }, 1000);
+      };
+      speechSynthesis.speak(first);
+    }
+
+    function ensureAudio() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return null;
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function tone(freq, start, duration, type = "sine", gainValue = .08) {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(gainValue, ctx.currentTime + start + .02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + duration + .03);
+    }
+
+    function playCorrectSound() {
+      tone(660, 0, .13, "sine", .07);
+      tone(920, .12, .18, "sine", .065);
+    }
+
+    function playWrongSound() {
+      tone(180, 0, .16, "sawtooth", .045);
+      tone(130, .1, .18, "sawtooth", .035);
+    }
+
+    function playKillSound() {
+      tone(420, 0, .08, "triangle", .06);
+      tone(720, .08, .12, "triangle", .07);
+    }
+
+    function playCheckinSound() {
+      tone(523, 0, .12, "sine", .07);
+      tone(659, .13, .12, "sine", .07);
+      tone(784, .26, .18, "sine", .075);
+      tone(1046, .45, .24, "triangle", .055);
+    }
+
+    function vibrate(ms) {
+      if (navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    function showToast(text) {
+      clearTimeout(toastTimer);
+      els.toast.textContent = text;
+      els.toast.classList.add("show");
+      toastTimer = setTimeout(() => els.toast.classList.remove("show"), 1450);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
+      q(`#${tab}Screen`).classList.add("active");
+      if (tab === "learn") renderLearn();
+      if (tab === "review") renderReview();
+      if (tab === "bank") renderBank();
+      if (tab === "checkin") renderCheckin();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function illustration(word, s) {
+      const hue = (word.unit * 41 + word.order * 9) % 360;
+      const level = Math.max(0, Math.min(6, s.level || 0));
+      const bars = Array.from({ length: 6 }, (_, i) => {
+        const h = 26 + i * 11;
+        const active = i < level;
+        return `<rect x="${78 + i * 42}" y="${154 - h}" width="24" height="${h}" rx="5" fill="${active ? "#11a67a" : "#dfe8e4"}"/>`;
+      }).join("");
+      const initial = esc(word.word.trim()[0] || "?").toUpperCase();
+      return `
+        <svg viewBox="0 0 430 150" role="img" aria-label="">
+          <rect width="430" height="150" rx="8" fill="#f6fbf8"/>
+          <path d="M0 118 C62 88 118 113 179 82 S290 58 430 91 V150 H0Z" fill="hsl(${hue}, 45%, 88%)"/>
+          <rect x="42" y="34" width="86" height="86" rx="8" fill="#ffffff" stroke="#dfe8e4" stroke-width="4"/>
+          <text x="85" y="96" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="58" font-weight="900" fill="#18201f">${initial}</text>
+          ${bars}
+          <path d="M318 110 L355 70 L389 110" fill="none" stroke="#2f72d6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="356" cy="69" r="10" fill="#ef684e"/>
+        </svg>
+      `;
+    }
+
+    els.startUnitBtn.addEventListener("click", beginLearning);
+
+    els.changeUnitBtn.addEventListener("click", () => {
+      saveState();
+      mode = "learn";
+      studyStarted = false;
+      if ("speechSynthesis" in window) speechSynthesis.cancel();
+      renderLearn();
+    });
+
+    els.speakBtn.addEventListener("click", () => {
+      ensureAudio();
+      speakWordThenExample();
+    });
+
+    els.replayBtn.addEventListener("click", () => {
+      ensureAudio();
+      speakWordThenExample();
+    });
+
+    els.killBtn.addEventListener("click", killCurrentWord);
+    els.startReviewBtn.addEventListener("click", buildReviewQueue);
+    els.searchInput.addEventListener("input", renderBank);
+    els.saveImageBtn.addEventListener("click", saveCheckinImage);
+
+    document.querySelector(".bottom-nav").addEventListener("click", event => {
+      const btn = event.target.closest(".nav-btn");
+      if (btn) switchTab(btn.dataset.tab);
+    });
+
+    document.body.addEventListener("click", event => {
+      const row = event.target.closest("[data-open-word]");
+      if (row) openWord(row.dataset.openWord);
+    });
+
+    if ("speechSynthesis" in window) {
+      refreshVoices();
+      speechSynthesis.onvoiceschanged = refreshVoices;
+    }
+
+    renderLearn();
+    renderReview();
+    renderBank();
+    renderCheckin();
+  </script>
+</body>
+</html>
