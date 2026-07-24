@@ -41,7 +41,10 @@
   .topbar .wrap{height:58px;display:flex;align-items:center;justify-content:space-between;gap:20px}
   .brand{display:inline-flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.2em;text-decoration:none;color:#fff}
   .led{width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.14),0 0 18px rgba(255,255,255,.8)}
+  .topbar-tools{display:flex;align-items:center;gap:18px}
   .topbar .mono{color:rgba(255,255,255,.58)}
+  .netapp-brand{display:flex;align-items:center;padding-left:18px;border-left:1px solid rgba(255,255,255,.24)}
+  .netapp-brand img{display:block;width:112px;height:auto;filter:brightness(0) invert(1);opacity:.94}
   .hero{padding:58px 0 64px}
   h1{margin:0;max-width:16ch;font-size:clamp(38px,5vw,66px);font-weight:800;line-height:1.02;letter-spacing:-.045em;color:#fff;text-wrap:balance}
   .lede{max-width:56ch;margin:18px 0 0;color:rgba(255,255,255,.76);font-size:clamp(15px,1.5vw,18px);font-weight:500;line-height:1.65;text-wrap:pretty}
@@ -90,6 +93,9 @@
     .hero{padding:44px 0 48px}
     .topbar .wrap{height:54px}
     .topbar .mono{display:none}
+    .topbar-tools{gap:0}
+    .netapp-brand{padding-left:0;border-left:0}
+    .netapp-brand img{width:96px}
     .bay{grid-template-columns:1fr;gap:16px}
     .visual img{filter:saturate(.95) brightness(.98)}
   }
@@ -119,7 +125,10 @@
         <span class="led" aria-hidden="true"></span>
         <span>ADG331 · APPS</span>
       </a>
-      <span class="mono">WEB TOOLS / INTERACTIVE DEMOS</span>
+      <div class="topbar-tools">
+        <span class="mono">WEB TOOLS / INTERACTIVE DEMOS</span>
+        <span class="netapp-brand"><img src="./assets/netapp-logo.svg" alt="NetApp" width="112" height="20"></span>
+      </div>
     </div>
   </nav>
 
