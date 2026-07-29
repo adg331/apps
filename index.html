@@ -72,8 +72,8 @@
   a.slot:hover .visual::after{opacity:.2}
   .body{padding:23px 24px 25px;display:flex;flex-direction:column;flex:1}
   .tag{display:inline-block;width:max-content;margin:0 0 13px;padding:5px 9px;border:1px solid #aed6f5;border-radius:4px;background:var(--blue-50);color:var(--netapp-blue);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
-  .body h3{margin:0;font-size:23px;font-weight:750;line-height:1.25;letter-spacing:-.025em;color:var(--ink)}
-  .body p{margin:11px 0 21px;color:var(--ink-2);font-size:14px;line-height:1.7;text-wrap:pretty}
+  .body h3{margin:0;min-height:58px;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;font-size:22px;font-weight:750;line-height:1.32;letter-spacing:-.015em;color:var(--ink)}
+  .body p{margin:11px 0 21px;min-height:48px;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;color:var(--ink-2);font-size:14px;font-weight:400;line-height:1.7;letter-spacing:0;text-wrap:pretty}
   .go{display:inline-flex;align-items:center;gap:8px;width:max-content;margin-top:auto;padding-bottom:3px;border-bottom:1px solid rgba(0,103,197,.3);color:var(--netapp-blue);font-size:13px;font-weight:750}
   .go::after{content:"→";font-size:16px;transition:transform .2s ease}
   a.slot:hover .go::after{transform:translateX(5px)}
@@ -108,7 +108,8 @@
     h1{font-size:38px}
     main{padding-top:30px}
     .body{padding:20px}
-    .body h3{font-size:21px}
+    .body h3{min-height:0;font-size:21px}
+    .body p{min-height:0}
     footer{margin-top:46px}
   }
   @media (prefers-reduced-motion:reduce){
@@ -147,7 +148,7 @@
   <section aria-labelledby="apps-title">
     <div class="sec-head">
       <h2 id="apps-title">应用与演示</h2>
-      <span class="mono">Bay 01 — 06</span>
+      <span class="mono">Bay 01 — 08</span>
     </div>
 
     <div class="bay">
@@ -181,7 +182,7 @@
       <a class="slot" href="./ontap-mcp/" aria-label="打开 ONTAP MCP 交互式演示">
         <div class="addr mono"><b>Bay 03</b><span class="state">在线</span></div>
         <div class="visual">
-          <img src="./assets/ontap-mcp-preview.png" alt="ONTAP MCP 自然语言存储管理演示界面" width="800" height="450" loading="lazy">
+          <img src="./assets/ontap-mcp-preview.svg" alt="ONTAP MCP 自然语言存储管理架构示意图" width="800" height="450" loading="lazy">
         </div>
         <div class="body">
           <span class="tag">ONTAP MCP</span>
@@ -194,7 +195,7 @@
       <a class="slot" href="./netapp-mcp/" aria-label="打开 NetApp MCP 交互式演示">
         <div class="addr mono"><b>Bay 04</b><span class="state">在线</span></div>
         <div class="visual">
-          <img src="./assets/netapp-mcp-preview.png" alt="NetApp MCP 数据基础设施管理演示界面" width="800" height="450" loading="lazy">
+          <img src="./assets/netapp-mcp-preview.svg" alt="NetApp MCP 数据基础设施管理架构示意图" width="800" height="450" loading="lazy">
         </div>
         <div class="body">
           <span class="tag">NetApp MCP</span>
@@ -204,20 +205,43 @@
         </div>
       </a>
 
-      <div class="slot empty">
-        <div class="addr mono"><b>Bay 05</b><span class="state">规划中</span></div>
-        <div class="body">
-          <h3>勒索软件行为检测</h3>
-          <p>ARP 自主防护如何在写入阶段识别异常加密行为。</p>
+      <a class="slot" href="./sm-as-nas/" aria-label="打开 SnapMirror active sync for NAS 技术演示">
+        <div class="addr mono"><b>Bay 05</b><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/sm-as-nas-preview.svg" alt="SnapMirror active sync for NAS 双站点同步保护示意图" width="800" height="450" loading="lazy">
         </div>
-      </div>
+        <div class="body">
+          <span class="tag">ONTAP 9.19.1</span>
+          <h3>SnapMirror active sync for NAS</h3>
+          <p>交互演示双站点 NAS 工作负载的同步复制、故障切换、规模规划与部署适配。</p>
+          <span class="go">进入技术演示</span>
+        </div>
+      </a>
+
+      <a class="slot" href="./arp-ai-manufacturing/" aria-label="打开 ONTAP ARP AI 制造业勒索软件检测与恢复演示">
+        <div class="addr mono"><b>Bay 06</b><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/arp-ai-preview.svg" alt="ONTAP ARP AI 制造业勒索软件检测与恢复示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <span class="tag">ONTAP ARP/AI</span>
+          <h3>制造业勒索软件检测与恢复</h3>
+          <p>交互展示异常加密行为的实时检测、快照锁定、告警响应与制造业务恢复路径。</p>
+          <span class="go">进入交互演示</span>
+        </div>
+      </a>
 
       <div class="slot empty">
-        <div class="addr mono"><b>Bay 06</b><span class="state">规划中</span></div>
+        <div class="addr mono"><b>Bay 07</b><span class="state">规划中</span></div>
         <div class="body">
           <h3>KV Cache 分层</h3>
           <p>推理缓存在 GPU 显存与存储之间的分层与命中过程。</p>
         </div>
+      </div>
+
+      <div class="slot empty">
+        <div class="addr mono"><b>Bay 08</b><span class="state">规划中</span></div>
+        <div class="body" aria-label="预留空白展位"></div>
       </div>
 
     </div>

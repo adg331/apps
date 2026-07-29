@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>ONTAP ARP/AI · 制造业勒索软件实时检测与恢复</title>
+<style>
+:root{
+  --bg:#f2f5fb; --bg2:#e9eef8; --panel:#ffffff; --panel2:#f2f5fc;
+  --line:#d9e0ef; --txt:#182342; --dim:#5b6788; --faint:#8b94b3;
+  --cyan:#0067c5; --violet:#6f5bd6; --green:#0f9d63; --orange:#d97b16;
+  --red:#d6365a; --blue:#2f6fe0; --teal:#0d8f80;
+  --mono:'SF Mono','Cascadia Code',Consolas,'Courier New',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:radial-gradient(1200px 700px at 70% -10%, #dbe7fa 0%, var(--bg) 55%);
+  color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  overflow:hidden; display:flex; flex-direction:column;
+}
+header{
+  display:flex; align-items:center; gap:16px;
+  padding:14px 28px; border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.78); backdrop-filter:blur(6px); z-index:10;
+}
+.logo{
+  font-weight:800; font-size:20px; letter-spacing:.5px;
+  background:linear-gradient(90deg,var(--cyan),var(--violet));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.logo small{font-size:12px; color:var(--dim); -webkit-text-fill-color:var(--dim); margin-left:8px; font-weight:400}
+.tabs{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap}
+.tab{border:1px solid var(--line); background:transparent; color:var(--dim);
+  padding:6px 13px; border-radius:20px; cursor:pointer; font-size:12.5px; transition:.2s; font-family:inherit}
+.tab:hover{color:var(--txt); border-color:var(--cyan)}
+.tab.on{background:linear-gradient(90deg,rgba(0,103,197,.10),rgba(111,91,214,.10)); color:var(--txt); border-color:var(--cyan)}
+main{flex:1; position:relative; overflow:hidden}
+.scene{position:absolute; inset:0; padding:24px 44px 20px; display:none; overflow:auto}
+.scene.active{display:block; animation:fadeUp .45s ease}
+@keyframes fadeUp{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
+h1{font-size:25px; font-weight:800; margin-bottom:4px}
+h1 .hl{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--dim); font-size:13.5px; margin-bottom:16px; max-width:1000px}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px}
+.panel h3{font-size:15px; font-weight:800; margin-bottom:8px}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+.btn{border:1px solid var(--line); background:var(--panel2); color:var(--txt);
+  padding:8px 16px; border-radius:9px; cursor:pointer; font-size:13.5px; transition:.15s; font-family:inherit}
+.btn:hover{border-color:var(--cyan); transform:translateY(-1px)}
+.btn.primary,.btn.on{background:linear-gradient(90deg,#0067c5,#5b57d0); border-color:var(--cyan); color:#fff}
+.note{font-size:12px; color:var(--faint); margin-top:10px; line-height:1.7}
+.note b{color:var(--dim)}
+input[type=range]{accent-color:var(--cyan); width:100%}
+.sliderRow{display:flex; align-items:center; gap:12px; margin:10px 0}
+.sliderRow label{width:150px; font-size:13px; color:var(--dim); flex-shrink:0}
+.sliderRow .val{width:120px; text-align:right; font-size:13.5px; color:var(--cyan); font-weight:700; font-variant-numeric:tabular-nums; flex-shrink:0}
+footer{display:flex; align-items:center; justify-content:center; gap:18px;
+  padding:9px 20px; border-top:1px solid var(--line); color:var(--faint); font-size:11.5px; text-align:center}
+.dots{display:flex; gap:8px}
+.dot{width:9px; height:9px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s}
+.dot.on{background:var(--cyan); box-shadow:0 0 8px var(--cyan)}
+.navBtn{border:1px solid var(--line); background:transparent; color:var(--dim); width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:15px; font-family:inherit}
+.navBtn:hover{color:var(--txt); border-color:var(--cyan)}
+.bigStat{display:flex; gap:14px; margin-top:14px; flex-wrap:wrap}
+.stat{flex:1; min-width:130px; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:13px 15px}
+.stat .v{font-size:24px; font-weight:800; font-variant-numeric:tabular-nums}
+.stat .l{font-size:11.5px; color:var(--dim); margin-top:3px}
+.stat.alert .v{color:var(--red)} .stat.ok .v{color:var(--green)}
+.stat.blue .v{color:var(--cyan)} .stat.warn .v{color:var(--orange)}
+table.dt{width:100%; border-collapse:collapse; font-size:12.6px}
+table.dt th,table.dt td{padding:7px 10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top}
+table.dt th{color:var(--dim); font-weight:700; font-size:11.5px; background:var(--panel2)}
+table.dt td.num{font-variant-numeric:tabular-nums; font-weight:700; font-family:var(--mono)}
+table.dt td.c{text-align:center; font-weight:800}
+table.dt tr:last-child td{border-bottom:none}
+table.dt .hi{background:rgba(0,103,197,.05)}
+.tag{display:inline-block; padding:2px 8px; border-radius:10px; font-size:10.5px; font-weight:700; white-space:nowrap}
+.tag.ok{background:rgba(15,157,99,.12); color:var(--green)}
+.tag.no{background:rgba(214,54,90,.12); color:var(--red)}
+.tag.part{background:rgba(217,123,22,.12); color:var(--orange)}
+.tag.new{background:rgba(111,91,214,.12); color:var(--violet)}
+.cards{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:12px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:17px 16px; transition:.2s}
+.card:hover{border-color:var(--cyan); transform:translateY(-3px)}
+.card .k{font-family:var(--mono); font-size:10px; color:var(--cyan); letter-spacing:1px}
+.card .t{font-weight:800; font-size:14.5px; margin:8px 0 6px}
+.card .d{font-size:12.3px; color:var(--dim); line-height:1.65}
+.barRow{display:grid; grid-template-columns:170px 1fr 130px; gap:12px; align-items:center; margin:11px 0}
+.barRow .nm{font-size:12.8px; text-align:right; color:var(--dim)}
+.barRow .nm b{color:var(--txt)}
+.barOuter{height:26px; background:#e8edf8; border:1px solid var(--line); border-radius:7px; overflow:hidden}
+.barIn{height:100%; border-radius:6px; width:0%; transition:width .7s cubic-bezier(.2,.8,.2,1);
+  display:flex; align-items:center; justify-content:flex-end; padding-right:8px;
+  font-size:11px; font-weight:800; color:#fff; min-width:2px}
+.barRow .spd{font-size:12.5px; font-variant-numeric:tabular-nums; color:var(--dim)}
+.spd b{font-size:16px; color:var(--txt)}
+.headline{display:flex; align-items:center; gap:20px; margin-top:14px; padding:13px 18px;
+  border:1px solid var(--cyan); border-radius:12px;
+  background:linear-gradient(90deg,rgba(0,103,197,.06),rgba(111,91,214,.06))}
+.headline .big{font-size:30px; font-weight:800; color:var(--green); font-variant-numeric:tabular-nums; white-space:nowrap}
+.headline .desc{color:var(--dim); font-size:12.5px; line-height:1.6}
+.stageWrap{display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:start}
+.stage{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px}
+.stage svg{width:100%; height:auto; display:block}
+.sideBox{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px}
+.sideBox h4{font-size:11px; font-family:var(--mono); letter-spacing:1.5px; color:var(--dim); margin-bottom:10px}
+.step{cursor:pointer; border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:12.8px; margin-bottom:7px; transition:.2s; display:flex; gap:9px}
+.step:hover{border-color:var(--cyan)}
+.step.on{border-color:var(--cyan); background:linear-gradient(180deg,rgba(0,103,197,.07),var(--panel))}
+.step .n{font-family:var(--mono); font-size:10px; color:var(--faint); padding-top:2px; flex:none}
+.step.on .n{color:var(--cyan)}
+.step b{display:block; font-weight:700; font-size:12.8px}
+.step em{font-style:normal; font-size:11px; color:var(--dim); display:block; margin-top:2px; line-height:1.5}
+.ctrls{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+.console{background:#f7f9fe; border:1px solid var(--line); border-radius:12px; padding:11px 13px; font-family:var(--mono); font-size:11px; line-height:1.75; min-height:120px; max-height:190px; overflow:auto; margin-top:12px}
+.console div{white-space:pre-wrap; color:var(--dim)}
+.console .ok{color:var(--green)} .console .warn{color:var(--orange)} .console .err{color:var(--red)} .console .dim{color:var(--faint)}
+ul.pts{list-style:none; margin-top:8px}
+ul.pts li{font-size:12.8px; padding:4px 0 4px 20px; position:relative; color:var(--txt); line-height:1.6}
+ul.pts li::before{content:'▸'; position:absolute; left:2px; color:var(--cyan)}
+.quote{margin-top:14px; padding:12px 16px; border-left:3px solid var(--violet); background:rgba(111,91,214,.05); border-radius:0 10px 10px 0; font-size:13px; color:var(--dim); line-height:1.7}
+.quote b{color:var(--txt)}
+.callout{margin-top:12px; padding:10px 14px; border-left:3px solid var(--cyan); background:rgba(0,103,197,.05); border-radius:0 10px 10px 0; font-size:12.3px; color:var(--dim); line-height:1.7}
+.callout b{color:var(--txt); margin-right:6px}
+.callout.warn{border-left-color:var(--orange); background:rgba(217,123,22,.05)}
+.callout.red{border-left-color:var(--red); background:rgba(214,54,90,.05)}
+.fitGrid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
+.fields{display:grid; gap:10px}
+.field label{display:block; font-size:11px; font-family:var(--mono); letter-spacing:1px; color:var(--dim); margin-bottom:4px}
+select{width:100%; font-family:inherit; font-size:13px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--panel); color:var(--txt)}
+select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+.verdict{padding:16px 18px; border-radius:12px; border:1px solid var(--line); background:var(--panel); min-height:280px}
+.verdict h4{font-size:14px; margin-bottom:11px; font-weight:800}
+.vline{display:flex; gap:9px; font-size:12.6px; margin-bottom:8px; align-items:flex-start; color:var(--dim); line-height:1.6}
+.vline i{width:7px; height:7px; border-radius:50%; flex:none; margin-top:7px; font-style:normal}
+.v-ok{background:var(--green)} .v-warn{background:var(--orange)} .v-no{background:var(--red)}
+.s-title{font-family:var(--mono); font-size:10px; fill:var(--faint); letter-spacing:1px}
+.s-label{font-size:12px; fill:var(--txt)}
+.s-small{font-size:10.5px; fill:var(--dim)}
+.s-box{fill:#fff; stroke:var(--line); stroke-width:1.5}
+.s-flow{stroke-width:2; fill:none; transition:stroke .4s ease, opacity .4s ease}
+.s-flow.dash{stroke-dasharray:6 5}
+.tile rect,.sig rect,.act rect{transition:fill .4s ease, stroke .4s ease}
+.bar-fill{transition:width .55s ease, fill .55s ease}
+@media (prefers-reduced-motion:no-preference){
+  .anim{stroke-dasharray:8 7; animation:march 1.1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-30}}
+}
+@media (max-width:1250px){ .grid4,.cards{grid-template-columns:repeat(2,1fr)} .grid3{grid-template-columns:1fr} }
+@media (max-width:1100px){ .grid2,.stageWrap,.fitGrid{grid-template-columns:1fr} .tabs{display:none} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="ar-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0067c5"/></marker>
+<marker id="ar-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0f9d63"/></marker>
+<marker id="ar-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#d6365a"/></marker>
+<marker id="ar-f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#c3cddf"/></marker>
+</defs></svg>
+
+<header>
+  <div class="logo">ONTAP ARP/AI<small>制造业场景 · 勒索软件实时检测与恢复</small></div>
+  <div class="tabs" id="tabs"></div>
+</header>
+
+<main>
+
+<!-- ═══════ 幕1 ═══════ -->
+<section class="scene" id="sc1">
+  <h1>先算一笔账：回退窗口<span class="hl">缩短一小时值多少</span></h1>
+  <div class="sub">制造业的勒索软件事件里，真正的成本是排产中断、质量追溯断链和交付延期。恢复点离事发时刻越近，需要重做的生产数据就越少。拖动滑块，看两种恢复点粒度的差别。</div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>环境条件输入</h3>
+      <div class="sliderRow">
+        <label>计划备份间隔</label>
+        <input type="range" id="s1bk" min="1" max="24" value="24" step="1">
+        <div class="val" id="s1bkV">24 小时</div>
+      </div>
+      <div class="sliderRow">
+        <label>每小时停产损失</label>
+        <input type="range" id="s1cost" min="5" max="300" value="80" step="5">
+        <div class="val" id="s1costV">80 万元</div>
+      </div>
+      <div class="sliderRow">
+        <label>受影响产线</label>
+        <input type="range" id="s1line" min="1" max="12" value="3" step="1">
+        <div class="val" id="s1lineV">3 条</div>
+      </div>
+      <div class="note">
+        <b>固定项：</b>ARP/AI 在 ONTAP 9.17.1 及以上按固定 4 小时间隔生成定期快照，并在确认攻击时额外生成快照，快照被锁定且管理员无法删除。<br>
+        <b>测算说明：</b>最坏情况下的数据回退窗口按「恢复点间隔」取值，攻击检出后即锁定快照的情形按最近一次定期快照计。停产损失与产线数量由实际情况输入，页面只做算术换算，不包含任何产品性能假设，也不构成 RPO / RTO 承诺。
+      </div>
+    </div>
+    <div class="panel">
+      <h3>最坏情况下的数据回退窗口</h3>
+      <div class="barRow"><div class="nm"><b>仅依赖计划备份</b></div><div class="barOuter"><div class="barIn" id="s1b1" style="background:linear-gradient(90deg,#d6365a,#e0708a)"></div></div><div class="spd"><b id="s1t1">24</b> 小时</div></div>
+      <div class="barRow"><div class="nm"><b>ARP/AI 定期快照</b></div><div class="barOuter"><div class="barIn" id="s1b2" style="background:linear-gradient(90deg,#0f9d63,#3bbd8a)"></div></div><div class="spd"><b>4</b> 小时</div></div>
+      <table class="dt" style="margin-top:14px">
+        <thead><tr><th>项目</th><th>仅计划备份</th><th>ARP/AI 定期快照</th></tr></thead>
+        <tbody>
+          <tr><td>回退窗口</td><td class="num" id="o-w1">—</td><td class="num" id="o-w2">4 小时</td></tr>
+          <tr><td>需重做的生产数据</td><td class="num" id="o-d1">—</td><td class="num" id="o-d2">—</td></tr>
+          <tr class="hi"><td>对应停产损失</td><td class="num" id="o-c1" style="color:var(--red)">—</td><td class="num" id="o-c2" style="color:var(--green)">—</td></tr>
+        </tbody>
+      </table>
+      <div class="bigStat">
+        <div class="stat ok"><div class="v" id="s1save">—</div><div class="l">可缩短的返工窗口对应金额</div></div>
+        <div class="stat blue"><div class="v" id="s1hr">—</div><div class="l">回退窗口缩短</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><b>换个角度</b>备份解决的是「最坏情况下还能不能恢复」，ARP/AI 解决的是「多久能发现、能退到多近的时间点」。两者不替代，但发现越早，产线重启越快。</div>
+</section>
+
+<!-- ═══════ 幕2 ═══════ -->
+<section class="scene" id="sc2">
+  <h1>检测发生在<span class="hl">数据路径里</span></h1>
+  <div class="sub">ARP/AI 在数据写入或读取文件系统的同时实时处理，不打开文件内容，而是对被修改的文件给出恶意加密概率。按步骤观察从异常写入到恢复的完整链路。</div>
+  <div class="stageWrap">
+    <div class="stage">
+      <svg id="stg" viewBox="0 0 900 400" role="img" aria-label="ARP/AI 检测与响应流程动画">
+        <rect x="20" y="12" width="860" height="42" rx="10" fill="rgba(0,103,197,.05)" stroke="rgba(0,103,197,.28)"/>
+        <text x="40" y="30" class="s-title">WORKLOAD · MES / PLM / 质检影像</text>
+        <text x="40" y="47" class="s-label" id="wlTxt">NFS 与 SMB 共享 · 正常业务读写</text>
+
+        <rect x="20" y="70" width="330" height="230" rx="12" class="s-box"/>
+        <text x="38" y="92" class="s-title">VOLUME</text>
+        <text x="332" y="92" text-anchor="end" class="s-small" id="volTag">状态正常</text>
+        <g id="tiles"></g>
+        <text x="38" y="288" class="s-small mono" id="affTxt" style="font-size:10.5px">受影响文件 0 / 9</text>
+
+        <rect x="368" y="70" width="180" height="230" rx="12" class="s-box"/>
+        <text x="386" y="92" class="s-title">SIGNALS</text>
+        <g id="sigs"></g>
+        <text x="386" y="288" class="s-small" style="font-size:9.5px">不读取文件内容</text>
+
+        <rect x="566" y="70" width="314" height="230" rx="12" class="s-box"/>
+        <text x="584" y="92" class="s-title">ARP/AI MODEL</text>
+        <text x="862" y="92" text-anchor="end" class="s-small mono" id="engTxt" style="font-size:10px;fill:#0f9d63">ACTIVE</text>
+        <text x="584" y="120" class="s-small">恶意加密概率</text>
+        <rect x="584" y="128" width="278" height="18" rx="9" fill="#e8edf8" stroke="#dfe6f3"/>
+        <rect id="probFill" x="584" y="128" width="12" height="18" rx="9" fill="#0f9d63" class="bar-fill"/>
+        <text x="584" y="164" class="s-small mono" style="font-size:9.5px">0</text>
+        <text x="862" y="164" text-anchor="end" class="s-small mono" style="font-size:9.5px">1</text>
+        <text x="723" y="164" text-anchor="middle" class="s-label mono" id="probTxt" style="font-weight:700">0.03</text>
+        <text x="584" y="186" class="s-small" id="thTxt" style="font-size:10px">威胁等级：无</text>
+        <text x="584" y="212" class="s-title">AUTOMATED RESPONSE</text>
+        <g id="acts"></g>
+
+        <path id="fl1" class="s-flow dash" stroke="#c3cddf" marker-end="url(#ar-f)" d="M350 185 L368 185"/>
+        <path id="fl2" class="s-flow dash" stroke="#c3cddf" marker-end="url(#ar-f)" d="M548 185 L566 185"/>
+
+        <rect x="20" y="316" width="860" height="46" rx="11" fill="rgba(15,157,99,.05)" stroke="rgba(15,157,99,.3)"/>
+        <text x="40" y="344" class="s-title">SNAPSHOTS</text>
+        <g id="snaps"></g>
+        <text x="40" y="386" class="s-small" id="noteTxt" style="font-size:11.5px">正常业务读写，ARP/AI 在数据路径内实时分析文件写入行为。</text>
+      </svg>
+    </div>
+    <div>
+      <div class="sideBox">
+        <h4>SEQUENCE</h4>
+        <div id="steps"></div>
+        <div class="ctrls">
+          <button class="btn primary" id="btnNext">下一步</button>
+          <button class="btn" id="btnPlay">▶ 自动播放</button>
+          <button class="btn" id="btnReset">■ 重置</button>
+        </div>
+      </div>
+      <div class="console" id="log" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 幕3 ═══════ -->
+<section class="scene" id="sc3">
+  <h1>ARP 与 ARP/AI 的<span class="hl">本质差别</span></h1>
+  <div class="sub">ONTAP 9.16.1 起，反勒索分析改用机器学习模型。最直接的运维差别是：不再需要学习期，启用即生效。</div>
+  <div class="cards">
+    <div class="card"><div class="k">01 · 模型</div><div class="t">预训练，随 ONTAP 内置</div><div class="d">模型在实验沙箱中用开源取证研究数据集训练：干净文件先入库，再经已知恶意软件加密生成损坏样本。训练在 ONTAP 之外完成，现网数据不参与建模流程。</div></div>
+    <div class="card"><div class="k">02 · 准确度</div><div class="t">NAS 环境 99% 检测准确率</div><div class="d">模型在超过一百万个文件与多种已知勒索软件攻击上训练。该能力已由独立测试机构 SE Labs 验证，获得其最高等级 AAA 评级。</div></div>
+    <div class="card"><div class="k">03 · 生效方式</div><div class="t">无学习期，启用即防护</div><div class="d">由于训练在云端持续进行，ARP/AI 不需要学习模式。NAS FlexVol（9.16.1+）、NAS FlexGroup（9.18.1+）、SAN 卷（9.17.1+）启用后立即进入主动防护。</div></div>
+    <div class="card"><div class="k">04 · 更新</div><div class="t">安全包独立更新</div><div class="d">模型参数通过安全更新包下发，节奏独立于 ONTAP 版本升级。可开启自动更新，也可手动控制更新时机；9.16.1 起可在 System Manager 中管理。</div></div>
+  </div>
+
+  <div class="panel" style="margin-top:16px">
+    <h3>逐项对照</h3>
+    <table class="dt">
+      <thead><tr><th style="width:130px">项目</th><th>ARP</th><th>ARP/AI</th></tr></thead>
+      <tbody>
+        <tr><td>ONTAP 版本</td><td>9.10.1 – 9.15.1</td><td class="hi">9.16.1 及以上；9.15.1 为技术预览</td></tr>
+        <tr><td>检测方式</td><td>分析文件活动、数据熵与文件扩展名类型</td><td>基于大规模取证数据集训练的机器学习模型，分析熵与文件行为，并识别文件头加密</td></tr>
+        <tr><td>学习期</td><td>NAS FlexVol 需 30 天学习模式（9.13.1 起可自动切换）</td><td><span class="tag ok">无需学习期</span> 启用即进入主动模式</td></tr>
+        <tr><td>卷类型支持</td><td>FlexVol 9.10.1+；FlexGroup 9.13.1+；不支持 SAN</td><td>FlexVol 9.16.1+；FlexGroup 9.18.1+；SAN 9.17.1+（含评估期）</td></tr>
+        <tr><td>快照创建</td><td>由高熵、新文件扩展名或文件操作激增触发</td><td>固定 4 小时间隔生成，并在确认攻击时额外生成</td></tr>
+        <tr><td>快照保留</td><td>保留到管理员清除可疑标记为止</td><td>默认 12 小时；按研判结果延长（误报 24 小时、确认攻击 7 天）</td></tr>
+        <tr><td>更新方式</td><td>检测逻辑随 ONTAP 升级更新</td><td>安全更新独立于 ONTAP 发布节奏</td></tr>
+        <tr><td>启用方式</td><td>按卷手动启用，或在 SVM 级设为默认</td><td>同左；9.18.1 起在受支持系统上可在集群级对所有新建卷默认启用</td></tr>
+        <tr><td>评估期</td><td>不适用</td><td>SAN 卷需 2–4 周评估期以建立加密阈值基线</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn"><b>需要留意</b>威胁分级中的「低」级别仅存在于 9.16.1 之前不含 ARP/AI 的版本。9.16.1 及以上以「中」级为基线检出等级，达到该级别时 ONTAP 生成 EMS 通知提示研判。</div>
+</section>
+
+<!-- ═══════ 幕4 ═══════ -->
+<section class="scene" id="sc4">
+  <h1>版本与<span class="hl">支持矩阵</span></h1>
+  <div class="sub">不同能力对应不同的最低版本。以下为官方文档中的配置支持矩阵与快照行为对照。</div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>配置支持矩阵</h3>
+      <table class="dt">
+        <thead><tr><th>能力</th><th>9.19.1</th><th>9.18.1</th><th>9.17.1</th><th>9.16.1</th><th>9.15.1</th><th>9.13.1</th><th>9.12.1</th></tr></thead>
+        <tbody>
+          <tr><td>SnapMirror 异步保护的卷</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td></tr>
+          <tr class="hi"><td>SnapMirror 同步保护的卷</td><td class="c">✓</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td></tr>
+          <tr class="hi"><td>SnapMirror active sync 保护的卷</td><td class="c">✓</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td></tr>
+          <tr><td>SVM 级异步保护（SVM DR）</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td></tr>
+          <tr><td>SVM 数据迁移（vserver migrate）</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td></tr>
+          <tr><td>FlexGroup 卷</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">—</td></tr>
+          <tr><td>多管理员校验（MAV）</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">—</td></tr>
+          <tr><td>ARP/AI 自动更新</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">—</td><td class="c">—</td><td class="c">—</td></tr>
+          <tr class="hi"><td>ARP/AI 默认启用</td><td class="c">✓</td><td class="c">✓</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td></tr>
+        </tbody>
+      </table>
+      <div class="note">9.16.1 与 9.17.1 上 FlexGroup 卷不使用 ARP/AI 模型，仍沿用此前的 ARP 模型；9.18.1 起 FlexGroup 卷改用 ARP/AI 模型。协议与虚拟化方面：SAN 块设备与 VMware 虚拟磁盘自 9.17.1 起支持，Hyper-V、KVM、OpenStack 自 9.17.1P5 起支持。</div>
+    </div>
+    <div class="panel">
+      <h3>快照行为对照</h3>
+      <table class="dt">
+        <thead><tr><th style="width:110px">项目</th><th>9.17.1 及以上</th><th>9.16.1 及更早</th></tr></thead>
+        <tbody>
+          <tr><td>创建触发</td><td>固定 4 小时间隔 + 确认攻击时</td><td>检出高熵；发现新文件扩展名（≤9.15.1）；文件操作激增（≤9.15.1）</td></tr>
+          <tr><td>命名前缀</td><td class="num" style="font-size:11px">Anti_ransomware_periodic_backup<br>Anti_ransomware_attack_backup</td><td class="num" style="font-size:11px">Anti_ransomware_backup</td></tr>
+          <tr><td>删除行为</td><td colspan="2">快照被锁定，管理员无法删除</td></tr>
+          <tr><td>数量上限</td><td colspan="2">6 个，可配置</td></tr>
+          <tr class="hi"><td>保留期</td><td>通常 12 小时。NAS 卷：确认攻击后，攻击前快照保留至管理员判定为真实攻击或误报；SAN 卷与虚拟机数据存储：确认后保留 10 天（可配置）</td><td>按触发条件决定，非固定；攻击前快照保留至管理员判定</td></tr>
+          <tr><td>清除可疑标记后</td><td colspan="2">误报保留 24 小时，确认为真实攻击保留 7 天</td></tr>
+          <tr><td>过期时间</td><td>所有快照均设置过期时间</td><td>无</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><b>9.19.1 的变化</b>ARP/AI 支持 SnapMirror 同步与 SnapMirror active sync 关系中的主卷。分析仅在可读写的主卷上运行，ARP 配置状态与 ARP 快照在 9.19.1 中不会复制到备端，切换后需要在恢复卷上重新启用。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 幕5 ═══════ -->
+<section class="scene" id="sc5">
+  <h1>制造业负载：<span class="hl">哪些适合，哪些要留意</span></h1>
+  <div class="sub">官方文档明确列出了适合与不适合的工作负载类型。把它对应到工厂里的实际数据，就能判断先在哪些卷上启用。</div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>适合的工作负载</h3>
+      <table class="dt">
+        <thead><tr><th style="width:170px">官方列举</th><th>制造业中对应的数据</th></tr></thead>
+        <tbody>
+          <tr><td>NFS 或 SAN 上的数据库</td><td>MES 生产数据库、质量追溯库、WMS 库存库</td></tr>
+          <tr><td>Windows 或 Linux 家目录</td><td>工艺工程师个人目录、部门共享盘</td></tr>
+          <tr><td>图像与视频</td><td>质检影像、AOI 检测图、产线监控录像、CAD 与图纸库</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><b>常见起步范围</b>先在 MES 共享目录、工艺配方目录、质检影像库上启用，这些卷变更模式相对稳定，且一旦不可用直接影响生产。</div>
+
+      <h3 style="margin-top:16px">虚拟化环境中的检测粒度</h3>
+      <ul class="pts">
+        <li>虚拟机支持 VMware（9.17.1 起）与 Hyper-V、KVM、OpenStack（9.17.1P5 起）</li>
+        <li>虚拟机外部：NFS 卷上出现加密状态的新扩展名或扩展名变化即可检出</li>
+        <li>虚拟机内部：若虚拟机内文件默认熵较低（如 txt、docx、mp4），可检出威胁</li>
+        <li>9.16.1 及更早版本在此情形下会创建保护性快照，但不产生威胁告警</li>
+        <li>9.17.1 起引入 SAN 支持后，若检出虚拟机内的熵异常，会同时产生威胁告警</li>
+        <li>SAN 侧在卷级分析熵统计，能指出哪个卷有问题，但看不进 VMDK 内部</li>
+        <li>虚拟机内部攻击的检测仅适用于 FlexVol；9.18.1 及以上，虚拟机数据存储位于 FlexGroup 卷时不适用</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>不适合的工作负载</h3>
+      <table class="dt">
+        <thead><tr><th style="width:200px">情形</th><th>原因</th></tr></thead>
+        <tbody>
+          <tr><td>高频创建或删除文件的负载（几秒内数十万文件，例如测试 / 开发）</td><td>检测依赖识别文件创建、重命名、删除操作的异常激增；若应用本身就是文件活动的来源，无法与勒索行为有效区分</td></tr>
+          <tr><td>9.10.1 至 9.15.1：单卷唯一文件扩展名超过 4,000 个的 NAS 卷</td><td>早期 ARP 模型每卷最多分析 4,000 个扩展名；<span class="tag ok">9.16.1 起 ARP/AI 不受此限制</span></td></tr>
+          <tr><td>应用或主机自行加密数据的负载</td><td>检测依赖区分传入数据是否为加密态；不过仍可依据文件活动与文件类型工作</td></tr>
+          <tr><td>虚拟机内含大量高压缩或加密文件（7z、ZIP、带口令的 PDF / DOC）</td><td>默认熵本身就高，检测能力受限；仍可创建保护性快照，但外部扩展名未被篡改时不触发告警</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:16px">不支持的配置</h3>
+      <table class="dt">
+        <tbody>
+          <tr><td>ONTAP S3 环境</td><td><span class="tag no">不支持</span></td></tr>
+          <tr><td>FlexGroup 卷（9.10.1 – 9.12.1）</td><td><span class="tag no">不支持</span></td></tr>
+          <tr><td>FlexCache 缓存卷</td><td><span class="tag part">源端 FlexVol 支持，缓存卷不支持</span></td></tr>
+          <tr><td>离线卷、受限卷</td><td><span class="tag no">不支持</span></td></tr>
+          <tr><td>SnapLock 卷</td><td><span class="tag no">不支持</span></td></tr>
+          <tr><td>存储 VM 的根卷、已停止 SVM 的卷</td><td><span class="tag no">不支持</span></td></tr>
+          <tr><td>FlexVol 转换为 FlexGroup</td><td><span class="tag part">转换前必须先禁用 ARP</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 幕6 ═══════ -->
+<section class="scene" id="sc6">
+  <h1>规模、性能影响与<span class="hl">许可</span></h1>
+  <div class="sub">启用范围越大，系统资源占用越高。官方给出了明确的每节点卷数建议与性能影响上限。</div>
+  <div class="grid3">
+    <div class="panel">
+      <h3>每节点卷数建议</h3>
+      <table class="dt">
+        <thead><tr><th>负载特征</th><th>建议上限</th><th>超出后的性能影响</th></tr></thead>
+        <tbody>
+          <tr><td>以读为主，或数据可压缩</td><td class="num">150</td><td>最大 IOPS 的 4%</td></tr>
+          <tr><td>以写为主，且数据不可压缩</td><td class="num">60</td><td>NAS：≤9.15.1 为 10%；9.16.1+ 为 5%<br>SAN：9.17.1+ 为 5%</td></tr>
+        </tbody>
+      </table>
+      <div class="note">无论超出建议上限多少卷，性能下降都不会超过上述比例。由于分析按优先级排队执行，受保护卷越多，单卷分析频率越低。</div>
+    </div>
+    <div class="panel">
+      <h3>平台卷数上限（9.18.1 起）</h3>
+      <table class="dt">
+        <thead><tr><th>平台档位</th><th>每节点最大启用卷数</th></tr></thead>
+        <tbody>
+          <tr><td>低端（不超过 20 个 CPU 核）</td><td class="num">250</td></tr>
+          <tr><td>中端（不超过 64 个 CPU 核）</td><td class="num">500</td></tr>
+          <tr class="hi"><td>高端（超过 64 个 CPU 核）</td><td class="num">1,000</td></tr>
+        </tbody>
+      </table>
+      <div class="note">CPU 核数按双节点 HA 对中的单个节点计。在大量新建卷上默认启用可能增加系统资源占用，规划时需一并考虑快照等并行进程的空间需求。</div>
+    </div>
+    <div class="panel">
+      <h3>许可</h3>
+      <table class="dt">
+        <thead><tr><th>ONTAP 版本</th><th>所需许可</th></tr></thead>
+        <tbody>
+          <tr><td>9.11.1 及以上</td><td class="num" style="font-size:11.5px">Anti_ransomware</td></tr>
+          <tr><td>9.10.1</td><td class="num" style="font-size:11.5px">MT_EK_MGMT</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><b>包含关系</b>ARP 与 ARP/AI 均包含在 ONTAP One 许可中。若已在 9.10.1 上配置 ARP 并升级到 9.11.1 及以上，无需另行安装新许可；新建配置则需要。</div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="panel">
+      <h3>SnapMirror 互操作行为</h3>
+      <ul class="pts">
+        <li>9.12.1 起，SnapMirror 异步目标卷支持 ARP</li>
+        <li>源卷启用 ARP 后，目标卷自动获得配置状态、训练数据与 ARP 快照，无需显式启用</li>
+        <li>异步目标卷为只读快照，其上不做 ARP 处理；转为可读写后自动启用 ARP，无需额外学习</li>
+        <li>9.10.1 与 9.11.1 不传输上述内容，目标卷转为可读写后需显式在学习模式下启用</li>
+        <li>9.19.1 起支持 SnapMirror 同步与 active sync 主卷；分析仅在可读写主卷上运行</li>
+        <li>同步关系中，主卷侧生成的 ARP 内部元数据会随复制到达备端，故障切换后在备端启用时元数据已就绪</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>升级时的行为变化</h3>
+      <ul class="pts">
+        <li>9.18.1 起，AFF A 系列 / C 系列、ASA、ASA r2 上，ARP/AI 在 12 小时宽限期后对所有新建卷自动启用</li>
+        <li>已有卷需要手动启用；宽限期内可在集群级选择不启用默认策略</li>
+        <li>9.19.1 起，默认启用范围扩展到包含 SnapMirror 同步与 active sync SAN 关系的集群</li>
+        <li>跨集群同步关系需源端与目标端集群都升级到 9.19.1 后才生效</li>
+        <li>AFX 系统即便具备同步支持，也不会默认启用</li>
+        <li>升级后在同步或 active sync 关系的卷上启用 ARP，关系会短暂进入 out-of-sync，随后自动重新同步</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 幕7 ═══════ -->
+<section class="scene" id="sc7">
+  <h1>落地路径与<span class="hl">纵深防御</span></h1>
+  <div class="sub">启用本身很轻，需要规划的是启用范围、告警响应流程与配套的管控措施。</div>
+  <div class="cards">
+    <div class="card"><div class="k">STEP 01</div><div class="t">选定首批卷并启用</div><div class="d">从 MES 共享、工艺配方、质检影像等业务价值高、变更模式稳定的卷开始。可按卷启用，也可在 SVM 级设为新建卷默认启用；9.18.1 起可在集群级对所有已有卷批量启用。</div></div>
+    <div class="card"><div class="k">STEP 02</div><div class="t">打通告警通道</div><div class="d">威胁升级到「中」级时 ONTAP 生成 EMS 通知。9.14.1 起还可对「创建 ARP 快照」与「发现新文件扩展名」两类事件单独开启告警，默认关闭，可按卷或按 SVM 设置。</div></div>
+    <div class="card"><div class="k">STEP 03</div><div class="t">约定研判与恢复流程</div><div class="d">告警后先确认是真实攻击还是误报。判定为误报会更新告警画像，下次出现同类文件扩展名不再告警；判定结果同时决定快照保留时长。</div></div>
+    <div class="card"><div class="k">STEP 04</div><div class="t">用 MAV 保护关键操作</div><div class="d">9.13.1 起可对禁用 ARP、暂停 ARP、清除可疑标记三条命令配置多管理员校验规则，需要两名及以上已认证管理员共同批准。</div></div>
+  </div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="panel">
+      <h3>常用命令</h3>
+      <table class="dt">
+        <thead><tr><th style="width:150px">用途</th><th>命令</th></tr></thead>
+        <tbody>
+          <tr><td>查看卷的防护状态</td><td class="num" style="font-size:11.5px">security anti-ransomware volume show</td></tr>
+          <tr><td>查看卷内已识别的文件扩展名</td><td class="num" style="font-size:11.5px">security anti-ransomware volume workload-behavior show</td></tr>
+          <tr><td>禁用防护（建议纳入 MAV）</td><td class="num" style="font-size:11.5px">security anti-ransomware volume disable</td></tr>
+          <tr><td>暂停防护（建议纳入 MAV）</td><td class="num" style="font-size:11.5px">security anti-ransomware volume pause</td></tr>
+          <tr><td>清除可疑标记（建议纳入 MAV）</td><td class="num" style="font-size:11.5px">security anti-ransomware volume attack clear-suspect</td></tr>
+          <tr><td>按 SVM 配置事件告警</td><td class="num" style="font-size:11.5px">security anti-ransomware vserver event-log modify</td></tr>
+          <tr><td>按卷配置事件告警</td><td class="num" style="font-size:11.5px">security anti-ransomware volume event-log modify</td></tr>
+        </tbody>
+      </table>
+      <div class="note">ARP 与 ARP/AI 均可通过 ONTAP 内置管理界面与 System Manager 配置，按卷启用。SAN 卷可用 <span class="mono">security anti-ransomware volume show</span> 查看 Block device detection status，状态为 Active_suitable_workload 表示评估期已完成且负载适合监测。</div>
+    </div>
+    <div class="panel">
+      <h3>与其他能力的分工</h3>
+      <table class="dt">
+        <thead><tr><th style="width:150px">层次</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td>ARP / ARP/AI</td><td>数据路径内实时检测，自动锁定快照、留存证据、发出告警</td></tr>
+          <tr><td>FPolicy</td><td>按文件扩展名做阻断，或对接外部策略服务器</td></tr>
+          <tr><td>快照</td><td>ARP 快照被锁定且无法被管理员删除，是恢复的直接依据</td></tr>
+          <tr><td>SnapLock</td><td>合规留存场景的不可变保护；注意 SnapLock 卷本身不在 ARP 支持范围内</td></tr>
+          <tr><td>多管理员校验</td><td>关键的破坏性操作需多人批准，凭据被盗不等于防护立刻失效</td></tr>
+          <tr><td>Active IQ Digital Advisor</td><td>从整体态势层面提示防护缺口</td></tr>
+          <tr><td>NetApp Console 勒索软件防护服务<br><span class="tag part">可选</span></td><td>在自动响应基础上追加阻断用户等处置动作。NetApp Console 是 NetApp 托管的云侧统一管理平台（原 BlueXP 更名而来），需要具备对外连通性；在中国大陆的可用性与交付方式需单独确认</td></tr>
+        </tbody>
+      </table>
+      <div class="callout red"><b>边界</b>没有任何勒索软件检测系统能够保证完全安全。ARP 提供的是在防病毒软件未能拦截入侵时的额外一层防御，需要与备份、异地副本、访问控制共同构成纵深防御。</div>
+      <div class="callout warn"><b>本机能力与云侧服务的边界</b>上表中除最后一项外，全部为 ONTAP 本机内置能力，按卷启用即可，不依赖任何云侧连接。仅「阻断用户」这类追加处置动作需要 NetApp Console 侧的服务配合。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 幕8 · 技术流派与代表方案 ═══════ -->
+<section class="scene" id="sc8">
+  <h1>五种技术流派，<span class="hl">以及各自的代表方案</span></h1>
+  <div class="sub">市面方案大致可归为五类。判定依据、发现时机与定位粒度各不相同，先看清流派归属，再比产品参数才有意义。表中信息取自各厂商公开资料，整理时间为 2026 年 7 月。</div>
+
+  <div class="panel">
+    <table class="dt">
+      <thead><tr>
+        <th style="width:100px">维度</th>
+        <th style="width:20%">A · 数据路径内检测</th>
+        <th style="width:16%">B · 介质层内联检测</th>
+        <th style="width:16%">C · 外部行为分析</th>
+        <th style="width:16%">D · 管理平台指标分析</th>
+        <th>E · 副本侧内容扫描</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><b>代表方案</b></td>
+          <td class="hi"><b>NetApp ONTAP ARP / ARP/AI</b><br>HPE Alletra Storage MP B10000<br>华为新一代 OceanStor Dorado（IO 级侦测）</td>
+          <td>IBM FlashSystem<br><span style="font-size:11px">FlashCore Module 内算力</span></td>
+          <td>Dell PowerScale + Superna Ransomware Defender</td>
+          <td>Dell PowerStore / PowerMax + CloudIQ</td>
+          <td>Dell PowerProtect Cyber Recovery、Hitachi VSP One、Infinidat InfiniSafe<br><span style="font-size:11px">多数基于 Index Engines CyberSense 引擎</span></td>
+        </tr>
+        <tr>
+          <td><b>判定依据</b></td>
+          <td class="hi">写入或读取时的数据特征与文件行为：数据熵、加密文件内容、文件头、扩展名类型、文件 IOPS</td>
+          <td>驱动器或介质控制器统计到的块级特征</td>
+          <td>文件访问事件流中的用户与操作行为模式</td>
+          <td>容量、数据缩减率、快照与卷数量等趋势指标</td>
+          <td>对备份或复制副本的内容做静态分析</td>
+        </tr>
+        <tr>
+          <td><b>发现时机</b></td>
+          <td class="hi">写入发生的同时参与判定</td>
+          <td>写入发生的同时参与判定</td>
+          <td>事件产生后近实时分析</td>
+          <td>指标趋势形成之后</td>
+          <td>下一次备份或扫描作业执行时</td>
+        </tr>
+        <tr>
+          <td><b>定位粒度</b></td>
+          <td class="hi">文件级；块设备场景下为卷级</td>
+          <td>块级，通常指向卷或设备</td>
+          <td>文件级，并可关联到操作账号</td>
+          <td>阵列或卷层面的趋势，不定位具体文件</td>
+          <td>文件级</td>
+        </tr>
+        <tr>
+          <td><b>部署形态</b></td>
+          <td class="hi">存储系统内置，按卷启用，无需额外服务器或代理</td>
+          <td>随硬件与阵列软件内置</td>
+          <td>独立软件与服务器，需单独部署与授权</td>
+          <td>接入云侧管理平台</td>
+          <td>随备份软件或隔离区架构提供</td>
+        </tr>
+        <tr>
+          <td><b>与恢复点的关系</b></td>
+          <td class="hi">检出瞬间即生成并锁定恢复点</td>
+          <td>可触发阵列侧生成恢复点</td>
+          <td>可联动存储或备份生成恢复点</td>
+          <td>通常只告警，恢复点依赖既有策略</td>
+          <td>本身就在验证副本是否干净</td>
+        </tr>
+        <tr>
+          <td><b>擅长</b></td>
+          <td class="hi">缩短从发生到发现的时间，恢复点贴近事发时刻</td>
+          <td>不依赖文件语义，块设备与虚拟化场景适用</td>
+          <td>定位来源账号与来源主机，支撑事后追溯</td>
+          <td>部署最轻，适合整体态势观察</td>
+          <td>回答「哪个副本是干净的」</td>
+        </tr>
+        <tr>
+          <td><b>局限</b></td>
+          <td class="hi">应用自身加密数据、或应用本身高频增删文件时判定难度上升</td>
+          <td>看不到文件语义，难以指出具体文件</td>
+          <td>需额外部署与授权，覆盖取决于事件采集完整性</td>
+          <td>粒度粗，发现时机相对滞后</td>
+          <td>发现时机取决于备份与扫描频率</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">同一厂商的方案可能同时覆盖多个流派。「代表方案」列出的是公开资料中该流派特征最明确的产品，不代表其能力仅限于此。各厂商公布的准确率测试方法与统计口径不同，数值之间不构成直接比较。</div>
+  </div>
+
+  <div class="grid3" style="margin-top:16px">
+    <div class="panel" style="border-color:rgba(0,103,197,.45)">
+      <h3>ONTAP ARP/AI 在流派 A 中的具体特征</h3>
+      <ul class="pts">
+        <li><b>判定在写入路径内完成</b>，检出即生成并锁定恢复点，恢复点与事发时刻的间隔被压到最小</li>
+        <li><b>无学习期</b>，启用当天即进入主动防护，不必等基线成型</li>
+        <li><b>无需额外组件</b>，按卷启用，包含在 ONTAP One 许可中，不新增服务器、代理与独立授权</li>
+        <li><b>NAS 与 SAN 同一套机制</b>，文件级与卷级分析共用一套运维流程</li>
+        <li><b>恢复点不可删除</b>，ARP 快照被锁定，管理员无法用常规方式删除</li>
+        <li><b>独立第三方验证</b>，SE Labs 测试并给予其最高等级 AAA 评级</li>
+        <li><b>检测能力独立更新</b>，安全包下发节奏不依赖 ONTAP 版本升级</li>
+        <li><b>数据不出存储</b>，不打开文件内容，现网数据不参与训练与决策</li>
+        <li><b>性能影响有明确上限说明</b>，可直接用于容量与规模规划</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>容易混淆的两件事</h3>
+      <div class="callout warn" style="margin-top:8px"><b>同一个 99.99% 未必是同一件事</b>流派 E 的多家方案底层使用同一个副本扫描引擎，其公布的置信度描述的是「副本内容分析的判定把握」，与「从写入到发现用了多久」不是同一个指标。比较时需要先对齐指的是召回率、精确率还是综合值，以及样本与攻击类型。</div>
+      <div class="callout warn"><b>「AI 勒索检测」不等于在写入路径上</b>同样冠以 AI 的方案，可能作用在写入路径、事件流、云侧指标或备份副本上。位置不同，能回答的问题就不同：写入路径回答「多久发现」，副本扫描回答「哪份能用」。</div>
+      <div class="callout"><b>建议核对的口径</b>判定依据能否覆盖部分加密与文件头篡改；定位粒度是文件、卷还是块；是否需要学习期或评估期；检测能力能否独立于产品版本更新；恢复点在管理权限被盗后是否仍安全；是否有独立第三方测试结论可查；对生产系统的性能影响有无明确上限。</div>
+    </div>
+    <div class="panel">
+      <h3>五类如何组合</h3>
+      <ul class="pts">
+        <li>A 或 B 负责第一时间发现并留下恢复点</li>
+        <li>C 负责回答「是谁、从哪台机器发起的」</li>
+        <li>D 负责整体态势观察与防护缺口提示</li>
+        <li>E 负责在最坏情况下确认哪个副本可以放心使用</li>
+        <li>再叠加不可变副本与权限管控，构成完整纵深防御</li>
+      </ul>
+      <div class="callout"><b>如何看待流派 E</b>它解决的是另一层问题，与流派 A 并不冲突。在 ONTAP 侧，异地副本与不可变保护由 SnapMirror、SnapLock 与快照锁定承担，可与本机实时检测配合使用。</div>
+      <div class="callout warn"><b>共同前提</b>没有任何勒索软件检测系统能够保证完全安全。无论采用哪种流派，都需要与备份、异地副本、访问控制共同构成纵深防御。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 幕9 ═══════ -->
+<section class="scene" id="sc9">
+  <h1>业务价值与<span class="hl">适用性自检</span></h1>
+  <div class="sub">左侧是制造业场景下的价值归纳，右侧按实际环境条件给出判断与需要提前确认的事项。</div>
+  <div class="grid2">
+    <div>
+      <div class="grid2" style="gap:14px">
+        <div class="card"><div class="t">恢复点贴近事发时刻</div><div class="d">定期快照按 4 小时间隔生成，确认攻击时额外生成。恢复时不必退回上一个计划备份点，需要重做的生产数据大幅减少。</div></div>
+        <div class="card"><div class="t">快照删不掉</div><div class="d">ARP 生成的快照处于锁定状态，管理员无法用常规方式删除。攻击者即便拿到管理权限，也不能顺手清掉恢复点。</div></div>
+        <div class="card"><div class="t">上线当天就有防护</div><div class="d">ARP/AI 无学习期，启用即进入主动模式。不需要为了等基线成型而让新产线的数据裸奔一个月。</div></div>
+        <div class="card"><div class="t">不需要额外代理</div><div class="d">能力内置于 ONTAP，按卷启用即可，不必在每台工控机或服务器上部署代理，也不必新增检测服务器。</div></div>
+        <div class="card"><div class="t">数据不出存储</div><div class="d">判定过程不打开文件内容，现网数据不参与模型训练与决策，模型也不能通过 CLI 或 API 访问修改。</div></div>
+        <div class="card"><div class="t">覆盖文件与虚拟化</div><div class="d">NAS 共享自 9.10.1 起，SAN 卷与 VMware 虚拟磁盘自 9.17.1 起，Hyper-V、KVM、OpenStack 自 9.17.1P5 起，MES 与 SCADA 虚拟机同样在覆盖范围内。</div></div>
+      </div>
+      <div class="quote">ARP/AI 的检测能力已由独立测试机构 SE Labs 验证，获得其最高等级 <b>AAA 评级</b>；官方文档给出的 NAS 环境检测准确率为 <b>99%</b>。</div>
+    </div>
+
+    <div class="panel">
+      <h3>适用性自检</h3>
+      <div class="fields" style="grid-template-columns:1fr 1fr; display:grid">
+        <div class="field"><label>ONTAP 版本</label>
+          <select id="f-ver">
+            <option value="919">9.19.1 及以上</option>
+            <option value="918" selected>9.18.1</option>
+            <option value="917">9.17.1</option>
+            <option value="916">9.16.1</option>
+            <option value="913">9.13.1 – 9.15.1</option>
+            <option value="912">9.12.1</option>
+            <option value="910">9.10.1 – 9.11.1</option>
+            <option value="old">9.10.1 以下</option>
+          </select>
+        </div>
+        <div class="field"><label>要保护的数据</label>
+          <select id="f-data">
+            <option value="share" selected>MES / 工艺 / 图纸共享</option>
+            <option value="img">质检影像与监控录像</option>
+            <option value="db">NFS 或 SAN 上的数据库</option>
+            <option value="vm">虚拟化数据存储</option>
+            <option value="s3">S3 对象存储</option>
+            <option value="devtest">测试 / 构建目录</option>
+          </select>
+        </div>
+        <div class="field"><label>卷类型</label>
+          <select id="f-vol"><option value="flexvol" selected>FlexVol</option><option value="flexgroup">FlexGroup</option><option value="cache">FlexCache 缓存卷</option><option value="snaplock">SnapLock 卷</option></select>
+        </div>
+        <div class="field"><label>协议</label>
+          <select id="f-proto"><option value="nas" selected>NFS / SMB</option><option value="san">SAN（LUN 或 NVMe 命名空间）</option><option value="both">文件与块混合</option></select>
+        </div>
+        <div class="field"><label>数据保护关系</label>
+          <select id="f-dp"><option value="async" selected>SnapMirror 异步</option><option value="sync">SnapMirror 同步</option><option value="as">SnapMirror active sync</option><option value="mcc">MetroCluster</option><option value="none">仅本地快照</option></select>
+        </div>
+        <div class="field"><label>负载写入特征</label>
+          <select id="f-io"><option value="read" selected>以读为主 / 可压缩</option><option value="write">以写为主 / 不可压缩</option><option value="churn">高频创建删除文件</option><option value="enc">应用自行加密数据</option></select>
+        </div>
+        <div class="field"><label>计划启用卷数（每节点）</label>
+          <select id="f-scale"><option value="s" selected>60 以内</option><option value="m">60 – 150</option><option value="l">150 以上</option></select>
+        </div>
+        <div class="field"><label>多管理员校验</label>
+          <select id="f-mav"><option value="yes">已启用</option><option value="no" selected>未启用</option></select>
+        </div>
+      </div>
+      <div class="verdict" id="verdict" style="margin-top:14px"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <button class="navBtn" id="prevB" aria-label="上一幕">‹</button>
+  <div class="dots" id="dots"></div>
+  <button class="navBtn" id="nextB" aria-label="下一幕">›</button>
+  <span style="margin-left:14px">本页面依据 NetApp ONTAP 自主勒索软件防护官方文档（2026 年 6–7 月更新版）整理，为交互式概念演示，不连接真实 ONTAP，也不产生实际 I/O；页面中的文件数量、评分与时序均为示意，不构成性能基准或 RPO / RTO 承诺。没有任何勒索软件检测系统能够保证完全安全，相关能力应作为纵深防御中的一层。具体规格以对应版本的官方发布说明与产品文档为准。</span>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ═══════ 导航 ═══════ */
+const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9'];
+const NAMES=['① 先算一笔账','② 检测原理','③ 模型差异','④ 版本矩阵','⑤ 负载适配','⑥ 规模影响','⑦ 落地防御','⑧ 流派与方案','⑨ 价值自检'];
+let cur=0;
+const tabsEl=$('tabs'), dotsEl=$('dots');
+SCENES.forEach((_,i)=>{
+  const t=document.createElement('button'); t.className='tab'; t.textContent=NAMES[i];
+  t.onclick=()=>show(i); tabsEl.appendChild(t);
+  const d=document.createElement('div'); d.className='dot'; d.onclick=()=>show(i); dotsEl.appendChild(d);
+});
+function show(i){
+  cur=(i+SCENES.length)%SCENES.length;
+  SCENES.forEach((id,k)=>$(id).classList.toggle('active',k===cur));
+  [...tabsEl.children].forEach((t,k)=>t.classList.toggle('on',k===cur));
+  [...dotsEl.children].forEach((d,k)=>d.classList.toggle('on',k===cur));
+  if(cur!==1) stopAuto();
+  if(cur===0) setTimeout(s1update,60);
+}
+$('prevB').onclick=()=>show(cur-1);
+$('nextB').onclick=()=>show(cur+1);
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='SELECT'||e.target.tagName==='INPUT') return;
+  if(e.key==='ArrowRight'||e.key==='PageDown') show(cur+1);
+  else if(e.key==='ArrowLeft'||e.key==='PageUp') show(cur-1);
+  else if(e.key>='1'&&e.key<='9') show(+e.key-1);
+});
+
+/* ═══════ 幕1 ═══════ */
+const ARP_INTERVAL=4;
+function s1update(){
+  const bk=+$('s1bk').value, cost=+$('s1cost').value, line=+$('s1line').value;
+  $('s1bkV').textContent=bk+' 小时';
+  $('s1costV').textContent=cost+' 万元';
+  $('s1lineV').textContent=line+' 条';
+  const max=24;
+  $('s1b1').style.width=(bk/max*100).toFixed(1)+'%';
+  $('s1b2').style.width=(ARP_INTERVAL/max*100).toFixed(1)+'%';
+  $('s1t1').textContent=bk;
+  $('o-w1').textContent=bk+' 小时';
+  $('o-d1').textContent=bk+' 小时的生产记录';
+  $('o-d2').textContent=Math.min(bk,ARP_INTERVAL)+' 小时的生产记录';
+  const c1=bk*cost*line, c2=Math.min(bk,ARP_INTERVAL)*cost*line;
+  const f=v=>v>=10000 ? (v/10000).toFixed(2)+' 亿元' : v.toFixed(0)+' 万元';
+  $('o-c1').textContent=f(c1);
+  $('o-c2').textContent=f(c2);
+  $('s1save').textContent=f(Math.max(0,c1-c2));
+  $('s1hr').textContent=Math.max(0,bk-ARP_INTERVAL)+' 小时';
+}
+['s1bk','s1cost','s1line'].forEach(id=>$(id).addEventListener('input',s1update));
+s1update();
+
+/* ═══════ 幕2 ═══════ */
+const FILES=['MES_工单.db','工艺配方.rcp','PLC_配置.xml','CAD_夹具.dwg','BOM_清单.xlsx','AOI_质检图.tif','SPC_数据.csv','产线录像.mp4','刀补参数.txt'];
+const SIGS=['数据熵','加密文件内容','加密文件头','文件扩展名与 IOPS'];
+const ACTS=['创建锁定快照','留存证据','生成告警'];
+
+const STEPS=[
+ {t:'稳态：启用即防护', s:'ARP/AI 无学习期，启用后立即进入主动模式',
+  enc:0, sig:[0,0,0,0], prob:.03, eng:['ACTIVE','#0f9d63'], th:'威胁等级：无', act:[0,0,0],
+  snaps:[['Anti_ransomware_periodic_backup · T-8h',0],['Anti_ransomware_periodic_backup · T-4h',0],['daily.latest',0]],
+  flow:[1,1], wl:'NFS 与 SMB 共享 · 正常业务读写', vol:'状态正常',
+  note:'正常业务读写，ARP/AI 在数据路径内实时分析文件写入行为。定期快照按 4 小时间隔生成。',
+  log:[['dim','security anti-ransomware volume show'],['dim','state: enabled   model: ARP/AI   learning period: not required'],['ok','periodic snapshot created   interval 4h']]},
+
+ {t:'异常写入开始', s:'文件被高熵内容覆写并改名',
+  enc:3, sig:[1,1,0,0], prob:.28, eng:['ANALYZING','#d97b16'], th:'威胁等级：分析中', act:[0,0,0],
+  snaps:[['Anti_ransomware_periodic_backup · T-8h',0],['Anti_ransomware_periodic_backup · T-4h',0],['daily.latest',0]],
+  flow:[2,1], wl:'NFS 与 SMB 共享 · 出现批量覆写与重命名', vol:'检测到异常活动',
+  note:'传入数据被识别为加密态，熵值与内容特征首先发生变化。判定过程不打开文件内容。',
+  log:[['warn','incoming data identified as encrypted'],['warn','entropy anomaly on modified files'],['dim','file extension does not conform to expected types']]},
+
+ {t:'多信号共同指向', s:'文件头加密与操作激增同时出现',
+  enc:6, sig:[1,1,1,1], prob:.58, eng:['ANALYZING','#d97b16'], th:'威胁等级：分析中', act:[0,0,0],
+  snaps:[['Anti_ransomware_periodic_backup · T-8h',0],['Anti_ransomware_periodic_backup · T-4h',0],['daily.latest',0]],
+  flow:[2,2], wl:'NFS 与 SMB 共享 · 文件操作激增', vol:'多项信号异常',
+  note:'ARP/AI 在 ARP 原有信号之外增加了文件头加密的识别，多信号共同参与概率判定。',
+  log:[['warn','signal: encrypted file header'],['warn','signal: surge in abnormal volume activity'],['dim','probabilistic model evaluating modified files']]},
+
+ {t:'升级为中级威胁', s:'比对勒索软件画像后确认异常',
+  enc:8, sig:[1,1,1,1], prob:.96, eng:['SUSPECT','#d6365a'], th:'威胁等级：中（基线检出等级）', act:[0,0,0],
+  snaps:[['Anti_ransomware_periodic_backup · T-8h',0],['Anti_ransomware_periodic_backup · T-4h',0],['daily.latest',0]],
+  flow:[2,2], wl:'NFS 与 SMB 共享 · 判定为可疑', vol:'疑似勒索软件活动',
+  note:'ONTAP 运行分析报告判断异常是否匹配勒索软件画像；升级为中级威胁时生成 EMS 通知提示研判。',
+  log:[['err','threat escalated to Moderate'],['err','EMS notification generated'],['dim','low-level threats exist only in versions prior to 9.16.1']]},
+
+ {t:'自动响应', s:'锁定快照、留存证据、发出告警',
+  enc:9, sig:[1,1,1,1], prob:.96, eng:['RESPONDING','#d6365a'], th:'威胁等级：中 · 已响应', act:[1,1,1],
+  snaps:[['Anti_ransomware_attack_backup · 锁定',1],['Anti_ransomware_periodic_backup · T-4h',1],['daily.latest',0]],
+  flow:[2,2], wl:'NFS 与 SMB 共享 · 告警已发出', vol:'恢复点已锁定',
+  note:'快照被锁定，管理员无法用常规方式删除。攻击前的定期快照同样被保留，用于调查与恢复。',
+  log:[['ok','Anti_ransomware_attack_backup created and locked'],['ok','evidence retained for investigation'],['ok','alert raised   EMS / System Manager / SIEM via syslog'],['warn','I/O is not blocked   detection and response only']]},
+
+ {t:'研判：真实攻击还是误报', s:'clear-suspect 的判定结果决定保留时长',
+  enc:9, sig:[1,1,1,1], prob:.96, eng:['UNDER REVIEW','#6f5bd6'], th:'威胁等级：中 · 待研判', act:[1,1,1],
+  snaps:[['Anti_ransomware_attack_backup · 锁定',1],['Anti_ransomware_periodic_backup · T-4h',1],['daily.latest',0]],
+  flow:[0,0], wl:'NFS 与 SMB 共享 · 等待研判', vol:'待管理员确认',
+  note:'判定为误报时更新告警画像，同类文件扩展名下次不再告警，快照保留 24 小时；确认为真实攻击则保留 7 天。该操作可纳入多管理员校验。',
+  log:[['dim','security anti-ransomware volume attack clear-suspect'],['warn','false positive  -> retention 24h, alert profile updated'],['warn','true positive   -> retention 7 days'],['dim','MAV requires two or more authenticated admins']]},
+
+ {t:'从锁定快照恢复', s:'可整卷回退，也可只恢复受影响文件',
+  enc:0, rest:9, sig:[0,0,0,0], prob:.05, eng:['RESTORING','#0067c5'], th:'威胁等级：处置中', act:[1,1,1],
+  snaps:[['Anti_ransomware_attack_backup · 锁定',1],['Anti_ransomware_periodic_backup · T-4h',1],['daily.latest',0]],
+  flow:[1,1], wl:'NFS 与 SMB 共享 · 恢复中', vol:'正在从恢复点还原',
+  note:'确认攻击后可用 ARP 快照还原整卷，也可只从选定快照中恢复受影响文件，缩小影响面。',
+  log:[['ok','restore initiated from ARP snapshot'],['ok','affected files recovered'],['dim','locked snapshots cannot be deleted by normal means']]},
+
+ {t:'回到常态并持续更新', s:'安全包独立于 ONTAP 版本下发',
+  enc:0, rest:0, sig:[0,0,0,0], prob:.03, eng:['ACTIVE','#0f9d63'], th:'威胁等级：无', act:[0,0,0],
+  snaps:[['Anti_ransomware_periodic_backup · T-0h',0],['Anti_ransomware_periodic_backup · T-4h',0],['daily.latest',0]],
+  flow:[1,1], wl:'NFS 与 SMB 共享 · 正常业务读写', vol:'状态正常',
+  note:'ARP/AI 通过安全更新包持续获得新的模型参数，节奏独立于 ONTAP 升级与发布周期。',
+  log:[['ok','volume back to normal state'],['dim','ARP/AI security package updates run outside ONTAP upgrade cadence'],['dim','updates can be automatic or applied manually']]}
+];
+
+(function build(){
+  let t='';
+  for(let i=0;i<9;i++){
+    const c=i%3, r=(i-c)/3;
+    const x=38+c*100, y=104+r*56;
+    t+=`<g class="tile"><rect id="tl${i}" x="${x}" y="${y}" width="92" height="46" rx="8" fill="#f7f9fe" stroke="#dfe6f3"/>
+      <text id="tt${i}" x="${x+8}" y="${y+19}" class="s-small" style="font-size:9px">${FILES[i]}</text>
+      <text id="ts${i}" x="${x+8}" y="${y+35}" class="s-small mono" style="font-size:8.5px;fill:#0f9d63">正常</text></g>`;
+  }
+  $('tiles').innerHTML=t;
+  let s='';
+  SIGS.forEach((n,i)=>{
+    const y=104+i*46;
+    s+=`<g class="sig"><rect id="sg${i}" x="386" y="${y}" width="146" height="36" rx="8" fill="#f7f9fe" stroke="#dfe6f3"/>
+      <text x="398" y="${y+16}" class="s-small" style="font-size:10px">${n}</text>
+      <text id="sv${i}" x="398" y="${y+29}" class="s-small mono" style="font-size:8.5px">—</text></g>`;
+  });
+  $('sigs').innerHTML=s;
+  let a='';
+  ACTS.forEach((n,i)=>{
+    const y=224+i*26;
+    a+=`<g class="act"><rect id="ac${i}" x="584" y="${y}" width="278" height="22" rx="6" fill="#f7f9fe" stroke="#dfe6f3"/>
+      <text id="at${i}" x="596" y="${y+15}" class="s-small" style="font-size:10px">${n}</text></g>`;
+  });
+  $('acts').innerHTML=a;
+})();
+
+let sCur=-1, sTimer=null;
+function paint(i){
+  const st=STEPS[i], enc=st.enc||0, rest=st.rest||0;
+  for(let k=0;k<9;k++){
+    let fill='#f7f9fe', stroke='#dfe6f3', col='#0f9d63', txt='正常';
+    if(k<enc){ fill='rgba(214,54,90,.08)'; stroke='rgba(214,54,90,.4)'; col='#d6365a'; txt='已加密'; }
+    else if(k<rest){ fill='rgba(15,157,99,.08)'; stroke='rgba(15,157,99,.4)'; col='#0f9d63'; txt='已恢复'; }
+    const r=$('tl'+k); r.setAttribute('fill',fill); r.setAttribute('stroke',stroke);
+    const s=$('ts'+k); s.textContent=txt; s.style.fill=col;
+    $('tt'+k).style.fill = (k<enc)?'#d6365a':'#5b6788';
+  }
+  $('affTxt').textContent='受影响文件 '+enc+' / 9';
+
+  st.sig.forEach((on,k)=>{
+    const r=$('sg'+k);
+    r.setAttribute('fill', on?'rgba(217,123,22,.10)':'#f7f9fe');
+    r.setAttribute('stroke', on?'rgba(217,123,22,.42)':'#dfe6f3');
+    const v=$('sv'+k); v.textContent=on?'ANOMALY':'—'; v.style.fill=on?'#d97b16':'#8b94b3';
+  });
+  st.act.forEach((on,k)=>{
+    const r=$('ac'+k);
+    r.setAttribute('fill', on?'rgba(15,157,99,.10)':'#f7f9fe');
+    r.setAttribute('stroke', on?'rgba(15,157,99,.42)':'#dfe6f3');
+    $('at'+k).style.fill = on?'#0f9d63':'#8b94b3';
+  });
+
+  const p=st.prob, pf=$('probFill');
+  pf.setAttribute('width', Math.max(12, 278*p).toFixed(1));
+  pf.setAttribute('fill', p>=.9?'#d6365a':(p>=.5?'#d97b16':'#0f9d63'));
+  $('probTxt').textContent=p.toFixed(2);
+  $('probTxt').style.fill = p>=.9?'#d6365a':(p>=.5?'#d97b16':'#182342');
+  $('engTxt').textContent=st.eng[0]; $('engTxt').style.fill=st.eng[1];
+  $('thTxt').textContent=st.th;
+  $('thTxt').style.fill = p>=.9?'#d6365a':'#5b6788';
+  $('wlTxt').textContent=st.wl;
+  $('volTag').textContent=st.vol;
+  $('noteTxt').textContent=st.note;
+
+  const FL=[['#c3cddf','url(#ar-f)',0],['#0067c5','url(#ar-c)',1],['#d6365a','url(#ar-r)',1]];
+  ['fl1','fl2'].forEach((id,k)=>{
+    const f=FL[st.flow[k]], el=$(id);
+    el.setAttribute('stroke',f[0]); el.setAttribute('marker-end',f[1]);
+    el.classList.toggle('anim',!!f[2]); el.classList.toggle('dash',!f[2]);
+  });
+
+  let sn='';
+  st.snaps.forEach((s,k)=>{
+    const x=120+k*250;
+    sn+=`<rect x="${x}" y="326" width="238" height="26" rx="7" fill="${s[1]?'rgba(15,157,99,.14)':'#ffffff'}" stroke="${s[1]?'rgba(15,157,99,.5)':'#dfe6f3'}"/>
+      <text x="${x+12}" y="344" class="s-small mono" style="font-size:9px;fill:${s[1]?'#0f9d63':'#5b6788'}">${s[0]}</text>`;
+  });
+  $('snaps').innerHTML=sn;
+}
+function render(){
+  $('steps').innerHTML=STEPS.map((s,i)=>`<div class="step${i===sCur?' on':''}" role="button" tabindex="0" data-i="${i}">
+    <span class="n">${String(i+1).padStart(2,'0')}</span><span><b>${s.t}</b><em>${s.s}</em></span></div>`).join('');
+  $('steps').querySelectorAll('.step').forEach(el=>{
+    const go=()=>goTo(+el.dataset.i);
+    el.addEventListener('click',go);
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+}
+function writeLog(i){
+  const el=$('log'); el.innerHTML='';
+  for(let k=0;k<=i;k++){
+    STEPS[k].log.forEach(([c,t])=>{
+      const d=document.createElement('div'); d.className=c; d.textContent=(k===i?'› ':'  ')+t; el.appendChild(d);
+    });
+  }
+  el.scrollTop=el.scrollHeight;
+}
+function goTo(i){ sCur=Math.max(0,Math.min(STEPS.length-1,i)); paint(sCur); writeLog(sCur); render(); }
+function stopAuto(){ if(sTimer){clearInterval(sTimer); sTimer=null; $('btnPlay').textContent='▶ 自动播放'; $('btnPlay').classList.remove('on');} }
+$('btnNext').onclick=()=>goTo(sCur>=STEPS.length-1?0:sCur+1);
+$('btnReset').onclick=()=>{stopAuto();goTo(0);};
+$('btnPlay').onclick=()=>{
+  if(sTimer){stopAuto();return;}
+  $('btnPlay').textContent='❚❚ 暂停'; $('btnPlay').classList.add('on');
+  sTimer=setInterval(()=>{ if(sCur>=STEPS.length-1){stopAuto();return;} goTo(sCur+1); },2800);
+};
+goTo(0);
+
+/* ═══════ 幕8 · 自检 ═══════ */
+const V=k=>$(k).value;
+const VN={old:0,'910':910,'912':912,'913':913,'916':916,'917':917,'918':918,'919':919};
+function checkFit(){
+  const out=[]; let blocked=false;
+  const v=VN[V('f-ver')], vol=V('f-vol'), data=V('f-data'), proto=V('f-proto');
+
+  if(v===0){out.push(['no','ARP 需要 ONTAP 9.10.1 及以上版本，当前版本需先规划升级']);blocked=true;}
+  else if(v>=916) out.push(['ok','该版本可使用 ARP/AI：无学习期、启用即防护，NAS 环境检测准确率 99%，已获 SE Labs AAA 评级']);
+  else out.push(['warn','该版本使用早期 ARP 模型，NAS FlexVol 需要学习期（建议 30 天，9.13.1 起可自动切换）；ARP/AI 需 9.16.1 及以上']);
+
+  if(vol==='cache'){out.push(['no','FlexCache 缓存卷不受支持；可在源端 FlexVol 上启用']);blocked=true;}
+  else if(vol==='snaplock'){out.push(['no','SnapLock 卷不在支持范围内，需为该数据集另行设计防护方式']);blocked=true;}
+  else if(vol==='flexgroup'){
+    if(v>=918) out.push(['ok','FlexGroup 卷自 9.18.1 起使用 ARP/AI 模型']);
+    else if(v>=913) out.push(['warn','该版本 FlexGroup 卷受支持，但仍沿用 ARP/AI 之前的模型，仍建议保留学习期']);
+    else {out.push(['no','FlexGroup 卷支持需要 9.13.1 及以上']);blocked=true;}
+  } else out.push(['ok','FlexVol 为受支持的卷类型']);
+
+  if(proto==='san'||proto==='both'){
+    if(v>=917) out.push(['ok','SAN 块设备负载自 9.17.1 起支持，需经 2–4 周评估期建立加密阈值；评估期内 ARP/AI 已提供主动防护']);
+    else {out.push(['no','SAN 负载支持需要 9.17.1 及以上，当前版本仅覆盖 NAS']); if(proto==='san') blocked=true;}
+  }
+  if(proto==='nas'||proto==='both') out.push(['ok','NFS 与 SMB 自 9.10.1 起在覆盖范围内']);
+
+  if(data==='s3'){out.push(['no','ONTAP S3 环境不受支持']);blocked=true;}
+  else if(data==='devtest') out.push(['warn','测试与构建目录属于高频创建删除类负载，应用自身即为文件活动来源，难以与勒索行为区分，不建议作为首批启用对象']);
+  else if(data==='vm'){
+    if(v>=917) out.push(['ok','虚拟化数据存储：VMware 自 9.17.1 起支持，Hyper-V、KVM、OpenStack 自 9.17.1P5 起支持']);
+    else {out.push(['no','虚拟化数据存储的支持需要 9.17.1 及以上']);blocked=true;}
+    out.push(['warn','虚拟机内部攻击的检测仅适用于 FlexVol；9.18.1 及以上，数据存储位于 FlexGroup 卷时不适用。虚拟机内含大量高压缩或加密文件时检测能力受限']);
+  }
+  else if(data==='db') out.push(['ok','NFS 或 SAN 上的数据库是官方列举的适合负载']);
+  else if(data==='img') out.push(['ok','图像与视频是官方列举的适合负载，质检影像与监控录像可直接对应']);
+  else out.push(['ok','共享目录属于适合负载；若为 9.15.1 及更早版本，需确认单卷唯一文件扩展名不超过 4,000 个，该限制自 9.16.1 的 ARP/AI 起取消']);
+
+  const io=V('f-io');
+  if(io==='churn') out.push(['warn','高频创建删除文件的负载不适合：检测依赖识别文件操作的异常激增，应用自身产生的活动无法有效区分']);
+  else if(io==='enc') out.push(['warn','应用或主机自行加密数据会削弱检测效果，但仍可依据文件活动与文件类型工作']);
+  else if(io==='write') out.push(['warn','以写为主且不可压缩的负载，建议每节点不超过 60 个启用卷；超出后性能影响上限为最大 IOPS 的 5%（9.16.1+ NAS 与 9.17.1+ SAN），9.15.1 及更早 NAS 为 10%']);
+  else out.push(['ok','以读为主或可压缩的负载，建议每节点不超过 150 个启用卷，超出后性能影响上限为最大 IOPS 的 4%']);
+
+  const sc=V('f-scale');
+  if(sc==='l'){
+    if(v>=918) out.push(['warn','9.18.1 起按平台档位放宽：低端（≤20 核）250、中端（≤64 核）500、高端（>64 核）1,000 个启用卷/节点；仍需注意受保护卷越多，单卷分析频率越低']);
+    else out.push(['warn','超过 150 个启用卷需评估资源占用；按平台档位放宽卷数上限需要 9.18.1 及以上']);
+  } else if(sc==='m') out.push(['ok','该规模在以读为主负载的建议范围内']);
+  else out.push(['ok','该规模在建议范围内，资源占用影响有限']);
+
+  const dp=V('f-dp');
+  if(dp==='sync'||dp==='as'){
+    if(v>=919){
+      out.push(['ok','9.19.1 起 ARP/AI 支持 SnapMirror 同步与 active sync 关系中的主卷，分析仅在可读写主卷上运行']);
+      out.push(['warn','ARP 配置状态与 ARP 快照在 9.19.1 中不复制到备端，故障切换后需在恢复卷上重新启用']);
+    } else {out.push(['no','SnapMirror 同步与 active sync 在 9.18.1 及更早版本上不受支持，需升级到 9.19.1']);blocked=true;}
+  } else if(dp==='async'){
+    if(v>=912) out.push(['ok','9.12.1 起异步目标卷受支持，源端配置状态、训练数据与 ARP 快照会自动传递，目标卷转为可读写后自动启用']);
+    else out.push(['warn','9.10.1 与 9.11.1 不传输 ARP 配置与训练数据，目标卷转为可读写后需显式在学习模式下启用']);
+  } else if(dp==='mcc') out.push(['ok','MetroCluster 配置属于 9.10.1 起的基线支持范围']);
+  else out.push(['ok','本地快照场景可直接启用；建议同时规划异地副本，最坏情况下的恢复仍依赖独立副本']);
+
+  if(V('f-mav')==='yes') out.push(['ok','已启用多管理员校验，可对禁用 ARP、暂停 ARP、清除可疑标记三条命令配置审批规则']);
+  else out.push(['warn','建议启用多管理员校验（9.13.1 起可用）：要求两名及以上已认证管理员共同批准，避免单一被盗账号即可关闭防护']);
+
+  out.push(['warn','需提前明确：ARP 不阻断 I/O，仅检测、锁定快照并告警。检测、快照与告警均为 ONTAP 本机能力，不依赖云侧连接']);
+  out.push(['warn','若需要阻断用户等追加处置动作，需配合 NetApp Console 侧的勒索软件防护服务；该平台需具备对外连通性，在中国大陆的可用性与交付方式需单独确认']);
+  out.push(['no','没有任何勒索软件检测系统能够保证完全安全，应作为纵深防御中的一层来规划']);
+
+  const head = blocked
+    ? '<h4 style="color:var(--red)">存在需要先解决的版本或范围限制</h4>'
+    : '<h4 style="color:var(--green)">当前条件可以启用相应能力</h4>';
+  $('verdict').innerHTML = head + out.map(([t,s])=>
+    `<div class="vline"><i class="v-${t==='ok'?'ok':(t==='warn'?'warn':'no')}"></i><span>${s}</span></div>`).join('');
+}
+document.querySelectorAll('#sc9 select').forEach(s=>s.addEventListener('change',checkFit));
+checkFit();
+
+show(0);
+</script>
+</body>
+</html>
