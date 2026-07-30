@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">NetApp AFX KV Cache 四级分层架构</title>
+  <desc id="desc">KV Cache 从 GPU HBM 逐级分层至主机 DRAM、本地 NVMe 和 AFX 共享存储池，并按命中回填。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7faff"/><stop offset="1" stop-color="#e8eefb"/></linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#0067c5"/><stop offset="1" stop-color="#6f5bd6"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#274264" flood-opacity=".14"/></filter>
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#aabbd5" stroke-opacity=".18"/></pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#0067c5"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <rect width="800" height="450" fill="url(#grid)"/>
+  <text x="42" y="48" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-size="16" font-weight="800" fill="#0067c5">NETAPP AFX</text>
+  <text x="42" y="82" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-size="28" font-weight="800" fill="#182342">KV Cache 四级分层加速</text>
+  <text x="42" y="108" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" fill="#5b6788">热数据驻留 · 温冷数据卸载 · 集群共享 · 按需回填</text>
+
+  <g filter="url(#shadow)">
+    <rect x="42" y="143" width="152" height="232" rx="16" fill="#fff" stroke="#a8c8e7"/>
+    <rect x="62" y="168" width="112" height="84" rx="12" fill="#e9f3ff" stroke="#0067c5"/>
+    <rect x="78" y="185" width="80" height="42" rx="7" fill="url(#brand)"/>
+    <text x="118" y="211" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="800" fill="#fff">GPU</text>
+    <text x="118" y="277" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#182342">推理工作负载</text>
+    <text x="118" y="299" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#5b6788">长上下文 / 高并发</text>
+    <path d="M78 327H158" stroke="#d9e0ef" stroke-width="5" stroke-linecap="round"/>
+    <path d="M78 327H142" stroke="#d6365a" stroke-width="5" stroke-linecap="round"/>
+    <text x="118" y="353" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#d6365a">HBM 压力</text>
+  </g>
+
+  <path d="M210 259H260" stroke="#0067c5" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="236" y="246" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#0067c5">卸载 / 回填</text>
+
+  <g filter="url(#shadow)" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+    <rect x="276" y="137" width="476" height="56" rx="11" fill="#fff" stroke="#e08ba0"/>
+    <rect x="276" y="137" width="12" height="56" rx="6" fill="#d6365a"/>
+    <text x="310" y="161" font-size="12" font-weight="800" fill="#d6365a">L1 · GPU HBM</text><text x="310" y="180" font-size="11" fill="#5b6788">最热 KV · 最低延迟</text>
+    <text x="710" y="169" text-anchor="end" font-size="11" font-weight="700" fill="#d6365a">HOT</text>
+
+    <rect x="276" y="202" width="430" height="56" rx="11" fill="#fff" stroke="#e6ad67"/>
+    <rect x="276" y="202" width="12" height="56" rx="6" fill="#d97b16"/>
+    <text x="310" y="226" font-size="12" font-weight="800" fill="#d97b16">L2 · Host DRAM</text><text x="310" y="245" font-size="11" fill="#5b6788">温数据 · 高带宽回填</text>
+
+    <rect x="276" y="267" width="384" height="56" rx="11" fill="#fff" stroke="#62b7df"/>
+    <rect x="276" y="267" width="12" height="56" rx="6" fill="#0984c9"/>
+    <text x="310" y="291" font-size="12" font-weight="800" fill="#0984c9">L3 · Local NVMe</text><text x="310" y="310" font-size="11" fill="#5b6788">冷数据 · 本地容量层</text>
+
+    <rect x="276" y="332" width="338" height="56" rx="11" fill="#fff" stroke="#9b8ee3"/>
+    <rect x="276" y="332" width="12" height="56" rx="6" fill="#6f5bd6"/>
+    <text x="310" y="356" font-size="12" font-weight="800" fill="#6f5bd6">L4 · AFX 共享存储池</text><text x="310" y="375" font-size="11" fill="#5b6788">跨节点共享 · 会话恢复</text>
+  </g>
+  <path d="M724 194V324" stroke="#0067c5" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arrow)" opacity=".75"/>
+  <text x="738" y="260" transform="rotate(90 738 260)" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#0067c5">容量扩大 · 延迟递增</text>
+  <rect x="590" y="31" width="162" height="38" rx="19" fill="#fff" stroke="#b8cce1"/>
+  <circle cx="612" cy="50" r="6" fill="#0f9d63"/>
+  <text x="628" y="55" font-family="sans-serif" font-size="11" font-weight="700" fill="#31516c">INTERACTIVE DEMO</text>
+</svg>
