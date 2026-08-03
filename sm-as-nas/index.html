@@ -906,7 +906,7 @@ function paint(i){
   lifB.textContent=bLive?'LIF-1 · 10.1.1.10':'LIF-1 · 未激活';
   lifB.style.fill=bLive?'#182342':'#5b6788';
 
-  const repDead=(i>=1&&i<=3);
+  const repDead=(i>=1&&i<=4);
   [repData,repCfg].forEach((p,k)=>{
     p.setAttribute('stroke', repDead?C_ALERT:(k?C_BLUE:C_LIVE));
     p.classList.toggle('dashed',repDead);
