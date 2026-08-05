@@ -26,6 +26,10 @@
     --live:#00a878;
     --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
     --sans:"Avenir Next","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    /* 头图总高：原版实测 297px，压缩到 2/3 ≈ 198px。
+       高度由 .hero 内边距撑开而非写死，避免字体差异时内容被裁切；
+       此变量只用于卡片的 scroll-margin-top。 */
+    --band-h:198px;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -35,29 +39,65 @@
   .wrap{width:min(1160px,calc(100% - 48px));margin-inline:auto}
   .mono{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
 
-  .band{position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.26);background:var(--netapp-blue-deep)}
-  .band::after{content:"";position:absolute;right:-12vw;bottom:-190px;width:58vw;height:330px;border:1px solid rgba(255,255,255,.15);border-radius:50%;box-shadow:0 0 0 54px rgba(255,255,255,.035),0 0 0 108px rgba(255,255,255,.025);pointer-events:none}
+  /* ── 头图：钉在顶部，卡片从下方滑过 ───────────────── */
+  .band{
+    position:sticky;top:0;z-index:20;
+    overflow:hidden;
+    border-bottom:1px solid rgba(255,255,255,.26);
+    background:var(--netapp-blue-deep);
+    transition:box-shadow .3s ease;
+  }
+  .band.scrolled{box-shadow:0 16px 34px rgba(0,32,64,.34)}
+  .band::after{content:"";position:absolute;right:-12vw;bottom:-150px;width:58vw;height:250px;border:1px solid rgba(255,255,255,.15);border-radius:50%;box-shadow:0 0 0 40px rgba(255,255,255,.035),0 0 0 80px rgba(255,255,255,.025);pointer-events:none}
   #stream{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;opacity:0;transition:opacity 1.1s ease;mix-blend-mode:screen}
-  #stream.ready{opacity:.72}
+  #stream.ready{opacity:.85}
   .band > *:not(#stream){position:relative;z-index:1}
-  .topbar{border-bottom:1px solid rgba(255,255,255,.18)}
-  .topbar .wrap{height:58px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-  .brand{display:inline-flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.2em;text-decoration:none;color:#fff}
-  .led{width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.14),0 0 18px rgba(255,255,255,.8)}
-  .topbar-tools{display:flex;align-items:center;gap:18px}
-  .topbar .mono{color:rgba(255,255,255,.58)}
-  .netapp-brand{display:flex;align-items:center;padding-left:18px;border-left:1px solid rgba(255,255,255,.24)}
-  .netapp-brand img{display:block;width:112px;height:auto;filter:brightness(0) invert(1);opacity:.94}
-  .hero{padding:58px 0 64px}
-  h1{margin:0;max-width:16ch;font-size:clamp(38px,5vw,66px);font-weight:800;line-height:1.02;letter-spacing:-.045em;color:#fff;text-wrap:balance}
-  .lede{max-width:56ch;margin:18px 0 0;color:rgba(255,255,255,.76);font-size:clamp(15px,1.5vw,18px);font-weight:500;line-height:1.65;text-wrap:pretty}
 
-  main{position:relative;padding:42px 0 0}
+  .topbar{border-bottom:1px solid rgba(255,255,255,.18);
+    background:linear-gradient(180deg,rgba(0,42,84,.62),rgba(0,42,84,.34))}
+  .topbar .wrap{height:52px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .brand{display:inline-flex;align-items:center;gap:11px;white-space:nowrap;flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.2em;text-decoration:none;color:#fff}
+  .led{width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.14),0 0 18px rgba(255,255,255,.8)}
+  .topbar-tools{display:flex;align-items:center;gap:14px;min-width:0}
+
+  /* 展位导航放在常驻顶栏里：头图已经是 sticky 的，导航跟着它一起常驻，
+     且不占用任何额外高度 —— 头图刚压到 2/3，不能再加一行回去。
+     52px 的行高塞不下条目名，所以只显示编号，名字走 title 与屏读文本。 */
+  .bays{display:flex;align-items:center;gap:4px;min-width:0;
+    overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+  .bays::-webkit-scrollbar{display:none}
+  .bays a{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+    min-width:27px;height:24px;padding:0 6px;border:1px solid rgba(255,255,255,.26);
+    border-radius:5px;background:rgba(255,255,255,.05);
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;
+    color:rgba(255,255,255,.72);text-decoration:none;
+    transition:background .18s ease,border-color .18s ease,color .18s ease}
+  .bays a:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.62);color:#fff}
+  .bays a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .bays a.on{background:#fff;border-color:#fff;color:var(--netapp-blue-deep)}
+  .vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+    clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  .topbar .mono{color:rgba(255,255,255,.58)}
+  .netapp-brand{flex:0 0 auto;display:flex;align-items:center;padding-left:18px;border-left:1px solid rgba(255,255,255,.24)}
+  .netapp-brand img{display:block;width:112px;height:auto;filter:brightness(0) invert(1);opacity:.94}
+
+  /* 压扁后改为横排：标题与副标题基线对齐，把省下的高度换成宽度 */
+  /* 粒子的收敛主干正好落在文字所在的纵向区间，加一层柔和压暗保证可读性 */
+  .hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(180deg,transparent 0%,rgba(0,45,88,.34) 26%,
+      rgba(0,45,88,.56) 54%,rgba(0,45,88,.32) 86%,transparent 100%)}
+  .hero{position:relative;padding:46px 0 51px}
+  .hero .wrap{display:flex;align-items:baseline;justify-content:space-between;gap:40px}
+  h1{margin:0;font-size:clamp(30px,3.6vw,46px);font-weight:800;line-height:1.02;letter-spacing:-.045em;color:#fff;text-wrap:balance;white-space:nowrap}
+  .lede{max-width:46ch;margin:0;color:rgba(255,255,255,.76);font-size:15px;font-weight:500;line-height:1.55;text-align:right;text-wrap:pretty}
+
+  /* ── 主体 ─────────────────────────────────────────── */
+  main{position:relative;padding:34px 0 0}
   .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;padding-bottom:14px;margin-bottom:22px;border-bottom:1px solid rgba(255,255,255,.35)}
   .sec-head h2{margin:0;font-size:17px;font-weight:750;letter-spacing:-.01em;color:#fff}
   .sec-head .mono{color:rgba(255,255,255,.64)}
   .bay{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
-  .slot{position:relative;display:flex;flex-direction:column;min-width:0;border:1px solid rgba(255,255,255,.62);border-radius:12px;background:#fff;color:var(--ink)}
+  .slot{position:relative;display:flex;flex-direction:column;min-width:0;border:1px solid rgba(255,255,255,.62);border-radius:12px;background:#fff;color:var(--ink);scroll-margin-top:calc(var(--band-h) + 20px)}
   a.slot{text-decoration:none;overflow:hidden;box-shadow:0 18px 42px rgba(0,49,96,.22);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
   a.slot:hover{transform:translateY(-6px);border-color:#fff;box-shadow:0 26px 58px rgba(0,42,82,.32)}
   a.slot:focus-visible{outline:3px solid #fff;outline-offset:4px}
@@ -75,8 +115,8 @@
   .body h3{margin:0;min-height:58px;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;font-size:22px;font-weight:750;line-height:1.32;letter-spacing:-.015em;color:var(--ink)}
   .body p{margin:11px 0 21px;min-height:48px;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;color:var(--ink-2);font-size:14px;font-weight:400;line-height:1.7;letter-spacing:0;text-wrap:pretty}
   .go{display:inline-flex;align-items:center;gap:8px;width:max-content;margin-top:auto;padding-bottom:3px;border-bottom:1px solid rgba(0,103,197,.3);color:var(--netapp-blue);font-size:13px;font-weight:750}
-  .go::after{content:"→";font-size:16px;transition:transform .2s ease}
-  a.slot:hover .go::after{transform:translateX(5px)}
+  .go::after{content:"↗";font-size:15px;transition:transform .2s ease}
+  a.slot:hover .go::after{transform:translate(3px,-3px)}
   .slot.empty{border-style:dashed;border-color:rgba(255,255,255,.55);background:rgba(0,75,145,.28);color:#fff;min-height:168px;box-shadow:none}
   .slot.empty .addr{background:rgba(0,49,96,.12);border-bottom-color:rgba(255,255,255,.22);border-bottom-style:dashed;color:rgba(255,255,255,.64)}
   .slot.empty .addr b{color:rgba(255,255,255,.78)}
@@ -92,21 +132,28 @@
   footer .mono{color:rgba(255,255,255,.5)}
 
   @media (max-width:820px){
+    :root{--band-h:155px}
     .wrap{width:min(100% - 30px,620px)}
-    .hero{padding:44px 0 48px}
-    .topbar .wrap{height:54px}
+    .topbar .wrap{height:48px}
     .topbar .mono{display:none}
-    .topbar-tools{gap:0}
+    .topbar-tools{gap:10px}
+    .brand-text{display:none}
+    .bays{gap:3px}
+    .bays a{min-width:23px;height:22px;padding:0 4px;font-size:9.5px}
     .netapp-brand{padding-left:0;border-left:0}
     .netapp-brand img{width:96px}
+    .hero{padding:22px 0 24px}
+    .hero .wrap{display:block}
+    h1{font-size:30px;white-space:normal}
+    .lede{margin-top:8px;font-size:13.5px;line-height:1.5;text-align:left;max-width:52ch}
+    main{padding-top:26px}
     .bay{grid-template-columns:1fr;gap:16px}
     .visual img{filter:saturate(.95) brightness(.98)}
   }
   @media (max-width:480px){
+    :root{--band-h:152px}
     body::before{background-size:32px 32px}
-    .hero{padding:38px 0 42px}
-    h1{font-size:38px}
-    main{padding-top:30px}
+    h1{font-size:27px}
     .body{padding:20px}
     .body h3{min-height:0;font-size:21px}
     .body p{min-height:0}
@@ -127,10 +174,19 @@
     <div class="wrap">
       <a class="brand" href="./" aria-label="ADG331 Apps 首页">
         <span class="led" aria-hidden="true"></span>
-        <span>ADG331 · APPS</span>
+        <span class="brand-text">ADG331 · APPS</span>
       </a>
       <div class="topbar-tools">
-        <span class="mono">WEB TOOLS / INTERACTIVE DEMOS</span>
+      <nav class="bays" aria-label="展位快速跳转">
+        <a href="#bay01" title="Bay 01 · Fusion 容量查询">01<span class="vh"> Bay 01 Fusion 容量查询</span></a>
+        <a href="#bay02" title="Bay 02 · 制造业 AI 推理数据平台">02<span class="vh"> Bay 02 制造业 AI 推理数据平台</span></a>
+        <a href="#bay03" title="Bay 03 · ONTAP MCP 运维演示">03<span class="vh"> Bay 03 ONTAP MCP 运维演示</span></a>
+        <a href="#bay04" title="Bay 04 · NetApp MCP 全景演示">04<span class="vh"> Bay 04 NetApp MCP 全景演示</span></a>
+        <a href="#bay05" title="Bay 05 · SnapMirror active sync for NAS">05<span class="vh"> Bay 05 SnapMirror active sync for NAS</span></a>
+        <a href="#bay06" title="Bay 06 · 制造业勒索软件检测与恢复">06<span class="vh"> Bay 06 制造业勒索软件检测与恢复</span></a>
+        <a href="#bay07" title="Bay 07 · KV Cache 分层加速">07<span class="vh"> Bay 07 KV Cache 分层加速</span></a>
+        <a href="#bay08" title="Bay 08 · ONTAP 9.19.1 技术总览">08<span class="vh"> Bay 08 ONTAP 9.19.1 技术总览</span></a>
+      </nav>
         <span class="netapp-brand"><img src="./assets/netapp-logo.svg" alt="NetApp" width="112" height="20"></span>
       </div>
     </div>
@@ -153,7 +209,7 @@
 
     <div class="bay">
 
-      <a class="slot" href="./fusion/" aria-label="打开 Fusion 容量查询">
+      <a class="slot" id="bay01" href="./fusion/" target="_blank" rel="noopener" aria-label="打开 Fusion 容量查询（在新标签页打开）">
         <div class="addr mono"><b>Bay 01</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/fusion-preview.svg" alt="Fusion 容量查询界面示意图" width="800" height="450" loading="lazy">
@@ -166,7 +222,7 @@
         </div>
       </a>
 
-      <a class="slot" href="./ntap-aide/" aria-label="打开制造业 AI 推理数据平台演示">
+      <a class="slot" id="bay02" href="./ntap-aide/" target="_blank" rel="noopener" aria-label="打开制造业 AI 推理数据平台演示（在新标签页打开）">
         <div class="addr mono"><b>Bay 02</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/aide-preview.svg" alt="AIDE 与 AFX 制造业 AI 数据流示意图" width="800" height="450" loading="lazy">
@@ -179,7 +235,7 @@
         </div>
       </a>
 
-      <a class="slot" href="./ontap-mcp/" aria-label="打开 ONTAP MCP 交互式演示">
+      <a class="slot" id="bay03" href="./ontap-mcp/" target="_blank" rel="noopener" aria-label="打开 ONTAP MCP 交互式演示（在新标签页打开）">
         <div class="addr mono"><b>Bay 03</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/ontap-mcp-preview.svg" alt="ONTAP MCP 自然语言存储管理架构示意图" width="800" height="450" loading="lazy">
@@ -192,7 +248,7 @@
         </div>
       </a>
 
-      <a class="slot" href="./netapp-mcp/" aria-label="打开 NetApp MCP 交互式演示">
+      <a class="slot" id="bay04" href="./netapp-mcp/" target="_blank" rel="noopener" aria-label="打开 NetApp MCP 交互式演示（在新标签页打开）">
         <div class="addr mono"><b>Bay 04</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/netapp-mcp-preview.svg" alt="NetApp MCP 数据基础设施管理架构示意图" width="800" height="450" loading="lazy">
@@ -205,7 +261,7 @@
         </div>
       </a>
 
-      <a class="slot" href="./sm-as-nas/" aria-label="打开 SnapMirror active sync for NAS 技术演示">
+      <a class="slot" id="bay05" href="./sm-as-nas/" target="_blank" rel="noopener" aria-label="打开 SnapMirror active sync for NAS 技术演示（在新标签页打开）">
         <div class="addr mono"><b>Bay 05</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/sm-as-nas-preview.svg" alt="SnapMirror active sync for NAS 双站点同步保护示意图" width="800" height="450" loading="lazy">
@@ -218,7 +274,7 @@
         </div>
       </a>
 
-      <a class="slot" href="./arp-ai-manufacturing/" aria-label="打开 ONTAP ARP AI 制造业勒索软件检测与恢复演示">
+      <a class="slot" id="bay06" href="./arp-ai-manufacturing/" target="_blank" rel="noopener" aria-label="打开 ONTAP ARP AI 制造业勒索软件检测与恢复演示（在新标签页打开）">
         <div class="addr mono"><b>Bay 06</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/arp-ai-preview.svg" alt="ONTAP ARP AI 制造业勒索软件检测与恢复示意图" width="800" height="450" loading="lazy">
@@ -231,7 +287,7 @@
         </div>
       </a>
 
-      <a class="slot" href="./kv-cache/" aria-label="打开 NetApp AFX KV Cache 分层加速交互演示">
+      <a class="slot" id="bay07" href="./kv-cache/" target="_blank" rel="noopener" aria-label="打开 NetApp AFX KV Cache 分层加速交互演示（在新标签页打开）">
         <div class="addr mono"><b>Bay 07</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/kv-cache-preview.svg" alt="NetApp AFX KV Cache 四级分层加速架构示意图" width="800" height="450" loading="lazy">
@@ -244,10 +300,18 @@
         </div>
       </a>
 
-      <div class="slot empty">
-        <div class="addr mono"><b>Bay 08</b><span class="state">规划中</span></div>
-        <div class="body" aria-label="预留空白展位"></div>
-      </div>
+      <a class="slot" id="bay08" href="./ontap-9191/" target="_blank" rel="noopener" aria-label="打开 ONTAP 9.19.1 技术总览（在新标签页打开）">
+        <div class="addr mono"><b>Bay 08</b><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/ontap-9191-preview.svg" alt="ONTAP 9.19.1 版本亮点特性总览示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <span class="tag">ONTAP 9.19.1 Release</span>
+          <h3>ONTAP 9.19.1 技术总览</h3>
+          <p>20 幕交互演示，覆盖 NAS 性能与 QoS、SAN 连接与高可用、S3 语义完备性、业务连续性、纵深安全与 AFX 平台演进。</p>
+          <span class="go">进入技术演示</span>
+        </div>
+      </a>
 
     </div>
   </section>
@@ -260,12 +324,74 @@
   </div>
 </footer>
 
+<script>
+(() => {
+  const band = document.querySelector('.band');
+  const bays = [...document.querySelectorAll('.slot[id]')];
+  const links = new Map(
+    [...document.querySelectorAll('.bays a')]
+      .map(a => [a.getAttribute('href').slice(1), a])
+  );
+
+  // 当前所在展位：以头图下沿再往下 28px 作为基准线。
+  // 桌面是两列，一行里两张卡片的 top 相同，所以命中的通常是一对 ——
+  // 如实点亮两个，而不是硬选一个当 aria-current。
+  function current() {
+    const line = band.getBoundingClientRect().height + 28;
+    const cross = bays.filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.top <= line && r.bottom > line;
+    });
+    if (cross.length) return cross;
+
+    // 页面顶部时没有卡片跨过基准线，取基准线下方最近的一行
+    let best = Infinity, pick = [];
+    for (const el of bays) {
+      const t = el.getBoundingClientRect().top;
+      if (t < line) continue;
+      if (t < best - 2) { best = t; pick = [el]; }
+      else if (Math.abs(t - best) <= 2) pick.push(el);
+    }
+    return pick;
+  }
+
+  let queued = false;
+  function sync() {
+    queued = false;
+    band.classList.toggle('scrolled', window.scrollY > 8);
+    const on = new Set(current().map(el => el.id));
+    for (const [id, a] of links) a.classList.toggle('on', on.has(id));
+  }
+  function schedule() {
+    if (!queued) { queued = true; requestAnimationFrame(sync); }
+  }
+
+  addEventListener('scroll', schedule, { passive: true });
+  addEventListener('resize', schedule);
+  sync();
+})();
+</script>
+
 <script type="module">
 import * as THREE from './assets/vendor/three.module.min.js';
 
 // ─────────────────────────────────────────────────────────
-// 数据入湖：左侧散乱的原始数据粒子，向右逐渐汇入整齐的
-// 通道流；一条明亮的主干在中部脉冲。加法混色 + 视差。
+// 版本 C —— 「数据涡流」/ GPGPU 旋度场平流
+//
+// 位置存在浮点渲染目标里，每帧在 fragment shader 中积分一次
+// 速度场，双缓冲乒乓。这是粒子能自发聚成丝状流的前提 ——
+// 解析式的伪运动（B 的做法）做不出丝，因为每个点各算各的，
+// 彼此之间没有共享的流场。
+//
+// 速度场 = 解析旋度 + 右向漂移 + 向主干的收敛力：
+//   · 旋度场由正弦势场解析求旋度，散度恒为零 → 不会塌成一团
+//   · 右向漂移让数据从左流向右
+//   · 收敛力随 x 增强 → 右侧自然收束成一条高亮主干
+// 叙事仍是「无序 → 汇入」，但这次是流体自己跑出来的，
+// 不是我用 smoothstep 摆出来的。
+//
+// 渲染两遍：本体 + 放大 3 倍压暗的辉光层（廉价 bloom，
+// 因为 EffectComposer 在 examples/ 里，本地 bundle 只有 core）。
 // ─────────────────────────────────────────────────────────
 
 const canvas = document.getElementById('stream');
@@ -275,102 +401,348 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let renderer;
 try {
   renderer = new THREE.WebGLRenderer({
-    canvas, alpha: true, antialias: false, powerPreference: 'low-power'
+    canvas, alpha: true, antialias: false, powerPreference: 'high-performance'
   });
 } catch (e) {
-  canvas.hidden = true; // 退回 CSS 渐变
+  canvas.hidden = true;
 }
 
 if (renderer) {
   renderer.setClearColor(0x000000, 0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 300);
-  const CAM = { x: 0, y: 1.2, z: 30 };
-  camera.position.set(CAM.x, CAM.y, CAM.z);
-
-  // 圆形光点贴图（加法混色的关键，否则是方块）
-  const dotTex = (() => {
-    const s = 64, cv = document.createElement('canvas');
-    cv.width = cv.height = s;
-    const g = cv.getContext('2d');
-    const grad = g.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
-    grad.addColorStop(0, 'rgba(255,255,255,1)');
-    grad.addColorStop(0.35, 'rgba(255,255,255,.6)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = grad;
-    g.fillRect(0, 0, s, s);
-    const t = new THREE.CanvasTexture(cv);
-    return t;
-  })();
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+  renderer.setPixelRatio(dpr);
 
   const compact = window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
-  const COUNT = compact ? 1400 : 3200;
-  let X_MIN = -34, X_MAX = 34;        // 会在 resize 时按视锥可见宽度重算
-  const LANES = 9;                     // 右侧通道数
-  const LANE_GAP = 1.15;
+  const SIM = compact ? 72 : 128;          // 位置纹理边长
+  const COUNT = SIM * SIM;                 // 5184 / 16384
 
-  const pos = new Float32Array(COUNT * 3);
-  const col = new Float32Array(COUNT * 3);
-  const meta = new Float32Array(COUNT * 4); // speed, laneY, laneZ, phase
+  // ── 共用的旋度场：模拟和渲染都要用，保证颜色跟着真实速度走 ──
+  const CURL = `
+    vec3 curlField(vec3 p, float t) {
+      const vec3 k1 = vec3(1.10, 1.70, 1.30);
+      const vec3 k2 = vec3(1.90, 1.10, 1.50);
+      const vec3 k3 = vec3(1.30, 1.50, 1.90);
 
-  const cDim  = new THREE.Color(0x1d5f86);
-  const cMid  = new THREE.Color(0x37a9e0);
-  const cHot  = new THREE.Color(0xaef0ff);
-  const tmp   = new THREE.Color();
+      float c1 = cos(dot(k1, p) + t * 0.35);
+      float c2 = cos(dot(k2, p) + t * 0.28);
+      float c3 = cos(dot(k3, p) + t * 0.41);
 
-  function seed(i, fromLeft) {
-    const lane = Math.floor(Math.random() * LANES);
-    const spanK = (X_MAX - X_MIN) / 68;                         // 跨度变宽则等比提速
-    meta[i*4]   = (2.6 + Math.random() * 3.4) * spanK;          // speed
-    meta[i*4+1] = (lane - (LANES - 1) / 2) * LANE_GAP;          // laneY
-    meta[i*4+2] = (Math.random() - 0.5) * 1.6;                  // laneZ
-    meta[i*4+3] = Math.random() * Math.PI * 2;                  // phase
-    pos[i*3]   = fromLeft ? X_MIN - Math.random() * 6
-                          : X_MIN + Math.random() * (X_MAX - X_MIN);
-    pos[i*3+1] = meta[i*4+1] + (Math.random() - 0.5) * 10;
-    pos[i*3+2] = meta[i*4+2] + (Math.random() - 0.5) * 10;
+      // v = curl(psi)，psi_i = sin(k_i . p + w_i t)
+      vec3 v = vec3(
+        k3.y * c3 - k2.z * c2,
+        k1.z * c1 - k3.x * c3,
+        k2.x * c2 - k1.y * c1
+      );
+
+      // 第二个八度，加细节
+      const vec3 m1 = vec3(2.9, 3.7, 3.1);
+      const vec3 m2 = vec3(4.1, 2.7, 3.5);
+      const vec3 m3 = vec3(3.3, 3.5, 4.3);
+      float d1 = cos(dot(m1, p) + t * 0.63);
+      float d2 = cos(dot(m2, p) + t * 0.51);
+      float d3 = cos(dot(m3, p) + t * 0.74);
+      v += 0.42 * vec3(
+        m3.y * d3 - m2.z * d2,
+        m1.z * d1 - m3.x * d3,
+        m2.x * d2 - m1.y * d1
+      );
+      // 整体压幅：湍流要跟右向漂移可比，压过头就只剩一团云
+      return v * 0.38;
+    }
+
+    float hash11(float n) { return fract(sin(n) * 43758.5453123); }
+    vec3 hash31(float n) {
+      return fract(sin(vec3(n, n + 1.7, n + 3.3)) *
+                   vec3(43758.5453, 22578.1459, 19642.3491));
+    }
+  `;
+
+  // ── 模拟：位置纹理乒乓 ──────────────────────────────────
+  const rtOpts = {
+    type: THREE.HalfFloatType,       // 模拟在归一化空间跑，半浮点精度足够
+    format: THREE.RGBAFormat,
+    minFilter: THREE.NearestFilter,
+    magFilter: THREE.NearestFilter,
+    depthBuffer: false,
+    stencilBuffer: false
+  };
+  let rtA = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts);
+  let rtB = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts);
+
+  const simScene = new THREE.Scene();
+  const simCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const simMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uPos:   { value: null },
+      uTime:  { value: 0 },
+      uDelta: { value: 0 },
+      uInit:  { value: 1 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = vec4(position.xy, 0.0, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D uPos;
+      uniform float uTime, uDelta, uInit;
+      varying vec2 vUv;
+      ${CURL}
+
+      vec4 spawn(vec2 uv, float t) {
+        vec3 h = hash31(uv.x * 371.7 + uv.y * 913.1 + t * 7.3);
+        return vec4(-1.06 - h.x * 0.22,
+                    (h.y - 0.5) * 1.30,
+                    (h.z - 0.5) * 1.30,
+                    0.0);
+      }
+
+      void main() {
+        if (uInit > 0.5) {
+          // 初始化时把粒子铺满整个流域，避免开场看到一堵墙从左推进来
+          vec3 h = hash31(vUv.x * 371.7 + vUv.y * 913.1);
+          gl_FragColor = vec4(h.x * 2.2 - 1.1,
+                              (h.y - 0.5) * 1.30,
+                              (h.z - 0.5) * 1.30,
+                              h.x * 4.0);
+          return;
+        }
+
+        vec4 d = texture2D(uPos, vUv);
+        vec3 p = d.xyz;
+        float age = d.w + uDelta;
+
+        vec3 v = curlField(p, uTime);
+        v.x += 1.45;                                   // 右向漂移
+
+        // 收敛力随 x 增强：右侧收束成主干
+        float conv = smoothstep(-0.35, 0.95, p.x);
+        v.yz -= p.yz * conv * 3.20;
+
+        p += v * uDelta * 0.42;
+
+        if (p.x > 1.08 || age > 5.0) {
+          gl_FragColor = spawn(vUv, uTime);
+          return;
+        }
+        gl_FragColor = vec4(p, age);
+      }
+    `
+  });
+  simScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), simMat));
+
+  function simInit() {
+    simMat.uniforms.uInit.value = 1;
+    for (const rt of [rtA, rtB]) {
+      renderer.setRenderTarget(rt);
+      renderer.render(simScene, simCam);
+    }
+    renderer.setRenderTarget(null);
+    simMat.uniforms.uInit.value = 0;
   }
-  for (let i = 0; i < COUNT; i++) seed(i, false);
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  function simStep(t, dt) {
+    simMat.uniforms.uPos.value = rtA.texture;
+    simMat.uniforms.uTime.value = t;
+    simMat.uniforms.uDelta.value = dt;
+    renderer.setRenderTarget(rtB);
+    renderer.render(simScene, simCam);
+    renderer.setRenderTarget(null);
+    const tmp = rtA; rtA = rtB; rtB = tmp;
+    coreMat.uniforms.uPos.value = rtA.texture;
+    glowMat.uniforms.uPos.value = rtA.texture;
+  }
 
-  const mat = new THREE.PointsMaterial({
-    size: compact ? 0.34 : 0.28,
-    map: dotTex,
-    vertexColors: true,
+  // ── 渲染：粒子本体 + 辉光层 ────────────────────────────
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 400);
+  const CAM = { x: 0, y: 0, z: 22 };
+  camera.position.set(CAM.x, CAM.y, CAM.z);
+
+  const refs = new Float32Array(COUNT * 2);
+  const dummy = new Float32Array(COUNT * 3);
+  for (let i = 0, y = 0; y < SIM; y++) {
+    for (let x = 0; x < SIM; x++, i++) {
+      refs[i * 2]     = (x + 0.5) / SIM;
+      refs[i * 2 + 1] = (y + 0.5) / SIM;
+    }
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(dummy, 3));
+  pGeo.setAttribute('aRef', new THREE.BufferAttribute(refs, 2));
+  pGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 500);
+
+  const PARTICLE_VS = `
+    attribute vec2 aRef;
+    uniform sampler2D uPos;
+    uniform vec3  uBounds;
+    uniform float uTime, uScale, uSizeMul;
+    varying float vHeat;
+    varying float vFade;
+    ${CURL}
+    void main() {
+      vec4 d = texture2D(uPos, aRef);
+      vec3 n = d.xyz;
+      float age = d.w;
+
+      vec3 world = n * uBounds;
+
+      // 用真实速度着色：湍流强的地方发亮
+      vec3 v = curlField(n, uTime);
+      float sp = clamp(length(v) / 1.8, 0.0, 1.0);
+      float spine = exp(-dot(n.yz, n.yz) * 5.5);       // 越贴近主干越热
+      float conv  = smoothstep(-0.35, 0.95, n.x);
+      vHeat = clamp(sp * 0.45 + spine * conv * 0.95, 0.0, 1.0);
+
+      // 生成与消亡的淡入淡出，避免出现硬边
+      vFade = smoothstep(0.0, 0.45, age) * (1.0 - smoothstep(4.2, 5.0, age));
+      // topbar 占头图上方约 26%（归一化 y > 0.47），压暗让品牌字和 logo 读得清
+      vFade *= 1.0 - 0.72 * smoothstep(0.42, 0.95, n.y);
+
+      vec4 mv = modelViewMatrix * vec4(world, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = uScale * uSizeMul * (0.75 + 2.6 * vHeat) * (34.0 / -mv.z);
+    }
+  `;
+
+  function particleMat(sizeMul, gain, soft) {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uPos:     { value: null },
+        uBounds:  { value: new THREE.Vector3(1, 1, 1) },
+        uTime:    { value: 0 },
+        uScale:   { value: dpr },
+        uSizeMul: { value: sizeMul },
+        uGain:    { value: gain },
+        uSoft:    { value: soft }
+      },
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+      vertexShader: PARTICLE_VS,
+      fragmentShader: `
+        precision highp float;
+        uniform float uGain, uSoft;
+        varying float vHeat;
+        varying float vFade;
+        void main() {
+          vec2 c = gl_PointCoord - 0.5;
+          float d = dot(c, c);
+          float mask = smoothstep(0.25, uSoft, d);
+          if (mask <= 0.001) discard;
+
+          vec3 cool = vec3(0.04, 0.20, 0.46);
+          vec3 mid  = vec3(0.09, 0.60, 0.96);
+          vec3 hot  = vec3(0.72, 0.98, 1.00);
+
+          vec3 col = mix(cool, mid, smoothstep(0.0, 0.55, vHeat));
+          col = mix(col, hot, smoothstep(0.5, 1.0, vHeat));
+
+          float a = mask * vFade * uGain * (0.30 + 0.90 * vHeat);
+          gl_FragColor = vec4(col * a, a);
+        }
+      `
+    });
+  }
+
+  const coreMat = particleMat(1.0, 0.82, 0.02);   // 本体：小而实
+  const glowMat = particleMat(3.4, 0.115, 0.24);   // 辉光：大而虚
+  scene.add(new THREE.Points(pGeo, glowMat));
+  scene.add(new THREE.Points(pGeo, coreMat));
+
+  // ── 主干光束：一条带脉冲的发光横梁 ──────────────────────
+  const beamMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     blending: THREE.AdditiveBlending,
-    sizeAttenuation: true
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      varying vec2 vUv;
+      void main() {
+        float front = fract(uTime * 0.17);
+        float pulse = exp(-pow((vUv.x - front) / 0.055, 2.0));
+        float dy = vUv.y - 0.5;
+
+        float core = exp(-pow(dy / 0.030, 2.0)) * (0.10 + 1.05 * pulse);
+        float glow = exp(-pow(dy / 0.170, 2.0)) * (0.035 + 0.42 * pulse);
+        float a = (core + glow) * smoothstep(0.0, 0.55, vUv.x);
+
+        vec3 col = mix(vec3(0.10, 0.58, 0.94), vec3(0.85, 0.99, 1.0), pulse);
+        gl_FragColor = vec4(col * a, a);
+      }
+    `
   });
-  scene.add(new THREE.Points(geo, mat));
+  const beam = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), beamMat);
+  scene.add(beam);
 
-  // 主干光轨：三条贯穿的细线，中间那条脉冲
-  const railMat = new THREE.LineBasicMaterial({
-    color: 0x2f9fd4, transparent: true, opacity: 0.22,
-    blending: THREE.AdditiveBlending
+  // ── 拖尾：累积缓冲乒乓 ─────────────────────────────────
+  // 粒子叠进累积缓冲，每帧先把上一帧按 uDecay 衰减再叠加新的一帧。
+  // 这是「一堆点」和「一道流」的区别 —— 没有它，运动只能靠眼睛脑补。
+  const accOpts = {
+    format: THREE.RGBAFormat,
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    depthBuffer: false,
+    stencilBuffer: false
+  };
+  let accA = new THREE.WebGLRenderTarget(2, 2, accOpts);
+  let accB = new THREE.WebGLRenderTarget(2, 2, accOpts);
+
+  const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const quadGeo = new THREE.PlaneGeometry(2, 2);
+  const QUAD_VS = `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+  `;
+
+  const fadeMat = new THREE.ShaderMaterial({
+    uniforms: { uTex: { value: null }, uDecay: { value: 0.80 } },
+    depthTest: false, depthWrite: false, transparent: false,
+    vertexShader: QUAD_VS,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D uTex; uniform float uDecay;
+      varying vec2 vUv;
+      void main() {
+        vec4 c = texture2D(uTex, vUv) * uDecay;
+        // 抹掉衰减到看不见的残值，避免长时间运行后底噪堆积
+        gl_FragColor = c * step(0.004, max(max(c.r, c.g), c.b));
+      }
+    `
   });
-  const railGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(X_MIN, 0, 0), new THREE.Vector3(X_MAX, 0, 0)
-  ]);
-  for (let k = -1; k <= 1; k++) {
-    const l = new THREE.Line(railGeo, railMat.clone());
-    l.position.y = k * LANE_GAP * 2;
-    l.userData.k = k;
-    scene.add(l);
-  }
+  const fadeScene = new THREE.Scene();
+  fadeScene.add(new THREE.Mesh(quadGeo, fadeMat));
 
-  function updateRails() {
-    const p = railGeo.attributes.position;
-    p.setX(0, X_MIN); p.setX(1, X_MAX);
-    p.needsUpdate = true;
-  }
+  const copyMat = new THREE.ShaderMaterial({
+    uniforms: { uTex: { value: null } },
+    depthTest: false, depthWrite: false, transparent: true,
+    blending: THREE.NoBlending,
+    vertexShader: QUAD_VS,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D uTex;
+      varying vec2 vUv;
+      void main() { gl_FragColor = texture2D(uTex, vUv); }
+    `
+  });
+  const copyScene = new THREE.Scene();
+  copyScene.add(new THREE.Mesh(quadGeo, copyMat));
 
-  // 鼠标视差
+  // ── 鼠标视差 ───────────────────────────────────────────
   const par = { x: 0, y: 0, tx: 0, ty: 0 };
   if (!compact) {
     band.addEventListener('pointermove', (e) => {
@@ -381,56 +753,6 @@ if (renderer) {
     band.addEventListener('pointerleave', () => { par.tx = 0; par.ty = 0; });
   }
 
-  function step(t, dt) {
-    for (let i = 0; i < COUNT; i++) {
-      let x = pos[i*3] + meta[i*4] * dt;
-      if (x > X_MAX + 2) { seed(i, true); x = pos[i*3]; }
-
-      // 0 → 1：从散乱到汇入通道
-      const f = Math.min(Math.max((x - X_MIN) / (X_MAX - X_MIN), 0), 1);
-      const order = f * f * (3 - 2 * f); // smoothstep
-
-      const ph = meta[i*4+3];
-      const wanderY = Math.sin(t * 0.7 + ph) * 4.5 * (1 - order);
-      const wanderZ = Math.cos(t * 0.55 + ph * 1.3) * 4.5 * (1 - order);
-      const jitter = Math.sin(t * 3.1 + ph * 7) * 0.06 * order;
-
-      pos[i*3]   = x;
-      pos[i*3+1] = meta[i*4+1] * order + wanderY + jitter;
-      pos[i*3+2] = meta[i*4+2] * order + wanderZ;
-
-      // 颜色：散乱时暗蓝，入流后转亮；主干附近提亮
-      tmp.copy(cDim).lerp(cMid, order);
-      const nearRail = Math.exp(-Math.pow(pos[i*3+1], 2) / 1.4);
-      const pulse = 0.5 + 0.5 * Math.sin(t * 1.6 - x * 0.35);
-      tmp.lerp(cHot, nearRail * pulse * 0.7 * order);
-
-      const a = 0.35 + order * 0.65;
-      col[i*3]   = tmp.r * a;
-      col[i*3+1] = tmp.g * a;
-      col[i*3+2] = tmp.b * a;
-    }
-    geo.attributes.position.needsUpdate = true;
-    geo.attributes.color.needsUpdate = true;
-
-    // 主干脉冲
-    scene.traverse(o => {
-      if (o.isLine) {
-        const k = o.userData.k;
-        o.material.opacity = k === 0
-          ? 0.16 + 0.18 * (0.5 + 0.5 * Math.sin(t * 1.6))
-          : 0.10;
-      }
-    });
-
-    // 视差缓动
-    par.x += (par.tx - par.x) * 0.05;
-    par.y += (par.ty - par.y) * 0.05;
-    camera.position.x = CAM.x + par.x * 2.2;
-    camera.position.y = CAM.y - par.y * 1.4;
-    camera.lookAt(0, 0, 0);
-  }
-
   function resize() {
     const w = band.clientWidth, h = band.clientHeight;
     if (!w || !h) return;
@@ -438,40 +760,81 @@ if (renderer) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
 
-    // 按视锥在 z=0 平面的可见宽度重算横向范围，铺满整个头图区
-    const halfW = Math.tan((camera.fov * Math.PI) / 360) * CAM.z * camera.aspect;
-    X_MIN = -halfW - 4;
-    X_MAX =  halfW + 4;
-    updateRails();
-    for (let i = 0; i < COUNT; i++) seed(i, false);
+    // 让归一化流域正好铺满头图
+    const halfH = Math.tan((camera.fov * Math.PI) / 360) * CAM.z;
+    const halfW = halfH * camera.aspect;
+    const bounds = new THREE.Vector3(halfW * 0.98, halfH * 1.02, halfH * 0.92);
+    coreMat.uniforms.uBounds.value.copy(bounds);
+    glowMat.uniforms.uBounds.value.copy(bounds);
+
+    beam.scale.set(bounds.x * 2.0, bounds.y * 2.0, 1);
+
+    const pw = Math.max(2, Math.floor(w * dpr));
+    const ph = Math.max(2, Math.floor(h * dpr));
+    accA.setSize(pw, ph);
+    accB.setSize(pw, ph);
   }
 
   let raf = null;
-  const clock = new THREE.Clock();
+  const t0 = performance.now();
+  const now = () => (performance.now() - t0) / 1000;
   let last = 0;
 
-  function frame() {
-    const t = clock.getElapsedTime();
-    const dt = Math.min(t - last, 0.05);
-    last = t;
-    step(t, dt);
+  function draw(t) {
+    par.x += (par.tx - par.x) * 0.05;
+    par.y += (par.ty - par.y) * 0.05;
+    camera.position.x = CAM.x + par.x * 1.9;
+    camera.position.y = CAM.y - par.y * 1.1;
+    camera.lookAt(0, 0, 0);
+
+    coreMat.uniforms.uTime.value = t;
+    glowMat.uniforms.uTime.value = t;
+    beamMat.uniforms.uTime.value = t;
+
+    renderer.autoClear = false;
+
+    // 1) 上一帧衰减后写入 accB
+    renderer.setRenderTarget(accB);
+    renderer.clear(true, false, false);
+    fadeMat.uniforms.uTex.value = accA.texture;
+    renderer.render(fadeScene, quadCam);
+
+    // 2) 本帧粒子加法叠加进 accB
     renderer.render(scene, camera);
+
+    // 3) accB 输出到屏幕
+    renderer.setRenderTarget(null);
+    renderer.clear(true, false, false);
+    copyMat.uniforms.uTex.value = accB.texture;
+    renderer.render(copyScene, quadCam);
+
+    const t2 = accA; accA = accB; accB = t2;
+    renderer.autoClear = true;
+  }
+
+  function frame() {
+    const t = now();
+    const dt = Math.min(Math.max(t - last, 0.0005), 0.05);
+    last = t;
+    simStep(t, dt);
+    draw(t);
     raf = requestAnimationFrame(frame);
   }
   function start() {
-    if (raf === null) { last = clock.getElapsedTime(); raf = requestAnimationFrame(frame); }
+    if (raf === null) { last = now(); raf = requestAnimationFrame(frame); }
   }
   function stop() {
     if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
   }
 
   resize();
+  simInit();
   canvas.classList.add('ready');
 
   if (reduceMotion.matches) {
-    // 静止一帧：把粒子推进几秒再定格
-    for (let s = 0; s < 180; s++) step(s / 30, 1 / 30);
-    renderer.render(scene, camera);
+    // 先把流场推进到成形状态，再定格一帧
+    for (let i = 0; i < 150; i++) simStep(i * 0.033, 0.033);
+    draw(150 * 0.033);
   } else {
     start();
   }
@@ -485,7 +848,10 @@ if (renderer) {
     clearTimeout(rt);
     rt = setTimeout(resize, 180);
   });
+
+  window.__hero = { renderer, COUNT, SIM, coreMat, simMat };
 }
 </script>
+
 </body>
 </html>

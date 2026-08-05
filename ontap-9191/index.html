@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ONTAP 9.19.1 技术总览 · 交互演示</title>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>ONTAP 9.19.1</b><span>TECHNICAL OVERVIEW</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp · 2026 年度版本</span></div>
+      <div class="big an" style="--d:.14s">ONTAP 9.19.1</div>
+      <div class="sub an" style="--d:.26s">统一数据平台 · 技术总览</div>
+      <p class="desc an" style="--d:.34s">
+        六大领域、二十余项增强：NAS 性能与 QoS、SAN 连接与高可用、S3 语义完备性、
+        业务连续性、纵深安全，以及面向 AI 与高性能工作负载的 AFX 平台演进。
+      </p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">NAS 增强</div>
+        <div class="chip" data-jump="4">SAN 增强</div>
+        <div class="chip" data-jump="8">S3 增强</div>
+        <div class="chip" data-jump="10">数据保护</div>
+        <div class="chip" data-jump="13">安全增强</div>
+        <div class="chip" data-jump="16">AFX 增强</div>
+      </div>
+      <div class="an" style="--d:.56s;margin-top:30px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 版本亮点 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="版本亮点">
+    <div class="wrap">
+      <div class="an"><span class="eyebrow">Release Highlights</span>
+        <h1>ONTAP 9.19.1 <span class="g">版本亮点</span></h1>
+        <p class="lead">点击任一领域卡片，可直接跳转至对应的技术详解幕。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="dc" style="--ac:#0067c5" data-jump="2">
+          <div class="hd"><span class="nm">NAS</span><span class="ct">2 项</span></div>
+          <ul><li>目录列表性能增强</li><li>可配置 QoS 突发策略</li></ul>
+          <div class="go">查看详解 →</div>
+        </div>
+        <div class="dc" style="--ac:#2f6fe0" data-jump="4">
+          <div class="hd"><span class="nm">SAN</span><span class="ct">4 项</span></div>
+          <ul><li>光纤通道直连（Direct-Attach FC）</li><li>AFF 对称主动-主动多路径</li><li>SCSI/NVMe 组合 LIF 自动故障转移</li><li>iSCSI 外部 LUN 导入（FLI）</li></ul>
+          <div class="go">查看详解 →</div>
+        </div>
+        <div class="dc" style="--ac:#0c8e86" data-jump="8">
+          <div class="hd"><span class="nm">S3</span><span class="ct">3 项</span></div>
+          <ul><li>条件写入与条件删除</li><li>单用户双访问密钥</li><li>多协议卷 NVFail 支持</li></ul>
+          <div class="go">查看详解 →</div>
+        </div>
+        <div class="dc" style="--ac:#6a5ad4" data-jump="10">
+          <div class="hd"><span class="nm">数据保护</span><span class="ct">5 项</span></div>
+          <ul><li>SnapMirror active sync 支持 NAS</li><li>SM-as 面向 AIX 的透明应用切换</li><li>SnapMirror Cloud 桶上限提升至 100</li><li>SM-S 支持防篡改快照（TPS）</li><li>SM-S 支持计划快照</li></ul>
+          <div class="go">查看详解 →</div>
+        </div>
+        <div class="dc" style="--ac:#d33a5c" data-jump="13">
+          <div class="hd"><span class="nm">安全</span><span class="ct">3 项</span></div>
+          <ul><li>NFS over TLS 1.3</li><li>ARP 勒索软件防护覆盖 SM-S / SM-as</li><li>WebAuthn 依赖方（RP）域限制</li></ul>
+          <div class="go">查看详解 →</div>
+        </div>
+        <div class="dc" style="--ac:#d5820f" data-jump="16">
+          <div class="hd"><span class="nm">AFX</span><span class="ct">4 项</span></div>
+          <ul><li>支持 32 节点规模</li><li>跨文件顺序读（CFSR）</li><li>全局重复数据删除</li><li>动态存储效率</li></ul>
+          <div class="go">查看详解 →</div>
+        </div>
+      </div>
+
+      <div class="kpis an" style="--d:.2s;margin-top:14px">
+        <div class="kpi"><b>3×+</b><span>小目录列表并发能力目标提升</span></div>
+        <div class="kpi v"><b>32</b><span>AFX 集群节点上限（原 24）</span></div>
+        <div class="kpi g"><b>100</b><span>SnapMirror Cloud 桶上限（原 6）</span></div>
+        <div class="kpi o"><b>0</b><span>SM-as NAS 透明切换 RPO</span></div>
+        <div class="kpi t"><b>TLS 1.3</b><span>NFS 传输加密，端口 2049 带内</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · NAS 目录列表性能 ══════════════════ -->
+  <section class="scene" data-sec="NAS" data-nav="目录列表性能">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>NAS 增强 · 01</span></div>
+        <h1>目录列表<span class="g">性能增强</span></h1>
+        <p class="lead">面向小目录的 readdir / readdir+ 多线程优化，目标是在同一目录上支撑 3 倍以上的并发客户端——
+          这是 3D 渲染、EDA 与集群计算场景中最常见的元数据热点。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:14px">
+            <button class="btn on" data-perf="on">ONTAP 9.19.1</button>
+            <button class="btn" data-perf="off">此前版本</button>
+            <span class="hint" style="margin-left:auto">同一小目录并发 readdir 客户端数（示意）</span>
+          </div>
+          <svg viewBox="0 0 640 250" id="perfSvg" style="max-height:205px">
+            <defs>
+              <linearGradient id="gA" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stop-color="#9fb6d6"/><stop offset="1" stop-color="#c3d1e6"/></linearGradient>
+              <linearGradient id="gB" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stop-color="#0067c5"/><stop offset="1" stop-color="#6a5ad4"/></linearGradient>
+            </defs>
+            <g stroke="#dfe6f2" stroke-width="1">
+              <line x1="70" y1="30" x2="620" y2="30"/><line x1="70" y1="80" x2="620" y2="80"/>
+              <line x1="70" y1="130" x2="620" y2="130"/><line x1="70" y1="180" x2="620" y2="180"/>
+              <line x1="70" y1="210" x2="620" y2="210"/>
+            </g>
+            <g font-family="var(--mono)" font-size="10" fill="#8d97b2" text-anchor="end">
+              <text x="60" y="34">3.0×</text><text x="60" y="84">2.0×</text>
+              <text x="60" y="134">1.0×</text><text x="60" y="214">0</text>
+            </g>
+            <rect x="150" y="130" width="120" height="80" rx="6" fill="url(#gA)"/>
+            <rect id="barNew" x="380" y="30" width="120" height="180" rx="6" fill="url(#gB)"/>
+            <text x="210" y="232" text-anchor="middle" font-size="12" fill="#5c6a8a">此前版本 · CPU 受限</text>
+            <text x="440" y="232" text-anchor="middle" font-size="12" fill="#152341" font-weight="700">9.19.1 · 多线程优化</text>
+            <text x="210" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#5c6a8a">1×</text>
+            <text id="lblNew" x="440" y="18" text-anchor="middle" font-size="15" font-weight="800" fill="#0067c5">3×+</text>
+          </svg>
+          <div class="lg">
+            <span><i style="background:#b0c1da"></i>基线能力</span>
+            <span><i style="background:linear-gradient(135deg,#0067c5,#6a5ad4)"></i>9.19.1 目标能力</span>
+          </div>
+          <p class="note">数值为方向性目标示意，实际收益取决于目录规模、协议版本与客户端行为。</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.18s">
+            <h3>技术原理</h3>
+            <div class="li"><b>多线程并行处理</b>：针对文件数较少的目录优化处理路径，此前版本在该场景下受单核 CPU 能力限制。</div>
+            <div class="li"><b>典型触发场景</b>：EDA、影视制作与 AI 训练环境中，数千客户端同时指向同一个小目录执行 readdir / readdir+。</div>
+            <div class="li"><b>协议覆盖</b>：NFS 目录枚举路径，无需客户端改造。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业 IT 的直接影响</h3>
+            <div class="g2" style="gap:6px 16px">
+              <div class="li ok">仿真/训练集群扩容不再受元数据热点制约</div>
+              <div class="li ok">单一源卷即可承载更多计算节点</div>
+              <div class="li ok">减少为绕开瓶颈而部署的 FlexCache</div>
+              <div class="li ok">减少挂载点数量，作业脚本无需改写</div>
+              <div class="li ok">无需按机台/工段分组隔离客户端</div>
+              <div class="li ok">调度器与客户端编排复杂度下降</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel an" style="--d:.3s;margin-top:13px">
+        <h3>与既有方案对比：为什么不是 FlexCache</h3>
+        <div class="split">
+          <div>
+            <div class="flag o" style="margin-bottom:9px">替代方案 · FlexCache 扩散读</div>
+            <div class="li">可提升吞吐、支撑更多客户端</div>
+            <div class="li warn">需要在 ONTAP 与客户端两侧置备与管理挂载</div>
+            <div class="li warn">集群内产生额外空间占用</div>
+            <div class="li warn">需要编排客户端使用不同挂载点</div>
+          </div>
+          <div class="arrowx" style="text-align:center">→</div>
+          <div>
+            <div class="flag" style="margin-bottom:9px">9.19.1 · 原生目录列表优化</div>
+            <div class="li ok">单一命名空间、单一挂载点即可扩展</div>
+            <div class="li ok">零额外容量开销</div>
+            <div class="li ok">无需客户端侧编排</div>
+            <div class="li ok">升级即生效，无新增管理对象</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="an" style="--d:.36s;margin-top:13px">
+        <div class="g4">
+          <div class="vc"><span class="k">AI · 训练</span><div class="t">数据集加载</div>
+            <div class="d">多节点 DataLoader 在同一样本目录并发枚举，读取海量小文件；元数据吞吐决定 GPU 能否喂饱</div></div>
+          <div class="vc"><span class="k">AI · 训练</span><div class="t">断点续训扫描</div>
+            <div class="d">作业重启时扫描 checkpoint 目录定位最新权重；扫描越快，GPU 空转时间越短</div></div>
+          <div class="vc"><span class="k">AI · 推理</span><div class="t">模型仓库拉取</div>
+            <div class="d">产线质检、缺陷识别等边缘推理节点批量拉起时，同时列举模型与配置目录</div></div>
+          <div class="vc"><span class="k">EDA / CAE</span><div class="t">库与工艺文件枚举</div>
+            <div class="d">数千并发作业反复列举标准单元库、PDK 与材料参数目录，是最典型的小目录热点</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · QoS 突发策略 ══════════════════ -->
+  <section class="scene" data-sec="NAS" data-nav="QoS 突发策略">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>NAS 增强 · 02</span></div>
+        <h1>可配置 <span class="g">QoS 突发策略</span></h1>
+        <p class="lead">速率控制型突发：低负载期累积令牌，尖峰期允许可控地超出 QoS 上限，
+          既吸收短时冲击，又保持多租户之间的公平性。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g32">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.12s">
+            <h3>解决的客户问题</h3>
+            <div class="li warn">固定 QoS 上限迫使客户在 <b>过度配置</b> 与 <b>接受不必要限流</b> 之间二选一。</div>
+            <div class="li warn">ONTAP 既有默认突发窗口仅为秒级，无法覆盖需要数十秒乃至数分钟高性能的工作负载。</div>
+            <div class="li warn">结果是虚机初始化延迟、应用重启缓慢、意外超时。</div>
+            <div class="li warn">临时关闭 QoS 会破坏公平性，放大"吵闹邻居"风险。</div>
+          </div>
+          <div class="panel tint an" style="--d:.18s">
+            <h3>突发参数</h3>
+            <div class="tw" style="box-shadow:none">
+              <table class="dt">
+                <tbody>
+                  <tr><td class="h mono">burst-percent</td><td>相对 QoS 上限的突发幅度（百分比）</td></tr>
+                  <tr><td class="h mono">burst-IOPS</td><td>以绝对 IOPS 值定义突发峰值</td></tr>
+                  <tr><td class="h mono">burst-duration</td><td>突发可持续时长，决定令牌银行容量</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="note">QoS 策略与自适应 QoS（Adaptive QoS）策略均支持配置突发行为。</p>
+          </div>
+        </div>
+
+        <div class="viz an" style="--d:.24s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn" id="qosRun">▶ 播放突发场景</button>
+            <button class="btn on" id="qosBurst">突发策略：开</button>
+            <span class="hint" style="margin-left:auto">虚机启动风暴 · IOPS 时序（示意）</span>
+          </div>
+          <svg viewBox="0 0 660 300" id="qosSvg">
+            <defs>
+              <linearGradient id="qFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0067c5" stop-opacity=".28"/>
+                <stop offset="1" stop-color="#0067c5" stop-opacity="0"/></linearGradient>
+              <linearGradient id="bankG" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stop-color="#0e9a62"/><stop offset="1" stop-color="#6ad4a8"/></linearGradient>
+            </defs>
+            <g stroke="#e2e8f4" stroke-width="1">
+              <line x1="56" y1="40" x2="600" y2="40"/><line x1="56" y1="95" x2="600" y2="95"/>
+              <line x1="56" y1="150" x2="600" y2="150"/><line x1="56" y1="205" x2="600" y2="205"/>
+            </g>
+            <!-- 突发天花板 -->
+            <line x1="56" y1="55" x2="600" y2="55" stroke="#6a5ad4" stroke-width="1.6" stroke-dasharray="6 5" opacity=".85"/>
+            <text x="604" y="52" font-size="10" fill="#6a5ad4" font-family="var(--mono)">突发上限</text>
+            <!-- QoS ceiling -->
+            <line x1="56" y1="150" x2="600" y2="150" stroke="#d33a5c" stroke-width="1.8"/>
+            <text x="604" y="147" font-size="10" fill="#d33a5c" font-family="var(--mono)">QoS 上限</text>
+
+            <path id="qosArea" d="" fill="url(#qFill)"/>
+            <path id="qosLine" d="" fill="none" stroke="#0067c5" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+            <path id="qosDemand" d="" fill="none" stroke="#8d97b2" stroke-width="1.6" stroke-dasharray="4 4"/>
+            <circle id="qosHead" cx="56" cy="205" r="4.5" fill="#0067c5" opacity="0"/>
+
+            <line x1="56" y1="205" x2="600" y2="205" stroke="#c9d4e6" stroke-width="1.4"/>
+            <text x="56" y="222" font-size="10" fill="#8d97b2" font-family="var(--mono)">t0</text>
+            <text x="596" y="222" font-size="10" fill="#8d97b2" font-family="var(--mono)" text-anchor="end">t</text>
+
+            <!-- 令牌银行 -->
+            <text x="56" y="252" font-size="11" fill="#5c6a8a">令牌银行（累积的突发额度）</text>
+            <rect x="56" y="260" width="490" height="15" rx="7.5" fill="#e7edf7" stroke="#d5dfee"/>
+            <rect id="bankBar" x="56" y="260" width="0" height="15" rx="7.5" fill="url(#bankG)"/>
+            <text id="bankTxt" x="556" y="272" font-size="11" font-family="var(--mono)" fill="#0e9a62" font-weight="700">0%</text>
+          </svg>
+          <div class="lg">
+            <span><i style="background:#8d97b2"></i>工作负载需求</span>
+            <span><i style="background:#0067c5"></i>实际交付 IOPS</span>
+            <span><i style="background:#d33a5c"></i>QoS 上限</span>
+            <span><i style="background:#0e9a62"></i>令牌银行余额</span>
+          </div>
+          <div id="qosStat" class="note" style="min-height:20px">低负载运行时持续累积令牌；尖峰到来时消耗令牌以超出上限运行。</div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.32s;margin-top:13px">
+        <div class="vc"><span class="k">场景 01</span><div class="t">交接班虚机启动风暴</div>
+          <div class="d">车间数百台工位机 / 虚拟桌面在换班时刻集中上电，避免开机排队影响上工时间</div></div>
+        <div class="vc"><span class="k">场景 02</span><div class="t">MES / ERP 预热</div>
+          <div class="d">系统重启或月结前缓存加载阶段允许短时高 IOPS，缩短业务就绪时间</div></div>
+        <div class="vc"><span class="k">场景 03</span><div class="t">批量下发与归档</div>
+          <div class="d">工艺程序批量下发、当班数据集中归档等突发写入不再被固定上限拖慢</div></div>
+        <div class="vc"><span class="k">价值</span><div class="t">不为峰值买单</div><div class="d">按常态容量配置，用突发覆盖偶发尖峰，降低 TCO</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · SAN 概览 + FC 直连 ══════════════════ -->
+  <section class="scene" data-sec="SAN" data-nav="FC 直连">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#2f6fe0"><i></i><span>SAN 增强 · 01</span></div>
+        <h1>光纤通道<span class="g">直连（Direct-Attach FC）</span></h1>
+        <p class="lead">FC 端口可按端口粒度配置为直连（DA）或组网（FA）模式；每个 DA 端口承载一个 SCSI 或 NVMe LIF，
+          主机 HBA 直插阵列，免去 FC 交换机。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn" data-fc="fab">传统 FC 组网</button>
+            <button class="btn on" data-fc="da">9.19.1 直连拓扑</button>
+          </div>
+          <svg viewBox="0 0 620 270" id="fcSvg">
+            <!-- 主机 -->
+            <g id="fcHosts">
+              <rect x="20" y="30" width="98" height="42" rx="9" fill="#fff" stroke="#c9d4e6"/>
+              <text x="69" y="56" text-anchor="middle" font-size="12" fill="#152341" font-weight="650">主机 A</text>
+              <rect x="20" y="112" width="98" height="42" rx="9" fill="#fff" stroke="#c9d4e6"/>
+              <text x="69" y="138" text-anchor="middle" font-size="12" fill="#152341" font-weight="650">主机 B</text>
+              <rect x="20" y="194" width="98" height="42" rx="9" fill="#fff" stroke="#c9d4e6"/>
+              <text x="69" y="220" text-anchor="middle" font-size="12" fill="#152341" font-weight="650">主机 C</text>
+            </g>
+            <!-- 交换机 -->
+            <g id="fcSw" opacity="1">
+              <rect x="248" y="88" width="120" height="90" rx="11" fill="#fdf3e6" stroke="#e5b877"/>
+              <text x="308" y="126" text-anchor="middle" font-size="12.5" fill="#a4671a" font-weight="750">FC 交换机</text>
+              <text x="308" y="146" text-anchor="middle" font-size="10.5" fill="#c08c3c" font-family="var(--mono)">Zoning / 许可 / 光模块</text>
+            </g>
+            <!-- 阵列 -->
+            <rect x="470" y="88" width="130" height="90" rx="11" fill="#eaf2fd" stroke="#93b6e4"/>
+            <text x="535" y="122" text-anchor="middle" font-size="13" fill="#123a7a" font-weight="780">ONTAP</text>
+            <text x="535" y="142" text-anchor="middle" font-size="10.5" fill="#2f6fe0" font-family="var(--mono)">AFF / ASA</text>
+            <text x="535" y="160" text-anchor="middle" font-size="10" fill="#5c6a8a" font-family="var(--mono)">FC 端口 DA | FA</text>
+            <!-- 连线 -->
+            <g id="fcL1" stroke="#9db3d4" stroke-width="2" fill="none">
+              <path d="M118 51 C 190 51, 200 110, 248 118"/>
+              <path d="M118 133 C 190 133, 200 133, 248 133"/>
+              <path d="M118 215 C 190 215, 200 155, 248 148"/>
+              <path d="M368 118 L 470 118"/><path d="M368 148 L 470 148"/>
+            </g>
+            <g id="fcL2" stroke="#0067c5" stroke-width="2.4" fill="none" opacity="0">
+              <path d="M118 51 C 280 51, 330 100, 470 108"/>
+              <path d="M118 133 C 280 133, 330 133, 470 133"/>
+              <path d="M118 215 C 280 215, 330 165, 470 158"/>
+            </g>
+            <text id="fcCap" x="308" y="252" text-anchor="middle" font-size="12" fill="#5c6a8a">主机 → 交换机 → 阵列：更多组件、更多配置、更高成本</text>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.18s">
+            <h3>特性要点</h3>
+            <div class="li"><b>端口级模式</b>：每个 FC 端口独立配置为 DA 或 FA，同一控制器可混合使用。</div>
+            <div class="li"><b>LIF 约束</b>：每个 DA 端口支持单个 SCSI 或 NVMe LIF。</div>
+            <div class="li"><b>数据路径效率</b>：相较交换组网，减少一跳，时延更低、吞吐更优。</div>
+            <div class="li"><b>适用场景</b>：中小规模、分厂与分支（ROBO）、边缘与部门级部署——主机数量有限、扩展需求可预期。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业场景的价值</h3>
+            <div class="li ok"><b>分厂与车间机房</b>：无需为 2–4 台 MES / SCADA 服务器单独采购和维护 FC 交换机</div>
+            <div class="li ok"><b>产线可靠性</b>：更少线缆与组件意味着更少故障点，贴近产线的机柜维护更简单</div>
+            <div class="li ok"><b>投资结构</b>：省去交换机、端口许可与光模块，预算可回到存储与算力本身</div>
+            <div class="li ok"><b>交付周期</b>：新厂区、新产线上线时 SAN 部署环节大幅缩短</div>
+          </div>
+          <div class="panel an" style="--d:.3s">
+            <h3>选型说明</h3>
+            <p style="font-size:12.8px;color:var(--dim)">直连是在既有 FC 体系内做减法：继续使用 FC 协议与运维习惯，
+            但不承担整套 Fabric 的成本与管理负担。适合主机数量有限、扩展需求可预期的场景——
+            分厂、车间边缘机房、测试与试制环境、专用应用栈。
+            当主机规模持续增长或需要复杂 Zoning 时，仍应选择交换组网；两种模式可在同一控制器上按端口混合使用。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 对称主动-主动多路径 ══════════════════ -->
+  <section class="scene" data-sec="SAN" data-nav="对称 A/A 多路径">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#2f6fe0"><i></i><span>SAN 增强 · 02</span></div>
+        <h1>AFF <span class="g">对称主动-主动多路径</span></h1>
+        <p class="lead">将 ASA 平台已验证的对称 A/A 行为带入统一 AFF 产品线：双控制器同时以"主动/优化"状态处理 I/O，
+          路径切换近乎瞬时，无过渡延迟。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn dg" id="aaFail">⚡ 注入节点故障</button>
+            <button class="btn" id="aaHeal">↺ 恢复</button>
+            <span class="hint" style="margin-left:auto" id="aaState">状态：双控制器均为 主动/优化</span>
+          </div>
+          <svg viewBox="0 0 620 260" id="aaSvg">
+            <rect x="240" y="20" width="140" height="46" rx="10" fill="#fff" stroke="#c9d4e6"/>
+            <text x="310" y="48" text-anchor="middle" font-size="12.5" font-weight="700" fill="#152341">主机 · 多路径</text>
+
+            <g id="aaP1" stroke="#0e9a62" stroke-width="2.8" fill="none"><path d="M282 66 L 175 140"/></g>
+            <g id="aaP2" stroke="#0e9a62" stroke-width="2.8" fill="none"><path d="M338 66 L 445 140"/></g>
+            <text id="aaT1" x="200" y="106" font-size="10.5" font-family="var(--mono)" fill="#0e9a62">主动/优化</text>
+            <text id="aaT2" x="360" y="106" font-size="10.5" font-family="var(--mono)" fill="#0e9a62">主动/优化</text>
+
+            <g id="aaN1">
+              <rect x="90" y="140" width="170" height="72" rx="12" fill="#eaf2fd" stroke="#93b6e4"/>
+              <text x="175" y="170" text-anchor="middle" font-size="13" font-weight="750" fill="#123a7a">控制器 A</text>
+              <text x="175" y="190" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#2f6fe0">SCSI LIF · NVMe LIF</text>
+            </g>
+            <g id="aaN2">
+              <rect x="360" y="140" width="170" height="72" rx="12" fill="#eaf2fd" stroke="#93b6e4"/>
+              <text x="445" y="170" text-anchor="middle" font-size="13" font-weight="750" fill="#123a7a">控制器 B</text>
+              <text x="445" y="190" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#2f6fe0">SCSI LIF · NVMe LIF</text>
+            </g>
+            <path d="M260 176 L 360 176" stroke="#c9d4e6" stroke-width="2" stroke-dasharray="5 4"/>
+            <text x="310" y="170" text-anchor="middle" font-size="10" fill="#8d97b2" font-family="var(--mono)">HA</text>
+            <text id="aaMsg" x="310" y="242" text-anchor="middle" font-size="12" fill="#5c6a8a">两条路径并行承载 I/O，聚合吞吐与负载均衡同时达成</text>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.18s">
+            <h3>特性要点</h3>
+            <div class="li"><b>SCSI 与 NVMe 统一</b>：两种块协议均以主动/优化状态呈现，新 I/O 近乎瞬时恢复，无过渡等待。</div>
+            <div class="li"><b>双控制器同时处理</b>：提升聚合吞吐，并在所有路径间均衡流量。</div>
+            <div class="li"><b>SVM 级作用域</b>：按 SVM 启用，可整机启用、可仅用于指定工作负载，或与对称主动-被动混合部署。</div>
+            <div class="li"><b>新建 SVM 自动优化</b>：默认完成路径优化，减少人工干预。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业场景的价值</h3>
+            <div class="li ok"><b>MES / SCADA 不断线</b>：控制器维护或故障时 I/O 不出现停顿，避免工单写入超时与产线报警</div>
+            <div class="li ok"><b>ERP 与数据库</b>：路径切换无过渡延迟，月结、批次追溯等长事务不因存储抖动而回滚</div>
+            <div class="li ok"><b>计划内维护</b>：固件升级、扩容可安排在生产班次内进行，不必等停产窗口</div>
+            <div class="li ok"><b>统一运维</b>：AFF 与 ASA 行为一致，多厂区存储团队只需一套操作规范</div>
+          </div>
+          <div class="panel an" style="--d:.3s">
+            <h3>与主机多路径的分工</h3>
+            <p style="font-size:12.8px;color:var(--dim)">主机侧多路径软件负责在已知路径间做选择，但无法感知 LIF 归属、优选节点、
+            本地聚合与内部路径资格——这些信息只存在于 ONTAP 内部。
+            对称 A/A 让两个控制器都处于完全主动角色，由存储侧消除主机无法掩盖的切换延迟；
+            两者是互补关系，主机多路径配置保持不变即可。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · 组合 LIF 故障转移 ══════════════════ -->
+  <section class="scene" data-sec="SAN" data-nav="组合 LIF 故障转移">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#2f6fe0"><i></i><span>SAN 增强 · 03</span></div>
+        <h1>组合 <span class="g">LIF 自动故障转移</span></h1>
+        <p class="lead">ASA r2 在既有 SCSI LIF 故障转移基础上新增 NVMe LIF 故障转移，并将两者合并为默认启用的统一自动切换机制。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="steps an" style="--d:.12s" id="lifSteps">
+        <div class="st on" data-lifstep="0"><div class="n">STEP 01</div><div class="l">正常运行</div></div>
+        <div class="st" data-lifstep="1"><div class="n">STEP 02</div><div class="l">端口/节点故障</div></div>
+        <div class="st" data-lifstep="2"><div class="n">STEP 03</div><div class="l">自动迁移 LIF</div></div>
+        <div class="st" data-lifstep="3"><div class="n">STEP 04</div><div class="l">自愈回归 Home</div></div>
+      </div>
+      <div class="stbody an" style="--d:.16s" id="lifBody"></div>
+
+      <div class="g3 an" style="--d:.22s;margin-top:13px">
+        <div class="panel">
+          <h3>能力要点</h3>
+          <div class="li"><b>自动 LIF 迁移</b>：节点、端口或链路故障时，始终由存活端口承载 LIF，保持 I/O 在线。</div>
+          <div class="li"><b>NVMe + SCSI 组合</b>：默认启用，消除按协议区分的故障转移行为差异。</div>
+          <div class="li"><b>自愈逻辑</b>：系统恢复健康后 LIF 自动回归 Home 节点/端口，维持长期性能均衡。</div>
+          <div class="li"><b>广播域校验</b>：仅迁移至广播域内的有效目标，避免误路由。</div>
+        </div>
+        <div class="panel tint">
+          <h3>对制造业场景的价值</h3>
+          <div class="li ok"><b>无人值守站点</b>：分厂夜班或无驻场 IT 时，端口/链路故障自动收敛，无需现场介入</div>
+          <div class="li ok"><b>混合协议环境</b>：SCSI 与 NVMe 负载并存的机房，故障表现一致，排障判断不再分协议</div>
+          <div class="li ok"><b>维护窗口更灵活</b>：自愈回归 Home 后性能自动复位，减少维护后的人工核对</div>
+          <div class="hr" style="margin:14px 0"></div>
+          <p style="font-size:12.6px;color:var(--dim)">在混合协议、混合 Fabric 或多路径配置并存的环境中，
+            协议专属的故障转移逻辑往往造成韧性不均与排障成本上升——组合切换正是为此而设计。</p>
+        </div>
+        <div class="panel">
+          <h3>路线图定位</h3>
+          <p style="font-size:12.8px;color:var(--dim)">组合 NVMe + SCSI LIF 故障转移是 NetApp 在 ASA r2 平台持续投入的一部分：
+            让高可用变得<b style="color:var(--ink)">简单、自动、自愈</b>。它与 AFF 侧的对称主动-主动能力共同构成
+            跨 ASA / AFF 一致的块协议运维体验，为关键业务负载提供统一的高可用基础。</p>
+          <div class="flag" style="margin-top:12px">与"对称 A/A 多路径"配合使用，构成完整的块存储 HA 组合</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · iSCSI FLI ══════════════════ -->
+  <section class="scene" data-sec="SAN" data-nav="iSCSI 外部 LUN 导入">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#2f6fe0"><i></i><span>SAN 增强 · 04</span></div>
+        <h1>iSCSI <span class="g">外部 LUN 导入（FLI）</span></h1>
+        <p class="lead">外部 LUN 导入不再依赖 FC 基础设施：通过 iSCSI 即可将第三方阵列的 LUN 块级迁移进 ONTAP，
+          支持在线与离线两种工作流。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.12s">
+            <h3>特性要点</h3>
+            <div class="li"><b>在线 / 离线工作流</b>：按业务窗口选择，最大限度降低中断。</div>
+            <div class="li"><b>原生支持主流外部阵列</b>：EMC、Hitachi、HP、IBM 等，导入至 AFF 与 ASA，链路可选 iSCSI 或 FC。</div>
+            <div class="li"><b>块级高效迁移</b>：初始拷贝期间源 LUN 保持在线；最终切换仅为一次短暂的主机重映射。</div>
+            <div class="li"><b>操作流程一致</b>：CLI 完成 initiator 配置、会话建立与导入控制，与既有 FC FLI 流程完全对齐。</div>
+          </div>
+          <div class="panel tint an" style="--d:.18s">
+            <h3>对制造业场景的价值</h3>
+            <div class="g2" style="gap:6px 16px">
+              <div class="li ok"><b>停机窗口可控</b>：ERP、MES 数据库仅在最终切换时短暂中断，可放进一次换班间隙</div>
+              <div class="li ok"><b>无需 FC 改造</b>：以太网组网的车间机房可直接迁移，不必为换代先建 FC 网络</div>
+              <div class="li ok"><b>本地团队可执行</b>：分厂存储管理员即可操作，减少对外部服务与差旅的依赖</div>
+              <div class="li ok"><b>历史数据完整搬迁</b>：批次追溯、质量档案等数百 LUN、PB 级数据可并行迁移</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="viz an" style="--d:.24s">
+          <div class="btnrow" style="margin-bottom:14px">
+            <button class="btn" id="fliRun">▶ 演示迁移流程</button>
+            <span class="hint" style="margin-left:auto" id="fliState">就绪</span>
+          </div>
+          <svg viewBox="0 0 600 250" id="fliSvg">
+            <rect x="20" y="94" width="130" height="66" rx="11" fill="#f7f2ec" stroke="#dcc6a5"/>
+            <text x="85" y="122" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7a5a25">第三方阵列</text>
+            <text x="85" y="141" text-anchor="middle" font-size="10" font-family="var(--mono)" fill="#a3854f">EMC / HDS / HP / IBM</text>
+
+            <rect x="450" y="94" width="130" height="66" rx="11" fill="#eaf2fd" stroke="#93b6e4"/>
+            <text x="515" y="122" text-anchor="middle" font-size="12.5" font-weight="750" fill="#123a7a">ONTAP</text>
+            <text x="515" y="141" text-anchor="middle" font-size="10" font-family="var(--mono)" fill="#2f6fe0">AFF / ASA</text>
+
+            <rect x="245" y="18" width="110" height="44" rx="10" fill="#fff" stroke="#c9d4e6"/>
+            <text x="300" y="45" text-anchor="middle" font-size="12" font-weight="650" fill="#152341">应用主机</text>
+
+            <path id="fliHostSrc" d="M262 62 L 130 94" stroke="#0e9a62" stroke-width="2.6" fill="none"/>
+            <path id="fliHostDst" d="M338 62 L 470 94" stroke="#c9d4e6" stroke-width="2.6" fill="none" stroke-dasharray="5 5"/>
+
+            <rect x="160" y="118" width="280" height="18" rx="9" fill="#e7edf7" stroke="#d5dfee"/>
+            <rect id="fliBar" x="160" y="118" width="0" height="18" rx="9" fill="#0067c5"/>
+            <text x="300" y="110" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#5c6a8a">iSCSI 块级拷贝</text>
+            <text id="fliPct" x="300" y="132" text-anchor="middle" font-size="11" font-family="var(--mono)" font-weight="700" fill="#fff">0%</text>
+
+            <text id="fliMsg" x="300" y="196" text-anchor="middle" font-size="12.5" fill="#5c6a8a">点击"演示迁移流程"开始</text>
+            <text id="fliSub" x="300" y="218" text-anchor="middle" font-size="11" fill="#8d97b2">源 LUN 在初始拷贝期间保持在线</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="panel an" style="--d:.32s;margin-top:13px">
+        <h3>与替代方案对比</h3>
+        <div class="tw" style="box-shadow:none">
+          <table class="dt">
+            <thead><tr><th style="width:210px">方案</th><th>优势</th><th>代价</th></tr></thead>
+            <tbody>
+              <tr><td class="h">第三方迁移工具/设备</td><td>面向特定平台的自动化，图形化流程</td><td>许可与服务成本高；常需主机代理与停机窗口；跨厂商灵活性有限</td></tr>
+              <tr><td class="h">主机侧拷贝（LVM / dd 等）</td><td>无需专用硬件，管理员完全可控</td><td>切换停机时间长；消耗主机 CPU 与网络；人工协调风险高；大数据集速度慢</td></tr>
+              <tr><td class="h">整体新建 + 备份恢复</td><td>环境干净，适合重新架构</td><td>最慢的选项；应用中断窗口长；不保留块布局与性能特征</td></tr>
+              <tr style="background:rgba(0,103,197,.045)"><td class="h" style="color:var(--blue)">iSCSI FLI（9.19.1）</td><td class="h" style="font-weight:600">原生块级流水线、无额外许可、跨厂商结果一致、与 ONTAP 置备逻辑对齐</td><td>需规划切换窗口用于最终同步与主机重映射</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · S3 条件写入与删除 ══════════════════ -->
+  <section class="scene" data-sec="S3" data-nav="S3 条件写入/删除">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>S3 增强 · 01</span></div>
+        <h1>S3 <span class="g">条件写入与条件删除</span></h1>
+        <p class="lead">自 ONTAP 9.19.1 起，ONTAP S3 支持条件写入与条件删除的强制执行，
+          为对象提供防覆盖、防误删的原子性保障。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <h3 style="font-size:14px;font-weight:750;margin-bottom:12px">交互演练：条件请求会怎样响应？</h3>
+          <div class="btnrow" style="margin-bottom:10px">
+            <span class="hint" style="width:74px">对象状态</span>
+            <button class="btn on" data-s3obj="none">对象不存在</button>
+            <button class="btn" data-s3obj="etagA">已存在 · ETag "a1b2"</button>
+          </div>
+          <div class="btnrow" style="margin-bottom:10px">
+            <span class="hint" style="width:74px">条件头</span>
+            <button class="btn on" data-s3hdr="inm">If-None-Match: *</button>
+            <button class="btn" data-s3hdr="imA">If-Match: "a1b2"</button>
+            <button class="btn" data-s3hdr="imB">If-Match: "9f9f"</button>
+          </div>
+          <div class="btnrow" style="margin-bottom:14px">
+            <span class="hint" style="width:74px">操作</span>
+            <button class="btn on" data-s3op="put">PutObject</button>
+            <button class="btn" data-s3op="del">DeleteObject</button>
+          </div>
+          <div class="code" id="s3req"></div>
+          <div class="code" id="s3res" style="margin-top:10px"></div>
+          <div id="s3note" class="note"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.18s">
+            <h3>支持范围</h3>
+            <div class="li"><b>条件写入</b>（<span class="mono">If-None-Match</span>、<span class="mono">If-Match</span>）
+              <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+                <span class="tag b">PutObject</span><span class="tag b">CopyObject</span><span class="tag b">CompleteMultipartUpload</span>
+              </div>
+            </div>
+            <div class="li" style="margin-top:12px"><b>条件删除</b>（<span class="mono">If-Match</span>）</div>
+            <div class="li"><b>模式</b>：支持 write-around 与 write-back 两种写入模式。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>前置条件</h3>
+            <div class="li warn">条件操作仅在请求使用 <b>AWS_V4 签名方式</b> 且通过 <b>TLS 连接</b> 时生效。</div>
+            <p class="note">未满足上述条件的请求将按普通写入/删除语义处理，不做条件校验。</p>
+          </div>
+          <div class="panel an" style="--d:.3s">
+            <h3>典型用途</h3>
+            <div class="li ok"><b>"仅当不存在时创建"</b>：分布式任务抢占对象锁，避免竞态覆盖</div>
+            <div class="li ok"><b>乐观并发控制</b>：以 ETag 作为版本令牌，写入前校验未被他人修改</div>
+            <div class="li ok"><b>安全删除</b>：只删除自己读到的那个版本，杜绝误删新数据</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · S3 双密钥 + NVFail ══════════════════ -->
+  <section class="scene" data-sec="S3" data-nav="双密钥 / NVFail">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>S3 增强 · 02 / 03</span></div>
+        <h1>双访问密钥 <span class="g">与 NVFail 支持</span></h1>
+        <p class="lead">一项面向密钥轮换的可用性改进，一项面向多协议卷的数据一致性保护。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g2">
+        <div class="panel an" style="--d:.12s">
+          <h3>单用户双访问密钥 <span class="tag new">NEW</span></h3>
+          <div class="li">创建 S3 用户时自动生成访问密钥与密钥对。</div>
+          <div class="li"><b>9.19.1 起</b>：可为同一 S3 用户生成<b>第二把访问密钥</b>，当原密钥过期时仍可持续访问 S3 资源。</div>
+          <div class="li ok">密钥轮换从"先断后立"变为"先立后断"，消除轮换窗口内的服务中断。</div>
+
+          <div style="margin-top:13px">
+            <div class="btnrow" style="margin-bottom:10px">
+              <button class="btn on" data-key="gui">System Manager</button>
+              <button class="btn" data-key="cli">CLI</button>
+            </div>
+            <div id="keyGui">
+              <div class="code">集群 <span class="c">/</span> Storage VM <span class="c">/</span> S3 磁贴设置 <span class="c">/</span> 用户设置 <span class="c">/</span> 添加另一个密钥</div>
+            </div>
+            <div id="keyCli" style="display:none">
+              <div class="code"><span class="k">vserver object-store-server user regenerate-keys</span>
+  <span class="p">-vserver</span> <span class="s">&lt;svm_name&gt;</span>
+  <span class="p">-user</span>    <span class="s">&lt;user_name&gt;</span>
+  <span class="p">-key-id</span>  <span class="s">2</span>
+  <span class="p">-key-time-to-live</span> <span class="s">0</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel an" style="--d:.18s">
+          <h3>NVFail 支持多协议 NAS/S3 卷 <span class="tag new">NEW</span></h3>
+          <div class="li">NVFail（非易失性内存故障保护）现已支持 <b>多协议 NAS/S3 卷</b>。</div>
+          <div class="li"><span class="mono">volume modify</span> 命令的 <span class="mono">-nvfail</span> 参数使 ONTAP 能够在
+            <b>系统启动时</b> 或 <b>切换（switchover）操作之后</b> 检测 NVRAM 不一致。</div>
+          <div class="li warn">检测到不一致时，ONTAP 会阻止并告警数据访问与修改，直至该卷完成人工恢复——
+            以可控的短暂不可用换取数据正确性。</div>
+
+          <div class="code" style="margin-top:14px"><span class="k">volume modify</span> <span class="p">-vserver</span> <span class="s">&lt;svm&gt;</span> <span class="p">-volume</span> <span class="s">&lt;vol&gt;</span> <span class="p">-nvfail</span> <span class="s">on</span></div>
+
+          <div class="flag o" style="margin-top:14px">适用场景：对写入顺序与一致性高度敏感的多协议数据集（如同时经 NAS 与 S3 访问的数据湖）</div>
+        </div>
+      </div>
+
+      <div class="g3 an" style="--d:.26s;margin-top:13px">
+        <div class="vc"><span class="k">运维视角</span><div class="t">密钥轮换零中断</div><div class="d">第二把密钥可提前下发给应用，验证通过后再回收旧密钥</div></div>
+        <div class="vc"><span class="k">合规视角</span><div class="t">满足密钥有效期策略</div><div class="d"><span class="mono">-key-time-to-live</span> 可为每把密钥独立设定生命周期</div></div>
+        <div class="vc"><span class="k">数据视角</span><div class="t">切换后一致性校验</div><div class="d">NVFail 让"疑似不一致"变为显式告警，而非静默的数据损坏</div></div>
+      </div>
+
+      <div class="panel an" style="--d:.3s;margin-top:13px">
+        <h3>双密钥带来的轮换时序变化</h3>
+        <div class="split">
+          <div>
+            <div class="flag r" style="margin-bottom:10px">此前 · 单密钥「先断后立」</div>
+            <div class="li warn"><b>T0</b>　重新生成密钥，旧密钥立即失效</div>
+            <div class="li warn"><b>T0+</b>　所有应用配置未更新前处于访问中断状态</div>
+            <div class="li warn"><b>T1</b>　逐个更新应用配置，中断窗口 = 更新耗时</div>
+            <div class="li warn"><b>风险</b>　任一应用遗漏即造成业务失败，回退困难</div>
+          </div>
+          <div class="arrowx" style="text-align:center">→</div>
+          <div>
+            <div class="flag" style="margin-bottom:10px">9.19.1 · 双密钥「先立后断」</div>
+            <div class="li ok"><b>T0</b>　生成第二把密钥，两把密钥同时有效</div>
+            <div class="li ok"><b>T1</b>　按批次将应用切换至新密钥，业务无感知</div>
+            <div class="li ok"><b>T2</b>　确认无流量使用旧密钥后再回收</div>
+            <div class="li ok"><b>收益</b>　中断窗口归零，可随时回退至旧密钥</div>
+          </div>
+        </div>
+        <p class="note">建议在密钥生命周期（<span class="mono">-key-time-to-live</span>）到期前预留足够的重叠期，用于灰度切换与验证。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · SM-as for NAS ══════════════════ -->
+  <section class="scene" data-sec="数据保护" data-nav="SM-as 支持 NAS">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>数据保护 · 01</span></div>
+        <h1>SnapMirror active sync <span class="g">支持 NAS</span></h1>
+        <p class="lead">SM-as 成为统一的业务连续性方案：同一集群内，SAN 走对称主动-主动，NAS 走非对称主动-被动，
+          均提供零 RPO 与透明故障切换。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn dg" id="smFail">⚡ 主站点故障</button>
+            <button class="btn" id="smHeal">↺ 恢复正常</button>
+            <span class="hint" style="margin-left:auto" id="smState">状态：正常运行 · 零 RPO 同步</span>
+          </div>
+          <svg viewBox="0 0 640 242" id="smSvg">
+            <rect x="255" y="14" width="130" height="42" rx="10" fill="#fff" stroke="#c9d4e6"/>
+            <text x="320" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#152341">NFS / SMB 客户端</text>
+
+            <path id="smPathA" d="M290 56 L 165 112" stroke="#0e9a62" stroke-width="3" fill="none"/>
+            <path id="smPathB" d="M350 56 L 475 112" stroke="#c9d4e6" stroke-width="2.4" fill="none" stroke-dasharray="6 5"/>
+            <text id="smLblA" x="176" y="88" font-size="10.5" font-family="var(--mono)" fill="#0e9a62">Active</text>
+            <text id="smLblB" x="432" y="88" font-size="10.5" font-family="var(--mono)" fill="#8d97b2">Passive</text>
+
+            <g id="smSiteA">
+              <rect x="60" y="112" width="210" height="86" rx="13" fill="#eaf2fd" stroke="#93b6e4"/>
+              <text x="165" y="142" text-anchor="middle" font-size="13" font-weight="760" fill="#123a7a">主数据中心</text>
+              <text x="165" y="162" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#2f6fe0">AFF 集群 · SVM</text>
+              <text x="165" y="182" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#5c6a8a">NAS 卷 + SAN LUN</text>
+            </g>
+            <g id="smSiteB">
+              <rect x="370" y="112" width="210" height="86" rx="13" fill="#f4f6fb" stroke="#c9d4e6"/>
+              <text x="475" y="142" text-anchor="middle" font-size="13" font-weight="760" fill="#123a7a">灾备数据中心</text>
+              <text x="475" y="162" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#2f6fe0">AFF 集群 · SVM</text>
+              <text x="475" y="182" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#5c6a8a">NAS 卷 + SAN LUN</text>
+            </g>
+
+            <path id="smRep" d="M270 155 L 370 155" stroke="#6a5ad4" stroke-width="2.6" fill="none"/>
+            <text x="320" y="148" text-anchor="middle" font-size="10" font-family="var(--mono)" fill="#6a5ad4">同步复制 · IP</text>
+            <text id="smMsg" x="320" y="216" text-anchor="middle" font-size="12.5" fill="#5c6a8a">客户端访问主站点，数据同步至灾备站点，RPO = 0</text>
+            <text id="smMsg2" x="320" y="234" text-anchor="middle" font-size="11" fill="#8d97b2">CA 共享在切换过程中保持无中断</text>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.18s">
+            <h3>特性要点</h3>
+            <div class="li"><b>应用级粒度</b>：按应用而非按整机保护 NAS 业务连续性。</div>
+            <div class="li"><b>统一集群模型</b>：NAS 非对称主动-被动 + SAN 对称主动-主动，同一 AFF 集群内并存。</div>
+            <div class="li"><b>协议覆盖</b>：支持 NFS 与 SMB，包含 CA（持续可用）共享的无中断故障切换。</div>
+            <div class="li"><b>零 RPO 透明切换</b>：应用无感知，无需重挂载或重启。</div>
+            <div class="li"><b>纯 IP 复制</b>：无需专用硬件，可基于既有 AFF 集群部署。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>解决的客户难题</h3>
+            <div class="li"><b>降低 TCO、简化部署</b>：此前同时保护 SAN 与 NAS 需要两套方案——SAN 用 SM-as、NAS 依赖 MetroCluster；现在一套 SM-as 即可覆盖。</div>
+            <div class="li"><b>部署灵活性</b>：客户需要的是统一的、应用级的细粒度保护，而 MCC 是"全有或全无"的基础设施级方案。</div>
+            <div class="li"><b>迁移路径</b>：从 MCC-FC 迁出的客户此前缺少统一保护的业务连续性方案。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel an" style="--d:.32s;margin-top:13px">
+        <h3>SM-as 与 MetroCluster 的定位差异</h3>
+        <div class="tw" style="box-shadow:none">
+          <table class="dt">
+            <thead><tr><th style="width:170px">维度</th><th>SnapMirror active sync（9.19.1）</th><th>MetroCluster</th></tr></thead>
+            <tbody>
+              <tr><td class="h">保护层级</td><td>应用级 / 卷级 · 细粒度</td><td>基础设施级 · 整集群</td></tr>
+              <tr><td class="h">SAN 模式</td><td>对称主动-主动</td><td>主动-待机</td></tr>
+              <tr><td class="h">NAS 模式</td><td>非对称主动-被动（本次新增）</td><td>主动-待机</td></tr>
+              <tr><td class="h">硬件要求</td><td>IP 复制，复用既有 AFF 集群</td><td>专用互联架构</td></tr>
+              <tr><td class="h">适用取向</td><td>按业务重要性选择性保护</td><td>整站点级容灾</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">两者均提供零 RPO；差异在于保护粒度、访问模式与基础设施要求，可按业务分层组合使用。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · SM-as AIX ══════════════════ -->
+  <section class="scene" data-sec="数据保护" data-nav="AIX 透明切换">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>数据保护 · 02</span></div>
+        <h1>SM-as <span class="g">面向 AIX 的透明应用切换</span></h1>
+        <p class="lead">自 9.19.1 起，SnapMirror active sync 支持 AIX 工作负载的无中断故障切换，
+          为 ASA r2 与 AFF Unified 块存储组合原生覆盖 AIX 关键应用。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g3">
+        <div class="panel an" style="--d:.12s">
+          <h3>能力要点</h3>
+          <div class="li"><b>透明应用切换（TAF）</b>：AIX 工作负载获得主动-主动访问，零 RPO / 零 RTO。</div>
+          <div class="li"><b>跨集群同步复制</b>：在故障域之间提供持续可用性与容灾能力。</div>
+          <div class="li"><b>无中断运维</b>：升级、硬件更新与站点维护不影响应用。</div>
+        </div>
+        <div class="panel tint an" style="--d:.18s">
+          <h3>对制造业场景的价值</h3>
+          <div class="li ok"><b>核心系统不停机</b>：运行在 AIX 上的 ERP、MES 与批次追溯系统跨站点切换时应用无感知</div>
+          <div class="li ok"><b>零 RPO</b>：工单、批号、质检结论等不可重建的数据不丢失</div>
+          <div class="li ok"><b>老系统平滑延寿</b>：无需改造 AIX 应用即可获得双活级保护</div>
+          <div class="hr" style="margin:12px 0"></div>
+          <p style="font-size:12.6px;color:var(--dim)">制造业中大量核心事务系统仍运行在 AIX 上；
+            此前保护这类负载往往需要复杂的变通方案，本次提供了原生路径。</p>
+        </div>
+        <div class="panel an" style="--d:.24s">
+          <h3>部署前提 <span class="tag warn">重要</span></h3>
+          <div class="li warn">在使用 SM-as 保护 LUN 之前，必须先将该 LUN 的 <b>访问模式（access mode）设置为 <span class="mono">Local</span></b>，
+            否则无法实现透明切换。</div>
+          <div class="li">访问模式可通过 API、CLI 或 System Manager 修改。</div>
+          <div class="li warn">当前仅支持采用<b>对称主动-主动配置的 2 节点集群</b>；4 节点支持为 AIX 的路线图项。</div>
+        </div>
+      </div>
+
+      <div class="panel an" style="--d:.3s;margin-top:13px">
+        <h3>工作机制</h3>
+        <div class="steps" style="margin-bottom:0">
+          <div class="st" style="cursor:default"><div class="n">01</div><div class="l">双活访问</div>
+            <div style="font-size:11.8px;color:var(--dim);margin-top:6px">两个集群间以同步模式运行 SM-as，AIX 主机可经由两个站点访问 LUN</div></div>
+          <div class="st" style="cursor:default"><div class="n">02</div><div class="l">零 RPO 同步</div>
+            <div style="font-size:11.8px;color:var(--dim);margin-top:6px">ONTAP 保持两侧数据完全一致，写入确认前完成双写</div></div>
+          <div class="st" style="cursor:default"><div class="n">03</div><div class="l">透明切换</div>
+            <div style="font-size:11.8px;color:var(--dim);margin-top:6px">节点、端口或整站点不可用时，I/O 无中断地转移至存活集群</div></div>
+          <div class="st" style="cursor:default"><div class="n">04</div><div class="l">自动重同步</div>
+            <div style="font-size:11.8px;color:var(--dim);margin-top:6px">故障排除后自动重新同步，恢复双节点/双站点常态行为</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · SM-C + SM-S ══════════════════ -->
+  <section class="scene" data-sec="数据保护" data-nav="SM-C / SM-S 增强">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>数据保护 · 03 / 04 / 05</span></div>
+        <h1>SnapMirror Cloud 与 <span class="g">同步复制增强</span></h1>
+        <p class="lead">云端备份目标规模提升 16 倍，同步复制补齐防篡改快照与计划快照能力。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="panel an" style="--d:.12s">
+          <h3>SnapMirror Cloud 桶上限提升至 100</h3>
+          <div class="split" style="margin:6px 0 16px">
+            <div class="kpi" style="text-align:center"><b style="color:var(--faint)">6</b><span>9.18.1 及此前 · 每集群 S3 桶上限</span></div>
+            <div class="arrowx" style="text-align:center">→</div>
+            <div class="kpi g" style="text-align:center"><b>100</b><span>9.19.1 · 每集群 S3 桶上限</span></div>
+          </div>
+          <div class="li">该限制适用于 ONTAP 集群上<b>所有 SnapMirror Cloud 对象存储端点</b>配置的对象存储总数。</div>
+          <div class="li warn"><b>使用超过 6 个桶时</b>，建议对支持的提供商采用 <b>virtual-hosted-style URL</b> 配置，
+            以获得可扩展的对象存储寻址、规避底层限制。</div>
+          <div style="margin:10px 0 0 19px;display:flex;gap:6px;flex-wrap:wrap">
+            <span class="tag n">AWS S3</span><span class="tag n">阿里云</span><span class="tag n">StorageGRID</span>
+            <span class="tag n">Google Cloud Storage</span><span class="tag n">IBM COS</span><span class="tag n">ONTAP S3</span>
+            <span class="tag n">其他 S3 兼容</span>
+          </div>
+          <div class="li" style="margin-top:12px"><b>按需恢复（On-demand restore）</b>默认启用。</div>
+          <div class="li warn">并发恢复任务较多时，读取时延可能升高——大规模恢复需做并发规划。</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel tint an" style="--d:.18s">
+            <h3>SM-S 支持防篡改快照（TPS）</h3>
+            <div class="li">SnapMirror synchronous 现支持<b>防篡改快照</b>，同步复制的数据集同样获得不可删除、不可修改的恢复点。</div>
+            <div class="li ok">零 RPO 复制 + 不可篡改快照 = 对抗勒索软件的双层防线</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>SM-S 支持计划快照</h3>
+            <div class="li">SnapMirror synchronous 现支持<b>按计划创建快照</b>，与常规 SnapMirror 的快照策略模型对齐。</div>
+            <div class="li ok">同步保护的卷可继承既有快照策略，无需为 SM-S 单独设计保留方案</div>
+          </div>
+          <div class="panel an" style="--d:.3s">
+            <h3>组合价值</h3>
+            <p style="font-size:12.8px;color:var(--dim)">同步复制此前偏重"可用性"，快照能力偏重"可恢复性"。
+              9.19.1 将两者合流：<b style="color:var(--ink)">同一份同步保护的数据，既有零 RPO 的连续性，也有带保留策略与防篡改属性的时间点恢复能力。</b></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · NFS over TLS ══════════════════ -->
+  <section class="scene" data-sec="安全" data-nav="NFS over TLS">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>安全增强 · 01</span></div>
+        <h1>NFS over <span class="g">TLS 1.3</span></h1>
+        <p class="lead">为 NFS 提供"一键式"传输加密：无需 Kerberos、无需 IPsec，在 2049 端口带内完成，
+          符合 RFC 9289 标准，覆盖 NFSv3 与 NFSv4.x。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g4 an" style="--d:.12s">
+        <div class="panel tint">
+          <h3>零基础设施开销</h3>
+          <div class="li ok">NFS 的"简易按钮"</div>
+          <div class="li ok">无需 Kerberos 或 IPsec</div>
+          <div class="li ok">端口 2049 带内协商</div>
+        </div>
+        <div class="panel tint">
+          <h3>最强加密强度</h3>
+          <div class="li ok">仅使用 TLS 1.3</div>
+          <div class="li ok">AES-GCM 与 ChaCha20-Poly1305</div>
+          <div class="li ok">可选 mTLS 实现主机双向身份认证</div>
+        </div>
+        <div class="panel tint">
+          <h3>性能影响可控</h3>
+          <div class="li">硬件卸载场景约 <b>10%</b></div>
+          <div class="li">纯软件 TLS 约 <b>30%</b></div>
+          <div class="li warn">上述为观测值，非性能承诺</div>
+        </div>
+        <div class="panel tint">
+          <h3>标准合规</h3>
+          <div class="li ok">遵循 <b>RFC 9289</b></div>
+          <div class="li ok">支持 NFSv3</div>
+          <div class="li ok">支持 NFSv4.x</div>
+        </div>
+      </div>
+
+      <div class="panel an" style="--d:.2s;margin-top:13px">
+        <h3>与既有 NFS 加固方案对比</h3>
+        <div class="tw" style="box-shadow:none">
+          <table class="dt">
+            <thead><tr><th style="width:190px">方案</th><th style="width:150px">部署复杂度</th><th style="width:150px">加密范围</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td class="h">Kerberos（krb5p）</td><td><span class="tag warn">高</span></td><td>NFS 载荷</td><td>依赖 KDC、主体与 keytab 管理；跨域与时钟同步问题常见</td></tr>
+              <tr><td class="h">IPsec</td><td><span class="tag warn">高</span></td><td>整条 IP 链路</td><td>需网络侧策略配合，排障需跨团队协作；与既有网络架构耦合</td></tr>
+              <tr style="background:rgba(211,58,92,.04)"><td class="h" style="color:var(--red)">NFS over TLS 1.3</td><td><span class="tag ok">低</span></td><td>NFS 连接</td><td>带内协商、证书驱动、存储侧即可完成配置；可选 mTLS 提供主机身份校验</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">选择建议：需要端到端用户身份与授权时仍可使用 Kerberos；仅需"数据在网络上不可被窃听/篡改"时，TLS 是成本最低的路径。</p>
+      </div>
+
+      <div class="g23 an" style="--d:.26s;margin-top:13px">
+        <div class="panel">
+          <h3>典型落地路径</h3>
+          <div class="steps" style="margin-bottom:0">
+            <div class="st" style="cursor:default"><div class="n">01</div><div class="l">准备证书</div>
+              <div style="font-size:11.8px;color:var(--dim);margin-top:6px">为 SVM 安装服务端证书；如需 mTLS，同时准备客户端证书与信任链</div></div>
+            <div class="st" style="cursor:default"><div class="n">02</div><div class="l">启用 TLS</div>
+              <div style="font-size:11.8px;color:var(--dim);margin-top:6px">在 NFS 服务上开启 TLS，客户端于 2049 端口带内协商，无需新增端口或策略</div></div>
+            <div class="st" style="cursor:default"><div class="n">03</div><div class="l">灰度挂载</div>
+              <div style="font-size:11.8px;color:var(--dim);margin-top:6px">先在部分客户端以 TLS 方式挂载验证，评估实际性能影响</div></div>
+            <div class="st" style="cursor:default"><div class="n">04</div><div class="l">全量推广</div>
+              <div style="font-size:11.8px;color:var(--dim);margin-top:6px">确认稳定后扩展至全部客户端，按需要求强制加密</div></div>
+          </div>
+        </div>
+        <div class="panel tint">
+          <h3>现场常见问题</h3>
+          <div class="li"><b>会不会要求所有客户端同时改造？</b><br>不会。TLS 在连接级协商，可与非加密挂载共存，支持渐进迁移。</div>
+          <div class="li"><b>性能损耗能否降低？</b><br>具备 TLS 硬件卸载能力的网卡可将开销压至约 10%；纯软件路径约 30%。均为观测值，需以现场压测为准。</div>
+          <div class="li"><b>与 Kerberos 冲突吗？</b><br>两者解决不同问题——Kerberos 负责身份与授权，TLS 负责传输机密性与完整性，可按需组合。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · ARP ══════════════════ -->
+  <section class="scene" data-sec="安全" data-nav="ARP 覆盖同步复制">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>安全增强 · 02</span></div>
+        <h1>自主勒索软件防护 <span class="g">覆盖 SM-S 与 SM-as</span></h1>
+        <p class="lead">ARP/AI 的实时检测能力现已延伸至同步复制的卷：主卷在被同步复制的同时，
+          依然受到 AI 驱动的勒索软件行为检测保护。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn dg" id="arpRun">⚡ 模拟勒索软件攻击</button>
+            <button class="btn" id="arpReset">↺ 重置</button>
+            <span class="hint" style="margin-left:auto" id="arpState">监测中 · 熵值正常</span>
+          </div>
+          <svg viewBox="0 0 640 280" id="arpSvg">
+            <defs><linearGradient id="entG" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#0e9a62"/><stop offset=".6" stop-color="#d5820f"/><stop offset="1" stop-color="#d33a5c"/></linearGradient></defs>
+            <text x="30" y="26" font-size="11.5" fill="#5c6a8a">数据熵值 / 写入模式异常度</text>
+            <g stroke="#e2e8f4" stroke-width="1">
+              <line x1="30" y1="40" x2="610" y2="40"/><line x1="30" y1="80" x2="610" y2="80"/><line x1="30" y1="120" x2="610" y2="120"/>
+            </g>
+            <line x1="30" y1="58" x2="610" y2="58" stroke="#d33a5c" stroke-width="1.5" stroke-dasharray="6 5"/>
+            <text x="614" y="55" font-size="9.5" fill="#d33a5c" font-family="var(--mono)">检测阈值</text>
+            <path id="arpLine" d="" fill="none" stroke="url(#entG)" stroke-width="2.6" stroke-linecap="round"/>
+            <line x1="30" y1="120" x2="610" y2="120" stroke="#c9d4e6" stroke-width="1.3"/>
+            <g id="arpSnap" opacity="0">
+              <line id="arpSnapL" x1="0" y1="34" x2="0" y2="124" stroke="#6a5ad4" stroke-width="2" stroke-dasharray="4 3"/>
+              <circle id="arpSnapC" cx="0" cy="34" r="5" fill="#6a5ad4"/>
+              <text id="arpSnapT" x="0" y="24" font-size="10.5" font-family="var(--mono)" fill="#6a5ad4" font-weight="700">安全快照</text>
+            </g>
+
+            <!-- 站点图 -->
+            <g>
+              <rect x="60" y="164" width="190" height="72" rx="12" fill="#eaf2fd" stroke="#93b6e4"/>
+              <text x="155" y="192" text-anchor="middle" font-size="12.5" font-weight="750" fill="#123a7a">主数据中心 · SVM</text>
+              <text x="155" y="212" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#2f6fe0">卷已启用 ARP/AI</text>
+              <rect x="390" y="164" width="190" height="72" rx="12" fill="#f4f6fb" stroke="#c9d4e6"/>
+              <text x="485" y="192" text-anchor="middle" font-size="12.5" font-weight="750" fill="#123a7a">灾备数据中心 · SVM</text>
+              <text x="485" y="212" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="#2f6fe0">卷已启用 ARP/AI</text>
+              <path d="M250 200 L 390 200" stroke="#6a5ad4" stroke-width="2.4"/>
+              <text x="320" y="193" text-anchor="middle" font-size="10" font-family="var(--mono)" fill="#6a5ad4">同步复制</text>
+              <text x="320" y="258" text-anchor="middle" font-size="11" fill="#8d97b2" id="arpMsg">正常与切换状态下，检测策略随活动数据集保持一致</text>
+            </g>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.18s">
+            <h3>特性要点</h3>
+            <div class="li"><b>AI 驱动的实时检测与响应</b>，无需第三方工具或代理。</div>
+            <div class="li"><b>覆盖同步复制主卷</b>：
+              <span class="tag b">SnapMirror synchronous (SM-S)</span>
+              <span class="tag b">SnapMirror active sync (SM-as)</span></div>
+            <div class="li"><b>检测方式</b>：分析数据熵、I/O 行为与文件级模式——<b>不读取文件内容</b>，准确率约 99%。</div>
+            <div class="li"><b>即时响应</b>：检测到攻击的瞬间生成安全快照，将数据损失窗口压至最小。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>为什么同步复制场景尤其需要</h3>
+            <div class="li warn">同步复制在提供零 RPO 的同时，也会把<b>被加密的数据瞬间复制到灾备端</b>——可用性不等于可恢复性。</div>
+            <div class="li warn">人工在主备两侧对齐安全策略容易出现配置漂移，形成保护盲区。</div>
+            <div class="li ok">ARP/AI 策略在主备两端一致生效，切换后跟随活动数据集，无需额外配置。</div>
+          </div>
+          <div class="panel an" style="--d:.3s">
+            <h3>技术定位</h3>
+            <p style="font-size:12.8px;color:var(--dim)">基于文件扫描、端点行为或周期性异常分析的检测方式，通常在数据已被加密之后才能做出反应。
+              ARP/AI 的差别在于<b style="color:var(--ink)">检测发生在存储层、由 AI 驱动，并且感知同步复制关系</b>：
+              复制与安全能力在同一平台内交付，无需额外的技术栈与联动配置。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 15 · WebAuthn ══════════════════ -->
+  <section class="scene" data-sec="安全" data-nav="WebAuthn RP 域">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>安全增强 · 03</span></div>
+        <h1>WebAuthn 多因素认证 · <span class="g">依赖方域限制</span></h1>
+        <p class="lead">在 System Manager 使用 FIDO2 物理密钥的基础上，9.19.1 新增
+          <span class="mono">-rp-domains</span> 参数，用于显式限定 WebAuthn 认证过程中被接受的依赖方（RP）域。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <h3 style="font-size:14px;font-weight:750;margin-bottom:6px">交互演练：谁可以登录？</h3>
+          <p style="font-size:12.5px;color:var(--dim);margin-bottom:12px">
+            配置：<span class="mono" style="color:var(--ink)">-rp-domains admin.mycompany.com</span> —— 点击不同用户查看结果。</p>
+          <div style="display:flex;flex-direction:column;gap:9px" id="waList">
+            <div class="st" data-wa="admin.mycompany.com"><div class="l mono" style="font-weight:600">alice@admin.mycompany.com</div></div>
+            <div class="st" data-wa="mycompany.com"><div class="l mono" style="font-weight:600">bob@mycompany.com</div></div>
+            <div class="st" data-wa="engineering.mycompany.com"><div class="l mono" style="font-weight:600">carol@engineering.mycompany.com</div></div>
+          </div>
+          <div class="code" id="waOut" style="margin-top:12px">选择一个用户以查看认证结果</div>
+          <p class="note">通过限制允许的 RP 域，可有效收缩"谁能登录 ONTAP"的影响半径（blast radius）。</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel an" style="--d:.18s">
+            <h3>特性要点</h3>
+            <div class="li">使用 <b>物理 FIDO 密钥</b>（如 YubiKey）作为 System Manager 登录的第二因素。</div>
+            <div class="li">必须在 WebAuthn 全局设置命令中使用 <span class="mono">-rp-domains</span> 参数。</div>
+            <div class="li">该参数允许管理员显式限制 WebAuthn（FIDO2）多因素认证过程中被接受的依赖方域集合。</div>
+            <div class="li"><b>每个用户仅支持一个 WebAuthn 凭据。</b></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>第一因素支持范围</h3>
+            <div class="tw" style="box-shadow:none">
+              <table class="dt">
+                <thead><tr><th style="width:90px">对象</th><th>支持的第一认证方式</th></tr></thead>
+                <tbody>
+                  <tr><td class="h">用户</td><td><span class="tag n">password</span> <span class="tag n">domain</span> <span class="tag n">nsswitch</span></td></tr>
+                  <tr><td class="h">组</td><td><span class="tag n">domain</span> <span class="tag n">nsswitch</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel an" style="--d:.3s">
+            <h3>典型场景</h3>
+            <p style="font-size:12.8px;color:var(--dim)">当企业按事业部或职能划分了多个 Active Directory 域
+              （如 <span class="mono">mycompany.com</span>、<span class="mono">admin.mycompany.com</span>、
+              <span class="mono">engineering.mycompany.com</span>），可仅允许
+              <span class="mono">@admin.mycompany.com</span> 的账号登录 ONTAP，其余域一律拒绝。</p>
+            <div class="flag" style="margin-top:12px">WebAuthn MFA 自 ONTAP 9.16.1 引入；新老用户默认关闭，需显式启用</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 16 · AFX 32 节点 + CFSR ══════════════════ -->
+  <section class="scene" data-sec="AFX" data-nav="32 节点 / CFSR">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>AFX 增强 · 01 / 02</span></div>
+        <h1>32 节点规模 与 <span class="g">跨文件顺序读</span></h1>
+        <p class="lead">单集群规模上限提升，配合面向顺序文件序列的智能预取，AFX 在超大规模与高吞吐场景同时进阶。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="panel an" style="--d:.12s">
+          <h3>支持 32 节点 <span class="tag new">NEW</span></h3>
+          <div class="split" style="margin:8px 0 14px">
+            <div>
+              <div class="flag r" style="margin-bottom:10px">此前 · 规模受限</div>
+              <div class="li warn">超过 24 节点即需新建集群</div>
+              <div class="li warn">新集群意味着新的命名空间</div>
+              <div class="li warn">数据与管理被人为切分</div>
+            </div>
+            <div class="arrowx" style="text-align:center">→</div>
+            <div>
+              <div class="flag" style="margin-bottom:10px">9.19.1 · 单集群扩展</div>
+              <div class="li ok"><b>32 节点</b>单集群</div>
+              <div class="li ok"><b>32 PB</b> 最大裸容量</div>
+              <div class="li ok">单一命名空间覆盖更大规模</div>
+            </div>
+          </div>
+          <div class="kpis">
+            <div class="kpi o"><b>32</b><span>集群节点上限</span></div>
+            <div class="kpi o"><b>32 PB</b><span>最大裸容量</span></div>
+            <div class="kpi"><b>1</b><span>命名空间，无需拆分</span></div>
+          </div>
+        </div>
+        <div class="panel tint an" style="--d:.32s">
+        <h3>制造业中具备同类访问模式的工作流</h3>
+        <div class="g2">
+          <div class="vc"><span class="k">EDA</span><div class="t">版图与光刻数据流</div>
+            <div class="d">OPC / 掩模数据处理按版图分区切分为编号文件，流程各阶段按序读取整批</div></div>
+          <div class="vc"><span class="k">CAE / CFD</span><div class="t">时间步结果后处理</div>
+            <div class="d">碰撞、流体、热仿真每个时间步一个结果文件，后处理按步长顺序读取</div></div>
+          <div class="vc"><span class="k">质检 / 计量</span><div class="t">工业 CT 断层序列</div>
+            <div class="d">铸件、焊点缺陷检测的逐层切片图像，三维重建时按层号连续读入</div></div>
+          <div class="vc"><span class="k">产线 / 试验</span><div class="t">高速影像与台架数据</div>
+            <div class="d">高速相机质检影像、台架采集文件（MDF / DAT）按时间分片顺序回放</div></div>
+        </div>
+        <p class="note">以上为与 CFSR 预取机制相匹配的访问模式归纳，实际收益需结合文件命名规律与读取顺序验证。</p>
+        </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="panel an" style="--d:.18s">
+          <h3>跨文件顺序读 CFSR <span class="tag new">NEW</span></h3>
+          <div class="li">面向<b>把数据切分为顺序编号文件</b>的工作流做读性能优化，单文件通常 <b>50–250 MB</b>。
+            <b>EDA 回归仿真</b>即是典型：一次夜间回归产生成百上千个按时间分片的波形转储
+            （<span class="mono">dump_0001.fsdb、dump_0002.fsdb …</span>）。</div>
+          <div class="li"><b>预测式预取</b>：CFSR 依据文件名的顺序规律预测并预取后续文件，
+            最多预取 <b>10 个文件或 500 MB</b> 数据。</div>
+          <div class="li ok">按序读取整段序列时<b>下一个分片已在内存中</b>，消除逐文件打开的读时延累积，缩短调试与签核周期。</div>
+          <div class="li"><b>访问模式本质</b>：文件名按序编号、单文件几十至数百 MB、被严格顺序读取——
+            具备该特征的数据集均可受益。</div>
+
+          <div class="viz" style="margin-top:14px;padding:12px">
+            <svg viewBox="0 0 560 96" id="cfsrSvg">
+              <text x="8" y="14" font-size="10.5" fill="#8d97b2" font-family="var(--mono)">dump_0001.fsdb … dump_0010.fsdb</text>
+              <g id="cfsrFrames"></g>
+              <text x="8" y="90" font-size="10.5" fill="#5c6a8a" id="cfsrMsg">已请求当前分片 · 后续分片由 CFSR 提前载入内存</text>
+            </svg>
+          </div>
+          <div class="btnrow" style="margin-top:10px">
+            <button class="btn" id="cfsrRun">▶ 播放预取过程</button>
+            <span class="lg" style="margin:0 0 0 auto"><span><i style="background:#0067c5"></i>已请求</span><span style="margin-left:12px"><i style="background:#6a5ad4"></i>预取中</span></span>
+          </div>
+        </div>
+        <div class="panel an" style="--d:.26s">
+          <h3>CFSR 启用方式</h3>
+          <div class="li">CFSR 在运行 ONTAP 9.19.1 及以上的 AFX 系统上<b>默认可用</b>，但需要<b>在各个卷上显式启用</b>。</div>
+          <div class="li">可通过 ONTAP CLI 或等效的 REST API 调用配置；创建新卷时即可一并启用。</div>
+          <div class="code" style="margin-top:10px"><span class="c"># 为已有卷启用跨文件顺序读</span>
+<span class="k">volume modify</span> <span class="p">-volume</span> <span class="s">&lt;volume_name&gt;</span> \
+  <span class="p">-aggressive-readahead-mode</span> <span class="s">cross_file_sequential_read</span>
+
+<span class="c"># 关闭</span>
+<span class="k">volume modify</span> <span class="p">-volume</span> <span class="s">&lt;volume_name&gt;</span> <span class="p">-aggressive-readahead-mode</span> <span class="s">none</span></div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 17 · AFX 全局重删 + 动态存储效率 ══════════════════ -->
+  <section class="scene" data-sec="AFX" data-nav="全局重删 / 动态效率">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>AFX 增强 · 03 / 04</span></div>
+        <h1>全局重复数据删除 与 <span class="g">动态存储效率</span></h1>
+        <p class="lead">重删域从节点扩展到整个存储可用区，同时让效率操作学会在高负载时主动让路。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g2">
+        <div class="panel an" style="--d:.12s">
+          <h3>全局重复数据删除 <span class="tag new">NEW</span></h3>
+          <div class="li">AFX 运行 9.19.1 后，重删范围<b>覆盖整个存储可用区（SAZ）</b>。</div>
+          <div class="li ok"><b>更大的重删域带来更高的存储效率收益。</b></div>
+          <div class="li warn">此前的重删域仅覆盖卷与节点范围：数据写入时只与该节点上的卷比对，其他节点的数据不在考虑范围内。</div>
+          <div class="li"><b>实现方式</b>：AFX 集群使用<b>全局块哈希表</b>，确保无论卷当前位于哪个节点，数据都能被去重。</div>
+
+          <div class="viz" style="margin-top:14px">
+            <div class="btnrow" style="margin-bottom:12px">
+              <button class="btn" data-dedup="node">此前 · 节点级重删域</button>
+              <button class="btn on" data-dedup="saz">9.19.1 · SAZ 全局重删域</button>
+            </div>
+            <svg viewBox="0 0 560 150" id="dedupSvg">
+              <g id="dedupNodes"></g>
+              <rect id="dedupScope" x="14" y="20" width="126" height="100" rx="12" fill="none"
+                stroke="#0067c5" stroke-width="2.4" stroke-dasharray="7 5"/>
+              <text id="dedupLbl" x="280" y="142" text-anchor="middle" font-size="11.5" fill="#5c6a8a">重删域范围</text>
+            </svg>
+          </div>
+          <p class="note">测试仍在进行中，量化的效率提升数据计划于 9.19.1 GA 版本发布。</p>
+        </div>
+
+        <div class="panel an" style="--d:.18s">
+          <h3>动态存储效率 <span class="tag new">NEW</span></h3>
+          <div class="li">智能优化压缩、重删与压紧（compaction）操作，服务于对性能与吞吐要求极高的大型工作负载。</div>
+          <div class="li">系统自动检测高写入负载并<b>临时挂起</b>内联与后台效率处理，避免峰值期间性能劣化；
+            吞吐回落至阈值以下后自动恢复，并<b>回补此前未实现的节省</b>，无需人工介入。</div>
+          <div class="li ok">AFX 平台<b>默认启用，无需配置</b>。</div>
+
+          <div class="viz" style="margin-top:14px">
+            <div class="btnrow" style="margin-bottom:10px;align-items:center">
+              <span class="hint">客户端写吞吐</span>
+              <input type="range" id="dseRange" min="2" max="18" value="6" step="0.5" style="flex:1;min-width:140px;accent-color:#d5820f">
+              <span class="mono" id="dseVal" style="font-size:13px;font-weight:700;color:var(--orange);width:82px;text-align:right">6.0 GBps</span>
+            </div>
+            <svg viewBox="0 0 560 150" id="dseSvg">
+              <rect x="30" y="24" width="500" height="72" rx="10" fill="#f4f7fc" stroke="#dce3ef"/>
+              <rect id="dseZone" x="30" y="24" width="0" height="72" rx="10" fill="#0e9a62" opacity=".12"/>
+              <line x1="30" y1="24" x2="30" y2="112" stroke="#c9d4e6"/>
+              <!-- 阈值 10 与 12（范围 2..18 映射到 30..530） -->
+              <line x1="280" y1="18" x2="280" y2="102" stroke="#0e9a62" stroke-width="1.6" stroke-dasharray="5 4"/>
+              <text x="280" y="14" text-anchor="middle" font-size="10" font-family="var(--mono)" fill="#0e9a62">10 GBps 恢复</text>
+              <line x1="342" y1="18" x2="342" y2="102" stroke="#d33a5c" stroke-width="1.6" stroke-dasharray="5 4"/>
+              <text x="342" y="126" text-anchor="middle" font-size="10" font-family="var(--mono)" fill="#d33a5c">12 GBps 抑制</text>
+              <circle id="dseDot" cx="130" cy="60" r="9" fill="#d5820f"/>
+              <text id="dseState" x="280" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#0e9a62">存储效率：全速运行</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.26s;margin-top:13px">
+        <div class="vc"><span class="k">智能突发检测</span><div class="t">监测客户端写吞吐</div>
+          <div class="d">识别高负载状态；写吞吐超过 <b>12 GBps</b> 时自动抑制内联存储效率操作，保持突发负载下的性能一致性</div></div>
+        <div class="vc"><span class="k">自适应节流控制</span><div class="t">峰值期动态挂起</div>
+          <div class="d">峰值期间暂停压缩、重删与压紧开销；吞吐降至 <b>10 GBps</b> 以下时恢复，避免频繁抖动切换</div></div>
+        <div class="vc"><span class="k">后台回补</span><div class="t">节省不丢失</div>
+          <div class="d">自动节流后台扫描以免影响客户端写吞吐；负载回落后通过后台处理回补效率节省，保障长期效率目标</div></div>
+        <div class="vc"><span class="k">平台支持</span><div class="t">AFX + pNFS 独有</div>
+          <div class="d">ONTAP 9.19.1 中仅 AFX 平台的 pNFS 协议可用；是支撑 NFS 异步写与 AI/ML 等高吞吐、高密度场景的关键能力</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 18 · 平台支持 ══════════════════ -->
+  <section class="scene" data-sec="平台" data-nav="平台支持">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#123a7a"><i></i><span>平台支持</span></div>
+        <h1>ONTAP 9.19.1 <span class="g">支持的系统</span></h1>
+        <p class="lead">升级规划前请确认现网型号：本版本新增 AFX 平台支持，同时有四款平台退出支持范围。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="btnrow an" style="--d:.1s;margin-bottom:14px">
+        <button class="btn on" data-plat="all">全部</button>
+        <button class="btn" data-plat="AFX">AFX</button>
+        <button class="btn" data-plat="AFF">AFF</button>
+        <button class="btn" data-plat="ASA">ASA</button>
+        <button class="btn" data-plat="FAS">FAS</button>
+      </div>
+
+      <div class="g2 an" style="--d:.14s">
+        <div class="tw">
+          <table class="dt" id="platTbl">
+            <thead><tr><th style="width:112px">产品线</th><th>ONTAP 9.19.1 支持型号</th></tr></thead>
+            <tbody>
+              <tr data-p="AFX"><td class="h">AFX 系统</td><td class="mono">AFX 1K <span class="tag new">NEW</span></td></tr>
+              <tr data-p="AFF"><td class="h">AFF · A 系列</td><td class="mono">C190 · A150 · A220 · A250 · A400 · A800 · A900 · A70 · A90 · A1K · A50 · A30 · A20</td></tr>
+              <tr data-p="AFF"><td class="h">AFF · C 系列</td><td class="mono">C250 · C400 · C800 · C60 · C30 · C80</td></tr>
+              <tr data-p="ASA"><td class="h">ASA 系统</td><td class="mono">A150 · A250 · A400 · A800 · A900 · A70 · A90 · A1K · A50 · A30 · A20 · C30</td></tr>
+              <tr data-p="FAS"><td class="h">FAS · 入门/中端</td><td class="mono">FAS2720 · FAS2750 · FAS2820</td></tr>
+              <tr data-p="FAS"><td class="h">FAS · 中高端</td><td class="mono">FAS8300 · FAS8700 · FAS9500 · FAS90 · FAS70 · FAS50</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel">
+            <h3 style="color:var(--red)">自 ONTAP 9.19.1 起不再支持的平台</h3>
+            <div class="tw" style="box-shadow:none">
+              <table class="dt">
+                <tbody>
+                  <tr><td class="h" style="width:112px">AFF 系统</td><td><span class="tag no">A700</span></td></tr>
+                  <tr><td class="h">ASA 系统</td><td><span class="tag no">A700</span></td></tr>
+                  <tr><td class="h">FAS 系统</td><td><span class="tag no">FAS500f</span> <span class="tag no">FAS9000</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="note">现网存在上述型号时，需在升级路径中安排替换或保留在受支持的较低版本。</p>
+          </div>
+          <div class="panel tint">
+            <h3>升级前检查清单</h3>
+            <div class="li">确认所有节点型号均在支持列表内，尤其是混合型号集群。</div>
+            <div class="li">评估拟启用的新特性对平台的限定：<b>动态存储效率、CFSR、全局重删、32 节点</b>仅适用于 AFX。</div>
+            <div class="li">SM-as for NAS 与 AIX 透明切换对集群节点数与配置模式有特定要求。</div>
+            <div class="li">规划 SnapMirror Cloud 桶数量与 URL 寻址方式（超过 6 桶时）。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 19 · 收官 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="价值总结">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>总结</span></div>
+        <h1>ONTAP 9.19.1 <span class="g">带来了什么</span></h1>
+        <p class="lead">一句话概括六大领域的客户价值，以及建议的下一步动作。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g3 an" style="--d:.12s">
+        <div class="vc" style="border-left:3px solid #0067c5"><span class="k">NAS</span>
+          <div class="t">元数据热点不再是瓶颈</div>
+          <div class="d">小目录列表能力目标提升 3 倍以上，同时用可配置突发替代"为峰值过度配置"的老办法。</div></div>
+        <div class="vc" style="border-left:3px solid #2f6fe0"><span class="k">SAN</span>
+          <div class="t">接入更简单，可用性更高</div>
+          <div class="d">FC 可免交换机直连；AFF 获得对称 A/A；组合 LIF 自动故障转移；iSCSI 打通外部 LUN 导入。</div></div>
+        <div class="vc" style="border-left:3px solid #0c8e86"><span class="k">S3</span>
+          <div class="t">对象语义向公有云看齐</div>
+          <div class="d">条件写入/删除提供原子性保障，双访问密钥消除轮换窗口，NVFail 覆盖多协议卷。</div></div>
+        <div class="vc" style="border-left:3px solid #6a5ad4"><span class="k">数据保护</span>
+          <div class="t">一套方案覆盖 SAN 与 NAS</div>
+          <div class="d">SM-as 支持 NAS 与 AIX 透明切换；SM-C 桶上限提升至 100；SM-S 补齐 TPS 与计划快照。</div></div>
+        <div class="vc" style="border-left:3px solid #d33a5c"><span class="k">安全</span>
+          <div class="t">加密、检测、准入三线加固</div>
+          <div class="d">NFS over TLS 1.3 免 Kerberos 部署；ARP/AI 覆盖同步复制卷；WebAuthn RP 域收缩登录半径。</div></div>
+        <div class="vc" style="border-left:3px solid #d5820f"><span class="k">AFX</span>
+          <div class="t">面向 AI 与高吞吐的规模化</div>
+          <div class="d">32 节点 / 32 PB 单集群；CFSR 保障 4K/8K 播放；SAZ 全局重删；动态存储效率保护峰值性能。</div></div>
+      </div>
+
+      <div class="g2 an" style="--d:.22s;margin-top:14px">
+        <div class="panel">
+          <h3>建议的下一步</h3>
+          <div class="li"><b>盘点现网平台</b>：确认是否涉及 A700 / FAS500f / FAS9000，规划替换或版本策略。</div>
+          <div class="li"><b>选定试点特性</b>：从收益明确、影响面可控的项目切入（如 QoS 突发策略、NFS over TLS）。</div>
+          <div class="li"><b>验证业务连续性方案</b>：评估以 SM-as 统一替代 SAN/NAS 双方案的可行性与 TCO 收益。</div>
+          <div class="li"><b>AFX 场景评估</b>：AI/ML、影视制作、EDA 等高吞吐场景优先纳入 AFX 平台论证。</div>
+        </div>
+        <div class="panel tint">
+          <h3>参考资料</h3>
+          <div class="li">ONTAP 9.19.1 新增功能：<span class="mono" style="font-size:11.5px">docs.netapp.com/us-en/ontap/release-notes/whats-new-9191.html</span></div>
+          <div class="li">版本说明与亮点：<span class="mono" style="font-size:11.5px">docs.netapp.com/us-en/ontap/release-notes/</span></div>
+          <div class="hr" style="margin:14px 0"></div>
+          <p style="font-size:12.6px;color:var(--dim)">本页内容整理自《ONTAP 9.19.1 Technical Overview》技术材料，用于客户现场技术交流。
+            具体功能可用性、限制条件与性能表现，请以对应版本的官方文档与技术支持确认为准。</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">20</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+/* ═══════════ 幕 2 · 目录列表性能 ═══════════ */
+$$('[data-perf]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-perf]').forEach(x=> x.classList.toggle('on', x===b));
+  const on = b.dataset.perf === 'on';
+  const bar = $('#barNew'), lbl = $('#lblNew');
+  if(!bar) return;
+  bar.setAttribute('y', on ? '30' : '130');
+  bar.setAttribute('height', on ? '180' : '80');
+  bar.setAttribute('fill', on ? 'url(#gB)' : 'url(#gA)');
+  bar.style.transition = 'all .55s cubic-bezier(.3,.8,.3,1)';
+  lbl.textContent = on ? '3×+' : '1×';
+  lbl.setAttribute('y', on ? '18' : '118');
+  lbl.setAttribute('fill', on ? '#0067c5' : '#5c6a8a');
+}));
+
+/* ═══════════ 幕 3 · QoS 突发 ═══════════ */
+const qos = { burst:true, t:0, timer:null, bank:0 };
+const QX0=56, QX1=600, QBASE=205, QCEIL=150, QBURST=55;
+function qosDemand(p){            // p: 0..1 时间进度 → 需求 IOPS（0..1 相对突发上限）
+  if(p < .28) return .30;
+  if(p < .34) return .30 + (p-.28)/.06 * .70;
+  if(p < .62) return 1.0;
+  if(p < .70) return 1.0 - (p-.62)/.08 * .70;
+  return .30;
+}
+function qosDraw(upTo){
+  const line=$('#qosLine'), area=$('#qosArea'), dem=$('#qosDemand'), head=$('#qosHead');
+  if(!line) return;
+  const steps = 120; let dp='', dd='', bank=0, lastX=QX0, lastY=QBASE;
+  const capC = QBASE-QCEIL, capB = QBASE-QBURST;
+  for(let i=0;i<=steps;i++){
+    const p = i/steps; if(p > upTo) break;
+    const x = QX0 + (QX1-QX0)*p;
+    const d = qosDemand(p);
+    // 令牌银行：需求低于上限时累积，高于上限时消耗
+    const ceilRel = capC/capB;
+    let served;
+    if(d <= ceilRel){ served = d; bank = Math.min(1, bank + (ceilRel-d)*0.46); }
+    else if(qos.burst && bank > 0.02){ served = d; bank = Math.max(0, bank - (d-ceilRel)*0.060); }
+    else { served = ceilRel; }
+    const y  = QBASE - served*capB;
+    const yd = QBASE - d*capB;
+    dp += (i===0?'M':'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+    dd += (i===0?'M':'L') + x.toFixed(1) + ' ' + yd.toFixed(1);
+    lastX = x; lastY = y;
+  }
+  line.setAttribute('d', dp);
+  dem.setAttribute('d', dd);
+  area.setAttribute('d', dp ? dp + ' L ' + lastX.toFixed(1) + ' ' + QBASE + ' L ' + QX0 + ' ' + QBASE + ' Z' : '');
+  head.setAttribute('cx', lastX); head.setAttribute('cy', lastY); head.setAttribute('opacity', upTo>0?1:0);
+  qos.bank = bank;
+  $('#bankBar').setAttribute('width', (490*bank).toFixed(1));
+  $('#bankTxt').textContent = Math.round(bank*100) + '%';
+  const st = $('#qosStat');
+  if(upTo >= .999){
+    st.textContent = qos.burst
+      ? '突发窗口耗尽后平滑回落至 QoS 上限，全程可控、可观测——虚机启动风暴期间无排队、无超时。'
+      : '固定上限下，尖峰需求被直接削平：应用等待、启动变慢，只能靠过度配置或临时关闭 QoS 来缓解。';
+  }
+}
+function qosPlay(){
+  clearInterval(qos.timer); qos.t = 0;
+  qos.timer = setInterval(()=>{
+    qos.t += 0.018;
+    if(qos.t >= 1){ qos.t = 1; clearInterval(qos.timer); }
+    qosDraw(qos.t);
+  }, 22);
+}
+$('#qosRun') && $('#qosRun').addEventListener('click', qosPlay);
+$('#qosBurst') && $('#qosBurst').addEventListener('click', function(){
+  qos.burst = !qos.burst;
+  this.textContent = '突发策略：' + (qos.burst ? '开' : '关');
+  this.classList.toggle('on', qos.burst);
+  qosPlay();
+});
+
+/* ═══════════ 幕 4 · FC 拓扑 ═══════════ */
+$$('[data-fc]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-fc]').forEach(x=> x.classList.toggle('on', x===b));
+  const da = b.dataset.fc === 'da';
+  const sw = $('#fcSw'), l1 = $('#fcL1'), l2 = $('#fcL2'), cap = $('#fcCap');
+  [sw,l1,l2].forEach(g=> g && (g.style.transition='opacity .45s ease'));
+  sw.setAttribute('opacity', da ? '.16' : '1');
+  l1.setAttribute('opacity', da ? '.14' : '1');
+  l2.setAttribute('opacity', da ? '1' : '0');
+  cap.textContent = da
+    ? '主机 HBA 直插阵列 FC 端口：更少组件、更短路径、更低时延'
+    : '主机 → 交换机 → 阵列：更多组件、更多配置、更高成本';
+  cap.setAttribute('fill', da ? '#0067c5' : '#5c6a8a');
+}));
+
+/* ═══════════ 幕 5 · 对称 A/A 故障模拟 ═══════════ */
+function aaSet(failed){
+  const p1=$('#aaP1'), n1=$('#aaN1'), t1=$('#aaT1'), t2=$('#aaT2'), msg=$('#aaMsg'), st=$('#aaState');
+  if(!p1) return;
+  p1.setAttribute('stroke', failed ? '#d33a5c' : '#0e9a62');
+  p1.setAttribute('stroke-dasharray', failed ? '6 5' : '');
+  p1.setAttribute('opacity', failed ? '.45' : '1');
+  n1.setAttribute('opacity', failed ? '.35' : '1');
+  t1.textContent = failed ? '不可用' : '主动/优化';
+  t1.setAttribute('fill', failed ? '#d33a5c' : '#0e9a62');
+  $('#aaP2').setAttribute('stroke-width', failed ? '4' : '2.8');
+  msg.textContent = failed
+    ? '控制器 A 故障：I/O 近乎瞬时切换至控制器 B，主机无过渡等待'
+    : '两条路径并行承载 I/O，聚合吞吐与负载均衡同时达成';
+  msg.setAttribute('fill', failed ? '#d33a5c' : '#5c6a8a');
+  st.textContent = failed ? '状态：控制器 A 不可用 · 路径已收敛' : '状态：双控制器均为 主动/优化';
+}
+$('#aaFail') && $('#aaFail').addEventListener('click', ()=> aaSet(true));
+$('#aaHeal') && $('#aaHeal').addEventListener('click', ()=> aaSet(false));
+
+/* ═══════════ 幕 6 · 组合 LIF 故障转移 步骤 ═══════════ */
+const LIF = [
+  {t:'正常运行 · LIF 位于 Home 端口',
+   d:'SCSI 与 NVMe LIF 均驻留在各自的 Home 节点与 Home 端口上，主机通过多路径访问所有可用路径。组合故障转移策略默认启用，无需额外配置。'},
+  {t:'节点 / 端口 / 链路故障',
+   d:'任一节点宕机、端口失效或链路中断时，ONTAP 立即识别受影响的 LIF。传统的按协议区分的处理方式会在此刻产生行为不一致——这正是组合切换要消除的问题。'},
+  {t:'自动迁移至有效目标',
+   d:'ONTAP 在广播域内校验候选目标，将 NVMe 与 SCSI LIF 一并自动迁移至存活的节点/端口，保证 I/O 持续在线，避免误路由至不可达的目标。'},
+  {t:'自愈：回归 Home 节点/端口',
+   d:'系统恢复健康后，自愈逻辑将各 LIF 送回其 Home 节点与端口，恢复最优的控制器对齐与长期性能均衡。整个过程无需管理员介入。'}
+];
+function lifShow(i){
+  $$('[data-lifstep]').forEach(el=> el.classList.toggle('on', +el.dataset.lifstep === i));
+  const b = $('#lifBody');
+  if(b) b.innerHTML = '<h4>' + LIF[i].t + '</h4><p>' + LIF[i].d + '</p>';
+}
+$$('[data-lifstep]').forEach(el=> el.addEventListener('click', ()=> lifShow(+el.dataset.lifstep)));
+lifShow(0);
+
+/* ═══════════ 幕 7 · FLI 迁移演示 ═══════════ */
+let fliTimer = null;
+function fliRun(){
+  clearInterval(fliTimer);
+  let p = 0;
+  const bar=$('#fliBar'), pct=$('#fliPct'), msg=$('#fliMsg'), sub=$('#fliSub'),
+        st=$('#fliState'), hs=$('#fliHostSrc'), hd=$('#fliHostDst');
+  hs.setAttribute('stroke','#0e9a62'); hs.setAttribute('stroke-dasharray','');
+  hd.setAttribute('stroke','#c9d4e6'); hd.setAttribute('stroke-dasharray','5 5');
+  msg.setAttribute('fill','#5c6a8a');
+  fliTimer = setInterval(()=>{
+    p += 1.6;
+    if(p >= 100){
+      p = 100; clearInterval(fliTimer);
+      hs.setAttribute('stroke','#c9d4e6'); hs.setAttribute('stroke-dasharray','5 5');
+      hd.setAttribute('stroke','#0e9a62'); hd.setAttribute('stroke-dasharray','');
+      msg.textContent = '切换完成：主机已重映射至 ONTAP LUN';
+      msg.setAttribute('fill','#0e9a62');
+      sub.textContent = '停机窗口仅为最终同步与重映射的短暂时间';
+      st.textContent = '迁移完成';
+    } else {
+      msg.textContent = p < 92 ? '块级拷贝进行中 · 应用持续在线读写源 LUN' : '最终同步 · 准备切换';
+      sub.textContent = p < 92 ? '源 LUN 在初始拷贝期间保持在线' : '主机即将重映射至 ONTAP';
+      st.textContent = '迁移中 ' + Math.round(p) + '%';
+    }
+    bar.setAttribute('width', (280*p/100).toFixed(1));
+    pct.textContent = Math.round(p) + '%';
+    pct.setAttribute('fill', p > 22 ? '#fff' : '#5c6a8a');
+  }, 40);
+}
+$('#fliRun') && $('#fliRun').addEventListener('click', fliRun);
+
+/* ═══════════ 幕 8 · S3 条件请求模拟 ═══════════ */
+const s3 = { obj:'none', hdr:'inm', op:'put' };
+function s3Render(){
+  const req=$('#s3req'), res=$('#s3res'), note=$('#s3note');
+  if(!req) return;
+  const hdrTxt = s3.hdr==='inm' ? 'If-None-Match: *' : (s3.hdr==='imA' ? 'If-Match: "a1b2"' : 'If-Match: "9f9f"');
+  const verb = s3.op==='put' ? 'PUT' : 'DELETE';
+  req.innerHTML =
+    '<span class="k">' + verb + '</span> /bucket/report.parquet <span class="c">HTTP/1.1</span>\n' +
+    '<span class="p">Host</span>: s3.ontap.local\n' +
+    '<span class="p">Authorization</span>: <span class="s">AWS4-HMAC-SHA256 …</span>   <span class="c"># AWS_V4 over TLS</span>\n' +
+    '<span class="p">' + hdrTxt.split(':')[0] + '</span>:' + hdrTxt.split(':').slice(1).join(':');
+
+  const exists = s3.obj !== 'none';
+  const etag = 'a1b2';
+  let code, txt, why, ok;
+
+  if(s3.hdr === 'inm'){
+    if(s3.op === 'del'){
+      code='400 Bad Request'; ok=false;
+      why='条件删除仅支持 If-Match；If-None-Match 不适用于删除语义。';
+    } else if(!exists){
+      code='200 OK'; ok=true;
+      why='对象不存在，If-None-Match: * 条件成立 → 写入被接受。这正是"仅当不存在时创建"的原子实现。';
+    } else {
+      code='412 Precondition Failed'; ok=false;
+      why='对象已存在，If-None-Match: * 条件不成立 → 写入被拒绝，已有对象不会被覆盖。';
+    }
+  } else {
+    const want = s3.hdr === 'imA' ? 'a1b2' : '9f9f';
+    if(!exists){
+      code='404 Not Found'; ok=false;
+      why='对象不存在，无法匹配任何 ETag。';
+    } else if(want === etag){
+      code='200 OK'; ok=true;
+      why = s3.op==='put'
+        ? 'ETag 匹配当前版本 → 写入被接受。乐观并发控制成立：自读取以来对象未被他人修改。'
+        : 'ETag 匹配当前版本 → 删除被接受。只删掉自己读到的那个版本，不会误删他人写入的新数据。';
+    } else {
+      code='412 Precondition Failed'; ok=false;
+      why='ETag 不匹配（当前为 "a1b2"）→ 操作被拒绝。说明对象已被他人更新，应重新读取后再重试。';
+    }
+  }
+  res.innerHTML = '<span class="c">HTTP/1.1</span> <span class="' + (ok?'s':'p') + '">' + code + '</span>' +
+    (ok && s3.op==='put' ? '\n<span class="p">ETag</span>: <span class="s">"7c3e"</span>' : '');
+  note.textContent = why;
+}
+$$('[data-s3obj]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-s3obj]').forEach(x=> x.classList.toggle('on', x===b)); s3.obj=b.dataset.s3obj; s3Render(); }));
+$$('[data-s3hdr]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-s3hdr]').forEach(x=> x.classList.toggle('on', x===b)); s3.hdr=b.dataset.s3hdr; s3Render(); }));
+$$('[data-s3op]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-s3op]').forEach(x=> x.classList.toggle('on', x===b)); s3.op=b.dataset.s3op; s3Render(); }));
+s3Render();
+
+/* ═══════════ 幕 9 · 密钥示例切换 ═══════════ */
+$$('[data-key]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-key]').forEach(x=> x.classList.toggle('on', x===b));
+  const cli = b.dataset.key === 'cli';
+  $('#keyGui').style.display = cli ? 'none' : '';
+  $('#keyCli').style.display = cli ? '' : 'none';
+}));
+
+/* ═══════════ 幕 10 · SM-as 站点切换 ═══════════ */
+function smSet(failed){
+  const pa=$('#smPathA'), pb=$('#smPathB'), la=$('#smLblA'), lb=$('#smLblB'),
+        sa=$('#smSiteA'), msg=$('#smMsg'), m2=$('#smMsg2'), st=$('#smState'), rep=$('#smRep');
+  if(!pa) return;
+  pa.setAttribute('stroke', failed ? '#d33a5c' : '#0e9a62');
+  pa.setAttribute('stroke-dasharray', failed ? '6 5' : '');
+  pa.setAttribute('opacity', failed ? '.4' : '1');
+  pb.setAttribute('stroke', failed ? '#0e9a62' : '#c9d4e6');
+  pb.setAttribute('stroke-dasharray', failed ? '' : '6 5');
+  pb.setAttribute('stroke-width', failed ? '3' : '2.4');
+  la.textContent = failed ? '不可用' : 'Active';
+  la.setAttribute('fill', failed ? '#d33a5c' : '#0e9a62');
+  lb.textContent = failed ? 'Active' : 'Passive';
+  lb.setAttribute('fill', failed ? '#0e9a62' : '#8d97b2');
+  sa.setAttribute('opacity', failed ? '.35' : '1');
+  rep.setAttribute('opacity', failed ? '.25' : '1');
+  msg.textContent = failed
+    ? '主站点不可用：客户端 I/O 透明切换至灾备站点，无需重挂载'
+    : '客户端访问主站点，数据同步至灾备站点，RPO = 0';
+  msg.setAttribute('fill', failed ? '#d33a5c' : '#5c6a8a');
+  m2.textContent = failed
+    ? 'NFS 与 SMB 会话得以保持，CA 共享全程无中断'
+    : 'CA 共享在切换过程中保持无中断';
+  st.textContent = failed ? '状态：已切换至灾备站点 · 应用无感知' : '状态：正常运行 · 零 RPO 同步';
+}
+$('#smFail') && $('#smFail').addEventListener('click', ()=> smSet(true));
+$('#smHeal') && $('#smHeal').addEventListener('click', ()=> smSet(false));
+
+/* ═══════════ 幕 14 · ARP 检测 ═══════════ */
+let arpTimer = null;
+function arpDraw(t){   // t: 0..1
+  const line = $('#arpLine'); if(!line) return;
+  const X0=30, X1=610, BASE=120, TOP=40;
+  let d=''; let detectedAt = null;
+  const steps = 116;
+  for(let i=0;i<=steps;i++){
+    const p = i/steps; if(p > t) break;
+    const x = X0 + (X1-X0)*p;
+    let lvl;
+    if(p < .46) lvl = 0.16 + Math.sin(p*46)*0.045;                  // 正常熵水位
+    else lvl = Math.min(1, 0.16 + (p-.46)/0.14 * 0.92 + Math.sin(p*60)*0.03); // 加密开始 → 熵飙升
+    const y = BASE - lvl*(BASE-TOP+22);
+    if(detectedAt === null && y <= 58) detectedAt = x;
+    d += (i===0?'M':'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+  }
+  line.setAttribute('d', d);
+  const g=$('#arpSnap');
+  if(detectedAt !== null){
+    g.setAttribute('opacity','1');
+    $('#arpSnapL').setAttribute('x1', detectedAt); $('#arpSnapL').setAttribute('x2', detectedAt);
+    $('#arpSnapC').setAttribute('cx', detectedAt);
+    $('#arpSnapT').setAttribute('x', Math.min(detectedAt+8, 520));
+    $('#arpState').textContent = '⚠ 检测到勒索软件行为 · 已生成安全快照';
+    $('#arpState').style.color = '#d33a5c';
+    $('#arpMsg').textContent = '主备两端策略一致：加密行为在主卷被识别的同时，恢复点已经落地';
+  }
+}
+function arpRun(){
+  clearInterval(arpTimer); let t=0;
+  $('#arpSnap').setAttribute('opacity','0');
+  $('#arpState').textContent = '监测中 · 熵值正常'; $('#arpState').style.color = '';
+  arpTimer = setInterval(()=>{
+    t += .016; if(t>=1){ t=1; clearInterval(arpTimer); }
+    arpDraw(t);
+  }, 26);
+}
+function arpReset(){
+  clearInterval(arpTimer);
+  $('#arpSnap').setAttribute('opacity','0');
+  $('#arpState').textContent = '监测中 · 熵值正常'; $('#arpState').style.color = '';
+  $('#arpMsg').textContent = '正常与切换状态下，检测策略随活动数据集保持一致';
+  arpDraw(.45);
+}
+$('#arpRun') && $('#arpRun').addEventListener('click', arpRun);
+$('#arpReset') && $('#arpReset').addEventListener('click', arpReset);
+
+/* ═══════════ 幕 15 · WebAuthn RP 域 ═══════════ */
+$$('[data-wa]').forEach(el=> el.addEventListener('click', ()=>{
+  $$('[data-wa]').forEach(x=> x.classList.toggle('on', x===el));
+  const dom = el.dataset.wa, allowed = dom === 'admin.mycompany.com';
+  const out = $('#waOut');
+  out.innerHTML = allowed
+    ? '<span class="c"># RP 域校验</span>\n请求域: <span class="s">' + dom + '</span>\n允许列表: <span class="s">admin.mycompany.com</span>\n结果: <span class="s">✓ 通过 — FIDO2 密钥验证后允许登录 System Manager</span>'
+    : '<span class="c"># RP 域校验</span>\n请求域: <span class="p">' + dom + '</span>\n允许列表: <span class="s">admin.mycompany.com</span>\n结果: <span class="p">✗ 拒绝 — 该依赖方域不在 -rp-domains 允许列表内</span>';
+}));
+
+/* ═══════════ 幕 16 · CFSR 预取 ═══════════ */
+(function buildCFSR(){
+  const g = $('#cfsrFrames'); if(!g) return;
+  let html='';
+  for(let i=0;i<10;i++){
+    const x = 8 + i*55;
+    html += '<rect id="cf'+i+'" x="'+x+'" y="26" width="47" height="40" rx="6" fill="#e7edf7" stroke="#d5dfee"/>' +
+            '<text x="'+(x+23.5)+'" y="51" text-anchor="middle" font-size="9.5" font-family="var(--mono)" fill="#8d97b2">'+(i+1)+'</text>';
+  }
+  g.innerHTML = html;
+})();
+let cfTimer=null;
+function cfsrRun(){
+  clearInterval(cfTimer);
+  for(let i=0;i<10;i++){ const r=$('#cf'+i); if(r){ r.setAttribute('fill','#e7edf7'); r.setAttribute('stroke','#d5dfee'); } }
+  let i=0;
+  cfTimer = setInterval(()=>{
+    if(i>0){ const prev=$('#cf'+(i-1)); if(prev){ prev.setAttribute('fill','#dbe6f7'); prev.setAttribute('stroke','#b9cbe8'); } }
+    const cur=$('#cf'+i);
+    if(cur){ cur.setAttribute('fill','#0067c5'); cur.setAttribute('stroke','#0067c5'); }
+    for(let k=i+1;k<=Math.min(9,i+4);k++){
+      const n=$('#cf'+k); if(n){ n.setAttribute('fill','#6a5ad4'); n.setAttribute('stroke','#6a5ad4'); n.setAttribute('opacity', 1 - (k-i)*0.16); }
+    }
+    $('#cfsrMsg').textContent = '正在读取第 ' + (i+1) + ' 个分片 · CFSR 已预取后续 ' + Math.min(4, 9-i) + ' 个（最多 10 个文件 / 500 MB）';
+    i++;
+    if(i>9){ clearInterval(cfTimer); $('#cfsrMsg').textContent = '整段序列读取完成 · 全程无等待，读时延由预取隐藏'; }
+  }, 320);
+}
+$('#cfsrRun') && $('#cfsrRun').addEventListener('click', cfsrRun);
+
+/* ═══════════ 幕 17 · 全局重删范围 ═══════════ */
+(function buildDedup(){
+  const g = $('#dedupNodes'); if(!g) return;
+  let html='';
+  for(let i=0;i<4;i++){
+    const x = 20 + i*133;
+    html += '<rect x="'+x+'" y="26" width="114" height="88" rx="10" fill="#eaf2fd" stroke="#93b6e4"/>' +
+            '<text x="'+(x+57)+'" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#123a7a">节点 '+(i+1)+'</text>' +
+            '<text x="'+(x+57)+'" y="72" text-anchor="middle" font-size="9.5" font-family="var(--mono)" fill="#2f6fe0">卷 · 卷 · 卷</text>' +
+            '<text x="'+(x+57)+'" y="92" text-anchor="middle" font-size="9" font-family="var(--mono)" fill="#8d97b2">block hash</text>';
+  }
+  g.innerHTML = html;
+})();
+$$('[data-dedup]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-dedup]').forEach(x=> x.classList.toggle('on', x===b));
+  const saz = b.dataset.dedup === 'saz';
+  const r = $('#dedupScope'), l = $('#dedupLbl');
+  r.style.transition = 'all .5s cubic-bezier(.3,.8,.3,1)';
+  r.setAttribute('x', saz ? '12' : '14');
+  r.setAttribute('width', saz ? '536' : '126');
+  r.setAttribute('stroke', saz ? '#0e9a62' : '#d5820f');
+  l.textContent = saz
+    ? '重删域 = 整个存储可用区（SAZ）· 全局块哈希表 · 卷所在节点不再影响去重效果'
+    : '重删域 = 单个节点 · 其他节点上的相同数据无法被去重';
+  l.setAttribute('fill', saz ? '#0e9a62' : '#d5820f');
+}));
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+(function syncToggles(){
+  ['[data-perf].on','[data-fc].on','[data-dedup].on'].forEach(sel=>{
+    const b = $(sel); if(b) b.click();
+  });
+})();
+
+/* ═══════════ 幕 17 · 动态存储效率 ═══════════ */
+(function dse(){
+  const r = $('#dseRange'); if(!r) return;
+  let suppressed = false;
+  function upd(){
+    const v = parseFloat(r.value);
+    const x = 30 + (v-2)/16*500;
+    $('#dseVal').textContent = v.toFixed(1) + ' GBps';
+    $('#dseDot').setAttribute('cx', x);
+    $('#dseZone').setAttribute('width', Math.max(0, x-30).toFixed(1));
+    // 迟滞：>12 抑制；<10 恢复；中间保持
+    if(v > 12) suppressed = true;
+    else if(v < 10) suppressed = false;
+    const st = $('#dseState');
+    if(suppressed){
+      st.textContent = '存储效率：已抑制（压缩 / 重删 / 压紧暂停，优先保障写吞吐）';
+      st.setAttribute('fill', '#d33a5c');
+      $('#dseZone').setAttribute('fill', '#d33a5c'); $('#dseDot').setAttribute('fill','#d33a5c');
+    } else if(v >= 10){
+      st.textContent = '存储效率：迟滞区间内保持当前状态（避免频繁抖动切换）';
+      st.setAttribute('fill', '#d5820f');
+      $('#dseZone').setAttribute('fill', '#d5820f'); $('#dseDot').setAttribute('fill','#d5820f');
+    } else {
+      st.textContent = '存储效率：全速运行（后台回补此前未实现的节省）';
+      st.setAttribute('fill', '#0e9a62');
+      $('#dseZone').setAttribute('fill', '#0e9a62'); $('#dseDot').setAttribute('fill','#0e9a62');
+    }
+  }
+  r.addEventListener('input', upd); upd();
+})();
+
+/* ═══════════ 幕 18 · 平台筛选 ═══════════ */
+$$('[data-plat]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-plat]').forEach(x=> x.classList.toggle('on', x===b));
+  const f = b.dataset.plat;
+  $$('#platTbl tbody tr').forEach(tr=>{
+    tr.style.display = (f==='all' || tr.dataset.p===f) ? '' : 'none';
+  });
+}));
+
+/* ═══════════ 进入幕时触发对应动效 ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav === 'QoS 突发策略') setTimeout(qosPlay, 320);
+  if(nav === 'iSCSI 外部 LUN 导入') setTimeout(fliRun, 380);
+  if(nav === 'ARP 覆盖同步复制') setTimeout(arpReset, 260);
+  if(nav === '32 节点 / CFSR') setTimeout(cfsrRun, 380);
+}
+
+/* 初始化 */
+arpDraw(.45);
+go(0, true);
+})();
+</script>
+</body>
+</html>
