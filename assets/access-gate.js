@@ -4,6 +4,35 @@
   const EXPECTED_HASH = "53d8ab0c908b84d1203dbdffb1fc44748517dc67280e8f85b2cf8bd157134bdd";
   const SESSION_KEY = "adg331_apps_access_v1";
 
+  // 已验证状态同时记在 sessionStorage 和会话 Cookie 里。
+  // 只用 sessionStorage 不行：卡片以 <a target="_blank"> 打开，
+  // 而 target="_blank" 在现代浏览器里隐含 noopener，新标签页
+  // 拿到的是全新的 sessionStorage，于是每个子页面都会重新弹门。
+  // 会话 Cookie 由 Cookie 模型保证同源各标签页共享，且不设
+  // Max-Age/Expires，关闭浏览器即失效，生命周期与 sessionStorage 一致。
+  // Cookie 作用域取脚本自身所在的站点根，避免泄漏到同域的其他项目。
+  const SCOPE = (() => {
+    try {
+      const src = document.currentScript && document.currentScript.src;
+      if (src) return new URL("../", src).pathname;   // <root>/assets/ 的上一级
+    } catch (e) {}
+    return "/";
+  })();
+
+  function cookieSet() {
+    return document.cookie.split("; ").indexOf(SESSION_KEY + "=1") !== -1;
+  }
+
+  function remember() {
+    try { sessionStorage.setItem(SESSION_KEY, "1"); } catch (e) {}
+    document.cookie = SESSION_KEY + "=1; path=" + SCOPE + "; SameSite=Lax";
+  }
+
+  function verified() {
+    try { if (sessionStorage.getItem(SESSION_KEY) === "1") return true; } catch (e) {}
+    return cookieSet();
+  }
+
   async function sha256(text) {
     const bytes = new TextEncoder().encode(text);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -29,14 +58,14 @@
   }
 
   function unlock(gate) {
-    sessionStorage.setItem(SESSION_KEY, "1");
+    remember();
     gate.hidden = true;
     document.documentElement.classList.remove("access-gate-pending");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     const gate = buildGate();
-    if (sessionStorage.getItem(SESSION_KEY) === "1") { unlock(gate); return; }
+    if (verified()) { unlock(gate); return; }
     document.documentElement.classList.remove("access-gate-pending");
     const form = document.getElementById("accessGateForm");
     const input = document.getElementById("accessGatePassword");
