@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">LiSA 联想存储智能体预览</title>
+  <desc id="desc">LiSA 以独立元数据引擎统一纳管异构存储，并提供检索、流转与智能标签能力。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#edf6ff"/>
+      <stop offset=".58" stop-color="#f8fbff"/>
+      <stop offset="1" stop-color="#f7f5ff"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#087bc7"/>
+      <stop offset=".5" stop-color="#4d83e8"/>
+      <stop offset="1" stop-color="#8068df"/>
+    </linearGradient>
+    <linearGradient id="engine" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#eef8ff"/>
+      <stop offset="1" stop-color="#f4f0ff"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#4c88bd" stroke-opacity=".085"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dy="8" stdDeviation="11" flood-color="#345f84" flood-opacity=".13"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <rect width="800" height="450" fill="url(#grid)"/>
+  <circle cx="700" cy="48" r="154" fill="#8068df" opacity=".045"/>
+  <circle cx="74" cy="424" r="150" fill="#0ca8c9" opacity=".045"/>
+
+  <text x="58" y="67" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif" font-size="43" font-weight="800" fill="url(#brand)">LiSA</text>
+  <text x="174" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" font-weight="700" letter-spacing="2" fill="#3975a4">LENOVO INTELLIGENT STORAGE AGENT</text>
+  <text x="174" y="73" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif" font-size="14" font-weight="650" letter-spacing="4" fill="#263f59">联想存储智能体</text>
+  <rect x="641" y="43" width="105" height="28" rx="14" fill="#e8f7f4" stroke="#a9ddd3"/>
+  <circle cx="661" cy="57" r="4" fill="#16a37f"/>
+  <text x="674" y="61" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" font-weight="700" fill="#27846e">DATA AGENT</text>
+
+  <g filter="url(#shadow)">
+    <rect x="58" y="102" width="684" height="274" rx="18" fill="#fff" stroke="#c8dceb"/>
+  </g>
+
+  <text x="80" y="131" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" font-weight="700" letter-spacing="1.4" fill="#6b859a">VERTICAL SOLUTIONS</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif" font-size="11" font-weight="650" fill="#29445f">
+    <g transform="translate(80 143)"><rect width="104" height="34" rx="9" fill="#f2f8fd" stroke="#c9ddeb"/><text x="52" y="22" text-anchor="middle">制造与质检</text></g>
+    <g transform="translate(196 143)"><rect width="104" height="34" rx="9" fill="#f2f8fd" stroke="#c9ddeb"/><text x="52" y="22" text-anchor="middle">生命科学</text></g>
+    <g transform="translate(312 143)"><rect width="104" height="34" rx="9" fill="#f2f8fd" stroke="#c9ddeb"/><text x="52" y="22" text-anchor="middle">媒体与内容</text></g>
+  </g>
+
+  <path d="M468 160H499" stroke="#4e9fd1" stroke-opacity=".52" stroke-dasharray="4 5"/>
+  <path d="m491 155 8 5-8 5" fill="none" stroke="#4e9fd1" stroke-opacity=".72"/>
+
+  <g transform="translate(507 123)">
+    <rect width="210" height="91" rx="15" fill="url(#engine)" stroke="#94bfe0"/>
+    <circle cx="43" cy="45" r="24" fill="#e7f5fb" stroke="#4ba9cf"/>
+    <circle cx="43" cy="45" r="13" fill="none" stroke="#7867d9" stroke-width="2"/>
+    <circle cx="43" cy="45" r="4" fill="#159fbd"/>
+    <path d="M43 17v11M43 62v11M15 45h11M60 45h11" stroke="#4ba9cf" stroke-opacity=".75"/>
+    <text x="79" y="50" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif" font-size="15" font-weight="750" fill="#203b57">LiSA 元数据引擎</text>
+  </g>
+
+  <text x="80" y="222" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" font-weight="700" letter-spacing="1.4" fill="#6b859a">INTELLIGENT DATA SERVICES</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif">
+    <g transform="translate(80 236)"><rect width="145" height="58" rx="12" fill="#f0f8fd" stroke="#b8d8eb"/><circle cx="25" cy="29" r="10" fill="none" stroke="#168ebc" stroke-width="1.7"/><path d="m32 36 7 7" stroke="#168ebc" stroke-width="2" stroke-linecap="round"/><text x="50" y="25" font-size="12" font-weight="700" fill="#203b57">统一检索</text><text x="50" y="41" font-size="9" fill="#65839a">千亿条目 · 秒级响应</text></g>
+    <g transform="translate(237 236)"><rect width="145" height="58" rx="12" fill="#f2f6fd" stroke="#c4d2ea"/><path d="M18 22h20M31 16l7 6-7 6M38 36H18M25 30l-7 6 7 6" fill="none" stroke="#547dd5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="25" font-size="12" font-weight="700" fill="#203b57">数据流转</text><text x="50" y="41" font-size="9" fill="#6b819b">备份 · 归档 · 分层</text></g>
+    <g transform="translate(394 236)"><rect width="145" height="58" rx="12" fill="#f6f3fd" stroke="#d3caed"/><path d="M18 19h18l7 10-7 10H18z" fill="none" stroke="#7867d9" stroke-width="1.8"/><circle cx="34" cy="29" r="2.5" fill="#7867d9"/><text x="50" y="25" font-size="12" font-weight="700" fill="#203b57">智能标签</text><text x="50" y="41" font-size="9" fill="#756f91">策略驱动 · AI-Ready</text></g>
+    <g transform="translate(551 236)"><rect width="166" height="58" rx="12" fill="#f7f3fc" stroke="#d8c9eb"/><path d="M18 37V22l10-6 10 6v15l-10 6z" fill="none" stroke="#8a65c8" stroke-width="1.7"/><path d="m21 25 7 4 7-4M28 29v10" fill="none" stroke="#8a65c8" stroke-width="1.5"/><text x="50" y="25" font-size="12" font-weight="700" fill="#203b57">统一纳管</text><text x="50" y="41" font-size="9" fill="#786f8f">本地 · 混合云 · 公有云</text></g>
+  </g>
+
+  <path d="M398 303v18" stroke="#5299c6" stroke-opacity=".5" stroke-dasharray="3 4"/>
+  <path d="m393 315 5 7 5-7" fill="none" stroke="#5299c6" stroke-opacity=".75"/>
+  <g transform="translate(80 322)">
+    <rect width="637" height="34" rx="10" fill="#f4f8fb" stroke="#cddde9"/>
+    <text x="18" y="22" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" font-weight="700" fill="#6c8699">HETEROGENEOUS STORAGE</text>
+    <text x="211" y="22" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="10" font-weight="650" fill="#334e66">ONTAP</text>
+    <circle cx="261" cy="17" r="2" fill="#178ebd"/>
+    <text x="278" y="22" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="10" font-weight="650" fill="#334e66">DXN</text>
+    <circle cx="316" cy="17" r="2" fill="#7664d4"/>
+    <text x="333" y="22" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="10" font-weight="650" fill="#334e66">第三方文件 / 对象存储</text>
+    <text x="610" y="22" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#597c93">50PB+</text>
+  </g>
+
+  <g transform="translate(58 409)" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">
+    <text font-size="9" font-weight="700" letter-spacing="1.1" fill="#708a9d">MANAGE · SEARCH · MOVE · GOVERN</text>
+    <rect x="520" y="-13" width="164" height="25" rx="12.5" fill="#edf6ff" stroke="#bfd8ea"/>
+    <text x="602" y="4" text-anchor="middle" font-size="9" font-weight="700" letter-spacing=".7" fill="#4c7798">ENTERPRISE DATA FABRIC</text>
+  </g>
+</svg>
