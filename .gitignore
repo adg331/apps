@@ -1,0 +1,6 @@
+# macOS
+.DS_Store
+
+# 编辑过程中的手工备份
+*.bak.html
+*.bk.html
