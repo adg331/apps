@@ -35,7 +35,7 @@ header{
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
 .logo small{font-size:12px; color:var(--dim); -webkit-text-fill-color:var(--dim); margin-left:8px; font-weight:400}
-.tabs{display:flex; gap:6px; margin-left:auto}
+.tabs{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end}
 .tab{
   border:1px solid var(--line); background:transparent; color:var(--dim);
   padding:6px 14px; border-radius:20px; cursor:pointer; font-size:13px;
@@ -239,9 +239,25 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
 .quote{margin-top:20px; text-align:center; font-size:19px; color:var(--txt); font-weight:600}
 .quote .hl{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
 
+/* ===== 幕6 术语速查 ===== */
+.termIntro{margin-bottom:14px}
+.termSecTitle{font-size:14px; font-weight:800; color:var(--txt); margin:18px 0 10px; display:flex; align-items:center; gap:8px}
+.termSecTitle:first-child{margin-top:0}
+.termSecTitle .bar{width:4px; height:14px; border-radius:2px; background:linear-gradient(180deg,var(--cyan),var(--violet))}
+.termGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.termCard{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; transition:.2s}
+.termCard:hover{border-color:var(--cyan); transform:translateY(-2px)}
+.termHead{display:flex; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px}
+.termName{font-weight:800; font-size:15px; color:var(--txt)}
+.termEn{font-size:11.5px; color:var(--faint)}
+.termDesc{font-size:12.5px; color:var(--dim); line-height:1.75}
+.termDesc b{color:var(--txt)}
+.termDesc .tag2{display:inline-block; color:var(--cyan); font-weight:700; margin-right:3px}
+
 @media (max-width:1100px){
   .grid2,.chatWrap{grid-template-columns:1fr}
   .cards{grid-template-columns:repeat(2,1fr)}
+  .termGrid{grid-template-columns:1fr 1fr}
   .tabs{display:none}
 }
 </style>
@@ -450,13 +466,106 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
   注：本演示聚焦 <b>AFX 存储</b>承载的 KV Cache 分层数据路径；<b>NetApp AIDE</b>（AI Data Engine）为 AFX 之上的数据服务层，不在本演示范围内。</div>
 </section>
 
+<!-- ═══════ 幕6 · 术语速查 ═══════ -->
+<section class="scene" id="sc6">
+  <h1>AI 推理<span class="hl">术语速查</span></h1>
+  <div class="panel">
+
+    <div class="termSecTitle"><span class="bar"></span>基础流程</div>
+    <div class="termGrid">
+      <div class="termCard">
+        <div class="termHead"><span class="termName">Token</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>书里最小的"字/词"切分单位，AI 一次只能读写一个 token，不是一次读完一整句。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">Attention</span><span class="termEn">注意力机制</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>读到当前这句话时，回头翻看前面哪几页跟它相关、该重点参考——"回头看"的动作本身。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">KV Cache</span><span class="termEn">Key-Value Cache · 键值缓存</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>读书时随手记的"标签便签"：记下"这段讲的是什么、原文在哪"，下次不用重新翻整本书查。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">Prefill</span><span class="termEn">预填充</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>拿到新书（新的问题/文档）后从头通读一遍、边读边做便签（生成 KV Cache）的过程——用户在这一步等待。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">Decode</span><span class="termEn">解码 / 生成</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>笔记做完后，照着便签一字一句复述、组织答案的过程——对应逐 token 往外"吐字"。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">自回归生成</span><span class="termEn">Autoregressive Generation</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>口述时必须先说完第 4 个字，才能决定第 5 个字说什么——不能跳着说，也不能想好整段再一次性倒出来。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">TTFT</span><span class="termEn">Time To First Token · 首字延迟</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>从提出问题，到读完/记完笔记、说出第一个字之间的等待时间——用户感知到的"卡顿感"。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">上下文长度</span><span class="termEn">Context Length</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>这本"书"（对话/文档）一共有多少字，决定了要记多少张便签、笔记本要多厚。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">命中 / 未命中</span><span class="termEn">Cache Hit / Cache Miss</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>命中 = 便签还在手边，直接拿来用；未命中 = 便签丢了或没做过，得重新翻书通读一遍。</div>
+      </div>
+    </div>
+
+    <div class="termSecTitle"><span class="bar"></span>KV 体积怎么算（第 1 幕"每 token KV 大小"的四个参数）</div>
+    <div class="termGrid">
+      <div class="termCard">
+        <div class="termHead"><span class="termName">层数</span><span class="termEn">Layers · 如 80 层</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>同一段内容反复读 80 遍、每遍都记一条笔记——不是重复抄同一件事，而是一层比一层读得更深（字面→逻辑→弦外之音）。层数越多，要记的笔记页数越多。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">KV 头数</span><span class="termEn">KV Heads · 如 8 个（GQA）</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>同时开着几本不同角度的笔记本（时间线、人物关系、因果链……），每读一遍都从这几个角度分别记一条摘要。头数越多，同一处内容记的摘要份数越多。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">head_dim</span><span class="termEn">每个头的维度大小 · 如 128</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>每条摘要用多少个数字来描述——数值越大，这条笔记能装下的细节越丰富，但笔记本身也越"厚"（占用空间越大）。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">FP16</span><span class="termEn">16 位浮点精度</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>记笔记时"字迹的精细程度"：用多高精度记录每个数字。精度越高笔记越准，但每个字占的纸（存储空间）也越多——FP16 即每个数字用 2 字节记录。</div>
+      </div>
+    </div>
+
+    <div class="termSecTitle"><span class="bar"></span>模型架构优化（决定"笔记怎么记、记多快"）</div>
+    <div class="termGrid">
+      <div class="termCard">
+        <div class="termHead"><span class="termName">GQA</span><span class="termEn">Grouped-Query Attention · 分组查询注意力</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>几个人共用同一份笔记本做参考，而不是每人各抄一份——省纸，对应省显存。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">MLA</span><span class="termEn">Multi-head Latent Attention · 多头潜在注意力</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>不抄原文摘录，而是写一份高度浓缩的"精简笔记"，需要时再展开还原——笔记本身占地更小。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">MoE</span><span class="termEn">Mixture of Experts · 混合专家模型</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>书里遇到不同类型内容（法律条款/数学公式/日常对话），分别喊对应的"专家"来读、来记，而非每次全员出动。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">DSA</span><span class="termEn">DeepSeek Sparse Attention · 稀疏注意力</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>用书的"索引/目录"直接定位到相关的几页去参考，而不是每次都把全书翻一遍。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">c4a / c128a</span><span class="termEn">DeepSeek/vLLM 内部代号，无官方全称</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>把连续 4 句/128 句话压缩成一张摘要卡片——比 MLA 更进一步的压缩粒度，笔记更薄。</div>
+      </div>
+    </div>
+
+    <div class="note">※ 本页为存储背景听众定制的 AI 推理扫盲卡片，术语与第 1–5 幕内容一一对应；如需面向更广泛/非技术听众，可在此基础上进一步简化措辞。</div>
+  </div>
+</section>
+
 </main>
 
 <footer>
   <button class="navBtn" id="prevB">‹</button>
   <div class="dots" id="dots"></div>
   <button class="navBtn" id="nextB">›</button>
-  <span style="margin-left:14px">← → 或数字键 1–5 切换 · 建议全屏（F11）投屏演示</span>
+  <span style="margin-left:14px">← → 或数字键 1–6 · 鼠标滚轮翻页 · 建议全屏（F11）投屏演示</span>
 </footer>
 
 <script>
@@ -509,8 +618,8 @@ const fmtTok = kb => kb>=1024 ? (kb/1024).toFixed(2)+' MB' : kb>=100 ? kb.toFixe
 const sleep = ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ═══════════ 导航 ═══════════ */
-const SCENES = ['sc1','sc2','sc3','sc4','sc5'];
-const NAMES  = ['① 显存墙','② 分层架构','③ 命中演示','④ TTFT 对比','⑤ 价值总结'];
+const SCENES = ['sc1','sc2','sc3','sc4','sc5','sc6'];
+const NAMES  = ['① 显存墙','② 分层架构','③ 命中演示','④ TTFT 对比','⑤ 价值总结','⑥ 术语速查'];
 let cur = 0;
 const tabsEl = $('tabs'), dotsEl = $('dots');
 SCENES.forEach((_,i)=>{
@@ -523,6 +632,7 @@ function show(i){
   SCENES.forEach((id,k)=>$(id).classList.toggle('active',k===cur));
   [...tabsEl.children].forEach((t,k)=>t.classList.toggle('on',k===cur));
   [...dotsEl.children].forEach((d,k)=>d.classList.toggle('on',k===cur));
+  $(SCENES[cur]).scrollTop = 0;         // 每次切幕默认从顶部开始看
   if(cur!==1) stopAuto();
 }
 $('prevB').onclick=()=>show(cur-1);
@@ -530,8 +640,30 @@ $('nextB').onclick=()=>show(cur+1);
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key==='PageDown') show(cur+1);
   else if(e.key==='ArrowLeft'||e.key==='PageUp') show(cur-1);
-  else if(e.key>='1'&&e.key<='5') show(+e.key-1);
+  else if(e.key>='1'&&e.key<='6') show(+e.key-1);
 });
+
+/* ═══════════ 鼠标滚轮翻页 ═══════════
+   规则：当前幕内容还没滚到底/顶时，滚轮照常滚动幕内内容；
+   一旦已经在顶部/底部，再滚一下才会翻到上/下一幕，并短暂加锁防止
+   一次滚轮手势（尤其触控板）连续跳好几幕。 */
+const mainEl = document.querySelector('main');
+let wheelLocked = false;
+const WHEEL_LOCK_MS = 650;
+const WHEEL_MIN_DELTA = 12;   // 过滤触控板/鼠标的微小抖动
+mainEl.addEventListener('wheel', e=>{
+  if(Math.abs(e.deltaY) < WHEEL_MIN_DELTA) return;
+  const scene = $(SCENES[cur]);
+  const atTop = scene.scrollTop <= 1;
+  const atBottom = scene.scrollTop + scene.clientHeight >= scene.scrollHeight - 1;
+  if(e.deltaY > 0 && !atBottom) return;   // 内容还没滚到底，先正常滚动本幕
+  if(e.deltaY < 0 && !atTop) return;      // 内容还没滚到顶，先正常滚动本幕
+  e.preventDefault();
+  if(wheelLocked) return;
+  wheelLocked = true;
+  show(cur + (e.deltaY > 0 ? 1 : -1));
+  setTimeout(()=>{ wheelLocked = false; }, WHEEL_LOCK_MS);
+}, { passive:false });
 
 /* ═══════════ 模型切换 ═══════════ */
 function applySliderRanges(){
