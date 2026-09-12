@@ -9,17 +9,17 @@
 <title>NetApp MCP 交互式演示</title>
 <style>
   :root{
-    --bg:#0b1526; --panel:#16243d; --panel2:#1c2d4a; --codebg:#101d33;
-    --blue:#0067C5; --blue-dk:#2f9bff; --teal:#00c2b3; --teal-lt:#1c2d4a;
-    --amber:#f5a623; --green:#3fd68f; --red:#ff6b6b;
-    --text:#e8eef7; --muted:#9db0c9; --line:#2a3d5e;
+    --bg:#f4f7fb; --panel:#ffffff; --panel2:#f0f5fb; --codebg:#f6f8fc;
+    --blue:#0067C5; --blue-dk:#00559f; --teal:#00857c; --teal-lt:#e6f5f3;
+    --amber:#b26a00; --green:#1d9e5f; --red:#c94040;
+    --text:#17263c; --muted:#5b6c84; --line:#dbe4f0;
     --mono:'SF Mono','Cascadia Code',Consolas,Menlo,monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;line-height:1.6}
-  a{color:#2f9bff}
+  a{color:var(--blue)}
   /* ---------- header ---------- */
-  header{position:sticky;top:0;z-index:100;background:rgba(11,21,38,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);box-shadow:none}
+  header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);box-shadow:0 1px 8px rgba(23,38,60,.05)}
   .hwrap{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:24px;padding:12px 24px;flex-wrap:wrap}
   .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;white-space:nowrap}
   .logo .mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
@@ -35,26 +35,26 @@
   h1{font-size:34px;line-height:1.25;margin-bottom:12px}
   h2{font-size:22px;margin:36px 0 14px}
   .sub{color:var(--muted);font-size:16px;max-width:860px}
-  .accent{background:linear-gradient(90deg,#2f9bff,var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-right:6px;margin-bottom:6px;background:transparent}
-  .tag.hl{border-color:var(--blue);color:#2f9bff}
+  .accent{background:linear-gradient(90deg,var(--blue),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-right:6px;margin-bottom:6px;background:var(--panel)}
+  .tag.hl{border-color:var(--blue);color:var(--blue)}
   .badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;font-weight:600}
-  .badge.h{background:#133f43;color:#4ee0d2}
-  .badge.o{background:#16305c;color:#7fb6ff}
-  .badge.d{background:#302752;color:#bba2ff}
-  .badge.k{background:#49371d;color:#ffc463}
+  .badge.h{background:var(--teal-lt);color:var(--teal)}
+  .badge.o{background:#e8f1fc;color:var(--blue)}
+  .badge.d{background:#f1eafc;color:#6a3fc4}
+  .badge.k{background:#fdf3e3;color:#b26a00}
   /* ---------- cards ---------- */
   .grid{display:grid;gap:16px;margin-top:20px}
   .g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
   .g2{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;transition:.2s;box-shadow:none}
-  .card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:none}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;transition:.2s;box-shadow:0 1px 4px rgba(23,38,60,.04)}
+  .card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,103,197,.10)}
   .card .ic{font-size:24px;margin-bottom:10px}
   .card h3{font-size:16px;margin-bottom:6px}
   .card p{font-size:13.5px;color:var(--muted)}
   /* ---------- hero flow ---------- */
   .flow{display:flex;align-items:center;justify-content:center;gap:14px;margin:34px 0 8px;flex-wrap:wrap}
-  .flow .node{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 20px;text-align:center;min-width:150px;box-shadow:none}
+  .flow .node{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 20px;text-align:center;min-width:150px;box-shadow:0 1px 4px rgba(23,38,60,.05)}
   .flow .node b{display:block;font-size:14.5px}
   .flow .node span{font-size:12px;color:var(--muted)}
   .flow .arr{color:var(--teal);font-size:20px}
@@ -72,7 +72,7 @@
   .arch-svg svg{width:100%;height:auto;display:block}
   .arch-node{cursor:pointer}
   .arch-node rect{transition:.2s}
-  .arch-node:hover rect.main{filter:brightness(1.3)}
+  .arch-node:hover rect.main{filter:brightness(.96)}
   .arch-node.sel rect.main{stroke:var(--teal);stroke-width:2.5}
   #archDetail{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;min-height:200px}
   #archDetail h3{font-size:16px;margin-bottom:10px;color:var(--blue)}
@@ -112,10 +112,10 @@
   .demo-side .grp:first-child{margin-top:0}
   .demo-side .sc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 15px;cursor:pointer;transition:.2s}
   .demo-side .sc:hover{border-color:var(--blue)}
-  .demo-side .sc.active{border-color:var(--teal);background:var(--panel2)}
+  .demo-side .sc.active{border-color:var(--teal);background:var(--teal-lt)}
   .demo-side .sc b{font-size:13.5px;display:block}
   .demo-side .sc span{font-size:12px;color:var(--muted)}
-  .chat{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:660px;box-shadow:none}
+  .chat{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:660px;box-shadow:0 1px 6px rgba(23,38,60,.05)}
   .chat-head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
   .chat-head .st{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
   .chat-head b{font-size:14px}
@@ -125,7 +125,7 @@
   .chat-foot .hint{font-size:12.5px;color:var(--muted)}
   .msg{max-width:88%;border-radius:12px;padding:12px 16px;font-size:14px;animation:fade .3s ease}
   .msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
-  .msg.ai{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.ai{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:4px}
   .msg .who{font-size:11px;opacity:.75;margin-bottom:4px}
   .msg.tool{align-self:flex-start;width:88%;background:var(--codebg);border:1px solid var(--line);border-left:3px solid var(--teal);font-family:var(--mono);font-size:12.5px}
   .msg.tool .tl{display:flex;align-items:center;gap:8px;color:var(--teal);margin-bottom:8px;font-size:12px;font-family:inherit;flex-wrap:wrap}
@@ -135,7 +135,7 @@
   .msg.tool.d .tl{color:#7a4fd0}
   .msg.tool.k{border-left-color:#b26a00}
   .msg.tool.k .tl{color:#b26a00}
-  .msg.tool pre,.msg.result pre{white-space:pre-wrap;word-break:break-all;color:#c7d6ec;margin:0}
+  .msg.tool pre,.msg.result pre{white-space:pre-wrap;word-break:break-all;color:#33475f;margin:0}
   .msg.result{align-self:flex-start;width:88%;background:var(--codebg);border:1px solid var(--line);border-left:3px solid var(--green);font-family:var(--mono);font-size:12.5px}
   .msg.result .tl{color:var(--green);margin-bottom:8px;font-size:12px}
   .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--teal);border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px}
@@ -151,44 +151,13 @@
   .dep.dops .step .num{background:#7a4fd0}
   .dep.know .step .num{background:#b26a00}
   .step h3{font-size:15.5px;margin-bottom:6px;padding-top:3px}
-  pre.code{background:var(--codebg);border:1px solid var(--line);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12.5px;color:#c7d6ec;overflow-x:auto;margin-top:10px;line-height:1.7}
-  pre.code .c{color:#5d7397}
+  pre.code{background:var(--codebg);border:1px solid var(--line);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12.5px;color:#33475f;overflow-x:auto;margin-top:10px;line-height:1.7}
+  pre.code .c{color:#8896aa}
   pre.code .k{color:var(--teal)}
   pre.code .s{color:var(--amber)}
-  footer{border-top:1px solid var(--line);margin-top:20px;background:transparent}
+  footer{border-top:1px solid var(--line);margin-top:20px;background:var(--panel)}
   .fwrap{max-width:1200px;margin:0 auto;padding:24px;font-size:12.5px;color:var(--muted)}
   .fwrap a{margin-right:16px}
-  /* ---------- dark SVG palette: aligned with netapp-ontap-mcp-demo ---------- */
-  .arch-svg [fill="#ffffff"]{fill:#16243d}
-  .arch-svg [fill="#f0f5fb"]{fill:#101d33}
-  .arch-svg [fill="#e6f5f3"]{fill:#133f43}
-  .arch-svg [fill="#e8f1fc"]{fill:#16305c}
-  .arch-svg [fill="#f3eefc"]{fill:#302752}
-  .arch-svg [fill="#fdf3e3"]{fill:#49371d}
-  .arch-svg [fill="#17263c"]{fill:#e8eef7}
-  .arch-svg [fill="#33475f"]{fill:#c7d6ec}
-  .arch-svg [fill="#5b6c84"],.arch-svg [fill="#8896aa"]{fill:#9db0c9}
-  .arch-svg [fill="#003f78"]{fill:#7fb6ff}
-  .arch-svg [fill="#00594f"]{fill:#4ee0d2}
-  .arch-svg [fill="#4a2b8f"]{fill:#bba2ff}
-  .arch-svg [fill="#7a4a00"]{fill:#ffc463}
-  .arch-svg [fill="#7a4fd0"]{fill:#bba2ff}
-  .arch-svg [fill="#b26a00"]{fill:#f5a623}
-  .arch-svg [fill="#00857c"]{fill:#00c2b3}
-  .arch-svg [stroke="#dbe4f0"],.arch-svg [stroke="#c6d4e6"]{stroke:#2a3d5e}
-  .arch-svg [stroke="#bfe3de"]{stroke:#26645f}
-  .arch-svg [stroke="#c3daf3"]{stroke:#285285}
-  .arch-svg [stroke="#dccdf5"]{stroke:#55477e}
-  .arch-svg [stroke="#f0dcb8"]{stroke:#73572d}
-  .arch-svg [stroke="#8896aa"]{stroke:#5d7397}
-  .arch-svg [stroke="#00857c"]{stroke:#00c2b3}
-  .arch-svg [stroke="#7a4fd0"]{stroke:#9b7de8}
-  .arch-svg [stroke="#b26a00"]{stroke:#f5a623}
-  ::selection{background:#0067c5;color:#fff}
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-track{background:#0b1526}
-  ::-webkit-scrollbar-thumb{background:#2a3d5e;border-radius:10px;border:2px solid #0b1526}
-  ::-webkit-scrollbar-thumb:hover{background:#3b557c}
 </style>
 </head>
 <body>
@@ -202,6 +171,7 @@
       <button data-p="tools">能力</button>
       <button data-p="scenarios">使用场景</button>
       <button data-p="demo">交互演示</button>
+      <button data-p="security">安全授权</button>
       <button data-p="deploy">快速部署</button>
     </nav>
   </div>
@@ -279,7 +249,7 @@
 <!-- ================= 架构 ================= -->
 <section class="page" id="p-arch">
   <h1>系统<span class="accent">架构</span></h1>
-  <p class="sub">一个对话入口，四条能力路径：<span class="badge h">Harvest MCP</span> 做观察，<span class="badge o">ONTAP MCP</span> 做操作，<span class="badge d">DataOps Toolkit MCP ×4</span> 做自助服务；知识检索则分成两条独立路径：<span class="badge k">AIDE MCP</span> 连接 AIDE 企业 RAG，<span class="badge k">Workload Factory GenAI KB MCP</span> 连接 AWS 侧 Knowledge Base。MCP 只是 Agent 侧适配层，检索服务位于各自后端。<b>点击图中组件</b>查看详细说明。</p>
+  <p class="sub">一个对话入口，四条能力路径：<span class="badge h">Harvest MCP</span> 复用现有监控管道做观察，<span class="badge o">ONTAP MCP</span> 直连集群 REST API 做操作，<span class="badge d">DataOps Toolkit MCP ×4</span> 以本地 stdio 方式提供跨 ONTAP / Azure / Google / K8s 的自助服务，<span class="badge k">知识检索 MCP ×2</span>（AIDE、Workload Factory KB）让企业文档可被 RAG 检索。<b>点击图中组件</b>查看详细说明。</p>
 
   <div class="arch-wrap">
     <div class="arch-svg">
@@ -415,8 +385,8 @@
         <!-- Knowledge MCP -->
         <g class="arch-node" data-k="kmcp">
           <rect class="main" x="250" y="782" width="205" height="118" rx="12" fill="#fdf3e3" stroke="#b26a00"/>
-          <text x="352" y="810" text-anchor="middle" fill="#7a4a00" font-size="15" font-weight="700">Agent 侧 MCP 适配器 ×2</text>
-          <text x="352" y="828" text-anchor="middle" fill="#b26a00" font-size="11">stdio 是通信方式，不是后端部署位置</text>
+          <text x="352" y="810" text-anchor="middle" fill="#7a4a00" font-size="15" font-weight="700">知识检索 MCP ×2</text>
+          <text x="352" y="828" text-anchor="middle" fill="#b26a00" font-size="11">RAG / 向量检索 · stdio 本地运行</text>
           <rect x="268" y="840" width="169" height="25" rx="7" fill="#ffffff" stroke="#f0dcb8"/>
           <text x="352" y="857" text-anchor="middle" fill="#33475f" font-size="11.5">AIDE MCP（AI Data Engine）</text>
           <rect x="268" y="869" width="169" height="25" rx="7" fill="#ffffff" stroke="#f0dcb8"/>
@@ -424,11 +394,11 @@
         </g>
         <g class="arch-node" data-k="ktargets">
           <rect class="main" x="540" y="787" width="200" height="108" rx="12" fill="#ffffff" stroke="#c6d4e6"/>
-          <text x="640" y="813" text-anchor="middle" fill="#17263c" font-size="13" font-weight="700">两个独立 RAG 后端</text>
+          <text x="640" y="813" text-anchor="middle" fill="#17263c" font-size="13" font-weight="700">知识数据源</text>
           <rect x="556" y="826" width="168" height="29" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
           <text x="640" y="845" text-anchor="middle" fill="#33475f" font-size="11.5">AIDE RAG / 向量索引</text>
           <rect x="556" y="861" width="168" height="29" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
-          <text x="640" y="880" text-anchor="middle" fill="#33475f" font-size="11.5">AWS Workload Factory GenAI KB</text>
+          <text x="640" y="880" text-anchor="middle" fill="#33475f" font-size="11.5">Workload Factory 知识库</text>
         </g>
         <line x1="455" y1="841" x2="533" y2="841" stroke="#b26a00" stroke-width="2" marker-end="url(#ahK)" class="dash"/>
         <text x="494" y="829" text-anchor="middle" fill="#b26a00" font-size="10.5">RAG API</text>
@@ -446,7 +416,7 @@
     <div class="card"><span class="badge h">Harvest MCP</span><h3 style="margin-top:8px">统一指标模型</h3><p>ONTAP、StorageGRID、E-Series、Cisco 用一致的开放指标模型，跨平台提问一次到位；Grafana 仪表盘依然可用，二者互补。</p></div>
     <div class="card"><span class="badge o">ONTAP MCP</span><h3 style="margin-top:8px">带护栏的"双手"</h3><p>每个工具标注 readOnly / idempotent / destructive 提示；--read-only 模式仅暴露只读工具；集中凭证，调用不带密码。</p></div>
     <div class="card"><span class="badge d">DataOps MCP</span><h3 style="margin-top:8px">本地 stdio · 零门槛</h3><p>uvx 一条命令即可拉起，凭证与配置留在本地；面向终端用户自助服务，覆盖本地 ONTAP 与 Azure / Google 云、K8s。</p></div>
-    <div class="card"><span class="badge k">知识 MCP</span><h3 style="margin-top:8px">两条 RAG 路径，边界清晰</h3><p>AIDE MCP 面向 AIDE 企业数据检索；Workload Factory GenAI KB MCP 面向 AWS 侧知识库。两者都把受认证的检索能力交给 Agent，但数据位置、身份体系和治理边界取决于各自后端。</p></div>
+    <div class="card"><span class="badge k">知识 MCP</span><h3 style="margin-top:8px">RAG 检索有出处</h3><p>AIDE / Workload Factory KB 通过向量语义检索返回相关文档，AI 回答可溯源；OAuth2 认证，数据不出企业边界。</p></div>
     <div class="card"><span class="badge h">观察</span> <span class="badge o">操作</span> <span class="badge k">知识</span><h3 style="margin-top:8px">同一对话，全栈协同</h3><p>一个 mcp.json 可同时接入远程 HTTP 与本地 stdio 服务器，AI 在同一对话流内查指标、做变更、检索知识。</p></div>
   </div>
 </section>
@@ -516,23 +486,12 @@
   <div class="grid g2" style="margin-top:16px">
     <div class="qa"><h4>🧠 AIDE MCP（AI Data Engine）</h4>
       <div class="q" style="font-family:var(--mono);font-size:12px">netapp_data_engine_search</div>
-      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">
-      面向 <b>AIDE 平台的数据检索入口</b>。MCP Server 将 AIDE RAG Retrieval Endpoint 封装为标准 MCP Tool，
-      AI Agent 可通过语义搜索访问 AIDE 已建立的数据集合、向量索引和企业文档知识。
-      MCP 不是检索引擎本身，也不是必须组件；自研应用可以直接调用 AIDE RAG API。
-      </p>
-      <div class="q">适合：AFX + AIDE、本地 AI 数据平台、企业私有数据 RAG</div>
-      <div class="q">"查找 ONTAP 故障处理手册中关于 SnapMirror 回切的标准流程"</div></div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">暴露 AIDE 的 RAG 检索 API：基于向量语义相似度找到最相关的企业文档，AI 回答自带出处。OAuth2（PKCE / 设备码）认证，配置保存在本地 ~/.netapp。</p>
+      <div class="q">"在我们的产品文档里找关于 SnapMirror 切换步骤的说明"</div></div>
     <div class="qa"><h4>📚 Workload Factory GenAI KB MCP</h4>
       <div class="q" style="font-family:var(--mono);font-size:12px">knowledge base search</div>
-      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">
-      面向 <b>NetApp Workload Factory GenAI Knowledge Base</b> 的 Agent 接入层。
-      将已经在 AWS 环境中构建完成的 GenAI Knowledge Base 暴露给 MCP Client，
-      通常结合 Amazon Bedrock、FSx for ONTAP 和 Workload Factory GenAI 工作流使用。
-      MCP Server 可在本地电脑或 Agent 服务器侧运行；知识库与 RAG 服务在 AWS 侧。它用于知识查询，<b>不创建、不扩容、也不管理 FSx for ONTAP</b>。
-      </p>
-      <div class="q">适合：AWS + FSx for ONTAP + Amazon Bedrock RAG 场景</div>
-      <div class="q">"从云上运维知识库查找类似故障处理记录"</div></div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">跨 NetApp Workload Factory GenAI 知识库统一检索（TypeScript · stdio），把已构建的企业知识库直接接入任意 MCP 客户端。</p>
+      <div class="q">"从运维知识库里查一下上次类似故障的处置记录"</div></div>
   </div>
 </section>
 
@@ -560,6 +519,118 @@
       <div class="chat-foot"><span class="hint">💡 自动逐步播放 · 工具调用按服务器着色：<span class="badge h">Harvest</span> <span class="badge o">ONTAP</span> <span class="badge d">DataOps</span> <span class="badge k">AIDE / WF KB</span></span></div>
     </div>
   </div>
+</section>
+
+<!-- ================= 安全授权 ================= -->
+<section class="page" id="p-security">
+  <h1>安全与<span class="accent">分级授权</span></h1>
+  <p class="sub">ONTAP MCP 用 <code style="font-family:var(--mono);font-size:12.5px">ontap.yaml</code> 中注册的<b>集群管理员账户</b>、经 REST API over HTTPS 与存储通讯，凭证只留在服务器端，客户端与每次调用都不接触密码。它本身<b>没有原生的多用户分级</b>——分级授权需要在其周围搭三层来实现，其中 ONTAP RBAC 是不可绕过的底线。</p>
+
+  <h2>分级授权：三层架构</h2>
+  <p class="sub">用户身份在<b>网关层</b>进入系统，"级别"由<b>连到哪个 MCP 实例</b>决定，最终强制由 <b>ONTAP RBAC</b> 完成。</p>
+  <div class="arch-svg" style="margin-top:18px">
+    <svg viewBox="0 0 900 470" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+      <defs>
+        <marker id="sah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#5b6c84"/></marker>
+      </defs>
+      <!-- users -->
+      <text x="95" y="28" text-anchor="middle" fill="#17263c" font-size="13" font-weight="700">用户 / 团队</text>
+      <g>
+        <rect x="20" y="42" width="150" height="34" rx="8" fill="#e6f5f3" stroke="#00857c"/>
+        <text x="95" y="64" text-anchor="middle" fill="#00594f" font-size="11.5">只读组（审计/查看）</text>
+        <rect x="20" y="84" width="150" height="34" rx="8" fill="#e8f1fc" stroke="#0067C5"/>
+        <text x="95" y="106" text-anchor="middle" fill="#003f78" font-size="11.5">运维组（日常开通）</text>
+        <rect x="20" y="126" width="150" height="34" rx="8" fill="#fdeaea" stroke="#c94040"/>
+        <text x="95" y="148" text-anchor="middle" fill="#8f2b2b" font-size="11.5">管理员组（高危操作）</text>
+      </g>
+      <text x="95" y="182" text-anchor="middle" fill="#8896aa" font-size="10.5">经企业 SSO 登录</text>
+      <!-- gateway -->
+      <line x1="170" y1="100" x2="235" y2="100" stroke="#5b6c84" stroke-width="1.8" marker-end="url(#sah)"/>
+      <rect x="240" y="40" width="185" height="150" rx="12" fill="#fff8ec" stroke="#b26a00"/>
+      <text x="332" y="66" text-anchor="middle" fill="#7a4a00" font-size="14" font-weight="700">① 认证网关</text>
+      <text x="332" y="84" text-anchor="middle" fill="#b26a00" font-size="10.5">真正引入"用户身份"</text>
+      <rect x="256" y="96" width="153" height="26" rx="6" fill="#ffffff" stroke="#f0dcb8"/>
+      <text x="332" y="113" text-anchor="middle" fill="#33475f" font-size="11">SSO / OAuth 识别用户</text>
+      <rect x="256" y="126" width="153" height="26" rx="6" fill="#ffffff" stroke="#f0dcb8"/>
+      <text x="332" y="143" text-anchor="middle" fill="#33475f" font-size="11">按组路由 / 过滤工具</text>
+      <rect x="256" y="156" width="153" height="26" rx="6" fill="#ffffff" stroke="#f0dcb8"/>
+      <text x="332" y="173" text-anchor="middle" fill="#33475f" font-size="11">审计：谁·何时·做了什么</text>
+      <!-- MCP instances -->
+      <text x="547" y="28" text-anchor="middle" fill="#17263c" font-size="13" font-weight="700">② 分级 MCP 实例</text>
+      <line x1="425" y1="88" x2="462" y2="70" stroke="#00857c" stroke-width="1.8" marker-end="url(#sah)"/>
+      <line x1="425" y1="115" x2="462" y2="115" stroke="#0067C5" stroke-width="1.8" marker-end="url(#sah)"/>
+      <line x1="425" y1="142" x2="462" y2="162" stroke="#c94040" stroke-width="1.8" marker-end="url(#sah)"/>
+      <rect x="465" y="46" width="165" height="42" rx="9" fill="#e6f5f3" stroke="#00857c"/>
+      <text x="547" y="64" text-anchor="middle" fill="#00594f" font-size="11.5" font-weight="600">只读实例</text>
+      <text x="547" y="80" text-anchor="middle" fill="#00857c" font-size="10">--read-only 启动</text>
+      <rect x="465" y="94" width="165" height="42" rx="9" fill="#e8f1fc" stroke="#0067C5"/>
+      <text x="547" y="112" text-anchor="middle" fill="#003f78" font-size="11.5" font-weight="600">开通实例</text>
+      <text x="547" y="128" text-anchor="middle" fill="#0067C5" font-size="10">卷/导出/快照工具</text>
+      <rect x="465" y="142" width="165" height="42" rx="9" fill="#fdeaea" stroke="#c94040"/>
+      <text x="547" y="160" text-anchor="middle" fill="#8f2b2b" font-size="11.5" font-weight="600">管理实例</text>
+      <text x="547" y="176" text-anchor="middle" fill="#c94040" font-size="10">含删除/SnapMirror 切换</text>
+      <!-- ONTAP accounts + RBAC -->
+      <text x="770" y="28" text-anchor="middle" fill="#17263c" font-size="13" font-weight="700">③ ONTAP RBAC（强制）</text>
+      <line x1="630" y1="67" x2="667" y2="70" stroke="#5b6c84" stroke-width="1.8" marker-end="url(#sah)"/>
+      <line x1="630" y1="115" x2="667" y2="115" stroke="#5b6c84" stroke-width="1.8" marker-end="url(#sah)"/>
+      <line x1="630" y1="163" x2="667" y2="160" stroke="#5b6c84" stroke-width="1.8" marker-end="url(#sah)"/>
+      <rect x="670" y="46" width="210" height="42" rx="9" fill="#ffffff" stroke="#c6d4e6"/>
+      <text x="775" y="64" text-anchor="middle" fill="#33475f" font-size="11">role-readonly 账户</text>
+      <text x="775" y="80" text-anchor="middle" fill="#8896aa" font-size="10">仅读权限</text>
+      <rect x="670" y="94" width="210" height="42" rx="9" fill="#ffffff" stroke="#c6d4e6"/>
+      <text x="775" y="112" text-anchor="middle" fill="#33475f" font-size="11">role-provision 账户</text>
+      <text x="775" y="128" text-anchor="middle" fill="#8896aa" font-size="10">卷/导出策略/快照</text>
+      <rect x="670" y="142" width="210" height="42" rx="9" fill="#ffffff" stroke="#c6d4e6"/>
+      <text x="775" y="160" text-anchor="middle" fill="#33475f" font-size="11">role-admin 账户</text>
+      <text x="775" y="176" text-anchor="middle" fill="#8896aa" font-size="10">全部权限</text>
+      <!-- bottom emphasis -->
+      <rect x="240" y="222" width="640" height="60" rx="10" fill="#f0f5fb" stroke="#dbe4f0"/>
+      <text x="560" y="248" text-anchor="middle" fill="#17263c" font-size="12.5" font-weight="600">🔒 不可绕过的底线：即使 MCP 暴露了 delete_volume，若底层账户无此权限，ONTAP 直接拒绝</text>
+      <text x="560" y="270" text-anchor="middle" fill="#5b6c84" font-size="11">强制点在存储侧 —— 网关或客户端被绕过时，RBAC 仍是最后一道闸</text>
+      <!-- credential flow bottom -->
+      <text x="20" y="320" fill="#17263c" font-size="13" font-weight="700">凭证如何存放与流动</text>
+      <rect x="20" y="332" width="270" height="118" rx="10" fill="#ffffff" stroke="#c6d4e6"/>
+      <text x="35" y="356" fill="#33475f" font-size="11.5">• 账户密码仅存于各实例的 ontap.yaml</text>
+      <text x="35" y="378" fill="#33475f" font-size="11.5">• 客户端 / AI / 每次调用都不接触凭证</text>
+      <text x="35" y="400" fill="#33475f" font-size="11.5">• 一次注册，多集群按名路由</text>
+      <text x="35" y="422" fill="#33475f" font-size="11.5">• 生产：专用最小权限账户 + 正式 TLS</text>
+      <text x="35" y="442" fill="#8896aa" font-size="10.5">（关闭 use_insecure_tls，配受信证书）</text>
+      <text x="320" y="320" fill="#17263c" font-size="13" font-weight="700">审计归属：注意"服务账户"问题</text>
+      <rect x="320" y="332" width="560" height="118" rx="10" fill="#ffffff" stroke="#c6d4e6"/>
+      <text x="335" y="356" fill="#33475f" font-size="11.5">• MCP 用服务账户访问，ONTAP 日志里所有操作显示为同一账户，看不出真人</text>
+      <text x="335" y="380" fill="#33475f" font-size="11.5">• 方案一：网关层记录"用户身份 ↔ 操作"的对应关系并留痕</text>
+      <text x="335" y="404" fill="#33475f" font-size="11.5">• 方案二：每团队用各自独立的 ONTAP 账户/实例，让原生审计即可区分</text>
+      <text x="335" y="430" fill="#33475f" font-size="11.5">• 高危操作（删除 / SnapMirror 切换）建议独立实例 + 独立审计 + 人工确认</text>
+    </svg>
+  </div>
+
+  <h2>四道防护，逐层叠加</h2>
+  <div class="grid g2">
+    <div class="card"><span class="badge k">③ 底线</span><h3 style="margin-top:8px">ONTAP RBAC 专用账户</h3><p>为每个级别建专用 ONTAP 账户并授予对应角色（只读 / 开通 / 管理）。强制点在存储侧，无法绕过——这是最可靠的一层，务必先做。建议用专用最小权限账户，而非直接拿超级管理员。</p></div>
+    <div class="card"><span class="badge o">② 隔离</span><h3 style="margin-top:8px">多 MCP 实例分级</h3><p>一个实例绑定一个账户。只读实例叠加 <code style="font-family:var(--mono);font-size:12px">--read-only</code> 双保险；不同实例在 ontap.yaml 注册不同集群子集，还能按团队/环境隔离。用户"属于哪级"= 被允许连到哪个端点。</p></div>
+    <div class="card"><span class="badge k">① 识别</span><h3 style="margin-top:8px">前置认证网关</h3><p>在 MCP 端点前放认证网关：SSO/OAuth 识别登录用户 → 按组路由到对应级别实例或过滤工具 → 记录操作。用户身份在这一层进入系统，是细粒度分级与按人审计的关键。</p></div>
+    <div class="card"><span class="badge h">＋ 加固</span><h3 style="margin-top:8px">网络与工具护栏</h3><p>网段/防火墙限制谁能触达管理级端点；工具自带 readOnly / idempotent / destructive 提示；高危操作走独立实例并要求人工确认。多层叠加，单点被绕过仍有兜底。</p></div>
+  </div>
+
+  <h2>认证网关：可选实现产品</h2>
+  <p class="sub">网关不是单一产品，常见做法是"身份提供商(IdP) + 网关"组合。按对 MCP 场景的贴合度分四类，可结合现有基础设施选型。</p>
+  <div class="grid g2">
+    <div class="card"><span class="badge k">最贴合</span><h3 style="margin-top:8px">MCP / Agentic 专用网关</h3><p>专为保护 MCP / Agent 工具调用设计，由网关在上游处理 OAuth 2.1、下发短期令牌，MCP 服务器不持凭证：<b>Pomerium</b>（身份感知）、<b>Microsoft MCP Gateway</b>（K8s / Entra ID）、<b>Kong</b>（原生 MCP OAuth 2.1）、<b>Solo agentgateway</b>（含 DCR）、<b>Hypr MCP Gateway</b>（一键 OAuth）。</p></div>
+    <div class="card"><span class="badge o">识别到人</span><h3 style="margin-top:8px">企业身份提供商（IdP）</h3><p>网关把认证委托给 IdP，这是"用户身份"的真正来源：<b>Okta</b>、<b>Microsoft Entra ID</b>、<b>Auth0</b>、<b>Keycloak</b>（开源）、<b>WorkOS</b>。选型通常取决于企业现有的 SSO。</p></div>
+    <div class="card"><span class="badge h">复用现有</span><h3 style="margin-top:8px">通用 API 网关 / 反向代理</h3><p>复用现有基础设施、自建路由与工具过滤：<b>Kong</b>、<b>APISIX</b>、<b>Envoy</b>、<b>NGINX / OpenResty</b>、<b>AWS API Gateway</b>、<b>Azure API Management</b>。负责终止 TLS、校验令牌、按组路由到不同 MCP 实例。</p></div>
+    <div class="card"><span class="badge k">选型建议</span><h3 style="margin-top:8px">怎么选</h3><p>贴合 MCP 最省事：<b>Pomerium</b> 或 <b>Microsoft MCP Gateway</b>（K8s / Azure 环境）。已有 SSO：网关只做"验令牌 + 按组路由"，认证交给现有 <b>Okta / Entra</b>，改动最小。全开源自建：<b>Keycloak + Kong / APISIX</b>。</p></div>
+  </div>
+  <p class="sub" style="font-size:13px;margin-top:12px">⚠️ 无论选哪个网关，它只解决"识别用户 + 路由到对应级别实例 + 审计"这一层；<b>最终强制仍落在 ONTAP RBAC 专用账户上</b>，网关被绕过时 RBAC 才是兜底。</p>
+
+  <h2>典型分级对照</h2>
+  <table>
+    <tr><th>级别</th><th>用户</th><th>MCP 实例</th><th>ONTAP 账户 / 角色</th><th>可做</th></tr>
+    <tr><td><span class="badge h">只读</span></td><td class="sm">审计 / 值班查看 / 外部演示</td><td class="sm">--read-only 实例</td><td class="sm">role-readonly（仅读）</td><td class="sm">查询卷/容量/配置，list_* 与 ontap_get</td></tr>
+    <tr><td><span class="badge o">运维</span></td><td class="sm">存储运维 / 应用团队自助</td><td class="sm">开通实例</td><td class="sm">role-provision</td><td class="sm">建卷、导出策略、快照、QoS 等日常开通</td></tr>
+    <tr><td><span class="badge k">管理</span></td><td class="sm">存储管理员 / 架构师</td><td class="sm">管理实例（独立审计）</td><td class="sm">role-admin（全部）</td><td class="sm">删除、SnapMirror 切换/回切等高危操作</td></tr>
+  </table>
+  <p class="sub" style="font-size:13px;margin-top:12px">一句话：ONTAP MCP 无原生多用户分级——靠 <b>ONTAP RBAC 强制 + 多实例隔离 + SSO 网关识别</b> 三层实现，RBAC 是绕不过的底线，网关是"识别到人"与审计的关键。</p>
+  <button class="btn" onclick="go('deploy')">查看部署 →</button>
 </section>
 
 <!-- ================= 部署 ================= -->
@@ -709,6 +780,8 @@ uvx --from netapp-dataops-traditional netapp_dataops_cli.py config</pre>
   <a href="https://community.netapp.com/t5/Tech-ONTAP-Blogs/New-ONTAP-MCP-AI-that-Modernizes-Your-Storage-Operations/ba-p/465968" target="_blank">ONTAP MCP 博客</a>
   <a href="https://github.com/NetApp/netapp-dataops-toolkit/blob/main/netapp_dataops_traditional/docs/mcp_server.md" target="_blank">DataOps Toolkit MCP</a>
   <a href="https://github.com/NetApp/aide-mcp-server" target="_blank">AIDE MCP</a>
+  <a href="https://www.pomerium.com/blog/top-5-agentic-gateways-for-securing-mcp-tool-calls-in-2026" target="_blank">MCP Agentic 网关(Pomerium)</a>
+  <a href="https://workos.com/blog/best-mcp-server-authentication-providers" target="_blank">MCP 认证提供商(WorkOS)</a>
   <br>本页面为客户交流演示用途，聊天内容与部分工具名称为模拟示意。NetApp、ONTAP、StorageGRID、SnapMirror 为 NetApp, Inc. 的商标。
 </div></footer>
 
@@ -891,11 +964,11 @@ const scenarios=[
     {type:'ai',text:'✅ 工作区 <span class="kw">ds-alice</span> 已就绪：访问地址 <span class="kw">http://k8s.corp.local:30888</span>，2TB 持久卷已 Bound（ONTAP-NAS 后端）。之后还可以对整个工作区做克隆/快照，实验分支管理像管代码一样轻。'}
    ]},
   /* ---- 知识检索类 ---- */
-  {id:'aide',grp:'k',ic:'🧠',name:'跨两套后端的 RAG 问答',brief:'按数据位置分别查询 AIDE 与 AWS KB',
-   card:'当同一 Agent 同时获得两套系统授权时，可分别查询 AIDE 企业数据集合与 AWS Workload Factory GenAI Knowledge Base，再合并有出处的结果。',
+  {id:'aide',grp:'k',ic:'🧠',name:'企业知识库 RAG 问答',brief:'AIDE 向量检索 + WF KB 联查',
+   card:'"去我们知识库找 SnapMirror 回切的标准步骤"——AIDE MCP 向量语义检索企业文档，WF KB MCP 联查运维知识库，答案带出处。',
    steps:[
     {type:'user',text:'客户问 SnapMirror 切换到 DR 站点后如何回切。去我们的知识库里找标准步骤，总结成 checklist，注明出处。'},
-    {type:'ai',text:'这台 Agent 已分别配置并获权访问 AIDE 与 AWS Workload Factory GenAI Knowledge Base。我会按数据位置调用两个独立检索后端，再合并结果。'},
+    {type:'ai',text:'我先用 AIDE MCP 做向量语义检索，再用 Workload Factory KB MCP 联查运维知识库。'},
     T('k','netapp_data_engine_search',{query:'SnapMirror failover failback 回切标准流程',top_k:3}),
     R({results:[{doc:'DR-Runbook-v3.pdf',section:'§4.2 回切流程',score:0.93},{doc:'ONTAP数据保护指南.docx',section:'snapmirror resync',score:0.89},{doc:'容灾演练记录-2025Q4.md',section:'问题与改进',score:0.81}]}),
     T('w','search_knowledge_base',{knowledge_base:'ops-runbooks',query:'SnapMirror 回切 checklist'}),
