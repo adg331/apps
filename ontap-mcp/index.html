@@ -93,6 +93,11 @@
   .btn:hover{background:var(--blue2)}
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
   .btn.ghost:hover{border-color:var(--blue2);color:var(--text)}
+  .vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+  .vdlg::backdrop{background:rgba(23,38,60,.78)}
+  .vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  .vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+  .vdlg .vbar .btn{margin-top:0;background:#fff;color:var(--text)}
   /* ---------- demo ---------- */
   .demo-wrap{display:grid;grid-template-columns:280px 1fr;gap:20px;margin-top:20px}
   @media(max-width:900px){.demo-wrap{grid-template-columns:1fr}}
@@ -153,6 +158,11 @@
   </div>
 </header>
 
+<dialog class="vdlg" id="vDlg" aria-label="ONTAP MCP 讲解视频">
+  <div class="vbar"><span>NetApp ONTAP MCP · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./mcp-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+
 <main>
 
 <!-- ================= 概述 ================= -->
@@ -160,6 +170,7 @@
   <div class="tag hl">开源 · Apache 2.0</div><div class="tag">Go 语言</div><div class="tag">Streamable HTTP</div><div class="tag">多集群</div>
   <h1>用自然语言，<span class="accent">管理你的 ONTAP 存储</span></h1>
   <p class="sub">ONTAP MCP Server 基于开放标准 <b>Model Context Protocol（MCP）</b>，让 Claude、GitHub Copilot 等 AI 助手安全地查询和操作 NetApp ONTAP 存储系统——从卷开通、数据保护到多集群管理，一句话完成。</p>
+  <button class="btn" id="vOpen" type="button" style="margin-top:12px">▶ 观看 3 分半讲解视频</button>
 
   <div class="flow">
     <div class="node"><b>💬 自然语言</b><span>"创建一个 5GB 的 NFS 卷"</span></div>
@@ -375,6 +386,13 @@ function go(p){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.p));
+
+/* ============ 讲解视频弹层 ============ */
+const vDlg=document.getElementById('vDlg'), vPlayer=document.getElementById('vPlayer');
+document.getElementById('vOpen').onclick=()=>{vDlg.showModal(); vPlayer.play().catch(()=>{});};
+document.getElementById('vClose').onclick=()=>vDlg.close();
+vDlg.addEventListener('click',e=>{if(e.target===vDlg)vDlg.close();});
+vDlg.addEventListener('close',()=>vPlayer.pause());
 
 /* ============ architecture detail ============ */
 const archInfo={
