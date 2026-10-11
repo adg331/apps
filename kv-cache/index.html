@@ -77,6 +77,11 @@ h1 .hl{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-backg
 .btn.primary{background:linear-gradient(90deg,#0067c5,#5b57d0); border-color:var(--cyan); color:#fff}
 .btn.on{background:linear-gradient(90deg,#0067c5,#5b57d0); border-color:var(--cyan); color:#fff}
 .btn:disabled{opacity:.4; cursor:not-allowed; transform:none}
+.vbtn{flex:0 0 auto; padding:7px 16px; font-size:13.5px; white-space:nowrap}
+.vdlg{margin:auto; padding:0; border:0; background:transparent; width:min(1120px,calc(100vw - 32px)); max-height:calc(100vh - 32px); overflow:visible}
+.vdlg::backdrop{background:rgba(24,35,66,.78)}
+.vdlg video{display:block; width:100%; max-height:calc(100vh - 96px); aspect-ratio:16/9; background:#000; border-radius:12px; box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; color:#fff; font-size:14px; font-weight:600}
 .note{font-size:12px; color:var(--faint); margin-top:10px; line-height:1.7}
 .kpi{font-variant-numeric:tabular-nums}
 input[type=range]{accent-color:var(--cyan); width:100%}
@@ -266,6 +271,7 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
 
 <header>
   <div class="logo">NetApp AFX<small>KV Cache 分层加速 · 交互演示</small></div>
+  <button class="btn primary vbtn" id="vOpen" type="button">▶ 观看 5 分钟讲解视频</button>
   <div class="tabs" id="tabs"></div>
 </header>
 
@@ -275,6 +281,11 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
   <button class="modelBtn" data-m="dsv4pro" id="mbtn-dsv4pro">DeepSeek V4-Pro · MLA+稀疏压缩</button>
   <span class="modelArch" id="modelArch"></span>
 </div>
+
+<dialog class="vdlg" id="vDlg" aria-label="KV Cache 分层加速讲解视频">
+  <div class="vbar"><span>NetApp AFX · KV Cache 分层加速 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./kv-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
 
 <main>
 
@@ -638,10 +649,17 @@ function show(i){
 $('prevB').onclick=()=>show(cur-1);
 $('nextB').onclick=()=>show(cur+1);
 document.addEventListener('keydown',e=>{
+  if($('vDlg').open) return;
   if(e.key==='ArrowRight'||e.key==='PageDown') show(cur+1);
   else if(e.key==='ArrowLeft'||e.key==='PageUp') show(cur-1);
   else if(e.key>='1'&&e.key<='6') show(+e.key-1);
 });
+
+/* ═══════════ 讲解视频弹层 ═══════════ */
+$('vOpen').onclick=()=>{ $('vDlg').showModal(); $('vPlayer').play().catch(()=>{}); };
+$('vClose').onclick=()=>$('vDlg').close();
+$('vDlg').addEventListener('click',e=>{ if(e.target===$('vDlg')) $('vDlg').close(); });
+$('vDlg').addEventListener('close',()=>$('vPlayer').pause());
 
 /* ═══════════ 鼠标滚轮翻页 ═══════════
    规则：当前幕内容还没滚到底/顶时，滚轮照常滚动幕内内容；
