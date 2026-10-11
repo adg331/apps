@@ -33,11 +33,13 @@
   </g>
 
   <g stroke="#0067c5" stroke-width="2.5" fill="none">
-    <path d="M238 166C274 166 270 240 306 240" marker-end="url(#arrow)"/>
-    <path d="M238 230C268 230 276 254 306 254" marker-end="url(#arrow)"/>
-    <path d="M238 294C268 294 276 270 306 270" marker-end="url(#arrow)"/>
-    <path d="M238 358C274 358 270 284 306 284" marker-end="url(#arrow)"/>
+    <path d="M238 166C260 166 252 262 274 262"/>
+    <path d="M238 230C258 230 254 262 274 262"/>
+    <path d="M238 294C258 294 254 262 274 262"/>
+    <path d="M238 358C260 358 252 262 274 262"/>
+    <path d="M274 262H304" stroke-width="3" marker-end="url(#arrow)"/>
   </g>
+  <circle cx="274" cy="262" r="4.5" fill="#0067c5"/>
 
   <g filter="url(#shadow)" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
     <rect x="316" y="150" width="200" height="224" rx="16" fill="#fff" stroke="#a8c8e7"/>
