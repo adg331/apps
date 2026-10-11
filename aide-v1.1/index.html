@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>AIDE 2026 深度解析 · 制造业视角</title>
+<style>
+:root{
+  --paper:#f7f6f2; --card:#ffffff; --card2:#faf9f6; --line:#e2dfd6; --line2:#cfcbc0;
+  --ink:#16213b; --dim:#5d6679; --faint:#9097a6;
+  --in:#3f51d8; --te:#0d8a86; --am:#c9820a; --ro:#c73a5b; --vi:#7a5ad8; --gr:#2f8f5b;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(22,33,59,.05),0 10px 28px rgba(22,33,59,.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{display:flex;flex-direction:column;overflow:hidden;background:var(--paper);color:var(--ink);line-height:1.6;font-size:15px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(900px 600px at 88% 6%,rgba(63,81,216,.07),transparent 70%),radial-gradient(800px 600px at 6% 100%,rgba(13,138,134,.07),transparent 70%)}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(22,33,59,.12) 1px,transparent 1.2px);background-size:26px 26px;opacity:.55}
+header,main,footer{position:relative;z-index:1}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
+.mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ── header ── */
+header{height:56px;flex:none;display:flex;align-items:center;gap:22px;padding:0 28px;background:rgba(247,246,242,.86);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--mono);font-size:14px;letter-spacing:3px;color:var(--dim);white-space:nowrap}
+.logo b{color:var(--in)}
+.tabs{margin-left:auto;display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden}
+.tab{font-size:12.5px;padding:4px 9px;border-radius:999px;color:var(--faint);white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab.on{background:var(--ink);color:#fff}
+
+/* ── main / track ── */
+main{flex:1;overflow:hidden}
+.prog{position:absolute;left:0;top:0;height:2px;background:var(--ink);z-index:3;transition:width .5s}
+.track{display:flex;height:100%;will-change:transform;transition:transform .62s cubic-bezier(.55,.06,.24,.99)}
+.scene{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:26px 48px 28px}
+.scene-in .in{animation:fadeUp .45s both}
+.scene-in .in:nth-child(2){animation-delay:.06s}.scene-in .in:nth-child(3){animation-delay:.12s}.scene-in .in:nth-child(4){animation-delay:.18s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.wrap{max-width:1440px;margin:0 auto}
+
+/* chapter head */
+.hd{display:flex;align-items:center;gap:22px;margin-bottom:6px}
+.hd .no{font-size:76px;font-weight:200;line-height:1;color:transparent;-webkit-text-stroke:1.6px var(--c,var(--in));font-family:-apple-system,'Helvetica Neue',sans-serif;flex:none}
+.hd .k{font-family:var(--mono);font-size:12px;letter-spacing:4px;color:var(--c,var(--in))}
+.hd h1{font-size:30px;font-weight:800;letter-spacing:.5px;line-height:1.3}
+.sub{color:var(--dim);font-size:15px;max-width:1040px;margin:4px 0 20px}
+
+/* status chips */
+.st{display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:5px;white-space:nowrap;vertical-align:middle;line-height:1.5}
+.st.ga{background:var(--te);color:#fff}
+.st.pv{color:var(--vi);border:1.5px solid var(--vi);background:rgba(122,90,216,.06)}
+.st.rm{color:var(--am);border:1.5px dashed var(--am);background:rgba(201,130,10,.06)}
+.st.lim{color:var(--ro);border:1.5px solid rgba(199,58,91,.5);background:rgba(199,58,91,.05)}
+
+/* building blocks */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh)}
+.pad{padding:20px 24px}
+.lab{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;color:var(--faint);text-transform:uppercase}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.g-l{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+.g-r{display:grid;grid-template-columns:1fr 1.25fr;gap:18px}
+.mt{margin-top:18px}.mt2{margin-top:10px}
+.note{font-size:12.5px;color:var(--faint);margin-top:10px}
+.callout{border-left:4px solid var(--c,var(--te));background:#fff;border-radius:10px;padding:12px 16px;font-size:14.5px;box-shadow:var(--sh)}
+.callout b{color:var(--c,var(--te))}
+ul.pts{list-style:none}
+ul.pts li{position:relative;padding:5px 0 5px 18px;font-size:14px;color:var(--dim)}
+ul.pts li::before{content:'▸';position:absolute;left:0;color:var(--c,var(--in))}
+ul.pts li b{color:var(--ink)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;padding:5px 13px;border-radius:999px;border:1.5px solid var(--line2);background:#fff;white-space:nowrap}
+.seg{display:inline-flex;gap:4px;padding:4px;background:#efede6;border-radius:999px}
+.seg button{font-size:13px;font-weight:600;padding:5px 14px;border-radius:999px;color:var(--dim)}
+.seg button.on{background:var(--ink);color:#fff}
+.btn{font-size:13px;font-weight:700;padding:7px 16px;border-radius:999px;background:var(--ink);color:#fff}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line2)}
+.row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap}
+
+/* tables */
+table.dt{width:100%;border-collapse:collapse;font-size:13.5px}
+.dt th{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--faint);font-weight:500;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--card2)}
+.dt td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
+.dt tr:last-child td{border-bottom:none}
+.dt td.h{color:var(--ink);font-weight:650;white-space:nowrap}
+.dt td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dt tr.pick td{background:rgba(63,81,216,.06)}
+.dt tr.click{cursor:pointer}
+.dt tr.click:hover td{background:#fbfaf7}
+
+/* cover */
+.cover{min-height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px 0}
+.kick{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--in);border:1.5px solid rgba(63,81,216,.35);border-radius:999px;padding:5px 16px;background:#fff}
+.title{font-size:84px;font-weight:900;letter-spacing:2px;line-height:1.1;margin-top:22px}
+.grad{background:linear-gradient(90deg,var(--in),var(--vi) 55%,var(--te));-webkit-background-clip:text;background-clip:text;color:transparent}
+.title-en{font-family:var(--mono);font-size:15px;letter-spacing:10px;color:var(--in);margin-top:6px}
+.cover h2{font-size:26px;font-weight:700;margin-top:22px}
+.lead{max-width:880px;color:var(--dim);font-size:15.5px;margin-top:12px}
+.qs{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+.qs span{font-size:18px;font-weight:800;color:var(--in);padding:8px 20px;border-radius:999px;background:#fff;border:1.5px solid var(--line2)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,220px));gap:14px;margin-top:28px}
+.stat{padding:16px 18px;text-align:left}
+.stat .v{font-size:24px;font-weight:800;line-height:1.2}
+.stat .d{font-size:12.5px;color:var(--dim);margin-top:4px}
+.legend{display:flex;gap:16px;justify-content:center;margin-top:22px;font-size:13px;color:var(--dim);flex-wrap:wrap}
+.hint{margin-top:18px;font-size:12.5px;color:var(--faint)}
+
+/* evolution */
+.cmp td:nth-child(3){color:var(--ink)}
+.chg .n{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--in)}
+.chg b{display:block;font-size:17px;margin:4px 0}
+.chg p{font-size:13.5px;color:var(--dim)}
+
+/* architecture */
+.arch{display:grid;grid-template-columns:1fr 210px;gap:16px}
+.lyr{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:stretch;margin-bottom:10px}
+.lyr .ln{font-size:13px;font-weight:700;color:var(--dim);display:flex;align-items:center;justify-content:center;background:var(--card2);border:1px solid var(--line);border-radius:10px}
+.boxes{display:flex;gap:8px}
+.bx{flex:1;text-align:left;padding:9px 12px;border-radius:10px;background:#fff;border:1.5px solid var(--line2);transition:all .2s;min-width:0}
+.bx b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx span{display:block;font-size:11.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx:hover{border-color:var(--in)}
+.bx.on{border-color:var(--in);background:rgba(63,81,216,.06);box-shadow:0 0 0 3px rgba(63,81,216,.12)}
+.bx.rm{border-style:dashed;border-color:var(--am);background:rgba(201,130,10,.04)}
+.bx.rm.on{box-shadow:0 0 0 3px rgba(201,130,10,.15)}
+.arch.ga-only .bx.rm{display:none}
+.ctl{display:flex;flex-direction:column;gap:10px}
+.ctl .bx{flex:none}
+.env{border:2px dashed rgba(13,138,134,.45);border-radius:16px;padding:16px;position:relative}
+.env::before{content:'自有环境 · 数据与元数据不离开';position:absolute;left:16px;top:-11px;background:var(--paper);padding:0 8px;font-size:12px;font-weight:700;color:var(--te)}
+.det h3{font-size:19px;margin:6px 0}
+.det p{font-size:14px;color:var(--dim)}
+
+/* scan */
+.steps{display:grid;grid-template-columns:repeat(var(--n,6),1fr);gap:8px}
+.stp{text-align:left;padding:10px 12px;border-radius:10px;background:#fff;border:1.5px solid var(--line2)}
+.stp .n{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--faint)}
+.stp .l{font-size:14px;font-weight:700}
+.stp.on{border-color:var(--vi);background:rgba(122,90,216,.06)}
+.stp.on .n{color:var(--vi)}
+.body{margin-top:12px;min-height:84px}
+.body h4{font-size:16px;margin-bottom:4px}
+.body p{font-size:14px;color:var(--dim)}
+.console{background:#1b2236;color:#cfd6ea;border-radius:12px;padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.75;min-height:200px;white-space:pre-wrap}
+.console .c{color:#7d88a6}.console .w{color:#f0b35a}.console .ok{color:#6fd3a5}.console .k{color:#9fb0ff}.console .s{color:#ffd28a}.console .p{color:#6fd3a5;font-weight:700}
+
+/* filters */
+.fgrp{margin-bottom:12px}
+.fgrp .t{font-size:12.5px;font-weight:700;color:var(--dim);margin-bottom:6px}
+.fchip{display:inline-block;font-size:13px;padding:5px 12px;border-radius:8px;border:1.5px solid var(--line2);background:#fff;margin:0 6px 6px 0;cursor:pointer}
+.fchip.on{border-color:var(--vi);background:rgba(122,90,216,.08);color:var(--vi);font-weight:700}
+.rec div{padding:3px 8px;border-radius:6px}
+.rec span{color:var(--in)}
+
+/* dashboard */
+.bar{display:flex;height:40px;border-radius:10px;overflow:hidden;background:#efede6}
+.bar i{display:block;height:100%;transition:width .35s}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.kpi{padding:10px 12px;border-radius:10px;background:var(--card2);border:1px solid var(--line)}
+.kpi .v{font-family:var(--mono);font-size:24px;font-weight:800}
+.kpi .d{font-size:12px;color:var(--dim)}
+.sl{display:grid;grid-template-columns:110px 1fr 90px;align-items:center;gap:12px;margin-top:12px;font-size:13.5px}
+.sl output{font-family:var(--mono);font-weight:700;text-align:right}
+input[type=range]{width:100%;accent-color:var(--ink)}
+.rb{display:grid;grid-template-columns:200px 1fr 50px;align-items:center;gap:12px;font-size:13.5px;margin-top:10px}
+.rb i{display:block;height:14px;border-radius:4px;background:var(--am)}
+
+/* roadmap */
+.rmcol{padding:18px 20px;border-top:4px solid var(--c)}
+.rmcol .w{font-size:26px;font-weight:800;color:var(--c)}
+.rmcol .en{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--faint);margin-left:8px}
+.rmcol .vis{font-size:13.5px;color:var(--dim);margin:4px 0 10px;min-height:40px}
+.rit{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:9px;font-size:14px;border:1px solid transparent}
+.rit .st{width:74px;flex:none}
+.rit:hover{background:var(--card2)}
+.rit.on{border-color:var(--line2);background:#fff;box-shadow:var(--sh)}
+.rit.dim{opacity:.25}
+.rmwrap.full .rit .st.pv,.rmwrap.full .rit .st.rm{background:var(--te);color:#fff;border:1.5px solid var(--te)}
+.rmwrap.full .vis{color:var(--ink);font-weight:600}
+
+/* footer */
+footer{height:48px;flex:none;display:flex;align-items:center;gap:14px;padding:0 24px;background:rgba(247,246,242,.86);backdrop-filter:blur(6px);border-top:1px solid var(--line)}
+.navBtn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line2);background:#fff;font-size:16px;line-height:1}
+.navBtn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line2);cursor:pointer;padding:0}
+.dot.on{background:var(--ink);width:22px;border-radius:4px}
+.fnote{margin-left:auto;font-size:11.5px;color:var(--faint);text-align:right;line-height:1.4}
+select:focus,.btn:focus-visible,.tab:focus-visible,.navBtn:focus-visible,.dot:focus-visible,.seg button:focus-visible,.bx:focus-visible,.rit:focus-visible,.stp:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+
+.flowln{animation:dash 1.4s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-24}}
+@media (max-width:1250px){.tabs{display:none}}
+@media (max-width:1100px){.grid2,.grid3,.g-l,.g-r,.arch{grid-template-columns:1fr}.grid4,.stats{grid-template-columns:1fr 1fr}.steps{grid-template-columns:repeat(3,1fr)}.title{font-size:60px}.fnote{display:none}}
+@media (max-width:820px){.scene{padding:18px 18px}.boxes{flex-wrap:wrap}.bx{flex:1 1 40%}.hd .no{font-size:52px}.hd h1{font-size:23px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><b>NETAPP AIDE</b> · 深度解析</div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+
+<main id="main">
+<div class="prog" id="prog"></div>
+<div class="track" id="track">
+
+<!-- ① 封面 -->
+<section class="scene" id="sc1"><div class="wrap cover">
+  <span class="kick in">AIDE 1.1 · INSIGHT 2026 · 制造业视角</span>
+  <div class="title in">NetApp <span class="grad">AIDE</span></div>
+  <div class="title-en">AI DATA ENGINE</div>
+  <h2>全企业的元数据底座：工厂数据的一本统一账</h2>
+  <p class="lead">图纸、工艺文件、质检图像、设备日志与生产数据库，散落在总部、分厂和云上。AIDE 以纯软件形态部署在自有基础设施上，就地扫描 NetApp 与第三方存储，构建统一元数据目录，回答四个基础问题：</p>
+  <div class="qs"><span>有哪些？</span><span>在哪里？</span><span>归谁？</span><span>还用不用？</span></div>
+  <div class="stats">
+    <div class="card stat"><div class="v">纯软件</div><div class="d">无 NetApp 硬件、GPU 或 AFX 依赖</div></div>
+    <div class="card stat"><div class="v mono">4 类接入</div><div class="d">NFS · SMB · S3 · 数据库</div></div>
+    <div class="card stat"><div class="v mono">30 亿 / 60 亿+</div><div class="d">Lite / Enterprise 参考文件规模</div></div>
+    <div class="card stat"><div class="v mono">6 个月</div><div class="d">评估期免费（新闻稿表述）</div></div>
+  </div>
+  <div class="legend"><span><span class="st ga">GA</span> 已发布（计划 2026-10-23）</span><span><span class="st pv">预览</span> 已宣布的技术预览</span><span><span class="st rm">ROADMAP</span> 路线图，未承诺时间</span></div>
+  <div class="hint">滚轮 / ← → 翻幕 · 数字键 1–9 直达 · 顶部标签跳转章节</div>
+</div></section>
+
+<!-- ② 版本演进 -->
+<section class="scene" id="sc2"><div class="wrap">
+  <div class="hd in"><span class="no">01</span><div><div class="k">EVOLUTION · 版本演进</div><h1>同名产品，不同的架构</h1></div></div>
+  <p class="sub">AIDE 在 2025 年随 AFX 发布；2026 年 Insight 重新定义为与存储解耦的纯软件服务。本幕是唯一涉及旧版的页面，此后各幕只描述新版。</p>
+  <div class="card in">
+    <div class="row pad" style="padding-bottom:0"><span class="lab">2025 版 vs 2026 版</span>
+      <div class="seg" id="evoSeg"><button class="on" data-evo="all">全部维度</button><button data-evo="a">架构与交付</button><button data-evo="d">数据采集</button><button data-evo="c">能力范围</button></div></div>
+    <table class="dt cmp"><thead><tr><th style="width:130px">维度</th><th>2025 · AFX 内置形态</th><th>2026 · 纯软件形态</th></tr></thead><tbody id="evoBody"></tbody></table>
+  </div>
+  <div class="grid4 mt in">
+    <div class="card pad chg"><div class="n">变化 01</div><b>从设备到软件</b><p>部署在已有的虚拟化或 K8s 平台上，单 VM 约 45 分钟完成安装。</p></div>
+    <div class="card pad chg"><div class="n">变化 02</div><b>从单平台到全资产</b><p>同一目录覆盖多厂商、多站点、本地与云上的文件和对象存储。</p></div>
+    <div class="card pad chg" style="border-color:rgba(201,130,10,.45)"><div class="n" style="color:var(--am)">变化 03 · 代价</div><b>从专有接口到标准协议</b><p>换来异构覆盖；新鲜度取决于扫描周期，源端承担扫描读负载。</p></div>
+    <div class="card pad chg"><div class="n">变化 04</div><b>从全栈到先打底座</b><p>首发聚焦元数据；内容理解、向量化与检索进入路线图。</p></div>
+  </div>
+  <p class="note">旧版依据 AIDE 1.0.0 文档（2026-05）；新版依据 AIDE 1.1.0 文档（2026-09-30）与 2026-09-29 新闻稿。</p>
+</div></section>
+
+<!-- ③ 架构全景 -->
+<section class="scene" id="sc3"><div class="wrap">
+  <div class="hd in"><span class="no">02</span><div><div class="k">ARCHITECTURE · 架构全景</div><h1>五层结构，全部运行在自有环境内</h1></div></div>
+  <div class="row"><p class="sub" style="margin:0">数据源 → 采集 → 目录 → 能力 → 接口；NetApp Console 作为托管控制面。点击组件查看说明，切换叠加路线图组件。</p>
+    <div class="seg" id="archSeg"><button class="on" data-arch="ga">已发布能力</button><button data-arch="rm">叠加路线图</button></div></div>
+  <div class="g-l in" style="grid-template-columns:1.7fr 1fr">
+    <div class="arch ga-only" id="arch">
+      <div class="env" id="archRows"></div>
+      <div class="ctl" id="archCtl"></div>
+    </div>
+    <div class="card pad det" id="archDet"></div>
+  </div>
+  <div class="grid3 mt in">
+    <div class="callout"><b>边界</b>：扫描、目录与操作都在自有基础设施上；数据和元数据不离开本地环境。</div>
+    <div class="callout" style="--c:var(--in)"><b>控制面</b>：部署、角色、界面经 NetApp Console；Console Agent 负责本地与 Console 的连接和认证。</div>
+    <div class="callout" style="--c:var(--vi)"><b>解耦</b>：采集只依赖标准协议，存储侧不装代理、不改架构。</div>
+  </div>
+</div></section>
+
+<!-- ④ 部署模型 -->
+<section class="scene" id="sc4"><div class="wrap">
+  <div class="hd in" style="--c:var(--te)"><span class="no">03</span><div><div class="k">DEPLOYMENT · 部署模型</div><h1>Lite 与 Enterprise，按增长后的体量选型</h1></div></div>
+  <p class="sub">Console 不负责置备基础设施：准备主机或集群后，从 Console 复制预生成的安装命令执行。两种模式相互独立，<b style="color:var(--ro)">不支持互相迁移</b>。</p>
+  <div class="g-l in">
+    <div class="card pad">
+      <div class="row"><div class="seg" id="depSeg"><button class="on" data-dep="lite">Lite · 单 VM</button><button data-dep="ent">Enterprise · RKE2</button></div><span class="pill" id="depHint"></span></div>
+      <table class="dt"><thead id="depHead"></thead><tbody id="depBody"></tbody></table>
+      <p class="note">规格为文档推荐基线（按 3～4 天完成首次全量扫描设计），不是硬上限；欠配不会失败，但会拉长首扫时间。</p>
+      <ul class="pts mt2" id="depReq"></ul>
+    </div>
+    <div class="card pad">
+      <div class="row"><span class="lab">网络连接与外部依赖 · 点击查看</span></div>
+      <table class="dt"><thead><tr><th>连接</th><th>端口</th><th>用途</th></tr></thead><tbody id="netBody"></tbody></table>
+      <div class="callout mt2" style="--c:var(--am)"><b>最常卡住的三处</b>：到各存储的协议端口、到 AD 的 LDAP、出站到 Console 与镜像仓库的 HTTPS。</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑤ 规模估算 -->
+<section class="scene" id="sc5"><div class="wrap">
+  <div class="hd in" style="--c:var(--te)"><span class="no">04</span><div><div class="k">SIZING · 规模与新鲜度</div><h1>文件数决定规格与扫描周期</h1></div></div>
+  <p class="sub">文件与目录总数是规格的主导因素，其次是目录深度、所需扫描速率和后端盘性能。拖动滑块估算推荐规格、首次全量扫描与单轮重扫时长。</p>
+  <div class="g-l in">
+    <div class="card pad">
+      <div class="row"><div class="seg" id="cmSeg"><button class="on" data-cm="lite">Lite</button><button data-cm="ent">Enterprise</button></div><span class="lab">文件与目录总数</span></div>
+      <input type="range" id="cSlider" min="0" max="100" value="45" aria-label="文件与目录总数">
+      <div class="row" style="font-size:12px;color:var(--faint);margin-top:2px"><span>5000 万</span><span>5 亿</span><span>50 亿</span><span>100 亿</span></div>
+      <div class="grid4 mt2">
+        <div class="kpi"><div class="d">文件数</div><div class="v" id="cFiles">—</div></div>
+        <div class="kpi"><div class="d">推荐规格</div><div class="v" id="cSize" style="font-size:20px">—</div><div class="d" id="cSizeSub"></div></div>
+        <div class="kpi"><div class="d">扫描速率 / 天</div><div class="v" id="cRate">—</div></div>
+        <div class="kpi"><div class="d">单轮全量（天）</div><div class="v" id="cDays" style="color:var(--am)">—</div></div>
+      </div>
+      <ul class="pts mt2" id="cSpec"></ul>
+      <p class="note">速率：Lite 文档区间 5000 万～10 亿 / 天、Enterprise 3 节点约 2.5 亿 / 天、9 节点约 20 亿 / 天；中间档为按"3～4 天首扫"基线推算的估算值，非性能承诺。</p>
+    </div>
+    <div>
+      <div class="card pad" style="text-align:center">
+        <svg width="170" height="170" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="80" fill="none" stroke="#e2dfd6" stroke-width="14"/><circle id="lagArc" cx="100" cy="100" r="80" fill="none" stroke="#c9820a" stroke-width="14" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="502" stroke-dashoffset="120"/><text x="100" y="96" text-anchor="middle" font-size="15" fill="#5d6679">最大滞后</text><text id="lagTxt" x="100" y="124" text-anchor="middle" font-size="24" font-weight="800" fill="#16213b" font-family="SF Mono,Menlo,monospace">—</text></svg>
+        <div style="font-size:18px;font-weight:800;margin-top:6px">一轮扫描时长 = 元数据最大滞后</div>
+        <p class="note">文档未单独给出增量重扫速率，此处按全量速率给出上限估计，建议以首扫实测校准。</p>
+      </div>
+      <div class="card pad mt">
+        <span class="lab">影响规格的因素</span>
+        <ul class="pts mt2">
+          <li><b>对象总数</b>：内存、CPU、索引盘按对象数线性增长</li>
+          <li><b>目录结构</b>：深层嵌套或碎片化目录更耗资源</li>
+          <li><b>后端盘性能</b>：索引与事件处理需持续 IOPS，建议 NVMe / SSD</li>
+          <li><b>HA 副本</b>：Enterprise 默认跨节点复制，资源高于同规模单机</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑥ 数据接入 -->
+<section class="scene" id="sc6"><div class="wrap">
+  <div class="hd in" style="--c:var(--vi)"><span class="no">05</span><div><div class="k">INGEST · 数据接入</div><h1>只需要标准协议</h1></div></div>
+  <p class="sub">AIDE 在协议层读取元数据，不需要存储厂商 API，也不在存储上安装代理；只要对外提供 NFS、SMB/CIFS 或 S3，就能纳入同一目录。</p>
+  <div class="g-l in">
+    <div class="card">
+      <table class="dt"><thead><tr><th>接入类型</th><th>覆盖对象</th><th>协议</th><th>需要提供</th></tr></thead><tbody>
+        <tr><td class="h">File shares group</td><td>ONTAP 卷（本地 / CVO / FSxN / ANF / GCNV）、第三方 NAS、Windows 文件服务器</td><td class="num">NFS · SMB</td><td>共享组名、主机与路径；SMB 需 CIFS 凭据</td></tr>
+        <tr><td class="h">StorageGRID</td><td>StorageGRID 存储桶，按桶开关扫描</td><td class="num">S3</td><td>S3 端点、Access Key / Secret Key</td></tr>
+        <tr><td class="h">第三方对象存储</td><td>第三方 / 云上 S3 存储桶<sup>※</sup></td><td class="num">S3</td><td>S3 端点与密钥</td></tr>
+        <tr><td class="h">Database</td><td>选定 schema：表名、行列数、表大小、发现时间</td><td class="num">DB</td><td>数据库类型、主机、端口、凭据</td></tr>
+      </tbody></table>
+      <p class="note" style="padding:0 14px 12px">※ 新闻稿与产品概述列为支持；当前文档的接入向导仅单列 StorageGRID 类型，具体接入方式以 GA 文档为准。</p>
+    </div>
+    <div class="card pad">
+      <span class="lab">工厂数据进入同一目录 · 示意</span>
+      <svg viewBox="0 0 520 300" width="100%" style="margin-top:6px" aria-hidden="true" id="ingSvg">
+        <g font-size="14" font-weight="700" fill="#16213b">
+          <g><rect x="6" y="14" width="190" height="46" rx="10" fill="#fff" stroke="#cfcbc0"/><text x="22" y="43">🏢 总部 ONTAP</text></g>
+          <g><rect x="6" y="84" width="190" height="46" rx="10" fill="#fff" stroke="#cfcbc0"/><text x="22" y="113">🏭 分厂老 NAS</text></g>
+          <g><rect x="6" y="154" width="190" height="46" rx="10" fill="#fff" stroke="#cfcbc0"/><text x="22" y="183">☁️ 云上协同桶</text></g>
+          <g><rect x="6" y="224" width="190" height="46" rx="10" fill="#fff" stroke="#cfcbc0"/><text x="22" y="253">🗄️ 生产数据库</text></g>
+        </g>
+        <g fill="none" stroke="#7a5ad8" stroke-width="2" stroke-dasharray="6 6" class="flowln">
+          <path d="M196 37 C 290 37, 300 142, 360 142"/><path d="M196 107 C 280 107, 300 142, 360 142"/><path d="M196 177 C 280 177, 300 142, 360 142"/><path d="M196 247 C 290 247, 300 142, 360 142"/>
+        </g>
+        <g font-family="SF Mono,Menlo,monospace" font-size="11" fill="#7a5ad8"><text x="238" y="30">NFS·SMB</text><text x="238" y="100">NFS·SMB</text><text x="250" y="196">S3</text><text x="250" y="262">DB</text></g>
+        <circle cx="430" cy="142" r="70" fill="#fff" stroke="#7a5ad8" stroke-width="3"/><text x="430" y="138" text-anchor="middle" font-size="28">🗂️</text><text x="430" y="168" text-anchor="middle" font-size="15" font-weight="800" fill="#16213b">同一个目录</text>
+      </svg>
+    </div>
+  </div>
+  <div class="grid2 mt in">
+    <div class="card pad"><span class="lab">身份与权限解析</span><p style="font-size:14px;color:var(--dim);margin-top:6px">经 LDAP / LDAPS / 全局编录连接 Active Directory，用于用户认证与 SMB 扫描时解析属主和 ACL。</p></div>
+    <div class="card pad"><span class="lab">扫描范围控制</span><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><span class="pill">● 按系统激活 / 停用</span><span class="pill">● 卷 / 共享 / 桶逐个开关</span><span class="pill" style="color:var(--faint)">○ SnapMirror 目标卷默认不扫描</span></div></div>
+  </div>
+</div></section>
+
+<!-- ⑦ 扫描机制 -->
+<section class="scene" id="sc7"><div class="wrap">
+  <div class="hd in" style="--c:var(--vi)"><span class="no">06</span><div><div class="k">SCANNING · 扫描机制</div><h1>挂载、遍历、索引、循环</h1></div></div>
+  <p class="sub">Metadata Engine 通过 NFS / SMB 挂载共享、S3 列举对象，提取文件系统元数据写入目录；一轮扫描完成后立即开始下一轮，以重扫识别新增、修改与删除。</p>
+  <div class="card pad in">
+    <div class="steps" id="scanSteps"></div>
+    <div class="body" id="scanBody"></div>
+  </div>
+  <div class="g-l mt in">
+    <div><div class="row"><span class="lab">扫描日志 · 示意</span><button class="btn" id="scanPlay">▶ 演示一轮扫描</button></div><div class="console" id="scanLog"><span class="c"># 点击"演示一轮扫描"</span></div><p class="note">日志为示意，非真实输出格式。</p></div>
+    <div class="card pad">
+      <span class="lab">扫描运维</span>
+      <ul class="pts mt2">
+        <li><b>Activate scans</b>：添加数据源后不会自动扫描，需逐系统激活</li>
+        <li><b>Pause / Resume</b>：按系统暂停与恢复，避开生产高峰</li>
+        <li><b>Scan all</b>：数据大幅变化后立即触发全量扫描</li>
+        <li><b>Retry all scans</b>：先修复凭据 / 网络 / 权限问题再重排</li>
+        <li><b>Deactivate</b>：停止扫描但保留配置</li>
+      </ul>
+      <div class="callout mt2"><b>使用结论前</b>：核对各系统最近扫描时间与覆盖完整性——暂停、进行中或有错误都意味着部分数据尚未评估。</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑧ 元数据与调查 -->
+<section class="scene" id="sc8"><div class="wrap">
+  <div class="hd in" style="--c:var(--vi)"><span class="no">07</span><div><div class="k">METADATA · 元数据模型与调查</div><h1>记录什么，怎么查</h1></div></div>
+  <p class="sub">目录记录路径、类型、大小、时间戳、属主、权限、哈希与自定义标签；Investigation 分三个视图，筛选条件之间为 AND。点选条件组合查询。</p>
+  <div class="g-r in">
+    <div class="card pad">
+      <span class="lab">Catalog record · 示意</span>
+      <div class="rec mono mt2" style="font-size:13.5px;line-height:1.9">
+        <div>path: <span>/分厂B/质检/2023/AOI/…</span></div><div>type: <span>.tiff</span></div><div>size: <span>4.2 MB</span></div>
+        <div>atime / mtime: <span>2023-04-18</span></div><div>owner: <span>质量部</span></div><div>acl: <span>QA-Group: rw</span></div>
+        <div>hash: <span>9f3a…c1</span></div><div>tags: <span>[待评审]</span></div>
+      </div>
+      <div class="callout mt" style="--c:var(--vi)"><b>存放与写回</b>：标签与目录元数据集中存放在元数据服务层，<b>不写回源文件或对象</b>；结果可导出用于离线分析。</div>
+    </div>
+    <div class="card pad">
+      <div class="row"><div class="seg" id="fSeg"><button class="on" data-ft="u">非结构化</button><button data-ft="s">结构化</button><button data-ft="d">目录</button></div><span class="pill" id="fHint"></span></div>
+      <div id="fBox"></div>
+      <span class="lab">策略条件表达式 · 示意</span>
+      <div class="console mt2" style="min-height:70px" id="fExpr"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑨ 了解 · 仪表盘 -->
+<section class="scene" id="sc9"><div class="wrap">
+  <div class="hd in" style="--c:var(--te)"><span class="no">08</span><div><div class="k">KNOW · 了解 · 仪表盘</div><h1>冷、陈旧与可回收容量 <span class="st ga">GA</span></h1></div></div>
+  <p class="sub">冷 / 陈旧由可配置阈值定义（默认冷 1 年、陈旧 3 年、保留期复核 7 年），修改后在下一轮扫描生效。拖动阈值观察分类变化。</p>
+  <div class="g-l in">
+    <div class="card pad">
+      <span class="lab">Active versus reclaimable · 示意数据</span>
+      <div class="sl"><span>冷 · 未访问</span><input type="range" id="sCold" min="3" max="36" value="12" aria-label="冷数据阈值"><output id="tCold"></output></div>
+      <div class="sl"><span>陈旧 · 未访问且未修改</span><input type="range" id="sStale" min="12" max="84" value="36" aria-label="陈旧数据阈值"><output id="tStale"></output></div>
+      <div class="bar mt" id="dashBar"><i style="background:var(--te)"></i><i style="background:#7fb8b6"></i><i style="background:var(--am)"></i><i style="background:var(--vi)"></i></div>
+      <div class="kpis">
+        <div class="kpi"><div class="d">■ 活跃（TiB）</div><div class="v" id="kAct" style="color:var(--te)">—</div></div>
+        <div class="kpi"><div class="d">■ 冷（TiB）</div><div class="v" id="kCold" style="color:#5f9d9b">—</div></div>
+        <div class="kpi"><div class="d">■ 陈旧（TiB）</div><div class="v" id="kStale" style="color:var(--am)">—</div></div>
+        <div class="kpi"><div class="d">■ 重复（TiB）</div><div class="v" id="kDup" style="color:var(--vi)">—</div></div>
+      </div>
+      <p class="note">数据为模拟分布，仅用于说明阈值的作用方式；默认阈值是产品默认值，不代表法规或行业保留期。</p>
+    </div>
+    <div class="card pad">
+      <span class="lab">Top data resources · 可回收比例 · 示意</span>
+      <div class="rb"><span class="mono">/分厂B/质检图像</span><i style="width:100%"></i><b class="num">62%</b></div>
+      <div class="rb"><span class="mono">/总部/归档图纸</span><i style="width:77%"></i><b class="num">48%</b></div>
+      <div class="rb"><span class="mono">/研发/仿真结果</span><i style="width:56%"></i><b class="num">35%</b></div>
+      <div class="rb"><span class="mono">/生产/MES 导出</span><i style="width:30%"></i><b class="num">19%</b></div>
+      <div class="lab mt">概览面板指标</div>
+      <ul class="pts mt2">
+        <li><b>Cold / Stale data</b>：按阈值统计的容量</li>
+        <li><b>Exposed directories</b>：权限过宽的目录，治理风险独立于容量</li>
+        <li><b>Data resources · Total files scanned</b>：已扫描资源数与文件总数</li>
+      </ul>
+      <div class="callout mt2"><b>排查优先级</b>：按可回收比例排序——小而冷的资源往往比大而活跃的更值得先看；按属主汇总可直接进入该属主的调查视图。</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑩ 了解 · 从发现到执行 -->
+<section class="scene" id="sc10"><div class="wrap">
+  <div class="hd in" style="--c:var(--te)"><span class="no">09</span><div><div class="k">KNOW · 从发现到执行</div><h1>定位 → 确认 → 执行 → 策略 <span class="st ga">GA</span></h1></div></div>
+  <p class="sub">每个工作流都遵循同一路径：仪表盘定位、调查确认、执行操作、保存为策略持续监控。点击步骤查看细节。</p>
+  <div class="card pad in"><div class="steps" id="wfSteps" style="--n:4"></div><div class="body" id="wfBody"></div></div>
+  <div class="grid4 mt in">
+    <div class="card pad"><span class="lab">Tag</span><p style="font-size:14px;color:var(--dim);margin-top:4px">需要时间或跨团队确认时先打标签，不改变文件位置。</p></div>
+    <div class="card pad"><span class="lab">Archive</span><p style="font-size:14px;color:var(--dim);margin-top:4px">仍有价值但不该占主存储，移到 NFS / SMB 冷存储目标，可留 breadcrumb 文件。</p></div>
+    <div class="card pad"><span class="lab">Copy</span><p style="font-size:14px;color:var(--dim);margin-top:4px">备份或迁移前在第二位置保留副本，原件不动。</p></div>
+    <div class="card pad" style="border-color:rgba(199,58,91,.4)"><span class="lab" style="color:var(--ro)">Delete</span><p style="font-size:14px;color:var(--dim);margin-top:4px">永久删除不可恢复，即使文件仍活跃也会删除，需输入确认短语。</p></div>
+  </div>
+  <div class="grid3 mt in">
+    <div class="callout" style="--c:var(--am)"><b>当前限制 · 策略动作有限</b><br>可挂"仅监控 / 邮件通知 / 永久删除"；自动归档与自动打标签暂不支持。</div>
+    <div class="callout" style="--c:var(--am)"><b>当前限制 · 标签不可删除或改名</b><br>标签定义只能从对象上移除，命名规范需提前约定。</div>
+    <div class="callout" style="--c:var(--ro)"><b>风险控制 · 删除策略每轮自动执行</b><br>挂载删除动作的策略会在每轮扫描后无确认删除命中文件，建议先以监控模式观察。</div>
+  </div>
+</div></section>
+
+<!-- ⑪ 信任 · 访问治理 -->
+<section class="scene" id="sc11"><div class="wrap">
+  <div class="hd in" style="--c:var(--ro)"><span class="no">10</span><div><div class="k">TRUST · 信任 · 访问治理</div><h1>开放目录看得清，角色分权管得住 <span class="st ga">GA</span></h1></div></div>
+  <p class="sub">Directories 视图按权限筛选全组织可访问的目录，查看每个用户 / 组的读写权限；AIDE 自身的操作权限通过 Console 的两个角色分配。</p>
+  <div class="g-l in">
+    <div class="card pad">
+      <div class="row"><div class="seg" id="dirSeg"><button class="on" data-dir="open">Open to organization</button><button data-dir="many">可访问用户数 &gt; 500</button><button data-dir="grp">指定组：Contractors</button></div></div>
+      <table class="dt"><thead><tr><th>目录 · 示意</th><th>属主</th><th>权限摘要</th><th>最近访问</th></tr></thead><tbody id="dirBody"></tbody></table>
+      <p class="note">流程：筛选 → 打开详情查看 View permissions → 确认是否有意为之 → 保存为策略，在每轮扫描后监控新增暴露。</p>
+    </div>
+    <div class="card">
+      <table class="dt"><thead><tr><th>能力</th><th>Administrator</th><th>Viewer</th></tr></thead><tbody>
+        <tr><td class="h">管理用户、角色、数据源与系统配置</td><td>✓</td><td style="color:var(--line2)">—</td></tr>
+        <tr><td class="h">查看仪表盘、元数据搜索、导出报表</td><td>✓</td><td>✓</td></tr>
+        <tr><td class="h">仅监控策略、打标签、管理业务标签</td><td>✓</td><td>✓</td></tr>
+        <tr><td class="h">创建带动作的策略</td><td>✓</td><td style="color:var(--line2)">—</td></tr>
+        <tr><td class="h">归档 / 复制 / 删除</td><td>✓</td><td style="color:var(--line2)">—</td></tr>
+      </tbody></table>
+      <ul class="pts pad" style="padding-top:8px">
+        <li>角色在 NetApp Console 的 Members 中按组织 / 文件夹 / 项目分配；文档建议管理员不超过 2～3 人</li>
+        <li>数据与元数据均不离开本地环境，目录内容不托管到外部</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑫ 激活 · MCP -->
+<section class="scene" id="sc12"><div class="wrap">
+  <div class="hd in" style="--c:var(--in)"><span class="no">11</span><div><div class="k">ACTIVATE · 激活 · MCP 访问</div><h1>让 Agent 读懂数据资产 <span class="st ga">GA</span></h1></div></div>
+  <p class="sub">首发提供 MCP 访问，使 Agent 与 AI 应用能以受控方式查询元数据服务层：有什么、在哪里、谁拥有、是否活跃、是否过度暴露。它提供的是元数据上下文，不是文件内容检索。</p>
+  <div class="g-l in">
+    <div class="card pad">
+      <div class="row"><div class="seg" id="mcpSeg"><button class="on" data-mcp="0">迁移评估</button><button data-mcp="1">暴露排查</button><button data-mcp="2">语料圈定</button></div><span class="lab">对话与工具调用 · 示意</span></div>
+      <div class="console" id="mcpCode"></div>
+      <p class="note">工具名称和参数不是官方接口定义；MCP 配置以 AIDE 文档为准。</p>
+    </div>
+    <div>
+      <div class="card pad">
+        <svg viewBox="0 0 440 120" width="100%" aria-hidden="true">
+          <rect x="4" y="30" width="120" height="60" rx="12" fill="#fff" stroke="#cfcbc0"/><text x="64" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#16213b">🤖 AI Agent</text>
+          <polygon points="190,20 250,20 280,60 250,100 190,100 160,60" fill="#fff" stroke="#3f51d8" stroke-width="3"/><text x="220" y="66" text-anchor="middle" font-size="17" font-weight="800" fill="#3f51d8" font-family="SF Mono,Menlo,monospace">MCP</text>
+          <rect x="316" y="30" width="120" height="60" rx="12" fill="#fff" stroke="#cfcbc0"/><text x="376" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#16213b">🗂️ 元数据服务</text>
+          <path class="flowln" d="M124 60 L160 60 M280 60 L316 60" stroke="#3f51d8" stroke-width="2.5" stroke-dasharray="6 6"/>
+        </svg>
+      </div>
+      <div class="grid2 mt">
+        <div class="card pad"><span class="lab" style="color:var(--gr)">是什么</span><ul class="pts mt2" style="--c:var(--gr)"><li>Agent 与元数据服务之间的<b>受控交互接口</b></li><li>为助手与 Agent 提供更干净、更及时的<b>元数据上下文</b></li></ul></div>
+        <div class="card pad"><span class="lab" style="color:var(--ro)">不是什么</span><ul class="pts mt2" style="--c:var(--ro)"><li>不读取文件内容、不做向量检索，不能单独完成 RAG</li><li>不是 Agent 平台，不负责构建或编排 Agent</li></ul></div>
+      </div>
+      <div class="callout mt" style="--c:var(--am)"><b>后续叠加</b>：<span class="st pv">预览</span> 代理式服务（数据到上下文）；<span class="st rm">ROADMAP</span> 语义搜索、知识图谱、决策上下文。</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑬ DataPelago -->
+<section class="scene" id="scdp"><div class="wrap">
+  <div class="hd in" style="--c:var(--am)"><span class="no">12</span><div><div class="k">ROADMAP · DATAPELAGO</div><h1>在数据所在处处理数据 <span class="st rm">ROADMAP</span></h1></div></div>
+  <p class="sub">NetApp 于 2026-07 收购 DataPelago。其 Nucleus 引擎以 CPU / GPU 异构加速，在数据所在处处理数据，免改代码加速 Spark、Trino 与 Python。NetApp 计划将其与 ONTAP、AFX、AIDE 集成，集成形态与时间未公布。</p>
+  <div class="g-l in" style="grid-template-columns:1.5fr 1fr">
+    <div class="card pad">
+      <div class="row"><div class="seg" id="dpSeg"><button data-dp="move">数据搬到计算侧</button><button class="on" data-dp="near">在数据所在处处理</button></div><span class="lab">处理路径 · 概念示意</span></div>
+      <svg viewBox="0 0 760 300" width="100%" aria-hidden="true">
+        <defs><path id="dpMove" d="M150 150 C 330 60, 470 60, 640 150"/><path id="dpNear" d="M150 150 L 300 150"/></defs>
+        <g font-family="-apple-system,PingFang SC,sans-serif">
+          <rect x="20" y="95" width="130" height="110" rx="14" fill="#fff" stroke="#cfcbc0" stroke-width="1.5"/>
+          <text x="85" y="140" text-anchor="middle" font-size="26">🗂️</text><text x="85" y="170" text-anchor="middle" font-size="14" font-weight="700" fill="#16213b">数据所在位置</text>
+          <g id="dpG1" style="display:none">
+            <use href="#dpMove" stroke="#cfcbc0" stroke-width="2.5" fill="none" stroke-dasharray="8 8" class="flowln"/>
+            <rect x="640" y="95" width="110" height="110" rx="14" fill="#fff" stroke="#cfcbc0" stroke-width="1.5"/>
+            <text x="695" y="140" text-anchor="middle" font-size="26">🖥️</text><text x="695" y="172" text-anchor="middle" font-size="14" font-weight="700" fill="#16213b">计算集群</text>
+            <g fill="#9097a6"><rect width="22" height="16" rx="3" x="-11" y="-8"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#dpMove"/></animateMotion></rect><rect width="22" height="16" rx="3" x="-11" y="-8"><animateMotion dur="2.6s" begin="-0.9s" repeatCount="indefinite"><mpath href="#dpMove"/></animateMotion></rect><rect width="22" height="16" rx="3" x="-11" y="-8"><animateMotion dur="2.6s" begin="-1.8s" repeatCount="indefinite"><mpath href="#dpMove"/></animateMotion></rect></g>
+            <text x="395" y="250" text-anchor="middle" font-size="14" fill="#5d6679">数据先跨网络移动，再进入分析引擎</text>
+          </g>
+          <g id="dpG2">
+            <use href="#dpNear" stroke="#7a5ad8" stroke-width="3" fill="none"/>
+            <rect x="300" y="80" width="200" height="140" rx="18" fill="url(#dpGrad)"/>
+            <linearGradient id="dpGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f51d8"/><stop offset="1" stop-color="#7a5ad8"/></linearGradient>
+            <text x="400" y="138" text-anchor="middle" font-size="24" font-weight="800" fill="#fff">Nucleus</text>
+            <text x="400" y="164" text-anchor="middle" font-size="13" fill="#e6e3ff">CPU / GPU 异构加速</text>
+            <circle r="7" fill="#7a5ad8"><animateMotion dur="0.9s" repeatCount="indefinite"><mpath href="#dpNear"/></animateMotion></circle>
+            <g font-family="SF Mono,Menlo,monospace" font-size="14" font-weight="700" fill="#7a5ad8">
+              <rect x="560" y="70" width="120" height="40" rx="10" fill="#fff" stroke="#7a5ad8"/><text x="620" y="96" text-anchor="middle">Spark</text>
+              <rect x="560" y="130" width="120" height="40" rx="10" fill="#fff" stroke="#7a5ad8"/><text x="620" y="156" text-anchor="middle">Trino</text>
+              <rect x="560" y="190" width="120" height="40" rx="10" fill="#fff" stroke="#7a5ad8"/><text x="620" y="216" text-anchor="middle">Python</text>
+            </g>
+            <path d="M500 150 L 560 90 M500 150 L 560 150 M500 150 L 560 210" stroke="#cfc6f3" stroke-width="2" fill="none"/>
+            <text x="400" y="262" text-anchor="middle" font-size="14" fill="#5d6679">处理贴近数据完成 · 上层引擎免改代码</text>
+          </g>
+        </g>
+      </svg>
+      <p class="note">示意图仅用于说明"在数据所在处处理"的概念，不代表集成后的部署位置、架构或性能。</p>
+    </div>
+    <div>
+      <div class="lab" style="color:var(--am)">计划集成 · 形态与时间未公布</div>
+      <div class="card pad mt2" style="border:1.5px dashed var(--am)"><b style="font-size:20px">ONTAP</b><div class="note" style="margin-top:2px">统一存储</div></div>
+      <div class="card pad mt2" style="border:1.5px dashed var(--am)"><b style="font-size:20px">AFX</b><div class="note" style="margin-top:2px">分离式全闪</div></div>
+      <div class="card pad mt2" style="border:1.5px dashed var(--am)"><b style="font-size:20px">AIDE</b><div class="note" style="margin-top:2px">元数据服务</div></div>
+      <div class="callout mt" style="--c:var(--am)"><b>部署位置未公布</b>：Nucleus 将运行在存储控制器、独立计算节点还是其他形态，NetApp 尚未披露集成路线图与支持平台。</div>
+    </div>
+  </div>
+  <div class="grid3 mt in">
+    <div class="callout" style="--c:var(--vi)"><b>收购前的独立形态</b>：以 Spark 插件（JAR）部署，运行在分析引擎所在的计算节点上（本地或云上 CPU / GPU），数据留在原有存储，上层作业免改代码。</div>
+    <div class="callout" style="--c:var(--in)"><b>收购后的方向</b>：把算力移到数据层，与存储层对齐，主要是 ONTAP 与 AFX；在 AIDE 架构中对应采集层的路线图组件"存储侧数据处理"。</div>
+    <div class="callout" style="--c:var(--ro)"><b>说明</b>：厂商宣称的性能与成本数字为厂商表述，非承诺；集成范围以官方后续发布为准。</div>
+  </div>
+  <p class="note">独立形态与收购后方向依据 DataPelago 文档、AWS APN Blog（2026-09）、NAND Research 与 Techzine（2026-07）的公开报道整理。</p>
+</div></section>
+
+<!-- ⑭ 路线图全景 -->
+<section class="scene" id="sc13"><div class="wrap">
+  <div class="hd in" style="--c:var(--am)"><span class="no">13</span><div><div class="k">ROADMAP · 了解 → 信任 → 激活</div><h1>路线图全部落地之后</h1></div></div>
+  <div class="row"><p class="sub" style="margin:0">后续版本在同一部署上叠加，不需要重建架构。状态依据 2026-09-29 新闻稿与分析师解读；路线图项目未公布时间表。点击能力查看说明。</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="seg" id="rmSeg"><button class="on" data-rf="all">全部</button><button data-rf="ga">GA</button><button data-rf="pv">预览</button><button data-rf="rm">路线图</button></div><button class="btn ghost" id="rmFull">◎ 全实现视图</button></div></div>
+  <div class="callout mt2" id="rmNote" style="display:none;--c:var(--am)"><b>全实现视图</b>：假设预览与路线图能力全部落地后的能力全景，为愿景示意；相关能力未公布时间表，以官方发布为准。</div>
+  <div class="rmwrap mt2 in" id="rmWrap">
+    <div class="grid3" id="rmCols"></div>
+    <div class="g-l mt">
+      <div class="card pad det" id="rmDet"></div>
+      <div class="card pad" style="border:1.5px dashed var(--am)">
+        <span class="lab" style="color:var(--am)">存储侧加速 · DataPelago</span>
+        <p style="font-size:14px;color:var(--dim);margin-top:6px">Nucleus 引擎在数据所在处处理数据，计划与 ONTAP、AFX、AIDE 集成；部署位置、形态与时间未公布。</p>
+        <button class="btn ghost mt2" id="toDp">‹ 回看 DataPelago 一幕</button>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ⑮ 上手路径 -->
+<section class="scene" id="sc14"><div class="wrap">
+  <div class="hd in" style="--c:var(--in)"><span class="no">14</span><div><div class="k">GETTING STARTED · 上手路径</div><h1>从一次全厂数据盘点开始</h1></div></div>
+  <p class="sub">评估期内免费使用（新闻稿：前 6 个月），覆盖 NetApp 与非 NetApp 存储；评估期后按届时的打包与定价执行，后续高级能力可能单独打包。</p>
+  <div class="grid4 in">
+    <div class="card pad"><div class="lab">STEP 1</div><b style="font-size:18px">登记</b><p style="font-size:13.5px;color:var(--dim)">在 netapp.com/forms/map-your-data 登记，获取准备指南（登记不提供提前访问）。</p></div>
+    <div class="card pad"><div class="lab">STEP 2</div><b style="font-size:18px">选定范围</b><p style="font-size:13.5px;color:var(--dim)">选定首批共享 / 桶与首个用例：容量回收、迁移规划、访问治理或 AI 语料圈定。</p></div>
+    <div class="card pad"><div class="lab">STEP 3</div><b style="font-size:18px">准备环境</b><p style="font-size:13.5px;color:var(--dim)">准备 VM 或 RKE2 集群、Console Agent、网络与扫描凭据。</p></div>
+    <div class="card pad" style="border:1.5px solid var(--in)"><div class="lab" style="color:var(--in)">STEP 4</div><b style="font-size:18px">部署并扫描</b><p style="font-size:13.5px;color:var(--dim)">GA（计划 2026-10-23）后在 Console 部署、接入数据源、激活扫描。</p></div>
+  </div>
+  <div class="g-l mt in">
+    <div class="card">
+      <div class="pad" style="padding-bottom:4px"><span class="lab">开放问题 · 适合在 POC 中确认</span></div>
+      <table class="dt"><thead><tr><th>议题</th><th>需要确认的问题</th><th>建议验证方式</th></tr></thead><tbody>
+        <tr><td class="h">目录新鲜度</td><td>增量重扫的实际速率与一轮周期</td><td>首扫后观测第二轮耗时</td></tr>
+        <tr><td class="h">源端负载</td><td>扫描对生产 NAS 的 IOPS / 延迟影响及节流手段</td><td>低峰窗口试扫 + 存储侧监控</td></tr>
+        <tr><td class="h">访问时间</td><td>扫描是否改变 atime，对冷数据判定的影响</td><td>抽样比对扫描前后 atime</td></tr>
+        <tr><td class="h">重复判定</td><td>文件哈希如何计算，是否读取全部内容</td><td>向 NetApp 确认 + 观察读流量</td></tr>
+        <tr><td class="h">第三方 S3</td><td>非 StorageGRID 对象存储的接入路径与兼容范围</td><td>GA 文档与兼容列表</td></tr>
+        <tr><td class="h">外部依赖</td><td>Console SaaS 中断时扫描与查询的行为</td><td>POC 中模拟断开出站</td></tr>
+        <tr><td class="h">MCP</td><td>暴露的工具集、鉴权方式与审计</td><td>按 AIDE 文档配置后实测</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card pad">
+      <span class="lab">参考资料</span>
+      <ul class="pts mt2">
+        <li>AI Data Engine 文档：docs.netapp.com/us-en/ai-data-engine（AIDE 1.1.0，2026-09-30 版）</li>
+        <li>新闻稿：NetApp Delivers Secure, Zero-Copy Data Activation for the Agentic Enterprise（2026-09-29）</li>
+        <li>产品页：netapp.com/aide</li>
+        <li>分析师解读：NAND Research、HyperFRAME Research（2026-10）</li>
+      </ul>
+      <div style="text-align:center;margin-top:26px"><div style="font-size:40px;font-weight:900">NetApp <span class="grad">AIDE</span></div><div style="font-size:16px;font-weight:700;letter-spacing:5px;margin-top:4px">全企业的元数据底座</div></div>
+    </div>
+  </div>
+</div></section>
+
+</div>
+</main>
+
+<footer>
+  <button class="navBtn" id="prev" aria-label="上一幕">‹</button>
+  <div class="dots" id="dots"></div>
+  <button class="navBtn" id="next" aria-label="下一幕">›</button>
+  <div class="fnote">依据 AIDE 1.1.0 文档（2026-09-30）与 2026-09-29 新闻稿整理 · GA 计划 2026-10-23，预览与路线图能力以官方后续发布为准<br>页面内日志、对话与数值为示意，不连接真实系统，不构成性能基准</div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const STB={ga:'<span class="st ga">GA</span>',pv:'<span class="st pv">预览</span>',rm:'<span class="st rm">ROADMAP</span>',lim:'<span class="st lim">当前限制</span>'};
+function seg(id,fn){ $$('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{ $$('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b)); fn(b); })); }
+
+/* ═══════════ 版本演进 ═══════════ */
+const EVO=[
+ ['a','交付形态','AFX 集群 + 3 台 NetApp 数据计算节点（DCN，含 GPU）','纯软件，无 NetApp 硬件、GPU 或 AFX 依赖'],
+ ['a','运行位置','AFX 集群内的 DCN，经 100GbE 集群交换机互联','自有 Linux VM（Lite）或 RKE2 集群（Enterprise）'],
+ ['a','管理入口','ONTAP System Manager + 本地 AIDE Console','NetApp Console（SaaS）+ Console Agent'],
+ ['d','数据源','仅开启 NFS 的 ONTAP 卷；远程卷经 SnapMirror 复制到本地 AFX','ONTAP、StorageGRID、第三方 NFS/SMB/S3、数据库，原处扫描'],
+ ['d','元数据采集','基于 AIDE 托管的快照，结合 ONTAP 变更比对能力','标准协议挂载 / 列举后遍历，不依赖 ONTAP 专有接口'],
+ ['d','目录更新','按工作区刷新间隔（1 小时～1 年）生成不可变版本','一轮扫描完成即开始下一轮，按扫描周期更新'],
+ ['d','目录存放','AFX 上的元数据存储 VM','AIDE 主机本地盘 / 集群 StorageClass，元数据不出本地环境'],
+ ['c','组织单元','Workspace（工作区）','Scanned systems → Data containers（卷 / 共享 / 桶）'],
+ ['c','首发能力','编目 + 数据同步；另购许可后提供护栏、向量化与 RAG 端点','编目、冷 / 陈旧 / 重复分析、开放权限目录、策略与操作、MCP 访问'],
+ ['c','商务形态','随 AFX / DCN 采购，元数据引擎含于 ONTAP One','评估期内免费（新闻稿：前 6 个月），覆盖 NetApp 与第三方存储']
+];
+function renderEvo(f){ $('#evoBody').innerHTML=EVO.filter(r=>f==='all'||r[0]===f).map(r=>`<tr><td class="h">${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join(''); }
+seg('evoSeg',b=>renderEvo(b.dataset.evo)); renderEvo('all');
+
+/* ═══════════ 架构全景 ═══════════ */
+const LAYERS=[
+ ['接口',[['ui','NetApp Console UI','仪表盘 · 调查 · 策略'],['mcp','MCP 访问','Agent / AI 应用'],['exp','结果导出','下载 · 离线分析'],['rag','检索 / 上下文端点','内容级 grounding',1]]],
+ ['能力',[['dash','仪表盘','冷 · 陈旧 · 暴露'],['inv','调查','多维筛选'],['pol','策略','监控 · 邮件 · 删除'],['act','操作','标签 · 归档 · 复制 · 删除'],['cls','内容理解','分类 · 实体',1],['vec','向量化','语义检索',1]]],
+ ['目录',[['cat','元数据目录 · 全局索引','路径 · 时间 · 属主 · 权限 · 哈希 · 标签'],['kg','知识图谱 · 决策上下文','语义层',1]]],
+ ['采集',[['eng','Metadata Engine · 扫描器','NFS / SMB 挂载遍历 · S3 列举 · DB schema · 循环重扫'],['dp','存储侧数据处理','DataPelago 方向',1]]],
+ ['数据源',[['ontap','ONTAP','本地 · 云上服务'],['sg','StorageGRID','S3'],['nas','第三方 NAS','NFS · SMB'],['obj','第三方对象','S3'],['db','数据库','schema'],['ana','开放分析引擎','Starburst 等',1]]]
+];
+const CTL=[['con','NetApp Console','托管控制面'],['agt','Console Agent','连接与认证'],['host','AIDE 运行环境','Lite VM / RKE2 集群'],['gap','断网 / 主权部署','规划中',1]];
+const DETAIL={
+ ui:['NetApp Console UI','ga','AI data hub > AI Data Engine 下的界面：仪表盘、Investigation、Policies、Configuration。',['角色在 Console Members 中分配','数据源接入与扫描运维均在此完成']],
+ mcp:['MCP 访问','ga','为 Agent 与 AI 应用提供与元数据服务层交互的受控接口。',['提供元数据上下文，不读取文件内容','配置方式以 AIDE 文档为准']],
+ exp:['结果导出','ga','Unstructured / Structured / Directories 三个视图的筛选结果均可下载，用于离线分析或下游流程。',[]],
+ rag:['检索 / 上下文端点','rm','面向 RAG 的内容级检索与 grounding 能力，不在首发范围。',['首发不包含向量库','与语义搜索、知识图谱同属激活方向']],
+ dash:['仪表盘','ga','汇总冷 / 陈旧数据、暴露目录、已扫描资源数与文件总数，并按资源与属主排出可回收容量。',['阈值可配置，下一轮扫描生效','Active versus reclaimable 图表']],
+ inv:['调查（Investigation）','ga','对目录直接查询：时间、文件属性、来源、治理、访问五类筛选，条件之间为 AND。',['非结构化 / 结构化 / 目录三个视图','可按属主分组查看']],
+ pol:['策略','ga','把筛选条件保存为可复用规则，每轮扫描后对目录重新评估。',['动作：仅监控、邮件通知、永久删除','自动归档与自动打标签暂不支持']],
+ act:['操作','ga','对选中结果执行标签、归档、复制、删除；归档与复制目标为 NFS 或 SMB。',['Viewer 只能打标签','归档可留 breadcrumb 文件']],
+ cls:['内容理解与分类','rm','读取文件内容做分类、抽取业务实体，属于路线图能力。',['首发只基于元数据','"增强的 AI 数据理解"处于预览']],
+ vec:['向量化与语义检索','rm','生成向量、提供语义检索，属于路线图能力。',['首发不包含向量库与检索端点']],
+ cat:['元数据目录 · 全局索引','ga','每轮扫描后更新的可搜索目录，跨所有已接入系统提供统一视图。',['标签集中存放，不写回源文件','元数据不离开本地环境','Lite 存于本机盘，Enterprise 存于集群 StorageClass']],
+ kg:['知识图谱 · 决策上下文','rm','在目录之上构建语义关系与决策上下文，分析师报道将其列为后续方向。',['未公布时间表']],
+ eng:['Metadata Engine','ga','通过 NFS / SMB 挂载共享遍历文件系统、S3 列举对象、连接数据库读取 schema，提取元数据写入目录；扫完一轮立即开始下一轮。',['存储侧不装代理','不依赖存储厂商专有 API','SnapMirror 目标卷默认不扫描']],
+ dp:['存储侧数据处理','rm','DataPelago Nucleus 以 CPU / GPU 异构加速在数据所在处处理数据，计划与 NetApp 平台（主要是 ONTAP、AFX）集成。',['集成形态、部署位置与时间未公布','收购前以 Spark 插件形式运行在计算节点上']],
+ ontap:['ONTAP 系统','ga','本地 ONTAP 与云上 CVO、FSxN、ANF、GCNV，需先经 Console Agent 在 Console 中发现。',['以 File shares group 方式按 NFS / SMB 接入']],
+ sg:['StorageGRID','ga','通过 S3 端点与 Access Key / Secret Key 接入，按桶扫描。',[]],
+ nas:['第三方 NAS','ga','任何对外提供 NFS 或 SMB/CIFS 的 NAS、文件服务器，以共享组方式接入。',['SMB 需提供 CIFS 凭据并可连通 AD']],
+ obj:['第三方对象存储','ga','新闻稿与产品概述列为支持的 S3 数据源。',['当前文档接入向导仅单列 StorageGRID，具体方式以 GA 文档为准']],
+ db:['数据库','ga','填写数据库类型、主机、端口与凭据，扫描选定 schema 的表元数据。',['Structured 视图展示表大小、行列数、发现时间']],
+ ana:['开放分析集成','pv','与 Starburst、Onehouse.AI 等开放分析引擎集成。',['新闻稿列为技术预览']],
+ con:['NetApp Console','ga','NetApp 托管的控制面：部署向导、角色分配、界面与支持入口。',['运行期需要保持连接','用户认证经 Console 集中处理']],
+ agt:['Console Agent','ga','部署在本地环境的通用平台组件，负责本地与 Console 的连接、认证与 ONTAP 发现。',['已有 Agent 可复用','与 AIDE 主机双向通信']],
+ host:['AIDE 运行环境','ga','自备的计算资源。Lite 为单台 Ubuntu / RHEL VM，安装器自动部署 k3s；Enterprise 为自行维护的 RKE2 集群。',['不需要 NetApp 硬件或 GPU','Lite 约 45 分钟、Enterprise 约 30 分钟完成安装']],
+ gap:['断网 / 主权部署','rm','混合、主权与完全断网的运行模式在规划中。',['当前需连接 NetApp Console 托管服务']]
+};
+const bx=b=>`<button class="bx${b[3]?' rm':''}" data-bx="${b[0]}"><b>${b[1]}</b><span>${b[2]}</span></button>`;
+$('#archRows').innerHTML=LAYERS.map(l=>`<div class="lyr"><div class="ln">${l[0]}</div><div class="boxes">${l[1].map(bx).join('')}</div></div>`).join('');
+$('#archCtl').innerHTML='<div class="lab" style="margin-bottom:-2px">控制面与运行环境</div>'+CTL.map(bx).join('');
+function pickBx(id){
+  $$('.bx').forEach(b=>b.classList.toggle('on',b.dataset.bx===id));
+  const d=DETAIL[id];
+  $('#archDet').innerHTML=`${STB[d[1]]}<h3>${d[0]}</h3><p>${d[2]}</p>${d[3].length?'<ul class="pts mt2">'+d[3].map(p=>'<li>'+p+'</li>').join('')+'</ul>':''}`;
+}
+$$('.bx').forEach(b=>b.addEventListener('click',()=>pickBx(b.dataset.bx)));
+seg('archSeg',b=>{ $('#arch').classList.toggle('ga-only',b.dataset.arch==='ga'); if(b.dataset.arch==='rm')pickBx('kg'); else pickBx('cat'); });
+pickBx('cat');
+
+/* ═══════════ 部署模型 ═══════════ */
+const DEP={
+ lite:{hint:'安装约 45 分钟 · 纵向扩展',
+  head:'<tr><th>规格</th><th>vCPU</th><th>内存</th><th>数据盘</th><th>IOPS</th><th>网络</th><th>约文件数</th></tr>',
+  rows:[['Small','16','64 GB','500 GB','8,000','1 GbE','2 亿'],['Medium（默认）','32','128 GB','2 TB','12,000','1 GbE','10 亿'],['Large','96','192 GB','6 TB','16,000','10 GbE','30 亿']],
+  req:['<b>OS</b>：Ubuntu 22.04 / 24.04 LTS（推荐 24.04），或 RHEL 8.x / 9.x','<b>工具</b>：安装器自动下载 k3s、helm、kubectl、jq','<b>端口</b>：6443 / 10250（TCP）、8472（UDP）空闲','<b>适用</b>：约 30 亿文件以内、可接受单点；纵向加 vCPU / 内存 / 盘扩容']},
+ ent:{hint:'安装约 30 分钟 · 横向扩展',
+  head:'<tr><th>规格</th><th>节点</th><th>vCPU / 节点</th><th>内存 / 节点</th><th>盘 / 节点</th><th>网络</th><th>约文件数</th></tr>',
+  rows:[['Small','3','32','128 GB','~1.3 TB','1 GbE','10 亿'],['Medium（默认）','6','48','192 GB','~2 TB','10 GbE','30 亿'],['Large','9','64','256 GB','~2.7 TB','10 GbE','60 亿']],
+  req:['<b>集群</b>：自行置备并维护的 RKE2 v1.34+（推荐 v1.36.x）','<b>存储</b>：可用的 StorageClass（默认 aide-sc）与一个 NFS 导出路径','<b>扩展</b>：加工作节点提升扫描处理，加存储节点扩大目录容量；扩容不中断扫描','<b>适用</b>：需要高可用、滚动升级，或超过 30 亿文件']}
+};
+function renderDep(m){
+  const d=DEP[m];
+  $('#depHint').textContent=d.hint; $('#depHead').innerHTML=d.head;
+  $('#depBody').innerHTML=d.rows.map(r=>'<tr>'+r.map((c,i)=>i===0?`<td class="h">${c}</td>`:`<td class="num">${c}</td>`).join('')+'</tr>').join('');
+  $('#depReq').innerHTML=d.req.map(x=>'<li>'+x+'</li>').join('');
+}
+seg('depSeg',b=>renderDep(b.dataset.dep)); renderDep('lite');
+const LINKS=[
+ ['Agent → Console','443 TCP','出站 HTTPS 连接 NetApp Console'],
+ ['Agent → ONTAP','443 TCP','出站 HTTPS，ONTAP 集群发现'],
+ ['Agent ↔ AIDE','80 / 443 / 8080 / 9000','双向，Agent 与 AIDE 通信'],
+ ['AIDE → 文件存储','111 / 2049 · 139 / 445','NFS 与 SMB/CIFS 数据源访问'],
+ ['AIDE → 对象存储','S3 端点','S3 列举对象（端口取决于端点）'],
+ ['AIDE → AD','389 / 636 / 3268 / 3269','LDAP、LDAPS、全局编录：认证与 SMB 扫描'],
+ ['AIDE → 镜像仓库','443 TCP','出站 HTTPS：制品下载与容器镜像'],
+ ['AIDE → 数据库','数据库端口','按数据库类型连接 schema']
+];
+$('#netBody').innerHTML=LINKS.map((l,i)=>`<tr class="click" data-l="${i}"><td class="h">${l[0]}</td><td class="num" style="font-size:12px">${l[1]}</td><td>${l[2]}</td></tr>`).join('');
+$$('#netBody tr').forEach(tr=>tr.addEventListener('click',()=>$$('#netBody tr').forEach(x=>x.classList.toggle('pick',x===tr))));
+$('#netBody tr[data-l="3"]').classList.add('pick');
+
+/* ═══════════ 规模估算 ═══════════ */
+const SIZES={
+ lite:[{n:'Small',max:2e8,rate:6e7,spec:'16 vCPU · 64 GB · 500 GB NVMe · 1 GbE',doc:false},
+       {n:'Medium',max:1e9,rate:3e8,spec:'32 vCPU · 128 GB · 2 TB NVMe · 1 GbE',doc:false},
+       {n:'Large',max:3e9,rate:1e9,spec:'96 vCPU · 192 GB · 6 TB NVMe · 10 GbE',doc:true}],
+ ent:[{n:'Small · 3 节点',max:1e9,rate:2.5e8,spec:'每节点 32 vCPU · 128 GB · ~1.3 TB · 1 GbE',doc:true},
+      {n:'Medium · 6 节点',max:3e9,rate:1e9,spec:'每节点 48 vCPU · 192 GB · ~2 TB · 10 GbE',doc:false},
+      {n:'Large · 9 节点',max:6e9,rate:2e9,spec:'每节点 64 vCPU · 256 GB · ~2.7 TB · 10 GbE',doc:true}]
+};
+let cMode='lite';
+const cn=v=>{ if(v>=1e8){const y=v/1e8;return (y>=100?Math.round(y):y.toFixed(y<10?1:0).replace(/\.0$/,''))+' 亿';} return Math.round(v/1e4)+' 万'; };
+function calc(){
+  const p=+$('#cSlider').value/100, files=Math.round(5e7*Math.pow(200,p));
+  $('#cFiles').textContent=cn(files);
+  const arr=SIZES[cMode]; let pick=arr.find(s=>files<=s.max), over=false;
+  if(!pick){pick=arr[arr.length-1];over=true;}
+  let rate=pick.rate; if(over&&cMode==='ent') rate=pick.rate*files/pick.max;
+  $('#cSize').textContent=pick.n.split(' · ')[0];
+  $('#cSizeSub').textContent=over?(cMode==='lite'?'超出 Lite 建议上限':'需横向扩展'):(pick.n.includes('·')?pick.n.split(' · ')[1]:'');
+  $('#cRate').textContent=cn(rate);
+  const days=files/rate, dtxt=days<1?'< 1':days.toFixed(days<10?1:0);
+  $('#cDays').textContent=dtxt; $('#lagTxt').textContent=dtxt+' 天';
+  $('#lagArc').setAttribute('stroke-dashoffset',502*(1-Math.min(1,days/14)));
+  $('#cSpec').innerHTML=`<li><b>${pick.n}</b>：${pick.spec}</li><li>${pick.doc?'速率取自文档基线':'速率为按首扫基线推算的估算值'}${over&&cMode==='ent'?'；超过 60 亿按节点线性外推，需 NetApp 提供定制规格':''}${over&&cMode==='lite'?'；Lite 不支持横向扩展与高可用，宜选 Enterprise':''}</li>`;
+}
+$('#cSlider').addEventListener('input',calc);
+seg('cmSeg',b=>{cMode=b.dataset.cm;calc();}); calc();
+
+/* ═══════════ 扫描机制 ═══════════ */
+const SCAN=[
+ ['部署','在 Console 选择 Lite 或 Enterprise，复制预生成的安装命令到目标主机执行；确认主机 IP 与用户后自动完成部署。'],
+ ['接入系统','Configuration > Scanned systems > Add system：选择 File shares group、Database 或 StorageGRID，填写连接信息与凭据。'],
+ ['激活扫描','添加后不会自动开始，需对每个系统执行 Activate scans；可在详情中按卷 / 共享 / 桶调整范围。'],
+ ['挂载与遍历','Metadata Engine 通过 NFS / SMB 挂载共享遍历文件系统、S3 列举对象、读取数据库 schema，提取文件系统元数据。'],
+ ['索引入目录','元数据写入可搜索目录；仪表盘、调查与策略都基于该目录工作。'],
+ ['循环重扫','所有已配置资源扫描完成后立即开始新一轮，通过重扫识别新增、修改与删除；策略在每轮之后重新评估。']
+];
+$('#scanSteps').innerHTML=SCAN.map((s,i)=>`<button class="stp" data-sc="${i}"><div class="n">STEP ${String(i+1).padStart(2,'0')}</div><div class="l">${s[0]}</div></button>`).join('');
+function setScan(i){ $$('#scanSteps .stp').forEach((e,k)=>e.classList.toggle('on',k===i)); $('#scanBody').innerHTML=`<h4>${String(i+1).padStart(2,'0')} · ${SCAN[i][0]}</h4><p>${SCAN[i][1]}</p>`; }
+$$('#scanSteps .stp').forEach(e=>e.addEventListener('click',()=>{stopScan();setScan(+e.dataset.sc);}));
+setScan(3);
+const LOG=[
+ ['c','# round 12 · 3 systems · 41 data resources'],
+ ['','mount nfs  ontap-hq:/eng_docs        → walk'],
+ ['','mount smb  \\\\fs-plant2\\qa_share    → walk'],
+ ['','list  s3   grid-01/aoi-images        → enumerate'],
+ ['w','share fs-plant2\\hr_private: access denied → skipped'],
+ ['','index  +184,220  ~9,431  -2,018 entries'],
+ ['ok','round 12 complete · policies re-evaluated'],
+ ['c','# round 13 started immediately']
+];
+let logT=[];
+function stopScan(){ logT.forEach(clearTimeout); logT=[]; }
+function playScan(){
+  stopScan(); const box=$('#scanLog'); box.innerHTML='';
+  LOG.forEach((l,i)=>logT.push(setTimeout(()=>{
+    const d=document.createElement('div'); if(l[0])d.className=l[0]; d.textContent=l[1]; box.appendChild(d);
+    setScan(Math.min(5,i<1?2:(i<5?3:(i<6?4:5))));
+  },i*520)));
+}
+$('#scanPlay').addEventListener('click',playScan);
+
+/* ═══════════ 元数据筛选 ═══════════ */
+const FILT={
+ u:{hint:'文件型数据 · NFS / SMB / S3',grp:[['时间',[['la','Last accessed ≥ 1 年','last_access_time <= 1 Years'],['lm','Last modified ≥ 3 年','last_modified_time <= 3 Years'],['lc','Created ≥ 7 年','creation_time <= 7 Years']]],['文件属性',[['fs','File size ≥ 5 GiB','file_size >= 5GiB'],['ft','File type = .tiff','file_type = .tiff'],['dup','Duplicates','duplicate = true'],['own','Owner = 质量部','owner = qa_dept']]],['来源 / 治理',[['sys','System = fs-plant2','system = fs-plant2'],['tag','Tag = Archive candidate','tag = "Archive candidate"']]]]},
+ s:{hint:'数据库表 · 按 schema',grp:[['表属性',[['dt','Discovered time ≥ 1 年','discovered_time <= 1 Years'],['srv','DB server = mes-db01','db_server = mes-db01'],['sch','Schema = history','schema = history']]]]},
+ d:{hint:'目录权限审计',grp:[['访问',[['op','Open to organization','open_permissions = organization'],['nu','Users with access > 500','users_with_access > 500'],['ug','Group = Contractors','permission_group = Contractors']]],['目录属性',[['dty','Directory type = share root','directory_type = share_root'],['dla','Last accessed ≥ 1 年','last_access_time <= 1 Years']]]]}
+};
+let fTab='u', fSel=new Set(['la','ft']);
+function renderF(){
+  const F=FILT[fTab]; $('#fHint').textContent=F.hint;
+  $('#fBox').innerHTML=F.grp.map(g=>`<div class="fgrp"><div class="t">${g[0]}</div>${g[1].map(f=>`<span class="fchip${fSel.has(f[0])?' on':''}" data-f="${f[0]}" role="button" tabindex="0">${f[1]}</span>`).join('')}</div>`).join('');
+  $$('#fBox .fchip').forEach(c=>c.addEventListener('click',()=>{const k=c.dataset.f; fSel.has(k)?fSel.delete(k):fSel.add(k); renderF();}));
+  const ex=[]; F.grp.forEach(g=>g[1].forEach(f=>{if(fSel.has(f[0]))ex.push(f[2]);}));
+  $('#fExpr').innerHTML=ex.length?ex.map(e=>'<span class="s">'+e+'</span>').join(' <span class="k">AND</span> '):'<span class="c"># 选择至少一个条件</span>';
+}
+seg('fSeg',b=>{fTab=b.dataset.ft; fSel=new Set(fTab==='u'?['la','ft']:fTab==='s'?['dt']:['op']); renderF();}); renderF();
+
+/* ═══════════ 仪表盘阈值（模拟分布） ═══════════ */
+const TOTAL=820, DUP=74;
+const accessedWithin=m=>1-Math.exp(-m/14);
+function dash(){
+  const c=+$('#sCold').value, s=Math.max(+$('#sStale').value,c);
+  $('#tCold').textContent=(c%12===0?(c/12)+' 年':c+' 个月');
+  $('#tStale').textContent=(s%12===0?(s/12)+' 年':(s/12).toFixed(1)+' 年');
+  const base=TOTAL-DUP, staleV=base*(1-accessedWithin(s))*0.92, coldV=base*(1-accessedWithin(c))-staleV, act=base-coldV-staleV;
+  [act,coldV,staleV,DUP].forEach((v,i)=>$$('#dashBar i')[i].style.width=(v/TOTAL*100)+'%');
+  $('#kAct').textContent=Math.round(act); $('#kCold').textContent=Math.round(coldV); $('#kStale').textContent=Math.round(staleV); $('#kDup').textContent=DUP;
+}
+$('#sCold').addEventListener('input',dash); $('#sStale').addEventListener('input',dash); dash();
+
+/* ═══════════ 工作流 ═══════════ */
+const WF=[
+ ['仪表盘定位','从 Top data resources / Top data owners 找到可回收比例最高的资源或属主，点击直接进入已带筛选的调查视图。例如分厂多年累积的质检图像。'],
+ ['调查确认','叠加 Last accessed、File size 等条件缩小范围，按 Owner 分组查看；打开文件详情核对系统、属主、已有标签与命中策略。'],
+ ['执行操作','勾选结果后执行 Tag / Archive / Copy / Delete。保留期复核类数据（默认创建 7 年以上）通常先监控，不直接删除。'],
+ ['保存为策略','在筛选工具栏 Create policy，选择仅监控、邮件通知或永久删除；之后每轮扫描自动评估，并可在 Policies 页面比较命中数量。']
+];
+$('#wfSteps').innerHTML=WF.map((w,i)=>`<button class="stp" data-wf="${i}"><div class="n">STEP ${String(i+1).padStart(2,'0')}</div><div class="l">${w[0]}</div></button>`).join('');
+function setWf(i){ $$('#wfSteps .stp').forEach((e,k)=>e.classList.toggle('on',k===i)); $('#wfBody').innerHTML=`<h4>${WF[i][0]}</h4><p>${WF[i][1]}</p>`; }
+$$('#wfSteps .stp').forEach(e=>e.addEventListener('click',()=>setWf(+e.dataset.wf))); setWf(0);
+
+/* ═══════════ 访问治理（示意） ═══════════ */
+const DIRS={
+ open:[['\\\\fs-hq\\rnd\\drawings','eng_lead','Open to organization','3 天前'],['\\\\fs-hq\\finance\\2019_close','fin_admin','Open to organization','3 年前'],['\\\\fs-plant2\\qa_share\\supplier','qa_mgr','Open to organization','2 周前']],
+ many:[['\\\\fs-hq\\public\\templates','it_ops','1,240 用户 / 组','1 天前'],['\\\\fs-hq\\rnd\\drawings','eng_lead','2,310 用户 / 组','3 天前']],
+ grp:[['\\\\fs-plant2\\process\\recipes','proc_mgr','Contractors：读写','5 天前'],['\\\\fs-plant2\\qa_share\\supplier','qa_mgr','Contractors：只读','2 周前']]
+};
+function renderDir(k){ $('#dirBody').innerHTML=DIRS[k].map(r=>`<tr><td class="num" style="font-size:12px;color:var(--ink)">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join(''); }
+seg('dirSeg',b=>renderDir(b.dataset.dir)); renderDir('open');
+
+/* ═══════════ MCP 场景（示意） ═══════════ */
+const MCP=[
+ '<span class="c"># 用户：fs-plant2 迁移到新平台前，哪些数据不用搬？</span>\n<span class="k">agent → tool</span> query_metadata(system=<span class="s">"fs-plant2"</span>, last_accessed=<span class="s">">2y"</span>, group_by=<span class="s">"owner"</span>)\n<span class="k">← result</span>   <span class="p">38%</span> 容量超过 2 年未访问；<span class="p">11%</span> 为重复文件；前 3 位属主占可回收容量 <span class="p">61%</span>\n<span class="c"># Agent 据此生成迁移范围建议，交由存储管理员确认</span>',
+ '<span class="c"># 用户：有没有对全公司开放、但最近还在被访问的研发图纸目录？</span>\n<span class="k">agent → tool</span> query_directories(open_permissions=<span class="s">"organization"</span>, path=<span class="s">"*drawings*"</span>, last_accessed=<span class="s">"<30d"</span>)\n<span class="k">← result</span>   <span class="p">2</span> 个目录，属主 eng_lead、cad_team\n<span class="c"># Agent 生成整改清单；是否收紧权限由人决定</span>',
+ '<span class="c"># 用户：给产线知识库挑一批候选作业指导书，排除日志、二进制和重复</span>\n<span class="k">agent → tool</span> query_metadata(file_type=<span class="s">["pdf","docx"]</span>, path=<span class="s">"*SOP*"</span>, duplicate=<span class="p">false</span>, last_modified=<span class="s">"<3y"</span>)\n<span class="k">← result</span>   候选 <span class="p">12,640</span> 个文件，按厂区与属主分布\n<span class="c"># 内容读取、切片与向量化由自有流水线完成（AIDE 对应能力在路线图上）</span>'
+];
+seg('mcpSeg',b=>$('#mcpCode').innerHTML=MCP[+b.dataset.mcp]); $('#mcpCode').innerHTML=MCP[0];
+
+/* ═══════════ 路线图 ═══════════ */
+const RM=[
+ ['know','了解','KNOW','var(--te)','全厂数据一本统一的账：不只知道文件在哪，还读懂内容里的设备、工序与物料。',[
+   ['ga','异构元数据目录与全局索引','ONTAP、StorageGRID、第三方 NFS / SMB / S3，本地与云上统一编目。'],
+   ['ga','冷 / 陈旧 / 重复 / 属主分析','阈值可配置；按资源与属主排序可回收容量。'],
+   ['ga','数据库表元数据','按 schema 编目表大小、行列数、发现时间。'],
+   ['pv','增强的 AI 数据理解','新闻稿列为预览。'],
+   ['rm','内容级理解与实体抽取','读取文件内容做分类、抽取业务实体；首发只基于元数据。'],
+   ['rm','其他变更跟踪集成','文档提及未来版本可能增加，首发不依赖。']]],
+ ['trust','信任','TRUST','var(--ro)','敏感图纸、配方与个人信息看得见、管得住；与外网隔离的工厂网络也能运行。',[
+   ['ga','开放权限目录与访问可见性','Open to organization、可访问用户数、指定用户 / 组。'],
+   ['ga','数据与元数据不出本地环境','扫描、目录与操作都在自有基础设施上。'],
+   ['pv','更深的治理智能','新闻稿列为预览。'],
+   ['rm','内容级分类与敏感数据识别','首发不读取内容；此类需求目前由 NetApp 其他产品承担。'],
+   ['rm','混合 / 主权 / 完全断网运行','当前需要 NetApp Console 连接。']]],
+ ['act','激活','ACTIVATE','var(--in)','Agent 与产线知识助手拿到有关系、有出处的工厂数据上下文。',[
+   ['ga','MCP 访问','Agent 与元数据服务层的受控交互。'],
+   ['pv','开放分析集成','Starburst、Onehouse.AI；新闻稿列为预览。'],
+   ['pv','代理式服务（数据到上下文）','新闻稿列为预览。'],
+   ['rm','向量化、语义检索、检索端点','首发不含向量库。'],
+   ['rm','知识图谱与决策上下文','分析师报道列为后续方向。'],
+   ['rm','存储侧加速数据处理（DataPelago）','集成形态、部署位置与时间未公布。']]]
+];
+$('#rmCols').innerHTML=RM.map((c,ci)=>`<div class="card rmcol" style="--c:${c[3]}"><span class="w">${c[1]}</span><span class="en">${c[2]}</span><div class="vis">${c[4]}</div>${c[5].map((it,ii)=>`<button class="rit" data-st="${it[0]}" data-r="${ci}-${ii}">${STB[it[0]]}<span>${it[1]}</span></button>`).join('')}</div>`).join('');
+function pickRm(key){
+  const [ci,ii]=key.split('-').map(Number), it=RM[ci][5][ii];
+  $$('.rit').forEach(b=>b.classList.toggle('on',b.dataset.r===key));
+  $('#rmDet').innerHTML=`<span class="lab" style="color:${RM[ci][3]}">${RM[ci][1]} · ${RM[ci][2]}</span><h3 style="margin-top:4px">${STB[it[0]]} ${it[1]}</h3><p>${it[2]}</p>`;
+}
+$$('.rit').forEach(b=>b.addEventListener('click',()=>pickRm(b.dataset.r)));
+seg('rmSeg',b=>{const f=b.dataset.rf; $$('.rit').forEach(r=>r.classList.toggle('dim',f!=='all'&&r.dataset.st!==f));});
+$('#rmFull').addEventListener('click',()=>{const on=$('#rmWrap').classList.toggle('full'); $('#rmFull').textContent=on?'◉ 全实现视图（已开启）':'◎ 全实现视图'; $('#rmFull').classList.toggle('ghost',!on); $('#rmNote').style.display=on?'block':'none';});
+pickRm('0-4');
+seg('dpSeg',b=>{const near=b.dataset.dp==='near'; $('#dpG1').style.display=near?'none':''; $('#dpG2').style.display=near?'':'none';});
+
+/* ═══════════ 幕式导航 ═══════════ */
+const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9','sc10','sc11','sc12','scdp','sc13','sc14'];
+const NAMES=['① 封面','② 版本演进','③ 架构全景','④ 部署模型','⑤ 规模估算','⑥ 数据接入','⑦ 扫描机制','⑧ 元数据','⑨ 仪表盘','⑩ 发现到执行','⑪ 访问治理','⑫ MCP','⑬ DataPelago','⑭ 路线图','⑮ 上手路径'];
+const track=$('#track'), mainEl=$('#main');
+let cur=0,navLock=false,acc=0,accTimer=null;
+SCENES.forEach((id,i)=>{
+  const t=document.createElement('button'); t.className='tab'; t.textContent=NAMES[i].slice(2); t.title=NAMES[i]; t.addEventListener('click',()=>show(i)); $('#tabs').appendChild(t);
+  const d=document.createElement('button'); d.className='dot'; d.setAttribute('aria-label',NAMES[i]); d.addEventListener('click',()=>show(i)); $('#dots').appendChild(d);
+});
+function stopAll(){ stopScan(); }
+function show(i){
+  i=Math.max(0,Math.min(SCENES.length-1,i));
+  stopAll(); cur=i;
+  track.style.transform='translateX('+(-i*100)+'%)';
+  $$('.tab').forEach((t,k)=>t.classList.toggle('on',k===i));
+  $$('.dot').forEach((d,k)=>d.classList.toggle('on',k===i));
+  $('#prog').style.width=((i+1)/SCENES.length*100)+'%';
+  $('#prev').disabled=i===0; $('#next').disabled=i===SCENES.length-1;
+  const sc=document.getElementById(SCENES[i]); sc.scrollTop=0;
+  sc.classList.remove('scene-in'); void sc.offsetWidth; sc.classList.add('scene-in');
+  if(SCENES[i]==='sc7') logT.push(setTimeout(playScan,450));
+}
+function go(d){ if(navLock)return; const n=cur+d; if(n<0||n>=SCENES.length)return; navLock=true; setTimeout(()=>navLock=false,700); show(n); }
+$('#prev').addEventListener('click',()=>go(-1)); $('#next').addEventListener('click',()=>go(1));
+function scrollableUnder(target,sceneEl){
+  let n=target;
+  while(n&&n!==sceneEl.parentNode){
+    if(n.nodeType===1){const ov=getComputedStyle(n).overflowY; if((ov==='auto'||ov==='scroll')&&n.scrollHeight-n.clientHeight>4)return n;}
+    n=n.parentNode;}
+  return null;
+}
+mainEl.addEventListener('wheel',e=>{
+  if(e.target.closest&&e.target.closest('input[type=range]'))return;
+  const sc=document.getElementById(SCENES[cur]);
+  const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+  const box=scrollableUnder(e.target,sc);
+  if(box){const atTop=box.scrollTop<=0,atBottom=box.scrollTop+box.clientHeight>=box.scrollHeight-1;
+    if((delta>0&&!atBottom)||(delta<0&&!atTop)){acc=0;return;}}
+  e.preventDefault();
+  if(navLock)return;
+  acc+=delta; clearTimeout(accTimer); accTimer=setTimeout(()=>{acc=0},200);
+  if(acc>55){acc=0;go(1);} else if(acc<-55){acc=0;go(-1);}
+},{passive:false});
+document.addEventListener('keydown',e=>{
+  if(/^(SELECT|INPUT|TEXTAREA)$/.test(e.target.tagName))return;
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(1);}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(-1);}
+  else if(e.key==='Home')show(0);
+  else if(e.key==='End')show(SCENES.length-1);
+  else if(/^[1-9]$/.test(e.key))show(+e.key-1);
+});
+let tx=null;
+mainEl.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+mainEl.addEventListener('touchend',e=>{if(tx==null)return; const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>60)go(dx<0?1:-1); tx=null;});
+$('#toDp').addEventListener('click',()=>show(SCENES.indexOf('scdp')));
+show(0);
+})();
+</script>
+</body>
+</html>
