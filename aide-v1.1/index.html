@@ -111,6 +111,12 @@ table.dt{width:100%;border-collapse:collapse;font-size:13.5px}
 .stat .d{font-size:12.5px;color:var(--dim);margin-top:4px}
 .legend{display:flex;gap:16px;justify-content:center;margin-top:22px;font-size:13px;color:var(--dim);flex-wrap:wrap}
 .hint{margin-top:18px;font-size:12.5px;color:var(--faint)}
+.vbtn{margin-top:20px;font-size:14.5px;padding:10px 22px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--sh)}
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(22,33,59,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+.vdlg .vbar .btn{flex:0 0 auto}
 
 /* evolution */
 .cmp td:nth-child(3){color:var(--ink)}
@@ -208,6 +214,11 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.navBtn:focus-visible,.dot:fo
   <nav class="tabs" id="tabs"></nav>
 </header>
 
+<dialog class="vdlg" id="vDlg" aria-label="AIDE 讲解视频">
+  <div class="vbar"><span>NetApp AIDE 深度解析 · 讲解视频</span><button class="btn ghost" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./aide-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+
 <main id="main">
 <div class="prog" id="prog"></div>
 <div class="track" id="track">
@@ -220,6 +231,7 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.navBtn:focus-visible,.dot:fo
   <h2>全企业的元数据底座：工厂数据的一本统一账</h2>
   <p class="lead">图纸、工艺文件、质检图像、设备日志与生产数据库，散落在总部、分厂和云上。AIDE 以纯软件形态部署在自有基础设施上，就地扫描 NetApp 与第三方存储，构建统一元数据目录，回答四个基础问题：</p>
   <div class="qs"><span>有哪些？</span><span>在哪里？</span><span>归谁？</span><span>还用不用？</span></div>
+  <button class="btn vbtn" id="vOpen" type="button">▶ 观看 5 分钟讲解视频</button>
   <div class="stats">
     <div class="card stat"><div class="v">纯软件</div><div class="d">无 NetApp 硬件、GPU 或 AFX 依赖</div></div>
     <div class="card stat"><div class="v mono">4 类接入</div><div class="d">NFS · SMB · S3 · 数据库</div></div>
@@ -933,6 +945,7 @@ mainEl.addEventListener('wheel',e=>{
   if(acc>55){acc=0;go(1);} else if(acc<-55){acc=0;go(-1);}
 },{passive:false});
 document.addEventListener('keydown',e=>{
+  if($('#vDlg').open)return;
   if(/^(SELECT|INPUT|TEXTAREA)$/.test(e.target.tagName))return;
   if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(1);}
   else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(-1);}
@@ -944,6 +957,10 @@ let tx=null;
 mainEl.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
 mainEl.addEventListener('touchend',e=>{if(tx==null)return; const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>60)go(dx<0?1:-1); tx=null;});
 $('#toDp').addEventListener('click',()=>show(SCENES.indexOf('scdp')));
+$('#vOpen').addEventListener('click',()=>{$('#vDlg').showModal(); $('#vPlayer').play().catch(()=>{});});
+$('#vClose').addEventListener('click',()=>$('#vDlg').close());
+$('#vDlg').addEventListener('click',e=>{if(e.target===$('#vDlg'))$('#vDlg').close();});
+$('#vDlg').addEventListener('close',()=>$('#vPlayer').pause());
 show(0);
 })();
 </script>
