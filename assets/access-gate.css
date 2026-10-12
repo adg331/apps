@@ -1,27 +1,279 @@
 /* Client-side visual gate only. This is not server-side authentication. */
+/* 这份样式被主页和所有子页面共用，子页面各有自己的全局 h1/p/input/button
+   规则，所以这里每个元素都用 .access-gate 前缀并把关键属性写全，不依赖继承。 */
 html.access-gate-pending body { visibility: hidden; }
+
+/* 流光描边的旋转角。不支持 @property 的浏览器里渐变静止不转，其余不受影响。 */
+@property --ag-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
 .access-gate {
-  position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center;
-  padding: 24px; visibility: visible; font-family: "Avenir Next", "Segoe UI", "PingFang SC", sans-serif;
-  background: radial-gradient(circle at 18% 15%, rgba(26,167,255,.28), transparent 36%),
-              radial-gradient(circle at 82% 82%, rgba(0,103,197,.34), transparent 42%),
-              linear-gradient(135deg, #00182d, #003c70);
+  --ag-blue: #0067c5;
+  --ag-blue-deep: #004b91;
+  --ag-blue-50: #edf7ff;
+  --ag-ink: #10273a;
+  --ag-ink-2: #52697a;
+  --ag-ink-3: #7f94a3;
+  --ag-line: #c9dbe8;
+  --ag-live: #00a878;
+  --ag-warn: #d98a00;
+  --ag-error: #c8372d;
+  --ag-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --ag-sans: "Avenir Next", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  position: fixed; inset: 0; z-index: 2147483647; overflow: auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  padding: 32px 24px; visibility: visible;
+  color: #fff; font-family: var(--ag-sans); font-size: 14px; line-height: 1.5; text-align: left;
+  -webkit-font-smoothing: antialiased;
+  background: linear-gradient(160deg, var(--ag-blue) 0%, var(--ag-blue-deep) 72%);
+  transition: opacity .38s ease;
 }
 .access-gate[hidden] { display: none; }
-.access-gate__box {
-  width: min(390px, 100%); padding: 34px; border: 1px solid rgba(255,255,255,.2);
-  border-radius: 18px; color: #fff; text-align: center; background: rgba(3,25,47,.9);
-  box-shadow: 0 28px 80px rgba(0,0,0,.42); backdrop-filter: blur(18px);
+.access-gate, .access-gate *, .access-gate *::before, .access-gate *::after { box-sizing: border-box; }
+
+/* 背景沿用主页的两个母题：44px 网格 + 右下角的同心轨道 */
+.access-gate::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 42%, black, transparent 78%);
+          mask-image: radial-gradient(ellipse at 50% 42%, black, transparent 78%);
 }
-.access-gate__mark { width: 46px; height: 6px; margin: 0 auto 25px; border-radius: 9px; background: #1aa7ff; box-shadow: 0 0 22px rgba(26,167,255,.7); }
-.access-gate__box h1 { margin: 0; color: #fff; font-size: 27px; line-height: 1.2; letter-spacing: -.02em; }
-.access-gate__box p { margin: 11px 0 23px; color: rgba(255,255,255,.7); font-size: 14px; line-height: 1.6; }
-.access-gate__box input, .access-gate__box button { box-sizing: border-box; width: 100%; height: 49px; border-radius: 9px; font: inherit; }
-.access-gate__box input { padding: 0 14px; border: 1px solid rgba(255,255,255,.25); outline: none; color: #fff; background: rgba(255,255,255,.08); }
-.access-gate__box input:focus { border-color: #40a9ff; box-shadow: 0 0 0 3px rgba(64,169,255,.16); }
-.access-gate__box button { margin-top: 12px; border: 0; color: #fff; font-weight: 750; cursor: pointer; background: #0067c5; }
-.access-gate__box button:hover { background: #0878dc; }
-.access-gate__error { min-height: 21px; margin-top: 11px; color: #ff9c9c; font-size: 13px; }
-.access-gate__contact { display: block; margin-top: 15px; color: rgba(255,255,255,.52); font-size: 12px; line-height: 1.6; }
-.access-gate__contact a { color: rgba(255,255,255,.8); }
-@media (max-width: 480px) { .access-gate { padding: 18px; } .access-gate__box { padding: 28px 22px; } }
+.access-gate::after {
+  content: ""; position: fixed; right: -14vw; bottom: -210px; width: 62vw; height: 360px; pointer-events: none;
+  border: 1px solid rgba(255,255,255,.15); border-radius: 50%;
+  box-shadow: 0 0 0 44px rgba(255,255,255,.035), 0 0 0 88px rgba(255,255,255,.025);
+}
+.access-gate > * { position: relative; z-index: 1; }
+
+/* ── 动效底层：两团缓慢漂移的光晕 + 节点网络 canvas ── */
+.access-gate > .access-gate__aurora,
+.access-gate > .access-gate__fx { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.access-gate > .access-gate__fx { display: block; width: 100%; height: 100%; }
+.access-gate > .access-gate__aurora { overflow: hidden; }
+.access-gate .access-gate__aurora::before,
+.access-gate .access-gate__aurora::after {
+  content: ""; position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; will-change: transform;
+}
+.access-gate .access-gate__aurora::before {
+  left: -20vmax; top: -24vmax;
+  background: radial-gradient(circle, rgba(26,167,255,.55), transparent 62%);
+  animation: access-gate-drift-a 17s ease-in-out infinite alternate;
+}
+.access-gate .access-gate__aurora::after {
+  right: -22vmax; bottom: -28vmax;
+  background: radial-gradient(circle, rgba(92,225,230,.34), transparent 62%);
+  animation: access-gate-drift-b 23s ease-in-out infinite alternate;
+}
+
+/* ── 站点标识 ─────────────────────────────────────── */
+.access-gate .access-gate__brand {
+  display: inline-flex; align-items: center; gap: 11px; margin: 0;
+  font-family: var(--ag-mono); font-size: 12px; font-weight: 700; letter-spacing: .2em; color: #fff;
+}
+.access-gate .access-gate__led {
+  width: 9px; height: 9px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 4px rgba(255,255,255,.14), 0 0 18px rgba(255,255,255,.8);
+  animation: access-gate-led 2.4s ease-in-out infinite;
+}
+.access-gate .access-gate__brand, .access-gate .access-gate__note { transition: opacity .3s ease; }
+
+/* ── 卡片：与主页展位卡片同一套结构（地址条 + 正文） ── */
+/* 外层三件套：stage 负责入场/退场与透视，tilt 负责跟随鼠标的 3D 倾斜，
+   frame 是 1.5px 的流光描边（conic 渐变绕圈），glow 是它在卡片外的柔光。
+   动画的 fill 一律用 backwards：结束后不再占着属性，后面的过渡才能生效。 */
+.access-gate .access-gate__stage {
+  width: min(420px, 100%); perspective: 1100px;
+  animation: access-gate-in .7s cubic-bezier(.2,.7,.2,1) backwards;
+  transition: transform .55s cubic-bezier(.5,0,.8,.4), opacity .45s ease, filter .45s ease;
+}
+.access-gate .access-gate__tilt { position: relative; transition: transform .28s ease-out; will-change: transform; --ag-gx: 50%; --ag-gy: 0px; }
+.access-gate .access-gate__glow {
+  position: absolute; inset: -3px; border-radius: 18px; filter: blur(20px); opacity: .6; pointer-events: none;
+  background: conic-gradient(from var(--ag-angle), transparent 0 18%, #8edcff 32%, transparent 46% 68%, #fff 82%, transparent 96%);
+  animation: access-gate-spin 6s linear infinite;
+  transition: opacity .3s ease;
+}
+.access-gate .access-gate__frame {
+  position: relative; padding: 1.5px; overflow: hidden; border-radius: 15px;
+  background: conic-gradient(from var(--ag-angle), rgba(255,255,255,.5) 0 18%, #8edcff 32%, rgba(255,255,255,.5) 46% 68%, #fff 82%, rgba(255,255,255,.5) 96%);
+  box-shadow: 0 26px 58px rgba(0,42,82,.32);
+  animation: access-gate-spin 6s linear infinite;
+}
+/* 入场后扫过卡面一次的高光 */
+.access-gate .access-gate__frame::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(142,220,255,.38) 50%, transparent 62%);
+  transform: translateX(120%);
+  animation: access-gate-sweep 1.1s .55s ease-out backwards;
+}
+.access-gate .access-gate__glare {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s ease;
+  background: radial-gradient(380px circle at var(--ag-gx) var(--ag-gy), rgba(26,167,255,.11), transparent 62%);
+}
+.access-gate.is-hover .access-gate__glare { opacity: 1; }
+.access-gate.is-error .access-gate__glow {
+  opacity: .8;
+  background: conic-gradient(from var(--ag-angle), transparent 0 18%, #ff6b5e 32%, transparent 46% 68%, #ffb0a6 82%, transparent 96%);
+}
+.access-gate.is-open .access-gate__glow {
+  opacity: .95;
+  background: conic-gradient(from var(--ag-angle), transparent 0 10%, #5ce1b6 30%, transparent 48% 60%, #fff 80%, transparent 98%);
+}
+.access-gate.is-error .access-gate__frame { animation: access-gate-shake .36s ease; }
+
+.access-gate .access-gate__box {
+  position: relative; z-index: 1; width: 100%; margin: 0; padding: 0; overflow: hidden;
+  border: 0; border-radius: 13.5px; background: #fff; color: var(--ag-ink); box-shadow: none;
+}
+.access-gate .access-gate__body > * { animation: access-gate-rise .5s cubic-bezier(.2,.7,.2,1) backwards; }
+.access-gate .access-gate__body > :nth-child(1) { animation-delay: .22s; }
+.access-gate .access-gate__body > :nth-child(2) { animation-delay: .28s; }
+.access-gate .access-gate__body > :nth-child(3) { animation-delay: .34s; }
+.access-gate .access-gate__body > :nth-child(4) { animation-delay: .40s; }
+.access-gate .access-gate__body > :nth-child(5) { animation-delay: .46s; }
+.access-gate .access-gate__body > :nth-child(6) { animation-delay: .46s; }
+.access-gate .access-gate__body > :nth-child(7) { animation-delay: .52s; }
+.access-gate .access-gate__addr {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 22px; border-bottom: 1px solid var(--ag-line); background: var(--ag-blue-50);
+  font-family: var(--ag-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ag-ink-3);
+}
+.access-gate .access-gate__addr b { font-weight: 700; color: var(--ag-blue); }
+.access-gate .access-gate__state { display: inline-flex; align-items: center; gap: 7px; letter-spacing: .1em; color: #527085; }
+.access-gate .access-gate__state::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ag-warn); box-shadow: 0 0 0 3px rgba(217,138,0,.14);
+  transition: background .25s ease, box-shadow .25s ease;
+}
+.access-gate.is-open .access-gate__state::before { background: var(--ag-live); box-shadow: 0 0 0 3px rgba(0,168,120,.14); }
+
+.access-gate .access-gate__body { padding: 28px 28px 24px; }
+.access-gate .access-gate__icon {
+  display: grid; place-items: center; width: 44px; height: 44px; margin: 0 0 18px;
+  border: 1px solid #aed6f5; border-radius: 10px; background: var(--ag-blue-50); color: var(--ag-blue);
+  transition: background .3s ease, border-color .3s ease, color .3s ease;
+}
+/* 开锁：锁梁绕右脚转开 */
+.access-gate .access-gate__shackle {
+  transform-box: view-box; transform-origin: 16px 10.5px;
+  transition: transform .4s cubic-bezier(.3,1.7,.5,1);
+}
+.access-gate.is-open .access-gate__shackle { transform: rotate(32deg); }
+.access-gate.is-open .access-gate__icon { background: #e6f8f2; border-color: #9fdcc8; color: var(--ag-live); }
+.access-gate .access-gate__icon svg { display: block; width: 22px; height: 22px; }
+.access-gate .access-gate__box h1 {
+  margin: 0; padding: 0; border: 0; white-space: normal; text-align: left;
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 24px; font-weight: 750; line-height: 1.25; letter-spacing: -.015em; color: var(--ag-ink);
+}
+.access-gate .access-gate__box p {
+  max-width: none; margin: 8px 0 24px; padding: 0; text-align: left;
+  font-size: 14px; font-weight: 400; line-height: 1.7; letter-spacing: 0; color: var(--ag-ink-2);
+}
+
+/* ── 表单 ─────────────────────────────────────────── */
+.access-gate .access-gate__label {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 8px;
+  font-size: 13px; font-weight: 650; line-height: 1.4; color: var(--ag-ink);
+}
+.access-gate .access-gate__caps { font-size: 12px; font-weight: 500; color: var(--ag-warn); }
+.access-gate .access-gate__caps[hidden] { display: none; }
+.access-gate .access-gate__field { position: relative; }
+.access-gate .access-gate__box input {
+  display: block; width: 100%; height: 48px; margin: 0; padding: 0 48px 0 14px;
+  border: 1px solid var(--ag-line); border-radius: 8px; outline: none;
+  background: #fff; color: var(--ag-ink); box-shadow: none;
+  font: 500 16px/1 var(--ag-sans); letter-spacing: .02em;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.access-gate .access-gate__box input::placeholder { color: var(--ag-ink-3); opacity: 1; }
+.access-gate .access-gate__box input:hover { border-color: #9dbfd8; }
+.access-gate .access-gate__box input:focus { border-color: var(--ag-blue); box-shadow: 0 0 0 3px rgba(0,103,197,.16); }
+.access-gate.is-error .access-gate__box input { border-color: var(--ag-error); }
+.access-gate.is-error .access-gate__box input:focus { box-shadow: 0 0 0 3px rgba(200,55,45,.14); }
+
+.access-gate .access-gate__box button { margin: 0; font-family: var(--ag-sans); cursor: pointer; }
+.access-gate .access-gate__box .access-gate__toggle {
+  position: absolute; top: 4px; right: 4px; display: grid; place-items: center;
+  width: 40px; height: 40px; padding: 0; border: 0; border-radius: 6px;
+  background: transparent; color: var(--ag-ink-3); box-shadow: none;
+  transition: background .18s ease, color .18s ease;
+}
+.access-gate .access-gate__box .access-gate__toggle:hover { background: var(--ag-blue-50); color: var(--ag-blue); }
+.access-gate .access-gate__box .access-gate__toggle:focus-visible { outline: 2px solid var(--ag-blue); outline-offset: 1px; }
+.access-gate .access-gate__toggle svg { display: block; width: 20px; height: 20px; }
+.access-gate .access-gate__toggle .access-gate__eye-off,
+.access-gate .access-gate__toggle[aria-pressed="true"] .access-gate__eye-on { display: none; }
+.access-gate .access-gate__toggle[aria-pressed="true"] .access-gate__eye-off { display: block; }
+
+.access-gate .access-gate__error {
+  min-height: 20px; margin: 7px 0 9px; text-align: left;
+  font-size: 13px; line-height: 20px; color: var(--ag-error);
+}
+.access-gate .access-gate__box .access-gate__submit {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 48px; padding: 0 16px; border: 0; border-radius: 8px;
+  background: var(--ag-blue); color: #fff; box-shadow: 0 8px 18px rgba(0,75,145,.22);
+  font-size: 15px; font-weight: 750; line-height: 1; letter-spacing: .02em;
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.access-gate .access-gate__box .access-gate__submit:hover { background: var(--ag-blue-deep); box-shadow: 0 10px 22px rgba(0,75,145,.3); }
+.access-gate .access-gate__box .access-gate__submit:active { transform: translateY(1px); }
+.access-gate .access-gate__box .access-gate__submit:focus-visible { outline: 3px solid rgba(0,103,197,.35); outline-offset: 2px; }
+.access-gate .access-gate__submit svg { display: block; width: 17px; height: 17px; transition: transform .2s ease; }
+.access-gate .access-gate__submit:hover svg { transform: translateX(3px); }
+.access-gate .access-gate__submit::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.3) 50%, transparent 65%);
+  transform: translateX(-120%);
+}
+.access-gate .access-gate__submit:hover::after { transform: translateX(120%); transition: transform .7s ease; }
+.access-gate.is-open .access-gate__box .access-gate__submit { background: var(--ag-live); box-shadow: none; pointer-events: none; }
+
+.access-gate .access-gate__contact {
+  display: block; margin: 0; padding: 14px 28px 16px; border-top: 1px solid var(--ag-line);
+  font-size: 12px; line-height: 1.6; color: var(--ag-ink-3); text-align: left;
+}
+.access-gate .access-gate__contact a {
+  color: var(--ag-blue); font-weight: 650; text-decoration: none;
+  border-bottom: 1px solid rgba(0,103,197,.3); overflow-wrap: anywhere;
+}
+.access-gate .access-gate__contact a:hover { border-bottom-color: var(--ag-blue); }
+
+.access-gate .access-gate__note {
+  margin: 0; font-family: var(--ag-mono); font-size: 11px; letter-spacing: .08em;
+  color: rgba(255,255,255,.62); text-align: center;
+}
+
+/* 验证通过：卡片向镜头冲出并虚化，随后由 JS 在整层上开圆形光圈露出页面。
+   overflow 收起来是因为放大的卡片会在窄屏上撑出一瞬间的滚动条。 */
+.access-gate.is-warp { overflow: hidden; pointer-events: none; }
+.access-gate.is-warp .access-gate__stage { transform: scale(1.12); opacity: 0; filter: blur(8px); }
+.access-gate.is-warp .access-gate__brand, .access-gate.is-warp .access-gate__note { opacity: 0; }
+
+@keyframes access-gate-in { from { opacity: 0; transform: translateY(26px) scale(.96); filter: blur(8px); } }
+@keyframes access-gate-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes access-gate-spin { to { --ag-angle: 360deg; } }
+@keyframes access-gate-sweep { from { transform: translateX(-120%); } }
+@keyframes access-gate-led { 50% { box-shadow: 0 0 0 7px rgba(255,255,255,.07), 0 0 26px rgba(255,255,255,1); } }
+@keyframes access-gate-drift-a { to { transform: translate(14vmax, 9vmax) scale(1.15); } }
+@keyframes access-gate-drift-b { to { transform: translate(-12vmax, -10vmax) scale(1.2); } }
+@keyframes access-gate-shake {
+  20% { transform: translateX(-7px); } 40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); } 80% { transform: translateX(2px); }
+}
+@media (max-width: 480px) {
+  .access-gate { padding: 24px 16px; gap: 18px; }
+  .access-gate .access-gate__addr { padding: 11px 18px; }
+  .access-gate .access-gate__body { padding: 22px 20px 20px; }
+  .access-gate .access-gate__contact { padding: 13px 20px 15px; }
+  .access-gate .access-gate__box h1 { font-size: 22px; }
+}
+/* 屏幕很矮时（横屏手机）从顶部开始排，避免卡片上沿被裁掉 */
+@media (max-height: 620px) { .access-gate { justify-content: flex-start; } }
+@media (prefers-reduced-motion: reduce) {
+  .access-gate, .access-gate * { animation: none !important; transition: none !important; }
+}
