@@ -281,9 +281,9 @@ table.dt tr.hide{display:none}
       <div class="chips an" style="--d:.44s">
         <div class="chip" data-jump="2">为什么需要</div>
         <div class="chip" data-jump="4">架构原理</div>
-        <div class="chip" data-jump="8">扩展与韧性</div>
-        <div class="chip" data-jump="10">接入与安全</div>
-        <div class="chip" data-jump="12">交付与选型</div>
+        <div class="chip" data-jump="9">扩展与韧性</div>
+        <div class="chip" data-jump="12">接入与安全</div>
+        <div class="chip" data-jump="14">交付与选型</div>
       </div>
       <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 4 分钟讲解视频</button></div>
       <div class="an" style="--d:.56s;margin-top:30px">
@@ -305,7 +305,7 @@ table.dt tr.hide{display:none}
       <div class="kpis an" style="--d:.1s">
         <div class="kpi"><b>&gt;100 TB/s</b><span>聚合吞吐设计目标<br>建模推算，非实测承诺</span></div>
         <div class="kpi v"><b>600</b><span>单集群 AFF A90 HA 系统<br>首发支持上限</span></div>
-        <div class="kpi t"><b>255</b><span>Data Director 节点<br>首发支持上限</span></div>
+        <div class="kpi t"><b>255</b><span>Data Director 节点（首发上限）<br>Lattice 架构面向 1,000+ 实例</span></div>
         <div class="kpi g"><b>200 PB</b><span>单命名空间容量（首发）<br>架构面向 ZB 级扩展</span></div>
         <div class="kpi o"><b>0</b><span>私有客户端<br>内核自带 NFSv4.2 / pNFS</span></div>
       </div>
@@ -317,26 +317,26 @@ table.dt tr.hide{display:none}
           <div class="go">进入 →</div>
         </div>
         <div class="dc" style="--ac:#0067c5" data-jump="4">
-          <div class="hd"><span class="nm">架构原理</span><span class="ct">4 幕</span></div>
-          <ul><li>元数据平面与数据平面各自独立</li><li>一次 I/O 的路径：取布局，然后直连</li><li>Data Director 分片与数据节点联邦</li></ul>
+          <div class="hd"><span class="nm">架构原理</span><span class="ct">5 幕</span></div>
+          <ul><li>元数据平面与数据平面各自独立</li><li>一次 I/O 的路径：取布局，然后直连</li><li>Data Director 分片、Lattice 引擎与数据节点联邦</li></ul>
           <div class="go">进入 →</div>
         </div>
-        <div class="dc" style="--ac:#0e9a62" data-jump="8">
-          <div class="hd"><span class="nm">扩展与韧性</span><span class="ct">2 幕</span></div>
-          <ul><li>并发、容量、带宽三条轴独立扩展</li><li>节点故障的影响范围与恢复过程</li></ul>
+        <div class="dc" style="--ac:#0e9a62" data-jump="9">
+          <div class="hd"><span class="nm">扩展与韧性</span><span class="ct">3 幕</span></div>
+          <ul><li>并发、容量、带宽三条轴独立扩展</li><li>节点故障的影响范围与恢复过程</li><li>八类 AI / HPC 负载各自得到什么</li></ul>
           <div class="go">进入 →</div>
         </div>
-        <div class="dc" style="--ac:#6a5ad4" data-jump="10">
+        <div class="dc" style="--ac:#6a5ad4" data-jump="12">
           <div class="hd"><span class="nm">接入与安全</span><span class="ct">2 幕</span></div>
           <ul><li>标准 NFS 客户端、RDMA 与 GPUDirect Storage</li><li>多租户隔离层次与加密现状</li></ul>
           <div class="go">进入 →</div>
         </div>
-        <div class="dc" style="--ac:#0c8e86" data-jump="12">
+        <div class="dc" style="--ac:#0c8e86" data-jump="14">
           <div class="hd"><span class="nm">交付与选型</span><span class="ct">4 幕</span></div>
           <ul><li>适用负载与产品组合中的位置</li><li>首发范围、后续规划与交付形态</li><li>同类方案的技术定位对照</li></ul>
           <div class="go">进入 →</div>
         </div>
-        <div class="dc" style="--ac:#123a7a" data-jump="16">
+        <div class="dc" style="--ac:#123a7a" data-jump="18">
           <div class="hd"><span class="nm">总结</span><span class="ct">1 幕</span></div>
           <ul><li>四点价值与评估时需要确认的事项</li><li>参考资料与信息时点</li></ul>
           <div class="go">进入 →</div>
@@ -527,6 +527,7 @@ table.dt tr.hide{display:none}
             <div class="li"><b>AFF / AFX</b>：呈现的是单个集群的性能与容量。</div>
             <div class="li"><b>Novus</b>：把多套 ONTAP 集群的容量与性能聚合到一个可持续扩展的命名空间下。</div>
             <div class="li"><b>关系</b>：两者在产品组合中并存；Novus 不面向通用负载，也不是现有 ONTAP 的升级路径。</div>
+            <div class="li"><b>演进脉络</b>：FlexVol（一个 HA 对拥有一个卷）→ FlexGroup（卷跨多个 HA 对）→ AFX（计算与容量解耦）→ Novus（命名空间与存放它的系统解耦）。</div>
           </div>
         </div>
       </div>
@@ -610,7 +611,7 @@ table.dt tr.hide{display:none}
       <div class="an">
         <div class="secmark" style="--ac:#0067c5"><i></i><span>架构原理 · 03</span></div>
         <h1>Data Director：<span class="g">分片 + 三副本</span>的元数据平面</h1>
-        <p class="lead">元数据平面提供 pNFS v4.2 命名空间，底层是基于高性能内存数据库的分布式元数据服务。元数据按键值范围分片到节点组，每组三台、组内三副本。增加节点组看分片如何变化。</p>
+        <p class="lead">元数据平面提供 pNFS v4.2 命名空间，底层是 Lattice 元数据引擎的分布式元数据存储（高性能内存数据库）。元数据按键值范围分片到节点组，每组三台、组内三副本；分片由系统管理，对客户端不可见。增加节点组看分片如何变化。</p>
       </div>
       <div class="hr an" style="--d:.06s"></div>
 
@@ -647,13 +648,52 @@ table.dt tr.hide{display:none}
     </div>
   </section>
 
+  <!-- ══════════════════ 幕 6b · Lattice ══════════════════ -->
+  <section class="scene" data-sec="架构原理" data-nav="Lattice 引擎">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>架构原理 · 04</span></div>
+        <h1>Lattice：<span class="g">每个节点都是完整写入者</span>的元数据引擎</h1>
+        <p class="lead">"多加几台元数据服务器"并不等于性能会跟着涨。主备对只换来可用性，手工分片把复杂度交给了用户。Lattice 把 pNFS 服务层与元数据存储层拆开，各自横向扩展。切换三种模式对比。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn sm" data-meta="ap" data-toggle-group="meta">主备对</button>
+            <button class="btn sm" data-meta="shard" data-toggle-group="meta">手工分片</button>
+            <button class="btn sm on" data-meta="lat" data-toggle-group="meta">Novus · Lattice</button>
+            <span class="hint" style="margin-left:auto" id="metaState"></span>
+          </div>
+          <svg viewBox="0 0 640 300" id="metaSvg" style="max-height:320px"></svg>
+          <div class="flag" style="margin-top:9px" id="metaFlag"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="metaTitle">模式说明</h3>
+            <div id="metaBody"></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>两层解耦，各扩各的</h3>
+            <div class="li"><b>服务层 · 随 GPU 规模扩</b>：协议状态管理、布局 / 资源调度、数据服务器控制面；运行在用户态，轻量、可水平扩展。</div>
+            <div class="li"><b>元数据存储层 · 随容量扩</b>：分片的持久化命名空间存储，加分片扩容量。</div>
+            <div class="li"><b>共享事务目录</b>：分布式、多副本，一次元数据变更就是一个事务；任何客户端可以连任何元数据服务器。</div>
+            <div class="li ok"><b>规模</b>：两层各自从 1 扩展到 1,000+ 实例（架构设计值；首发支持上限 255 台）。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ══════════════════ 幕 7 · 数据节点 ══════════════════ -->
   <section class="scene" data-sec="架构原理" data-nav="数据节点与联邦">
     <div class="wrap">
       <div class="an">
-        <div class="secmark" style="--ac:#0067c5"><i></i><span>架构原理 · 04</span></div>
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>架构原理 · 05</span></div>
         <h1>数据节点：<span class="g">多套 ONTAP 集群联邦</span>为一个命名空间</h1>
-        <p class="lead">首发数据节点是面向 Novus 强化的 AFF A90。每个 HA 对保持为独立的 ONTAP 集群，由 Data Director 把它们联合呈现 —— 这与"把更多节点加进同一个集群"是两种做法。</p>
+        <p class="lead">首发数据节点是面向 Novus 强化的 AFF A90。默认每套是双节点无交换机（switchless）的独立 ONTAP 集群，靠元数据层横向扩展，由 Data Director 把它们联合呈现 —— 这与"把更多节点加进同一个集群"是两种做法。</p>
       </div>
       <div class="hr an" style="--d:.06s"></div>
 
@@ -729,7 +769,9 @@ table.dt tr.hide{display:none}
               <tbody>
                 <tr><td class="h">最小集群</td><td>1 个 HA 对（2 节点）+ 3 台 Data Director</td></tr>
                 <tr><td class="h">数据节点上限</td><td>600 套 AFF A90 for NetApp Novus</td></tr>
-                <tr><td class="h">Data Director 上限</td><td>255 台</td></tr>
+                <tr><td class="h">Data Director 上限</td><td>255 台；Lattice 架构设计为 1 到 1,000+ 实例</td></tr>
+                <tr><td class="h">Data Director 服务器</td><td>第三方 x86，每台 ≥128 核、≥1 TB 内存；小文件密集的部署可加内存</td></tr>
+                <tr><td class="h">起步规模</td><td>3 台 Data Director 可支撑约 12 PB 可用容量，容量再大时增加</td></tr>
                 <tr><td class="h">单命名空间</td><td>200 PB；架构可扩展至 ZB 级</td></tr>
               </tbody>
             </table>
@@ -778,6 +820,29 @@ table.dt tr.hide{display:none}
     </div>
   </section>
 
+  <!-- ══════════════════ 幕 9b · 负载映射 ══════════════════ -->
+  <section class="scene" data-sec="扩展与韧性" data-nav="负载映射">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>扩展与韧性 · 03</span></div>
+        <h1>八类负载，<span class="g">各自得到什么</span></h1>
+        <p class="lead">AI 工厂的负载改写了存储的 I/O 约定：有的考验带宽，有的考验元数据，有的两者同时考验。下面逐一对照挑战与 Novus 的应对机制。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+          <div class="vc"><span class="k">01 · 负载</span><div class="t">AI 训练</div><div class="d"><b>挑战</b>：数千 GPU worker 并发读取打乱后的数据集，每个 epoch 触及数百万文件。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：打乱读取并行扇出到各数据节点；元数据平面让 epoch 级的海量 lookup 保持低延迟。</div></div>
+          <div class="vc"><span class="k">02 · 负载</span><div class="t">检查点写入</div><div class="d"><b>挑战</b>：整个集群定时写出状态；很多框架把检查点拆成数千个小文件。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：突发写直接扇出到数据节点；预创建（pre-create）吸收数千个小分片的创建开销。</div></div>
+          <div class="vc"><span class="k">03 · 负载</span><div class="t">检查点恢复</div><div class="d"><b>挑战</b>：故障后整集群同时回读，恢复时长直接决定 GPU 空转时长。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：大规模并行读；条带化与镜像读故障切换让恢复时间有界。</div></div>
+          <div class="vc"><span class="k">04 · 负载</span><div class="t">推理模型加载</div><div class="d"><b>挑战</b>：推理节点群冷启动加载数百 GB 的模型，突发读且有严格的延迟预算。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：布局把每个节点直接导向持有模型的数据服务器，经 RDMA 读取。</div></div>
+          <div class="vc"><span class="k">05 · 负载</span><div class="t">RAG 流水线</div><div class="d"><b>挑战</b>：检索访问文档库、向量与索引，大量小而重元数据的操作。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：共享元数据平面把海量语料上的 lookup 压力水平分摊。</div></div>
+          <div class="vc"><span class="k">06 · 负载</span><div class="t">HPC 仿真</div><div class="d"><b>挑战</b>：大规模并行作业写共享文件，N-to-1 与 N-to-N 模式需要真正的并行数据路径。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：可选宽条带，最多 1,024 路；聚合提交（aggregated commits）减轻元数据负担。</div></div>
+          <div class="vc"><span class="k">07 · 负载</span><div class="t">EB 级命名空间</div><div class="d"><b>挑战</b>：多年累积的数十亿文件，平台每次演进都不可能整体重拷。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：元数据容量水平扩展，分片由系统管理，按租户隔离。</div></div>
+          <div class="vc"><span class="k">08 · 负载</span><div class="t">存量 NFS 数据</div><div class="d"><b>挑战</b>：已有的大量 NFS 数据，迁移窗口难以安排。</div><div class="d" style="margin-top:6px;color:var(--ink)"><b style="color:var(--green)">Novus</b>：Flex Files 的数据服务器可以是任意 NFS 导出，架构上支持就地纳管、免整体拷贝；首发版本现有 AFF / AFX 不能加入，见首发范围。</div></div>
+      </div>
+      <p class="note an" style="--d:.2s">宽条带需要较新的 NFS 客户端（见"标准客户端"一幕）；各项机制的实际效果需结合负载做 PoC 验证。</p>
+    </div>
+  </section>
+
   <!-- ══════════════════ 幕 10 · 标准客户端 ══════════════════ -->
   <section class="scene" data-sec="接入与安全" data-nav="标准客户端">
     <div class="wrap">
@@ -804,7 +869,7 @@ table.dt tr.hide{display:none}
           <div class="panel tint an" style="--d:.18s">
             <h3>访问协议与加速</h3>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px">
-              <span class="tag b">NFSv4.2</span><span class="tag b">pNFS Flex Files · RFC 8435</span><span class="tag b">NFS over RDMA</span><span class="tag b">nconnect</span><span class="tag b">NVIDIA GPUDirect Storage</span>
+              <span class="tag b">NFSv4.1 / 4.2 · RFC 8881 / 7862</span><span class="tag b">pNFS Flex Files · RFC 8435</span><span class="tag b">NFS over RDMA</span><span class="tag b">nconnect</span><span class="tag b">NVIDIA GPUDirect Storage</span>
             </div>
             <div class="li"><b>nconnect</b>：单挂载多连接，提高吞吐。</div>
             <div class="li"><b>GPUDirect Storage</b>：GPU 与存储之间直接传输，绕过 CPU 与系统内存拷贝。</div>
@@ -818,7 +883,7 @@ table.dt tr.hide{display:none}
               <thead><tr><th style="width:150px">客户端能力</th><th>要求（2026 年 10 月）</th></tr></thead>
               <tbody>
                 <tr><td class="h">标准 pNFS</td><td>Ubuntu 24.04 或 RHEL 的内核 NFS 客户端</td></tr>
-                <tr><td class="h">Flex Files 宽条带</td><td>需要更新的客户端版本；目前仅 Ubuntu 26.04 的 NFS 客户端支持</td></tr>
+                <tr><td class="h">Flex Files 宽条带</td><td>按需启用，最多 1,024 路；需要更新的客户端版本，目前仅 Ubuntu 26.04 的 NFS 客户端支持</td></tr>
                 <tr><td class="h">网络</td><td>仅以太网（100 / 400GbE，无损）；不支持 InfiniBand</td></tr>
                 <tr><td class="h">数据导入</td><td>建议使用主机侧工具拷贝；NetApp 提供 XCP 等工具</td></tr>
               </tbody>
@@ -962,13 +1027,13 @@ table.dt tr.hide{display:none}
             <tr data-s="ok"><td class="h">多租户隔离</td><td><span class="tag ok">首发支持</span></td><td>命名空间、VLAN、节点池、每租户身份与密钥、专属数据节点</td></tr>
             <tr data-s="ok"><td class="h">静态数据加密</td><td><span class="tag ok">首发支持</span></td><td>自加密盘、卷级加密</td></tr>
             <tr data-s="ok"><td class="h">AFF A90 数据节点</td><td><span class="tag ok">首发支持</span></td><td>AFF A90 for NetApp Novus；Data Director 运行在合格 x86 服务器（默认裸金属）</td></tr>
-            <tr data-s="plan"><td class="h">软件定义数据节点</td><td><span class="tag warn">后续规划</span></td><td>ONTAP 数据服务运行在合格的第三方服务器上，首发后跟进</td></tr>
+            <tr data-s="plan"><td class="h">软件定义数据节点</td><td><span class="tag warn">后续规划</span></td><td>ONTAP SDS 运行在第三方 x86 服务器上（KVM 优化）作为数据节点，GA 目标 Q1 CY27；同时提供云控制服务（存储供给、可观测性、IAM、机群管理）</td></tr>
             <tr data-s="plan"><td class="h">S3 / S3 over RDMA</td><td><span class="tag warn">后续规划</span></td><td>对象访问在路线图中</td></tr>
             <tr data-s="plan"><td class="h">传输中加密</td><td><span class="tag warn">后续规划</span></td><td>高优先级路线图项</td></tr>
             <tr data-s="plan"><td class="h">统一管理与控制平面</td><td><span class="tag warn">后续规划</span></td><td>首发时 ONTAP 与 Data Director 分别管理，统一管理在开发中</td></tr>
             <tr data-s="plan"><td class="h">分层与纠删码</td><td><span class="tag warn">后续规划</span></td><td>数据分层、StorageGRID 分层集成、纠删码</td></tr>
             <tr data-s="plan"><td class="h">推理 KV cache 外部缓存</td><td><span class="tag warn">后续规划</span></td><td>KV cache 类负载可承载，性能测试进行中；外部缓存集成属后续范围</td></tr>
-            <tr data-s="plan"><td class="h">NVIDIA Cloud Partner 认证</td><td><span class="tag warn">计划中</span></td><td>按认证要求设计，认证流程进行中，尚未完成</td></tr>
+            <tr data-s="plan"><td class="h">NVIDIA Cloud Partner 认证</td><td><span class="tag warn">计划中</span></td><td>与 NVIDIA 共同推进，目标 Q4 CY26 – Q1 CY27；AFF A90 本身已获 NCP 认证，本次认证对象是 Data Director 元数据服务器</td></tr>
             <tr data-s="no"><td class="h">InfiniBand</td><td><span class="tag no">不支持</span></td><td>仅以太网；InfiniBand 环境可考虑 NetApp E-Series + Lustre 方案</td></tr>
             <tr data-s="no"><td class="h">现有 ONTAP 系统加入或升级</td><td><span class="tag no">不支持</span></td><td>现有 AFF / AFX 不能加入 Novus 集群，也不能升级为 Novus；数据可通过工具复制</td></tr>
             <tr data-s="no"><td class="h">公有云内交付</td><td><span class="tag no">首发不提供</span></td><td>首发不在超大规模云内提供</td></tr>
@@ -993,7 +1058,7 @@ table.dt tr.hide{display:none}
         <div class="st" data-step="0" data-grp="tl"><div class="n">2026-09-25</div><div class="l">宣布拟收购 PEAK:AIO</div></div>
         <div class="st on" data-step="1" data-grp="tl"><div class="n">2026-09-29 · INSIGHT</div><div class="l">Novus 发布，开放订购</div></div>
         <div class="st" data-step="2" data-grp="tl"><div class="n">发布后 1–2 个月</div><div class="l">首批客户部署</div></div>
-        <div class="st" data-step="3" data-grp="tl"><div class="n">后续</div><div class="l">软件定义形态与统一管理</div></div>
+        <div class="st" data-step="3" data-grp="tl"><div class="n">Q4 CY26 – Q1 CY27（目标）</div><div class="l">NCP 认证与软件定义数据节点</div></div>
       </div>
       <div class="stbody an" style="--d:.14s;min-height:74px;margin-bottom:13px"><h4 id="tlH"></h4><p id="tlP"></p></div>
 
@@ -1004,7 +1069,7 @@ table.dt tr.hide{display:none}
             <tbody>
               <tr><td class="h">数据节点</td><td>AFF A90 for NetApp Novus：A90 基础 + 额外控制器 NVRAM + 400GbE 网卡</td><td>NetApp 或其合作伙伴</td><td>NetApp</td></tr>
               <tr><td class="h">Data Director 软件</td><td>元数据服务软件，订阅制</td><td>NetApp</td><td>NetApp</td></tr>
-              <tr><td class="h">Data Director 服务器</td><td>符合 NetApp 规格的合格 x86 服务器（如 Supermicro）</td><td>服务器厂商</td><td>服务器厂商（硬件）</td></tr>
+              <tr><td class="h">Data Director 服务器</td><td>符合 NetApp 规格的合格 x86 服务器（如 Supermicro）：每台 ≥128 核、≥1 TB 内存，最少 3 台（约支撑 12 PB 可用容量）</td><td>服务器厂商</td><td>服务器厂商（硬件）</td></tr>
               <tr><td class="h">部署服务</td><td>初始部署与上线由 NetApp 专业服务完成</td><td>NetApp</td><td>NetApp</td></tr>
             </tbody>
           </table>
@@ -1098,7 +1163,8 @@ table.dt tr.hide{display:none}
           <div class="li">NetApp 官方博客《Novus: AI factory storage for GPU clouds at zettabyte scale》，Arindam Banerjee，2026-09-29</div>
           <div class="li">NetApp 新闻稿：拟收购 PEAK:AIO，2026-09-25</div>
           <div class="li">行业媒体与分析机构报道：StorageReview、Blocks &amp; Files、NAND Research、Computer Weekly</div>
-          <div class="li">RFC 8435 · pNFS Flexible File Layout</div>
+          <div class="li">NetApp Novus Overview 技术简报（Field Roadmap Webcast），2026-09-22</div>
+          <div class="li">RFC 8435 · pNFS Flexible File Layout；RFC 8881 · NFSv4.1；RFC 7862 · NFSv4.2</div>
           <p class="note">本页包含对预期产品功能的前瞻性描述，反映 2026 年 10 月的公开信息与计划，实际功能与时间可能变化。</p>
         </div>
       </div>
@@ -1379,7 +1445,7 @@ const TL = [
   ['拟收购 PEAK:AIO','NetApp 于 2026 年 9 月 25 日宣布拟收购 PEAK:AIO —— 一家总部位于英国曼彻斯特的软件定义存储公司，核心技术是面向 pNFS 的横向扩展、解耦式元数据服务。NetApp 计划将其元数据服务、全局命名空间与并行 NFS 访问能力与 ONTAP 结合。交易尚待满足惯常交割条件与监管审批。'],
   ['Novus 发布并开放订购','Novus 于 2026 年 9 月 29 日在 NetApp INSIGHT 2026（9 月 29 日至 10 月 1 日，拉斯维加斯）发布，发布时即可订购。首发配置：Novus Data Director 运行在合格的 Supermicro 服务器上，数据层为运行 ONTAP 的 AFF A90。首发阶段的配置与规模需与 NetApp 共同确认。'],
   ['首批客户部署','据发布时的行业媒体报道，首批客户预计在发布后一到两个月内获得系统，更大范围的供货在其后数月展开。该时间为报道信息，以 NetApp 正式通知为准。'],
-  ['后续方向','元数据服务与 ONTAP 数据服务均可运行在合格第三方硬件上的软件定义形态；ONTAP 与 Data Director 的统一管理；对象访问、传输加密、分层等能力。以上为方向性规划，未公布具体时间。']
+  ['NCP 认证与软件定义形态','NVIDIA Cloud Partner（NCP）认证目标 Q4 CY26 – Q1 CY27，认证对象是 Data Director 元数据服务器（AFF A90 已获 NCP 认证）。第二种交付形态以运行在第三方 x86 服务器上的 ONTAP SDS 作为数据节点，GA 目标 Q1 CY27，配套云控制服务负责存储供给、可观测性、IAM 与机群管理。ONTAP 与 Data Director 的统一管理，以及对象访问、传输加密、分层等能力仍为方向性规划。以上均为目标时间，可能调整。']
 ];
 function setTl(k){
   $$('.st[data-grp="tl"]').forEach(s=> s.classList.toggle('on', +s.dataset.step === k));
@@ -1417,6 +1483,53 @@ function drawShard(n){
 }
 toggleGroup('data-shard', drawShard);
 
+/* ── Lattice：三种元数据模式 ── */
+const META = {
+  ap:{st:'容量 = 1 台 · 可用性 = 2 台', t:'主备对', flag:['o','第二台不增加任何 ops/s；丢掉第一台就是一次故障切换事件'],
+    body:[['所有客户端都压在 active 节点上，元数据吞吐等于单台能力',''],['passive 只做热备：<b>换来可用性，没换来容量</b>','warn'],['主节点故障需要切换，切换期间元数据服务受影响','warn']]},
+  shard:{st:'容量 = N 台 · 复杂度 = 你的', t:'手工分片', flag:['o','热点要人工再均衡；分片边界对用户可见'],
+    body:[['按目录或租户把命名空间切给不同元数据服务器，容量随台数增长','ok'],['<b>边界是硬的</b>：客户端要知道自己属于哪个分片','warn'],['热点出现时只能人工迁移、再均衡，目录结构变成性能决策','warn']]},
+  lat:{st:'每个节点都是完整写入者', t:'Novus · Lattice', flag:['','任何客户端可连任何元数据服务器；一致性由事务保证，命名空间保持完整'],
+    body:[['<b>扩展</b>：元数据吞吐随节点数水平增长，运行在普通 x86 硬件上','ok'],['<b>韧性</b>：丢一台元数据服务器是日常事件，不是事故','ok'],['<b>运维简单</b>：没有分片映射、没有选主、没有需要演练的故障切换手册','ok'],['<b>命名空间自由</b>：目录结构不再是性能决策','ok']]}
+};
+function drawMeta(k){
+  const c = META[k];
+  let h = '';
+  const cl = (x,y)=> '<rect x="'+x+'" y="'+y+'" width="74" height="28" rx="7" fill="#fff5e6" stroke="#e6b566"/><text x="'+(x+37)+'" y="'+(y+18)+'" text-anchor="middle" font-size="10.5" fill="#7a4a05">client</text>';
+  const node = (x,y,w,txt,fill,stroke,tc,dash)=> '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="40" rx="9" fill="'+fill+'" stroke="'+stroke+'"'+(dash?' stroke-dasharray="5 4"':'')+'/><text x="'+(x+w/2)+'" y="'+(y+25)+'" text-anchor="middle" font-size="12" font-weight="750" fill="'+tc+'">'+txt+'</text>';
+  if(k==='ap'){
+    [110,230,350,470].forEach(x=>{ h += cl(x,30) + '<path d="M'+(x+37)+' 58 L250 130" stroke="#c9d4e6" stroke-width="1.6" fill="none"/>'; });
+    h += node(180,130,140,'active','#123a7a','#123a7a','#fff') + node(360,130,140,'passive','#fff','#c9d4e6','#8d97b2',true)
+       + '<path d="M320 150 H360" stroke="#8d97b2" stroke-width="1.6" stroke-dasharray="4 3"/>'
+       + '<text x="320" y="215" text-anchor="middle" font-size="11" fill="#5c6a8a">所有元数据操作都由 active 一台处理</text>';
+  } else if(k==='shard'){
+    [60,160].forEach(x=>{ h += cl(x,40) + '<path d="M'+(x+37)+' 68 L160 130" stroke="#c9d4e6" stroke-width="1.6" fill="none"/>'; });
+    [406,506].forEach(x=>{ h += cl(x,40) + '<path d="M'+(x+37)+' 68 L480 130" stroke="#c9d4e6" stroke-width="1.6" fill="none"/>'; });
+    h += '<text x="160" y="28" text-anchor="middle" font-size="11" fill="#5c6a8a">clients A</text><text x="480" y="28" text-anchor="middle" font-size="11" fill="#5c6a8a">clients B</text>'
+       + node(70,130,180,'shard A','#123a7a','#123a7a','#fff') + node(390,130,180,'shard B','#123a7a','#123a7a','#fff')
+       + '<path d="M320 20 V200" stroke="#d33a5c" stroke-width="2.4"/><text x="320" y="218" text-anchor="middle" font-size="11" font-weight="700" fill="#d33a5c">硬边界</text>';
+  } else {
+    for(let i=0;i<6;i++){ const x = 34 + i*100; h += cl(x,10); }
+    h += '<rect x="30" y="58" width="580" height="104" rx="12" fill="#f1eefc" stroke="#a99fe6"/>'
+       + '<text x="320" y="152" text-anchor="middle" font-size="10.5" font-weight="750" fill="#4a3db0">服务层 · 随 GPU 规模扩　协议状态 · 布局调度 · 数据服务器控制面</text>';
+    const dd = ['DD 1','DD 2','DD 3','DD n'];
+    for(let i=0;i<6;i++){ for(let j=0;j<4;j++){ if((i+j)%2) continue; h += '<path d="M'+(71+i*100)+' 38 L'+(102+j*142)+' 58" stroke="#a99fe6" stroke-width="1" stroke-dasharray="3 3" fill="none"/>'; } }
+    dd.forEach((t,j)=>{ h += node(44+j*142,78,116,t+(j===3?' · 在线添加':' · active'),'#fff','#a99fe6','#4a3db0',j===3); });
+    h += '<path d="M320 162 V178" stroke="#a99fe6" stroke-width="2"/>'
+       + '<rect x="30" y="178" width="580" height="34" rx="9" fill="#fff" stroke="#a99fe6"/>'
+       + '<text x="320" y="199" text-anchor="middle" font-size="11.5" font-weight="750" fill="#4a3db0">共享事务目录 · 分布式 · 多副本 · 一次变更 = 一个事务</text>'
+       + '<path d="M320 212 V226" stroke="#a99fe6" stroke-width="2"/>'
+       + '<text x="44" y="242" font-size="10.5" font-weight="750" fill="#123a7a">元数据存储层 · 随容量扩</text>';
+    for(let j=0;j<6;j++) h += '<rect x="'+(44+j*94)+'" y="250" width="82" height="34" rx="8" fill="#123a7a"/><text x="'+(85+j*94)+'" y="271" text-anchor="middle" font-size="11" fill="#fff">shard</text>';
+  }
+  $('#metaSvg').innerHTML = h;
+  $('#metaState').textContent = c.st;
+  $('#metaTitle').textContent = c.t;
+  $('#metaBody').innerHTML = c.body.map(x=> li(x[0], x[1])).join('');
+  const f = $('#metaFlag'); f.className = 'flag' + (c.flag[0] ? ' '+c.flag[0] : ''); f.textContent = c.flag[1];
+}
+toggleGroup('data-meta', drawMeta);
+
 /* ── 数据节点：联邦 vs 单集群 ── */
 function drawFed(k){
   let h = '';
@@ -1440,7 +1553,7 @@ function drawFed(k){
          + '<text x="'+(x+68)+'" y="210" text-anchor="middle" font-size="10" fill="#5c6a8a">AFF A90 HA 对</text>';
     }
     $('#fedState').textContent = '多集群联邦';
-    $('#fedNote').textContent = '每个 HA 对是一套独立的 ONTAP 双节点集群，各自保持自治；Data Director 把它们联合呈现为一个命名空间，首发最多 600 套。';
+    $('#fedNote').textContent = '默认每个 HA 对是一套独立的双节点无交换机 ONTAP 集群，各自保持自治；Data Director 把它们联合呈现为一个命名空间，首发最多 600 套。需要时也可以使用更大的 A90 集群（2–12 节点）作为数据节点。';
   }
   $('#fedSvg').innerHTML = h;
 }
