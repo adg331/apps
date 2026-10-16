@@ -199,11 +199,11 @@
       <nav class="bays" aria-label="展位快速跳转">
         <a href="#bay01" title="Bay 01 · AIDE 2026 深度解析 · 制造业视角">01<span class="vh"> Bay 01 AIDE 2026 深度解析 · 制造业视角</span></a>
         <a href="#bay02" title="Bay 02 · NetApp Novus · AI 工厂存储架构">02<span class="vh"> Bay 02 NetApp Novus · AI 工厂存储架构</span></a>
-        <a href="#bay03" title="Bay 03 · ONTAP MCP 运维演示">03<span class="vh"> Bay 03 ONTAP MCP 运维演示</span></a>
-        <a href="#bay04" title="Bay 04 · NetApp MCP 全景演示">04<span class="vh"> Bay 04 NetApp MCP 全景演示</span></a>
-        <a href="#bay05" title="Bay 05 · SnapMirror active sync for NAS">05<span class="vh"> Bay 05 SnapMirror active sync for NAS</span></a>
-        <a href="#bay06" title="Bay 06 · 制造业勒索软件检测与恢复">06<span class="vh"> Bay 06 制造业勒索软件检测与恢复</span></a>
-        <a href="#bay07" title="Bay 07 · KV Cache 分层加速">07<span class="vh"> Bay 07 KV Cache 分层加速</span></a>
+        <a href="#bay03" title="Bay 03 · KV Cache 分层加速">03<span class="vh"> Bay 03 KV Cache 分层加速</span></a>
+        <a href="#bay04" title="Bay 04 · ONTAP MCP 运维演示">04<span class="vh"> Bay 04 ONTAP MCP 运维演示</span></a>
+        <a href="#bay05" title="Bay 05 · NetApp MCP 全景演示">05<span class="vh"> Bay 05 NetApp MCP 全景演示</span></a>
+        <a href="#bay06" title="Bay 06 · SnapMirror active sync for NAS">06<span class="vh"> Bay 06 SnapMirror active sync for NAS</span></a>
+        <a href="#bay07" title="Bay 07 · 制造业勒索软件检测与恢复">07<span class="vh"> Bay 07 制造业勒索软件检测与恢复</span></a>
         <a href="#bay08" title="Bay 08 · ONTAP 9.19.1 技术总览">08<span class="vh"> Bay 08 ONTAP 9.19.1 技术总览</span></a>
         <a href="#bay09" title="Bay 09 · LiSA 联想存储智能体">09<span class="vh"> Bay 09 LiSA 联想存储智能体</span></a>
         <a href="#bay10" title="Bay 10 · Fusion 容量查询">10<span class="vh"> Bay 10 Fusion 容量查询</span></a>
@@ -264,6 +264,22 @@
       <article class="slot" id="bay03">
         <div class="addr mono"><b>Bay 03</b><span class="state">在线</span></div>
         <div class="visual">
+          <img src="./assets/kv-cache-preview.svg" alt="NetApp AFX KV Cache 四级分层加速架构示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <span class="tag">NetApp AFX</span>
+          <h3>KV Cache 分层加速</h3>
+          <p>交互演示长上下文推理的显存压力，以及 KV Cache 在 HBM、DRAM、NVMe 与 AFX 共享存储池之间的分层、命中和回填，含 5 分钟讲解视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./kv-cache/" target="_blank" rel="noopener" aria-label="交互演示：KV Cache 分层加速（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./kv-cache/kv-deep.mp4" data-title="KV Cache 分层加速">视频解说</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay04">
+        <div class="addr mono"><b>Bay 04</b><span class="state">在线</span></div>
+        <div class="visual">
           <img src="./assets/ontap-mcp-preview.svg" alt="ONTAP MCP 自然语言存储管理架构示意图" width="800" height="450" loading="lazy">
         </div>
         <div class="body">
@@ -277,8 +293,8 @@
         </div>
       </article>
 
-      <article class="slot" id="bay04">
-        <div class="addr mono"><b>Bay 04</b><span class="state">在线</span></div>
+      <article class="slot" id="bay05">
+        <div class="addr mono"><b>Bay 05</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/netapp-mcp-preview.svg" alt="NetApp MCP 数据基础设施管理架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -293,8 +309,8 @@
         </div>
       </article>
 
-      <article class="slot" id="bay05">
-        <div class="addr mono"><b>Bay 05</b><span class="state">在线</span></div>
+      <article class="slot" id="bay06">
+        <div class="addr mono"><b>Bay 06</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/sm-as-nas-preview.svg" alt="SnapMirror active sync for NAS 双站点同步保护示意图" width="800" height="450" loading="lazy">
         </div>
@@ -309,8 +325,8 @@
         </div>
       </article>
 
-      <article class="slot" id="bay06">
-        <div class="addr mono"><b>Bay 06</b><span class="state">在线</span></div>
+      <article class="slot" id="bay07">
+        <div class="addr mono"><b>Bay 07</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/arp-ai-preview.svg" alt="ONTAP ARP AI 制造业勒索软件检测与恢复示意图" width="800" height="450" loading="lazy">
         </div>
@@ -321,22 +337,6 @@
           <div class="acts">
             <a class="act demo" href="./arp-ai-manufacturing/" target="_blank" rel="noopener" aria-label="交互演示：制造业勒索软件检测与恢复（在新标签页打开）">交互演示</a>
             <span class="act off" aria-disabled="true">视频制作中</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="slot" id="bay07">
-        <div class="addr mono"><b>Bay 07</b><span class="state">在线</span></div>
-        <div class="visual">
-          <img src="./assets/kv-cache-preview.svg" alt="NetApp AFX KV Cache 四级分层加速架构示意图" width="800" height="450" loading="lazy">
-        </div>
-        <div class="body">
-          <span class="tag">NetApp AFX</span>
-          <h3>KV Cache 分层加速</h3>
-          <p>交互演示长上下文推理的显存压力，以及 KV Cache 在 HBM、DRAM、NVMe 与 AFX 共享存储池之间的分层、命中和回填，含 5 分钟讲解视频。</p>
-          <div class="acts">
-            <a class="act demo" href="./kv-cache/" target="_blank" rel="noopener" aria-label="交互演示：KV Cache 分层加速（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./kv-cache/kv-deep.mp4" data-title="KV Cache 分层加速">视频解说</button>
           </div>
         </div>
       </article>
