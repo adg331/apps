@@ -244,7 +244,42 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
 .quote{margin-top:20px; text-align:center; font-size:19px; color:var(--txt); font-weight:600}
 .quote .hl{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
 
-/* ===== 幕6 术语速查 ===== */
+/* ===== 幕5 FAST'26 五场景 ===== */
+.scnGrid{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:4px}
+.scnCard{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:13px 14px; cursor:pointer; transition:.2s; position:relative}
+.scnCard:hover{border-color:var(--cyan); transform:translateY(-2px)}
+.scnCard.on{border-color:var(--cyan); box-shadow:0 0 0 2px rgba(0,103,197,.15); background:linear-gradient(160deg,#f4f8ff,#f1f0fd)}
+.scnCard .ic{font-size:22px}
+.scnCard .t{font-weight:800; font-size:14.5px; margin:6px 0 3px}
+.scnCard .d{font-size:12px; color:var(--dim); line-height:1.6; min-height:38px}
+.rel{display:inline-block; margin-top:8px; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:700}
+.rel.r3{background:rgba(15,157,99,.12); color:var(--green)}
+.rel.r2{background:rgba(9,132,201,.12); color:var(--nvme)}
+.rel.r1{background:rgba(139,148,179,.16); color:var(--faint)}
+.scnDetail{display:grid; grid-template-columns:1.05fr 1fr 1fr; gap:14px; margin-top:12px}
+.scnDetail .panel{padding:14px 16px}
+.dt{font-size:12px; color:var(--dim); font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:7px}
+.dt .bar{width:4px; height:13px; border-radius:2px; background:linear-gradient(180deg,var(--cyan),var(--violet))}
+.dBody{font-size:13px; line-height:1.75}
+.dBody b{color:var(--txt)}
+.obs{display:flex; flex-direction:column; gap:7px}
+.obs .o{display:flex; align-items:baseline; gap:10px; font-size:12.5px; color:var(--dim); line-height:1.5}
+.obs .o .n{flex:0 0 76px; font-size:19px; font-weight:800; color:var(--orange); font-variant-numeric:tabular-nums; text-align:right}
+.lowerRow{display:grid; grid-template-columns:1.25fr 1fr; gap:14px; margin-top:12px}
+.ladder{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px}
+.step{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--panel2); position:relative}
+.step .lv{font-size:11px; font-weight:800; letter-spacing:.5px}
+.step .nm{font-weight:800; font-size:13.5px; margin:3px 0}
+.step .ds{font-size:11.5px; color:var(--dim); line-height:1.6}
+.step:nth-child(1){border-top:3px solid var(--faint)} .step:nth-child(1) .lv{color:var(--faint)}
+.step:nth-child(2){border-top:3px solid var(--nvme)}  .step:nth-child(2) .lv{color:var(--nvme)}
+.step:nth-child(3){border-top:3px solid var(--green)} .step:nth-child(3) .lv{color:var(--green)}
+.qList{counter-reset:q; display:flex; flex-direction:column; gap:8px; margin-top:4px}
+.qList .q{counter-increment:q; display:flex; gap:10px; font-size:12.5px; line-height:1.6; color:var(--dim)}
+.qList .q::before{content:counter(q); flex:0 0 20px; height:20px; border-radius:50%; background:linear-gradient(135deg,var(--cyan),var(--violet)); color:#fff; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:1px}
+.qList .q b{color:var(--txt)}
+
+/* ===== 幕7 术语速查 ===== */
 .termIntro{margin-bottom:14px}
 .termSecTitle{font-size:14px; font-weight:800; color:var(--txt); margin:18px 0 10px; display:flex; align-items:center; gap:8px}
 .termSecTitle:first-child{margin-top:0}
@@ -262,6 +297,8 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
 @media (max-width:1100px){
   .grid2,.chatWrap{grid-template-columns:1fr}
   .cards{grid-template-columns:repeat(2,1fr)}
+  .scnGrid{grid-template-columns:repeat(2,1fr)}
+  .scnDetail,.lowerRow,.ladder{grid-template-columns:1fr}
   .termGrid{grid-template-columns:1fr 1fr}
   .tabs{display:none}
 }
@@ -456,7 +493,41 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
   </div>
 </section>
 
-<!-- ═══════ 幕5 · 总结 ═══════ -->
+<!-- ═══════ 幕5 · 业界共识：FAST'26 五场景 ═══════ -->
+<section class="scene" id="sc5f">
+  <h1>业界共识：KV Cache <span class="hl">已经是存储问题</span></h1>
+  <div class="sub">USENIX FAST '26（存储系统顶会，2026-02）的"AI and LLMs"专题中，有 5 篇论文从五个场景研究同一个问题：KV Cache 装不进内存、必须落到存储时，性能在哪里损失，又怎么找回来。点击场景卡片查看。</div>
+
+  <div class="scnGrid" id="scnGrid"></div>
+
+  <div class="scnDetail">
+    <div class="panel"><div class="dt"><span class="bar"></span>存储侧的问题</div><div class="dBody" id="scnPain"></div></div>
+    <div class="panel"><div class="dt"><span class="bar"></span>论文给出的观测</div><div class="obs" id="scnObs"></div></div>
+    <div class="panel"><div class="dt"><span class="bar"></span>对共享存储层的含义</div><div class="dBody" id="scnMean"></div></div>
+  </div>
+
+  <div class="lowerRow">
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>淘汰策略的三个档位：喂给淘汰器的信息越多，命中率上限越高</div>
+      <div class="ladder">
+        <div class="step"><div class="lv">第一档</div><div class="nm">只看时间戳</div><div class="ds">采样 + LRU，不知道数据还会不会再用。多轮对话 trace 上命中率仅约 20%，与 FIFO 相当。</div></div>
+        <div class="step"><div class="lv">第二档</div><div class="nm">领域先验</div><div class="ds">把已知规律写进策略，例如"模型权重读进加速卡后不会再读"，读完即释放。只在该场景成立。</div></div>
+        <div class="step"><div class="lv">第三档</div><div class="nm">概率预测</div><div class="ds">用历史 trace 估计各重用距离的命中概率，例如按回复长度预测用户多久后回来。</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>评估 KV Cache 分层方案时值得先问的三个问题</div>
+      <div class="qList">
+        <div class="q"><div>业务的 <b>KV 复用模式</b>是哪一类：固定前缀、多轮会话、Agent 拼接，还是 RAG 乱序片段？</div></div>
+        <div class="q"><div>调度与淘汰依赖的 <b>I/O 特征从哪来、有多稳定、多久校准一次</b>？特征失效时会退化成什么？</div></div>
+        <div class="q"><div>KV 读取、模型加载、checkpoint 写入是否<b>共用同一份存储带宽</b>？高峰期会不会互相挤占？</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="note">※ 数据均为各论文在其自身硬件与负载条件下的自报结果，非 NetApp 实测，不同论文之间、与前几幕示意值之间均不可直接比较；"对共享存储层的含义"为基于论文观测的推导，需结合实际负载验证。资料来源：USENIX FAST '26 论文 SolidAttention、CacheSlide、Bidaw、AITURBO、PPC/modelFS。</div>
+</section>
+
+<!-- ═══════ 幕6 · 总结 ═══════ -->
 <section class="scene" id="sc5">
   <h1>NetApp AFX：让 KV Cache 成为<span class="hl">可管理的存储资产</span></h1>
   <div class="sub">从"HBM 装不下就重算"到"分层驻留、按需回填、集群共享"。</div>
@@ -477,7 +548,7 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
   注：本演示聚焦 <b>AFX 存储</b>承载的 KV Cache 分层数据路径；<b>NetApp AIDE</b>（AI Data Engine）为 AFX 之上的数据服务层，不在本演示范围内。</div>
 </section>
 
-<!-- ═══════ 幕6 · 术语速查 ═══════ -->
+<!-- ═══════ 幕7 · 术语速查 ═══════ -->
 <section class="scene" id="sc6">
   <h1>AI 推理<span class="hl">术语速查</span></h1>
   <div class="panel">
@@ -566,7 +637,27 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
       </div>
     </div>
 
-    <div class="note">※ 本页为存储背景听众定制的 AI 推理扫盲卡片，术语与第 1–5 幕内容一一对应；如需面向更广泛/非技术听众，可在此基础上进一步简化措辞。</div>
+    <div class="termSecTitle"><span class="bar"></span>存储侧研究（第 5 幕"业界研究"）</div>
+    <div class="termGrid">
+      <div class="termCard">
+        <div class="termHead"><span class="termName">重用距离</span><span class="termEn">Reuse Distance</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>一张便签用完后，到下次再被翻出来之间又写了多少新便签。距离越长，笔记本要越厚才留得住它。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">Ghost Cache</span><span class="termEn">影子缓存</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>扔掉的便签只留一行"目录记录"，事后统计"要是当初留着，会不会被再用到"，据此调整该留哪些。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">HRRN</span><span class="termEn">Highest Response Ratio Next · 最高响应比优先</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>排队时，等得久、要搬的笔记少的人先办；等待时间会不断累积，搬得多的人也不会一直被插队。</div>
+      </div>
+      <div class="termCard">
+        <div class="termHead"><span class="termName">位置漂移</span><span class="termEn">RPDC · Agent 场景的复用模式</span></div>
+        <div class="termDesc"><span class="tag2">📖</span>同一段内容每次出现在书里的页码都不同；如果便签是按页码记的，换了页码就对不上，只能重抄。</div>
+      </div>
+    </div>
+
+    <div class="note">※ 本页为存储背景听众定制的 AI 推理扫盲卡片，术语与第 1–6 幕内容一一对应；如需面向更广泛/非技术听众，可在此基础上进一步简化措辞。</div>
   </div>
 </section>
 
@@ -576,7 +667,7 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
   <button class="navBtn" id="prevB">‹</button>
   <div class="dots" id="dots"></div>
   <button class="navBtn" id="nextB">›</button>
-  <span style="margin-left:14px">← → 或数字键 1–6 · 鼠标滚轮翻页 · 建议全屏（F11）投屏演示</span>
+  <span style="margin-left:14px">← → 或数字键 1–7 · 鼠标滚轮翻页 · 建议全屏（F11）投屏演示</span>
 </footer>
 
 <script>
@@ -629,8 +720,8 @@ const fmtTok = kb => kb>=1024 ? (kb/1024).toFixed(2)+' MB' : kb>=100 ? kb.toFixe
 const sleep = ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ═══════════ 导航 ═══════════ */
-const SCENES = ['sc1','sc2','sc3','sc4','sc5','sc6'];
-const NAMES  = ['① 显存墙','② 分层架构','③ 命中演示','④ TTFT 对比','⑤ 价值总结','⑥ 术语速查'];
+const SCENES = ['sc1','sc2','sc3','sc4','sc5f','sc5','sc6'];
+const NAMES  = ['① 显存墙','② 分层架构','③ 命中演示','④ TTFT 对比','⑤ 业界研究','⑥ 价值总结','⑦ 术语速查'];
 let cur = 0;
 const tabsEl = $('tabs'), dotsEl = $('dots');
 SCENES.forEach((_,i)=>{
@@ -652,7 +743,7 @@ document.addEventListener('keydown',e=>{
   if($('vDlg').open) return;
   if(e.key==='ArrowRight'||e.key==='PageDown') show(cur+1);
   else if(e.key==='ArrowLeft'||e.key==='PageUp') show(cur-1);
-  else if(e.key>='1'&&e.key<='6') show(+e.key-1);
+  else if(e.key>='1'&&e.key<='7') show(+e.key-1);
 });
 
 /* ═══════════ 讲解视频弹层 ═══════════ */
@@ -682,6 +773,45 @@ mainEl.addEventListener('wheel', e=>{
   show(cur + (e.deltaY > 0 ? 1 : -1));
   setTimeout(()=>{ wheelLocked = false; }, WHEEL_LOCK_MS);
 }, { passive:false });
+
+/* ═══════════ 幕5 · FAST'26 五场景 ═══════════ */
+const SCN = [
+  { ic:'💻', t:'端侧 AI PC', d:'单用户 · 128K 长上下文 · 本机 SSD', rel:1, relT:'不在 AFX 范围',
+    pain:'8–16 GB 内存的 AI PC 跑 128K 上下文，8B 模型的 KV Cache 就超过 16 GB（约为权重的 4 倍），只能放到本机 SSD。稀疏注意力读 KV 是<b>细粒度随机 I/O</b>，而 SSD 只有在大块顺序读时才快。',
+    obs:[['40 ms','batch=1 时加载 1K token 的 KV，约占 decode 时间的一半'],['81%','相邻两轮迭代选中的注意力块相似度，可据此投机预取'],['3.1×','KV 交错布局 + 预取后，128K 上下文最高提速']],
+    mean:'单机场景，与数据中心共享存储无关。可借鉴的结论是：<b>KV 的数据布局要迁就介质的 I/O 粒度</b>，块粒度与顺序性直接决定能否吃满带宽。' },
+  { ic:'🤖', t:'Agent 工作流', d:'系统段 + 更新段 + 固定段拼接 prompt', rel:2, relT:'间接相关',
+    pain:'Agent 的 prompt 由多段拼接，可复用片段<b>相对顺序固定、绝对位置每次漂移</b>，按前缀匹配的复用失效。存储侧另有两个问题：主流框架 KV 读写逐层串行，形成 load-before-write 锁；LRU 不区分脏页，带来随机写放大。',
+    obs:[['>90%','位置偏移 0→1000 时，RoPE 下 KV 相似度的下降幅度'],['12%','换用位置不敏感编码后，只需重算的 token 比例'],['3.1–3.6×','合并覆写、顺序写回后写放大的降低幅度']],
+    mean:'复用率主要靠<b>推理引擎侧</b>（位置编码、部分重算）解决。存储层要承接的是 Agent 场景下<b>更频繁的 KV 写入</b>：写入能否合并成顺序写，决定共享层的写放大与寿命。' },
+  { ic:'💬', t:'多轮对话服务', d:'多用户 · 内存 + SSD 两级 KV', rel:3, relT:'直接相关',
+    pain:'调度器不知道每个请求的 KV 要加载多久，长 KV 请求占住 GPU、短请求排队空转；淘汰策略不理解对话语义，<b>用户隔几分钟回来时 KV 早已被逐出</b>。',
+    obs:[['>90%','KV 加载时间的变异系数（单请求 KV 从 <100 MB 到 >800 MB）'],['80%','重用距离超过 200 GB 性能层容量的访问占比'],['≈20%','LRU 在该负载下的命中率，与 FIFO 相当']],
+    mean:'多轮会话的大部分复用发生在<b>长重用距离</b>上，小容量缓存层留不住。容量更大的共享池能留住更多"隔一会儿再回来"的会话；<b>加载时延可预测</b>也是调度能否协同的前提。' },
+  { ic:'🏢', t:'分离式数据中心', d:'训练 + 推理共用云存储', rel:3, relT:'直接相关',
+    pain:'训练侧周期性 checkpoint 写入是数百 GB 级突发；推理侧弹性扩容要读模型、Agent 要读共享前缀 KV。<b>三类负载争用同一份存储带宽</b>，单靠加带宽成本陡增。',
+    obs:[['>10%','AI 任务占该云厂商数据中心存储带宽的比例（厂商口径）'],['16×','带宽从 1.6 提到 80 GBps 时每 GB 成本的增幅'],['−23%','论文系统在共享前缀 KV 读取上的平均 TTFT 降幅']],
+    mean:'KV Cache 不是孤立负载，要和<b>模型加载、checkpoint 一起规划带宽</b>。绕过主机内存的数据路径（如 GDS/RDMA）与多客户端并发读能力，决定共享层在高峰期能否不被挤占。' },
+  { ic:'🚀', t:'模型冷启动', d:'MaaS 弹性扩缩容 · 权重加载', rel:2, relT:'相关',
+    pain:'模型权重加载是一次性顺序读，内核页缓存的采样 + LRU 认不出这种模式，该释放的页不释放；预取线程也不知道 I/O 的来源，<b>带宽吃不满</b>。',
+    obs:[['17%','模型加载时 SSD 带宽的实际利用率'],['+38%','页缓存缩到模型大小 45% 时加载延迟的恶化幅度'],['−79%','按 I/O 模板预取、读完即释放后的加载延迟降幅']],
+    mean:'冷启动速度往往卡在<b>数据路径与预取策略</b>，而不是存储裸带宽。评估时应实测"从存储到加速卡"的端到端加载时间，而不只看存储标称吞吐。' },
+];
+let scnCur = 2;
+function renderScn(){
+  $('scnGrid').innerHTML = SCN.map((c,i)=>`<div class="scnCard${i===scnCur?' on':''}" data-i="${i}">
+    <div class="ic">${c.ic}</div><div class="t">${c.t}</div><div class="d">${c.d}</div>
+    <span class="rel r${c.rel}">与共享存储：${c.relT}</span></div>`).join('');
+  const c = SCN[scnCur];
+  $('scnPain').innerHTML = c.pain;
+  $('scnObs').innerHTML = c.obs.map(o=>`<div class="o"><span class="n">${o[0]}</span><span>${o[1]}</span></div>`).join('');
+  $('scnMean').innerHTML = c.mean;
+}
+$('scnGrid').addEventListener('click', e=>{
+  const card = e.target.closest('.scnCard'); if(!card) return;
+  scnCur = +card.dataset.i; renderScn();
+});
+renderScn();
 
 /* ═══════════ 模型切换 ═══════════ */
 function applySliderRanges(){
