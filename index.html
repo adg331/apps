@@ -36,7 +36,7 @@
   body{margin:0;min-height:100vh;background:var(--netapp-blue);color:var(--white);font-family:var(--sans);-webkit-font-smoothing:antialiased}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:linear-gradient(to bottom,black,transparent 78%);mask-image:linear-gradient(to bottom,black,transparent 78%)}
   a{color:inherit}
-  .wrap{width:min(1160px,calc(100% - 48px));margin-inline:auto}
+  .wrap{width:min(1680px,calc(100% - max(48px,8vw)));margin-inline:auto}
   .mono{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
 
   /* ── 头图：钉在顶部，卡片从下方滑过 ───────────────── */
@@ -95,10 +95,17 @@
   .sec-head h2{margin:0;font-size:17px;font-weight:750;letter-spacing:-.01em;color:#fff}
   .sec-head .mono{color:rgba(255,255,255,.64)}
   .bay{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+  /* 10 张卡：1440 以上 4 列（4+4+2），1800 以上 5 列（正好两行） */
+  @media (min-width:1440px){
+    .bay{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+    .body{padding:20px 20px 22px}
+    .body h3{font-size:19px;min-height:50px}
+    .body p{font-size:13.5px;min-height:0}
+  }
+  @media (min-width:1800px){.bay{grid-template-columns:repeat(5,minmax(0,1fr))}}
   .slot{position:relative;display:flex;flex-direction:column;min-width:0;border:1px solid rgba(255,255,255,.62);border-radius:12px;background:#fff;color:var(--ink);scroll-margin-top:calc(var(--band-h) + 20px)}
-  a.slot{text-decoration:none;overflow:hidden;box-shadow:0 18px 42px rgba(0,49,96,.22);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
-  a.slot:hover{transform:translateY(-6px);border-color:#fff;box-shadow:0 26px 58px rgba(0,42,82,.32)}
-  a.slot:focus-visible{outline:3px solid #fff;outline-offset:4px}
+  .slot:not(.empty){overflow:hidden;box-shadow:0 18px 42px rgba(0,49,96,.22);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+  .slot:not(.empty):hover{transform:translateY(-6px);border-color:#fff;box-shadow:0 26px 58px rgba(0,42,82,.32)}
   .addr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--blue-50);color:var(--ink-3)}
   .addr b{font-weight:700;color:var(--netapp-blue);letter-spacing:.16em}
   .state{display:inline-flex;align-items:center;gap:7px;letter-spacing:.1em;color:#527085}
@@ -106,15 +113,31 @@
   .visual{position:relative;aspect-ratio:16/9;overflow:hidden;border-bottom:1px solid var(--line);background:var(--blue-50)}
   .visual img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.9) brightness(.96) contrast(1.02);transition:filter .35s ease,transform .45s ease}
   .visual::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,103,197,.04),transparent 55%,rgba(0,75,145,.10));transition:opacity .35s ease}
-  a.slot:hover .visual img{filter:none;transform:scale(1.018)}
-  a.slot:hover .visual::after{opacity:.2}
+  .slot:hover .visual img{filter:none;transform:scale(1.018)}
+  .slot:hover .visual::after{opacity:.2}
   .body{padding:23px 24px 25px;display:flex;flex-direction:column;flex:1}
   .tag{display:inline-block;width:max-content;margin:0 0 13px;padding:5px 9px;border:1px solid #aed6f5;border-radius:4px;background:var(--blue-50);color:var(--netapp-blue);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
   .body h3{margin:0;min-height:58px;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;font-size:22px;font-weight:750;line-height:1.32;letter-spacing:-.015em;color:var(--ink)}
   .body p{margin:11px 0 21px;min-height:48px;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;color:var(--ink-2);font-size:14px;font-weight:400;line-height:1.7;letter-spacing:0;text-wrap:pretty}
-  .go{display:inline-flex;align-items:center;gap:8px;width:max-content;margin-top:auto;padding-bottom:3px;border-bottom:1px solid rgba(0,103,197,.3);color:var(--netapp-blue);font-size:13px;font-weight:750}
-  .go::after{content:"↗";font-size:15px;transition:transform .2s ease}
-  a.slot:hover .go::after{transform:translate(3px,-3px)}
+  /* 卡片底部两个入口：交互演示 + 视频解说 */
+  .acts{display:flex;gap:10px;margin-top:auto}
+  .act{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;height:38px;padding:0 12px;border:1px solid #aed6f5;border-radius:8px;background:var(--blue-50);color:var(--netapp-blue);font:inherit;font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease}
+  .act.demo::after{content:"↗";font-size:14px;transition:transform .2s ease}
+  .act.vid::before{content:"";width:0;height:0;border-left:8px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+  .act:hover{background:var(--netapp-blue);border-color:var(--netapp-blue);color:#fff}
+  .act.demo:hover::after{transform:translate(2px,-2px)}
+  .act:focus-visible{outline:3px solid var(--netapp-blue);outline-offset:2px}
+  .act.off{border-style:dashed;border-color:var(--line);background:transparent;color:var(--ink-3);font-weight:600;cursor:default}
+  .act.off:hover{background:transparent;border-color:var(--line);color:var(--ink-3)}
+
+  /* 视频弹层 */
+  .vdlg{width:min(1180px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:0;border:1px solid rgba(255,255,255,.3);border-radius:14px;background:#0b1e33;color:#fff;box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden}
+  .vdlg::backdrop{background:rgba(2,16,32,.78);backdrop-filter:blur(3px)}
+  .vdlg header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px 12px 20px;border-bottom:1px solid rgba(255,255,255,.14)}
+  .vdlg h2{margin:0;font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vdlg .x{flex:0 0 auto;width:34px;height:34px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:transparent;color:#fff;font-size:18px;line-height:1;cursor:pointer}
+  .vdlg .x:hover{background:rgba(255,255,255,.14)}
+  .vdlg video{display:block;width:100%;max-height:calc(100vh - 100px);aspect-ratio:16/9;background:#000}
   .slot.empty{border-style:dashed;border-color:rgba(255,255,255,.55);background:rgba(0,75,145,.28);color:#fff;min-height:168px;box-shadow:none}
   .slot.empty .addr{background:rgba(0,49,96,.12);border-bottom-color:rgba(255,255,255,.22);border-bottom-style:dashed;color:rgba(255,255,255,.64)}
   .slot.empty .addr b{color:rgba(255,255,255,.78)}
@@ -174,16 +197,16 @@
       </a>
       <div class="topbar-tools">
       <nav class="bays" aria-label="展位快速跳转">
-        <a href="#bay01" title="Bay 01 · Fusion 容量查询">01<span class="vh"> Bay 01 Fusion 容量查询</span></a>
-        <a href="#bay02" title="Bay 02 · AIDE 2026 深度解析">02<span class="vh"> Bay 02 AIDE 2026 深度解析</span></a>
-        <a href="#bay03" title="Bay 03 · ONTAP MCP 运维演示">03<span class="vh"> Bay 03 ONTAP MCP 运维演示</span></a>
-        <a href="#bay04" title="Bay 04 · NetApp MCP 全景演示">04<span class="vh"> Bay 04 NetApp MCP 全景演示</span></a>
-        <a href="#bay05" title="Bay 05 · SnapMirror active sync for NAS">05<span class="vh"> Bay 05 SnapMirror active sync for NAS</span></a>
-        <a href="#bay06" title="Bay 06 · 制造业勒索软件检测与恢复">06<span class="vh"> Bay 06 制造业勒索软件检测与恢复</span></a>
-        <a href="#bay07" title="Bay 07 · KV Cache 分层加速">07<span class="vh"> Bay 07 KV Cache 分层加速</span></a>
-        <a href="#bay08" title="Bay 08 · ONTAP 9.19.1 技术总览">08<span class="vh"> Bay 08 ONTAP 9.19.1 技术总览</span></a>
-        <a href="#bay09" title="Bay 09 · LiSA 联想存储智能体">09<span class="vh"> Bay 09 LiSA 联想存储智能体</span></a>
-        <a href="#bay10" title="Bay 10 · NetApp Novus AI 工厂存储架构">10<span class="vh"> Bay 10 NetApp Novus AI 工厂存储架构</span></a>
+        <a href="#bay01" title="Bay 01 · AIDE 2026 深度解析 · 制造业视角">01<span class="vh"> Bay 01 AIDE 2026 深度解析 · 制造业视角</span></a>
+        <a href="#bay02" title="Bay 02 · ONTAP MCP 运维演示">02<span class="vh"> Bay 02 ONTAP MCP 运维演示</span></a>
+        <a href="#bay03" title="Bay 03 · NetApp MCP 全景演示">03<span class="vh"> Bay 03 NetApp MCP 全景演示</span></a>
+        <a href="#bay04" title="Bay 04 · SnapMirror active sync for NAS">04<span class="vh"> Bay 04 SnapMirror active sync for NAS</span></a>
+        <a href="#bay05" title="Bay 05 · 制造业勒索软件检测与恢复">05<span class="vh"> Bay 05 制造业勒索软件检测与恢复</span></a>
+        <a href="#bay06" title="Bay 06 · KV Cache 分层加速">06<span class="vh"> Bay 06 KV Cache 分层加速</span></a>
+        <a href="#bay07" title="Bay 07 · ONTAP 9.19.1 技术总览">07<span class="vh"> Bay 07 ONTAP 9.19.1 技术总览</span></a>
+        <a href="#bay08" title="Bay 08 · LiSA 联想存储智能体">08<span class="vh"> Bay 08 LiSA 联想存储智能体</span></a>
+        <a href="#bay09" title="Bay 09 · NetApp Novus · AI 工厂存储架构">09<span class="vh"> Bay 09 NetApp Novus · AI 工厂存储架构</span></a>
+        <a href="#bay10" title="Bay 10 · Fusion 容量查询">10<span class="vh"> Bay 10 Fusion 容量查询</span></a>
       </nav>
       </div>
     </div>
@@ -206,21 +229,8 @@
 
     <div class="bay">
 
-      <a class="slot" id="bay01" href="./fusion/" target="_blank" rel="noopener" aria-label="打开 Fusion 容量查询（在新标签页打开）">
+      <article class="slot" id="bay01">
         <div class="addr mono"><b>Bay 01</b><span class="state">在线</span></div>
-        <div class="visual">
-          <img src="./assets/fusion-preview.svg" alt="Fusion 容量查询界面示意图" width="800" height="450" loading="lazy">
-        </div>
-        <div class="body">
-          <span class="tag">NetApp Fusion</span>
-          <h3>Fusion 容量查询</h3>
-          <p>基于 Fusion 历史实测数据，支持精确配置查询、可用容量反查及加密截图查看。</p>
-          <span class="go">密码登录后进入</span>
-        </div>
-      </a>
-
-      <a class="slot" id="bay02" href="./aide-v1.1/" target="_blank" rel="noopener" aria-label="打开 AIDE 2026 深度解析（在新标签页打开）">
-        <div class="addr mono"><b>Bay 02</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/aide-v1.1-preview.svg" alt="AIDE 1.1 统一元数据目录示意图" width="800" height="450" loading="lazy">
         </div>
@@ -228,12 +238,15 @@
           <span class="tag">AIDE v1.1</span>
           <h3>AIDE 2026 深度解析 · 制造业视角</h3>
           <p>纯软件形态的 AIDE 1.1：经标准协议就地扫描 NetApp 与第三方存储，构建统一元数据目录，交互讲解架构、部署选型、扫描机制与数据治理，含 6 分钟讲解视频。</p>
-          <span class="go">进入交互演示</span>
+          <div class="acts">
+            <a class="act demo" href="./aide-v1.1/" target="_blank" rel="noopener" aria-label="交互演示：AIDE 2026 深度解析 · 制造业视角（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./aide-v1.1/aide-deep.mp4" data-title="AIDE 2026 深度解析 · 制造业视角">视频解说</button>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay03" href="./ontap-mcp/" target="_blank" rel="noopener" aria-label="打开 ONTAP MCP 交互式演示（在新标签页打开）">
-        <div class="addr mono"><b>Bay 03</b><span class="state">在线</span></div>
+      <article class="slot" id="bay02">
+        <div class="addr mono"><b>Bay 02</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/ontap-mcp-preview.svg" alt="ONTAP MCP 自然语言存储管理架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -241,12 +254,15 @@
           <span class="tag">ONTAP MCP</span>
           <h3>ONTAP MCP 运维演示</h3>
           <p>用自然语言完成 ONTAP 卷开通、数据保护与多集群管理，交互展示 AI 到 REST API 的完整调用链路，含 3 分半讲解视频。</p>
-          <span class="go">进入交互演示</span>
+          <div class="acts">
+            <a class="act demo" href="./ontap-mcp/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP MCP 运维演示（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./ontap-mcp/mcp-deep.mp4" data-title="ONTAP MCP 运维演示">视频解说</button>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay04" href="./netapp-mcp/" target="_blank" rel="noopener" aria-label="打开 NetApp MCP 交互式演示（在新标签页打开）">
-        <div class="addr mono"><b>Bay 04</b><span class="state">在线</span></div>
+      <article class="slot" id="bay03">
+        <div class="addr mono"><b>Bay 03</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/netapp-mcp-preview.svg" alt="NetApp MCP 数据基础设施管理架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -254,12 +270,15 @@
           <span class="tag">NetApp MCP</span>
           <h3>NetApp MCP 全景演示</h3>
           <p>集中展示 Harvest、ONTAP、DataOps 与 Knowledge MCP，让 AI 看懂并管好 NetApp 数据基础设施。</p>
-          <span class="go">进入交互演示</span>
+          <div class="acts">
+            <a class="act demo" href="./netapp-mcp/" target="_blank" rel="noopener" aria-label="交互演示：NetApp MCP 全景演示（在新标签页打开）">交互演示</a>
+            <span class="act off" aria-disabled="true">视频制作中</span>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay05" href="./sm-as-nas/" target="_blank" rel="noopener" aria-label="打开 SnapMirror active sync for NAS 技术演示（在新标签页打开）">
-        <div class="addr mono"><b>Bay 05</b><span class="state">在线</span></div>
+      <article class="slot" id="bay04">
+        <div class="addr mono"><b>Bay 04</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/sm-as-nas-preview.svg" alt="SnapMirror active sync for NAS 双站点同步保护示意图" width="800" height="450" loading="lazy">
         </div>
@@ -267,12 +286,15 @@
           <span class="tag">ONTAP 9.19.1</span>
           <h3>SnapMirror active sync for NAS</h3>
           <p>交互演示双站点 NAS 工作负载的同步复制、故障切换、规模规划与部署适配。</p>
-          <span class="go">进入技术演示</span>
+          <div class="acts">
+            <a class="act demo" href="./sm-as-nas/" target="_blank" rel="noopener" aria-label="交互演示：SnapMirror active sync for NAS（在新标签页打开）">交互演示</a>
+            <span class="act off" aria-disabled="true">视频制作中</span>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay06" href="./arp-ai-manufacturing/" target="_blank" rel="noopener" aria-label="打开 ONTAP ARP AI 制造业勒索软件检测与恢复演示（在新标签页打开）">
-        <div class="addr mono"><b>Bay 06</b><span class="state">在线</span></div>
+      <article class="slot" id="bay05">
+        <div class="addr mono"><b>Bay 05</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/arp-ai-preview.svg" alt="ONTAP ARP AI 制造业勒索软件检测与恢复示意图" width="800" height="450" loading="lazy">
         </div>
@@ -280,12 +302,15 @@
           <span class="tag">ONTAP ARP/AI</span>
           <h3>制造业勒索软件检测与恢复</h3>
           <p>交互展示异常加密行为的实时检测、快照锁定、告警响应与制造业务恢复路径。</p>
-          <span class="go">进入交互演示</span>
+          <div class="acts">
+            <a class="act demo" href="./arp-ai-manufacturing/" target="_blank" rel="noopener" aria-label="交互演示：制造业勒索软件检测与恢复（在新标签页打开）">交互演示</a>
+            <span class="act off" aria-disabled="true">视频制作中</span>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay07" href="./kv-cache/" target="_blank" rel="noopener" aria-label="打开 NetApp AFX KV Cache 分层加速交互演示（在新标签页打开）">
-        <div class="addr mono"><b>Bay 07</b><span class="state">在线</span></div>
+      <article class="slot" id="bay06">
+        <div class="addr mono"><b>Bay 06</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/kv-cache-preview.svg" alt="NetApp AFX KV Cache 四级分层加速架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -293,12 +318,15 @@
           <span class="tag">NetApp AFX</span>
           <h3>KV Cache 分层加速</h3>
           <p>交互演示长上下文推理的显存压力，以及 KV Cache 在 HBM、DRAM、NVMe 与 AFX 共享存储池之间的分层、命中和回填，含 5 分钟讲解视频。</p>
-          <span class="go">进入交互演示</span>
+          <div class="acts">
+            <a class="act demo" href="./kv-cache/" target="_blank" rel="noopener" aria-label="交互演示：KV Cache 分层加速（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./kv-cache/kv-deep.mp4" data-title="KV Cache 分层加速">视频解说</button>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay08" href="./ontap-9191/" target="_blank" rel="noopener" aria-label="打开 ONTAP 9.19.1 技术总览（在新标签页打开）">
-        <div class="addr mono"><b>Bay 08</b><span class="state">在线</span></div>
+      <article class="slot" id="bay07">
+        <div class="addr mono"><b>Bay 07</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/ontap-9191-preview.svg" alt="ONTAP 9.19.1 版本亮点特性总览示意图" width="800" height="450" loading="lazy">
         </div>
@@ -306,12 +334,15 @@
           <span class="tag">ONTAP 9.19.1 Release</span>
           <h3>ONTAP 9.19.1 技术总览</h3>
           <p>20 幕交互演示，覆盖 NAS 性能与 QoS、SAN 连接与高可用、S3 语义完备性、业务连续性、纵深安全与 AFX 平台演进。</p>
-          <span class="go">进入技术演示</span>
+          <div class="acts">
+            <a class="act demo" href="./ontap-9191/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP 9.19.1 技术总览（在新标签页打开）">交互演示</a>
+            <span class="act off" aria-disabled="true">视频制作中</span>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay09" href="https://chinaeastse.github.io/LiSA/login.html" target="_blank" rel="noopener" aria-label="打开 LiSA 联想存储智能体（在新标签页打开）">
-        <div class="addr mono"><b>Bay 09</b><span class="state">在线</span></div>
+      <article class="slot" id="bay08">
+        <div class="addr mono"><b>Bay 08</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/lisa-preview.svg" alt="LiSA 联想存储智能体的数据管理架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -319,12 +350,15 @@
           <span class="tag">Lenovo Intelligent Storage Agent</span>
           <h3>LiSA 联想存储智能体</h3>
           <p>以独立元数据引擎统一纳管 ONTAP、DXN 与第三方非结构化数据，实现千亿条目秒级检索、数据流转、智能标签与生命周期治理。</p>
-          <span class="go">密码登录后进入</span>
+          <div class="acts">
+            <a class="act demo" href="https://chinaeastse.github.io/LiSA/login.html" target="_blank" rel="noopener" aria-label="登录进入：LiSA 联想存储智能体（在新标签页打开）">登录进入</a>
+            <span class="act off" aria-disabled="true">视频制作中</span>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="slot" id="bay10" href="./novus/" target="_blank" rel="noopener" aria-label="打开 NetApp Novus AI 工厂存储架构演示（在新标签页打开）">
-        <div class="addr mono"><b>Bay 10</b><span class="state">在线</span></div>
+      <article class="slot" id="bay09">
+        <div class="addr mono"><b>Bay 09</b><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/novus-preview.svg" alt="NetApp Novus 元数据与数据解耦架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -332,9 +366,28 @@
           <span class="tag">NetApp Novus</span>
           <h3>NetApp Novus · AI 工厂存储架构</h3>
           <p>INSIGHT 2026 发布的解耦式横向扩展架构：Data Director 管理命名空间与布局，ONTAP 数据节点经标准 pNFS 并行直连，交互讲解 I/O 路径、独立扩展、故障影响与首发范围，含 4 分钟讲解视频。</p>
-          <span class="go">进入交互演示</span>
+          <div class="acts">
+            <a class="act demo" href="./novus/" target="_blank" rel="noopener" aria-label="交互演示：NetApp Novus · AI 工厂存储架构（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./novus/novus-deep.mp4" data-title="NetApp Novus · AI 工厂存储架构">视频解说</button>
+          </div>
         </div>
-      </a>
+      </article>
+
+      <article class="slot" id="bay10">
+        <div class="addr mono"><b>Bay 10</b><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/fusion-preview.svg" alt="Fusion 容量查询界面示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <span class="tag">NetApp Fusion</span>
+          <h3>Fusion 容量查询</h3>
+          <p>基于 Fusion 历史实测数据，支持精确配置查询、可用容量反查及加密截图查看。</p>
+          <div class="acts">
+            <a class="act demo" href="./fusion/" target="_blank" rel="noopener" aria-label="登录进入：Fusion 容量查询（在新标签页打开）">登录进入</a>
+            <span class="act off" aria-disabled="true">视频制作中</span>
+          </div>
+        </div>
+      </article>
 
     </div>
   </section>
@@ -357,7 +410,7 @@
   );
 
   // 当前所在展位：以头图下沿再往下 28px 作为基准线。
-  // 桌面是两列，一行里两张卡片的 top 相同，所以命中的通常是一对 ——
+  // 桌面是多列，同一行卡片的 top 相同，所以命中的通常是一整行 ——
   // 如实点亮两个，而不是硬选一个当 aria-current。
   function current() {
     const line = band.getBoundingClientRect().height + 28;
@@ -528,5 +581,26 @@ if (renderer) {
 }
 </script>
 
+<dialog class="vdlg" id="vDlg" aria-labelledby="vTitle">
+  <header><h2 id="vTitle">讲解视频</h2><button class="x" type="button" aria-label="关闭视频">✕</button></header>
+  <video id="vPlayer" controls playsinline preload="none"></video>
+</dialog>
+<script>
+(() => {
+  const dlg = document.getElementById('vDlg');
+  const player = document.getElementById('vPlayer');
+  const title = document.getElementById('vTitle');
+  document.querySelectorAll('.act.vid').forEach(btn => btn.addEventListener('click', () => {
+    title.textContent = btn.dataset.title + ' · 讲解视频';
+    if (player.getAttribute('src') !== btn.dataset.video) player.src = btn.dataset.video;
+    dlg.showModal();
+    player.play().catch(() => {});
+  }));
+  dlg.querySelector('.x').addEventListener('click', () => dlg.close());
+  // 点击弹层外的遮罩关闭
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+  dlg.addEventListener('close', () => player.pause());
+})();
+</script>
 </body>
 </html>
