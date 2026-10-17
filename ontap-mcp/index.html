@@ -167,7 +167,7 @@
 
 <!-- ================= 概述 ================= -->
 <section class="page show" id="p-overview">
-  <div class="tag hl">开源 · Apache 2.0</div><div class="tag">Go 语言</div><div class="tag">Streamable HTTP</div><div class="tag">多集群</div>
+  <div class="tag hl">开源 · Apache 2.0</div><div class="tag">Go 语言</div><div class="tag">Streamable HTTP</div><div class="tag">多集群</div><div class="tag">最新版 26.07 · OAuth / HTTPS</div>
   <h1>用自然语言，<span class="accent">管理你的 ONTAP 存储</span></h1>
   <p class="sub">ONTAP MCP Server 基于开放标准 <b>Model Context Protocol（MCP）</b>，让 Claude、GitHub Copilot 等 AI 助手安全地查询和操作 NetApp ONTAP 存储系统——从卷开通、数据保护到多集群管理，一句话完成。</p>
   <button class="btn" id="vOpen" type="button" style="margin-top:12px">▶ 观看 3 分半讲解视频</button>
@@ -192,7 +192,7 @@
     <div class="card"><div class="ic">🛡️</div><h3>数据保护自动化</h3><p>快照策略、SnapMirror 复制关系的创建与管理全部工具化，策略驱动、结果可预期。</p></div>
     <div class="card"><div class="ic">🌐</div><h3>多集群统一管理</h3><p>单一 MCP 端点纳管多个 ONTAP 集群，凭证集中管理，AI 客户端跨环境一致操作。</p></div>
     <div class="card"><div class="ic">🧩</div><h3>自定义工作流</h3><p>AI 可将多个工具链式编排成多步工作流，贴合企业自身的存储运维流程。</p></div>
-    <div class="card"><div class="ic">🔒</div><h3>安全护栏</h3><p>工具带 readOnly / destructive 提示元数据，支持只读模式启动，危险操作可控。</p></div>
+    <div class="card"><div class="ic">🔒</div><h3>安全护栏</h3><p>工具带 readOnly / destructive 提示元数据，支持只读模式启动；26.07 起可原生校验 OAuth 令牌并以 HTTPS 提供服务。</p></div>
   </div>
 
   <h2>从"观察"到"操作"：与 Harvest MCP 互补</h2>
@@ -236,7 +236,7 @@
         <g class="arch-node" data-k="server">
           <rect x="290" y="20" width="220" height="270" rx="12" fill="#e8f1fc" stroke="#0067C5"/>
           <text x="400" y="50" text-anchor="middle" fill="#003f78" font-size="15" font-weight="700">ONTAP MCP Server</text>
-          <text x="400" y="68" text-anchor="middle" fill="#0067C5" font-size="11">Go · Docker · 开源</text>
+          <text x="400" y="68" text-anchor="middle" fill="#0067C5" font-size="11">Go · 容器 / Helm · 开源</text>
           <rect x="310" y="84" width="180" height="34" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
           <text x="400" y="106" text-anchor="middle" fill="#33475f" font-size="12">工具 Schema 注册与托管</text>
           <rect x="310" y="126" width="180" height="34" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
@@ -246,7 +246,7 @@
           <rect x="310" y="210" width="180" height="34" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
           <text x="400" y="232" text-anchor="middle" fill="#33475f" font-size="12">多集群路由</text>
           <rect x="310" y="252" width="180" height="26" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
-          <text x="400" y="270" text-anchor="middle" fill="#5b6c84" font-size="11">--read-only / --stateless</text>
+          <text x="400" y="270" text-anchor="middle" fill="#5b6c84" font-size="11">只读模式 · OAuth · HTTPS</text>
         </g>
         <!-- REST arrows -->
         <line x1="510" y1="90" x2="580" y2="70" stroke="#00857c" stroke-width="2" marker-end="url(#ah)" class="dash"/>
@@ -283,18 +283,37 @@
 
   <h2>关键设计要点</h2>
   <div class="grid g3">
-    <div class="card"><div class="ic">🔁</div><h3>Streamable HTTP</h3><p>支持多客户端并发连接；--stateless 模式可兼容剥离会话头的代理环境。</p></div>
+    <div class="card"><div class="ic">🔁</div><h3>Streamable HTTP</h3><p>支持多客户端并发连接；<code>--stateless</code> 兼容剥离会话头的代理，<code>--json-response</code> 兼容不转发 SSE 的网关。</p></div>
     <div class="card"><div class="ic">🔑</div><h3>集中凭证</h3><p>集群凭证在 ontap.yaml 中一次注册，工具调用无需携带凭证——更安全、更简单。</p></div>
     <div class="card"><div class="ic">🏷️</div><h3>工具提示元数据</h3><p>每个工具标注 readOnlyHint / idempotentHint / destructiveHint，--read-only 模式仅暴露只读工具。</p></div>
+    <div class="card"><div class="ic">🪪</div><h3>原生 OAuth（26.07）</h3><p>在 ontap.yaml 的 McpAuth 段配置 issuer / audience / scope，校验客户端的 Bearer 令牌，并提供标准的 OAuth 发现端点。它只决定谁能连进来，所有操作仍用同一个 ONTAP 账户执行。</p></div>
+    <div class="card"><div class="ic">🔐</div><h3>HTTPS 与 Helm（26.07）</h3><p>可直接以 HTTPS 对外提供服务，不必另加反向代理；官方 Helm chart 支持在 Kubernetes 中部署。</p></div>
+    <div class="card"><div class="ic">🧮</div><h3>工具模式</h3><p><code>--tool-mode multiplex</code> 把每类资源的 update / delete 合并成一个 <code>modify_*</code>，减少 AI 需要挑选的工具数；26.07 默认仍是 legacy，下一版本将改为默认 multiplex。</p></div>
   </div>
 </section>
 
 <!-- ================= 工具 ================= -->
 <section class="page" id="p-tools">
   <h1>MCP <span class="accent">工具能力</span></h1>
-  <p class="sub">每个工具对应一个定义良好的 ONTAP REST API 工作流，覆盖 NAS、SAN、数据保护与多集群管理。点击分类展开工具列表。</p>
+  <p class="sub">26.07 版共 88 个工具（legacy 模式），每个工具对应一个定义良好的 ONTAP REST API 工作流，覆盖 NAS、SAN、数据保护与多集群管理；查询统一通过 API 发现与 <code>ontap_get</code> 完成。点击分类展开工具列表。</p>
   <div class="legend"><span class="dot" style="background:var(--cyan)"></span>青色 = 只读/查询类　<span class="dot" style="background:var(--amber)"></span>橙色 = 写入/变更类（带 destructiveHint 护栏）</div>
   <div id="toolList" style="margin-top:18px"></div>
+
+  <h2 style="margin-top:40px">版本动态</h2>
+  <div class="grid g2">
+    <div class="card"><div class="ic">✅</div><h3>26.07（2026-07-28 发布）</h3><ul style="margin:8px 0 0 18px;font-size:13.5px;color:var(--muted);line-height:1.8">
+      <li>原生 OAuth 令牌校验与 HTTPS 服务</li>
+      <li>官方 Helm chart，可部署到 Kubernetes</li>
+      <li>新增 NFS / CIFS 服务、DNS 工具；<code>--tool-mode</code> 与 <code>--json-response</code> 参数</li>
+      <li>卷、LUN、igroup、自适应 QoS 工具补充字段（空间保证、快照策略、效率等）</li>
+      <li>文档补充集群账户所需权限说明</li></ul></div>
+    <div class="card"><div class="ic">🧪</div><h3>下一版本（main 分支，尚未发布）</h3><ul style="margin:8px 0 0 18px;font-size:13.5px;color:var(--muted);line-height:1.8">
+      <li>默认工具模式改为 multiplex</li>
+      <li><code>create_volume</code> 可在 AFF / FAS 上直接创建 FlexGroup</li>
+      <li>新增 <code>create_cluster_peer</code> / <code>delete_cluster_peer</code>，自动发现集群间 LIF 并生成认证口令</li>
+      <li>新增 <code>abort_snapmirror_transfer</code>，中止正在进行的传输</li></ul>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">以上来自源码仓库的开发文档，功能与名称以正式发布为准。</p></div>
+  </div>
 </section>
 
 <!-- ================= 场景 ================= -->
@@ -326,7 +345,7 @@
 <!-- ================= 部署 ================= -->
 <section class="page" id="p-deploy">
   <h1>三步<span class="accent">快速部署</span></h1>
-  <p class="sub">前提条件：ONTAP 集群及管理员凭证 · Docker 运行环境 · MCP Server 到集群的网络连通。</p>
+  <p class="sub">前提条件：ONTAP 集群及具备所需权限的账户（官方文档列出了最小权限要求，生产建议用专用账户）· Docker 或 Kubernetes 环境 · MCP Server 到集群的网络连通。</p>
 
   <div class="step"><div class="num">1</div><div style="flex:1">
     <h3>启动 ONTAP MCP Server 容器</h3>
@@ -335,14 +354,22 @@
   -p 8083:8083 \
   -v /path/to/your/ontap.yaml:/opt/mcp/ontap.yaml \
   ghcr.io/netapp/ontap-mcp:latest \
-  start --port 8083 --host 0.0.0.0   <span class="c"># 可加 --read-only 只读模式</span></pre>
+  start --port 8083 --host 0.0.0.0   <span class="c"># 可加 --read-only 只读模式</span>
+
+<span class="c"># Kubernetes：也可使用官方 Helm chart 部署（26.07 起）</span></pre>
     <pre class="code"><span class="c"># ontap.yaml — 集中注册集群凭证</span>
 <span class="k">Pollers:</span>
   <span class="k">cluster1:</span>
     addr: <span class="s">10.0.0.1</span>
     username: <span class="s">admin</span>
     password: <span class="s">********</span>
-    use_insecure_tls: true</pre>
+    use_insecure_tls: true   <span class="c"># 生产环境请关闭并配置受信证书</span>
+
+<span class="c"># 可选（26.07 起）：校验客户端 OAuth 令牌</span>
+<span class="k">McpAuth:</span>
+  issuer: <span class="s">https://your-idp/realms/REALM</span>
+  audience: <span class="s">https://ontap-mcp.example.com</span>
+<span class="c"># 另可在 tls 段配置证书，直接以 HTTPS 提供服务</span></pre>
   </div></div>
 
   <div class="step"><div class="num">2</div><div style="flex:1">
@@ -351,7 +378,8 @@
   <span class="k">"servers"</span>: {
     <span class="k">"ontap-mcp"</span>: {
       <span class="k">"type"</span>: <span class="s">"http"</span>,
-      <span class="k">"url"</span>: <span class="s">"http://your-server-ip:8083"</span>
+      <span class="k">"url"</span>: <span class="s">"http://your-server-ip:8083"</span>,
+      <span class="k">"headers"</span>: { <span class="k">"Authorization"</span>: <span class="s">"Bearer &lt;AUTH_TOKEN&gt;"</span> }  <span class="c">// 启用 OAuth 时才需要</span>
     }
   }
 }</pre>
@@ -373,6 +401,8 @@
   资料来源：
   <a href="https://github.com/NetApp/ontap-mcp" target="_blank">GitHub · NetApp/ontap-mcp</a>
   <a href="https://netapp.github.io/ontap-mcp/latest/" target="_blank">官方文档</a>
+  <a href="https://github.com/NetApp/ontap-mcp/releases/tag/v26.07.0" target="_blank">26.07 发布说明</a>
+  <a href="https://netapp.github.io/ontap-mcp/latest/mcp-oauth/" target="_blank">OAuth 配置</a>
   <a href="https://community.netapp.com/t5/Tech-ONTAP-Blogs/New-ONTAP-MCP-AI-that-Modernizes-Your-Storage-Operations/ba-p/465968" target="_blank">NetApp Tech ONTAP 博客</a>
   <br>本页面为客户交流演示用途，聊天内容为模拟数据。NetApp、ONTAP、SnapMirror 为 NetApp, Inc. 的商标。
 </div></footer>
@@ -397,8 +427,8 @@ vDlg.addEventListener('close',()=>vPlayer.pause());
 /* ============ architecture detail ============ */
 const archInfo={
   clients:{t:'MCP 客户端',d:'任何支持 MCP 标准的 AI 助手都可以接入：',li:['Claude Desktop / Claude Code：对话式存储运维','GitHub Copilot（VS Code 等 IDE）：开发场景内直接申请存储','自研 Agent：基于 MCP SDK 构建企业专属存储机器人','客户端只需在 mcp.json 中配置 Server 地址即可接入']},
-  server:{t:'ONTAP MCP Server',d:'轻量 Go 服务，以 Docker 容器交付，是整套方案的核心：',li:['托管工具 Schema：每个工具对应一个明确的管理动作','参数校验与护栏：动作可预测、结果结构化','集中凭证管理：ontap.yaml 一次注册，调用无需带凭证','多集群路由：单一端点纳管全部集群','支持 --read-only（只读）与 --stateless（代理兼容）启动']},
-  cluster:{t:'ONTAP 集群',d:'MCP Server 通过 ONTAP REST API 与集群通信：',li:['支持 AFF / FAS / ONTAP Select / Cloud Volumes ONTAP','需要集群管理员凭证与网络连通','所有操作最终都是标准 REST API 调用，可审计','返回结果被规范化后交给 AI 继续编排后续步骤']},
+  server:{t:'ONTAP MCP Server',d:'轻量 Go 服务，以容器镜像与 Helm chart 交付，是整套方案的核心：',li:['托管工具 Schema：每个工具对应一个明确的管理动作','参数校验与护栏：动作可预测、结果结构化','集中凭证管理：ontap.yaml 一次注册，调用无需带凭证','多集群路由：单一端点纳管全部集群','支持 --read-only（只读）与 --stateless（代理兼容）启动','26.07 起：原生 OAuth 令牌校验、HTTPS、Helm 部署、--json-response']},
+  cluster:{t:'ONTAP 集群',d:'MCP Server 通过 ONTAP REST API 与集群通信：',li:['支持 AFX / AFF / FAS / FSx for ONTAP / Cloud Volumes ONTAP / ONTAP Select','需要集群管理员凭证与网络连通','所有操作最终都是标准 REST API 调用，可审计','返回结果被规范化后交给 AI 继续编排后续步骤']},
   harvest:{t:'Harvest MCP（互补组件）',d:'与 ONTAP MCP 配合形成"观察 + 操作"闭环：',li:['Harvest MCP 回答"哪些卷快满了？延迟趋势如何？"','ONTAP MCP 执行"扩容、调整导出、建立复制"','同一 MCP 模型、同一对话流，无缝衔接','覆盖 ONTAP、StorageGRID、E-Series、Cisco 环境']}
 };
 document.querySelectorAll('.arch-node').forEach(n=>{
@@ -420,7 +450,8 @@ const toolCats=[
   {ic:'📁',name:'CIFS/SMB 共享',desc:'Windows 文件共享管理',tools:[['create_cifs_share',1],['update_cifs_share',1],['delete_cifs_share',1]]},
   {ic:'📤',name:'NFS 导出策略',desc:'导出策略与规则的访问控制',tools:[['create_nfs_export_policies',1],['update_nfs_export_policies',1],['delete_nfs_export_policies',1],['create_nfs_export_policies_rules',1],['update_nfs_export_policies_rules',1],['delete_nfs_export_policies_rules',1]]},
   {ic:'📈',name:'性能管理（QoS）',desc:'QoS 策略查询与管理',tools:[['list_qos_policies',0],['create_qos_policy',1],['update_qos_policy',1],['delete_qos_policy',1]]},
-  {ic:'🏢',name:'SVM 管理',desc:'Storage VM 的创建与管理',tools:[['create_svm',1],['update_svm',1],['delete_svm',1]]},
+  {ic:'🏢',name:'SVM 管理',desc:'Storage VM 的创建与管理，以及 SVM 对等清理',tools:[['create_svm',1],['update_svm',1],['delete_svm',1],['delete_svm_peer',1]]},
+  {ic:'🧩',name:'NFS / CIFS 服务与 DNS',desc:'SVM 级协议服务与名称解析（26.07 新增）',tools:[['create_nfs_service',1],['update_nfs_service',1],['delete_nfs_service',1],['create_cifs_service',1],['update_cifs_service',1],['delete_cifs_service',1],['create_dns',1],['delete_dns',1]]},
   {ic:'🗂️',name:'Qtree 管理',desc:'Qtree 子目录级管理',tools:[['create_qtree',1],['update_qtree',1],['delete_qtree',1]]},
   {ic:'🌐',name:'网络接口',desc:'IP 逻辑接口（LIF）管理',tools:[['create_network_ip_interface',1],['update_network_ip_interface',1],['delete_network_ip_interface',1]]},
   {ic:'🧱',name:'LUN 与 igroup（SAN）',desc:'块存储 LUN、启动器组与映射',tools:[['create_lun',1],['update_lun',1],['delete_lun',1],['create_igroup',1],['update_igroup',1],['delete_igroup',1],['add_igroup_initiator',1],['remove_igroup_initiator',1],['create_lun_map',1],['delete_lun_map',1]]},
@@ -471,7 +502,7 @@ const scenarios=[
    card:'向容灾集群建立 SnapMirror 复制关系、完成基线初始化，甚至执行容灾演练（break / resync），全程对话式完成。',
    steps:[
     {type:'user',text:'把 cluster1 上的 demo_vol01 复制到容灾集群 cluster2，建立 SnapMirror 关系并初始化。'},
-    {type:'ai',text:'收到。我将在 cluster2 创建目标卷关系并启动基线传输。'},
+    {type:'ai',text:'收到。两个集群已建立对等关系，我将在 cluster2 创建目标卷关系并启动基线传输。（集群对等目前需事先完成；下一版本将提供 create_cluster_peer 工具自动建立。）'},
     T('create_snapmirror',{source:'cluster1://demo_svm01/demo_vol01',destination:'cluster2://dr_svm01/demo_vol01_dst',policy:'MirrorAllSnapshots'}),
     R({status:'success',relationship:{uuid:'8d2c…41af',state:'uninitialized',policy:'MirrorAllSnapshots'}}),
     T('initialize_snapmirror',{relationship_uuid:'8d2c…41af'}),
