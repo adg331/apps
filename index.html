@@ -143,13 +143,15 @@
   .vdlg .x{flex:0 0 auto;width:34px;height:34px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:transparent;color:#fff;font-size:18px;line-height:1;cursor:pointer}
   .vdlg .x:hover{background:rgba(255,255,255,.14)}
   .vdlg video{display:block;width:100%;max-height:calc(100vh - 100px);aspect-ratio:16/9;background:#000}
+  .addr b,.addr .state{flex:0 0 auto;white-space:nowrap}
+  .addr .tag{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 9px;border-color:var(--netapp-blue);background:var(--netapp-blue);color:#fff;font-size:11px;letter-spacing:.1em;box-shadow:0 2px 6px rgba(0,103,197,.22)}
   .sec-tools{margin-top:52px}
   .bays .sep{flex:0 0 auto;width:1px;height:14px;margin:0 5px;background:rgba(255,255,255,.35)}
   .bays a.tool{padding:0 8px;letter-spacing:.12em}
   .slot.tool{border-color:rgba(255,255,255,.4);box-shadow:0 10px 26px rgba(0,49,96,.16)}
   .slot.tool .addr{background:#f3f5f8}
   .slot.tool .addr b{color:#5a6b80}
-  .slot.tool .tag{border-color:#cfd8e3;background:#f3f5f8;color:#5a6b80}
+  .slot.tool .tag{border-color:#5a6b80;background:#5a6b80;color:#fff;box-shadow:0 2px 6px rgba(60,75,95,.2)}
   .slot.tool .visual img{filter:saturate(.55) brightness(.98)}
   .slot.tool:hover .visual img{filter:saturate(.8)}
   .state.lock{color:#6b7a8c}
@@ -216,13 +218,13 @@
       <nav class="bays" aria-label="展位快速跳转">
         <a href="#bay01" title="Bay 01 · AIDE 2026 深度解析 · 制造业视角">01<span class="vh"> Bay 01 AIDE 2026 深度解析 · 制造业视角</span></a>
         <a href="#bay02" title="Bay 02 · NetApp Novus · AI 工厂存储架构">02<span class="vh"> Bay 02 NetApp Novus · AI 工厂存储架构</span></a>
-        <a href="#bay03" title="Bay 03 · KV Cache 分层加速">03<span class="vh"> Bay 03 KV Cache 分层加速</span></a>
-        <a href="#bay04" title="Bay 04 · ONTAP MCP 运维演示">04<span class="vh"> Bay 04 ONTAP MCP 运维演示</span></a>
-        <a href="#bay05" title="Bay 05 · NetApp MCP 全景演示">05<span class="vh"> Bay 05 NetApp MCP 全景演示</span></a>
-        <a href="#bay06" title="Bay 06 · SnapMirror active sync for NAS">06<span class="vh"> Bay 06 SnapMirror active sync for NAS</span></a>
-        <a href="#bay07" title="Bay 07 · 制造业勒索软件检测与恢复">07<span class="vh"> Bay 07 制造业勒索软件检测与恢复</span></a>
-        <a href="#bay08" title="Bay 08 · ONTAP 9.19.1 技术总览">08<span class="vh"> Bay 08 ONTAP 9.19.1 技术总览</span></a>
-        <a href="#bay09" title="Bay 09 · LiSA 联想存储智能体">09<span class="vh"> Bay 09 LiSA 联想存储智能体</span></a>
+        <a href="#bay03" title="Bay 03 · LiSA 联想存储智能体">03<span class="vh"> Bay 03 LiSA 联想存储智能体</span></a>
+        <a href="#bay04" title="Bay 04 · KV Cache 分层加速">04<span class="vh"> Bay 04 KV Cache 分层加速</span></a>
+        <a href="#bay05" title="Bay 05 · ONTAP MCP 运维演示">05<span class="vh"> Bay 05 ONTAP MCP 运维演示</span></a>
+        <a href="#bay06" title="Bay 06 · NetApp MCP 全景演示">06<span class="vh"> Bay 06 NetApp MCP 全景演示</span></a>
+        <a href="#bay07" title="Bay 07 · SnapMirror active sync for NAS">07<span class="vh"> Bay 07 SnapMirror active sync for NAS</span></a>
+        <a href="#bay08" title="Bay 08 · 制造业勒索软件检测与恢复">08<span class="vh"> Bay 08 制造业勒索软件检测与恢复</span></a>
+        <a href="#bay09" title="Bay 09 · ONTAP 9.19.1 技术总览">09<span class="vh"> Bay 09 ONTAP 9.19.1 技术总览</span></a>
         <span class="sep" aria-hidden="true"></span>
         <a class="tool" href="#tool01" title="内部工具 · Fusion 容量查询">工具<span class="vh"> 内部工具 Fusion 容量查询</span></a>
       </nav>
@@ -278,7 +280,22 @@
       </article>
 
       <article class="slot" id="bay03">
-        <div class="addr mono"><b>Bay 03</b><span class="tag">NetApp AFX</span><span class="state">在线</span></div>
+        <div class="addr mono"><b>Bay 03</b><span class="tag">Lenovo LiSA</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/lisa-preview.svg" alt="LiSA 联想存储智能体的数据管理架构示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>LiSA 联想存储智能体</h3>
+          <p>独立元数据引擎统一纳管 ONTAP、DXN 与第三方非结构化数据，千亿条目秒级检索与生命周期治理，含 5 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="https://chinaeastse.github.io/LiSA/login.html" target="_blank" rel="noopener" aria-label="登录进入：LiSA 联想存储智能体（在新标签页打开）">登录进入</a>
+            <button class="act vid" type="button" data-video="./lisa/lisa-deep.mp4" data-title="LiSA 联想存储智能体">视频解说</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay04">
+        <div class="addr mono"><b>Bay 04</b><span class="tag">NetApp AFX</span><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/kv-cache-preview.svg" alt="NetApp AFX KV Cache 四级分层加速架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -292,14 +309,14 @@
         </div>
       </article>
 
-      <article class="slot" id="bay04">
-        <div class="addr mono"><b>Bay 04</b><span class="tag">ONTAP MCP</span><span class="state">在线</span></div>
+      <article class="slot" id="bay05">
+        <div class="addr mono"><b>Bay 05</b><span class="tag">ONTAP MCP</span><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/ontap-mcp-preview.svg" alt="ONTAP MCP 自然语言存储管理架构示意图" width="800" height="450" loading="lazy">
         </div>
         <div class="body">
           <h3>ONTAP MCP 运维演示</h3>
-          <p>用自然语言完成 ONTAP 卷开通、数据保护与多集群管理，交互展示 AI 到 REST API 的完整调用链路，含 3 分半讲解视频。</p>
+          <p>用自然语言完成 ONTAP 卷开通、数据保护与多集群管理，交互展示 AI 到 REST API 的完整调用链路，含 3.5 分钟视频。</p>
           <div class="acts">
             <a class="act demo" href="./ontap-mcp/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP MCP 运维演示（在新标签页打开）">交互演示</a>
             <button class="act vid" type="button" data-video="./ontap-mcp/mcp-deep.mp4" data-title="ONTAP MCP 运维演示">视频解说</button>
@@ -307,8 +324,8 @@
         </div>
       </article>
 
-      <article class="slot" id="bay05">
-        <div class="addr mono"><b>Bay 05</b><span class="tag">NetApp MCP</span><span class="state">在线</span></div>
+      <article class="slot" id="bay06">
+        <div class="addr mono"><b>Bay 06</b><span class="tag">NetApp MCP</span><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/netapp-mcp-preview.svg" alt="NetApp MCP 数据基础设施管理架构示意图" width="800" height="450" loading="lazy">
         </div>
@@ -322,8 +339,8 @@
         </div>
       </article>
 
-      <article class="slot" id="bay06">
-        <div class="addr mono"><b>Bay 06</b><span class="tag">ONTAP 9.19.1</span><span class="state">在线</span></div>
+      <article class="slot" id="bay07">
+        <div class="addr mono"><b>Bay 07</b><span class="tag">ONTAP 9.19.1</span><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/sm-as-nas-preview.svg" alt="SnapMirror active sync for NAS 双站点同步保护示意图" width="800" height="450" loading="lazy">
         </div>
@@ -337,8 +354,8 @@
         </div>
       </article>
 
-      <article class="slot" id="bay07">
-        <div class="addr mono"><b>Bay 07</b><span class="tag">ONTAP ARP/AI</span><span class="state">在线</span></div>
+      <article class="slot" id="bay08">
+        <div class="addr mono"><b>Bay 08</b><span class="tag">ONTAP ARP/AI</span><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/arp-ai-preview.svg" alt="ONTAP ARP AI 制造业勒索软件检测与恢复示意图" width="800" height="450" loading="lazy">
         </div>
@@ -352,8 +369,8 @@
         </div>
       </article>
 
-      <article class="slot" id="bay08">
-        <div class="addr mono"><b>Bay 08</b><span class="tag">ONTAP 9.19.1 Release</span><span class="state">在线</span></div>
+      <article class="slot" id="bay09">
+        <div class="addr mono"><b>Bay 09</b><span class="tag">ONTAP 9.19.1 Release</span><span class="state">在线</span></div>
         <div class="visual">
           <img src="./assets/ontap-9191-preview.svg" alt="ONTAP 9.19.1 版本亮点特性总览示意图" width="800" height="450" loading="lazy">
         </div>
@@ -363,21 +380,6 @@
           <div class="acts">
             <a class="act demo" href="./ontap-9191/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP 9.19.1 技术总览（在新标签页打开）">交互演示</a>
             <span class="act off" aria-disabled="true">视频制作中</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="slot" id="bay09">
-        <div class="addr mono"><b>Bay 09</b><span class="tag">Lenovo Intelligent Storage Agent</span><span class="state">在线</span></div>
-        <div class="visual">
-          <img src="./assets/lisa-preview.svg" alt="LiSA 联想存储智能体的数据管理架构示意图" width="800" height="450" loading="lazy">
-        </div>
-        <div class="body">
-          <h3>LiSA 联想存储智能体</h3>
-          <p>独立元数据引擎统一纳管 ONTAP、DXN 与第三方非结构化数据，千亿条目秒级检索与生命周期治理，含 5 分钟视频。</p>
-          <div class="acts">
-            <a class="act demo" href="https://chinaeastse.github.io/LiSA/login.html" target="_blank" rel="noopener" aria-label="登录进入：LiSA 联想存储智能体（在新标签页打开）">登录进入</a>
-            <button class="act vid" type="button" data-video="./lisa/lisa-deep.mp4" data-title="LiSA 联想存储智能体">视频解说</button>
           </div>
         </div>
       </article>
@@ -393,7 +395,7 @@
     <div class="bay">
 
       <article class="slot tool" id="tool01">
-        <div class="addr mono"><b>Tool 01</b><span class="tag">NetApp Fusion</span><span class="state lock"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5.2" width="8" height="5.6" rx="1.2" fill="currentColor"/><path d="M3.9 5.2V3.8a2.1 2.1 0 0 1 4.2 0v1.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>内部 · 需登录</span></div>
+        <div class="addr mono"><b>Tool 01</b><span class="tag">NetApp Fusion</span><span class="state lock"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5.2" width="8" height="5.6" rx="1.2" fill="currentColor"/><path d="M3.9 5.2V3.8a2.1 2.1 0 0 1 4.2 0v1.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>需登录</span></div>
         <div class="visual">
           <img src="./assets/fusion-preview.svg" alt="Fusion 容量查询界面示意图" width="800" height="450" loading="lazy">
         </div>
