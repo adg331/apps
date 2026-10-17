@@ -159,9 +159,18 @@
   footer{border-top:1px solid var(--line);margin-top:20px;background:var(--panel)}
   .fwrap{max-width:1200px;margin:0 auto;padding:24px;font-size:12.5px;color:var(--muted)}
   .fwrap a{margin-right:16px}
+  .vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+  .vdlg::backdrop{background:rgba(23,38,60,.78)}
+  .vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  .vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+  .vdlg .vbar .btn{margin-top:0;background:#fff;color:var(--text)}
 </style>
 </head>
 <body>
+<dialog class="vdlg" id="vDlg" aria-label="NetApp MCP 讲解视频">
+  <div class="vbar"><span>NetApp MCP 服务器家族 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./netapp-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
 
 <header>
   <div class="hwrap">
@@ -185,6 +194,7 @@
   <div class="tag hl">开源 · Apache 2.0</div><div class="tag">官方 MCP 服务器目录</div><div class="tag">观察 + 操作</div><div class="tag">多集群 · 多平台</div>
   <h1>用自然语言，<span class="accent">看懂并管好你的 NetApp 数据基础设施</span></h1>
   <p class="sub">NetApp 基于开放标准 <b>Model Context Protocol（MCP）</b> 推出了一系列官方 MCP 服务器，让 Claude、GitHub Copilot 等 AI 助手既能<b>查询</b>（Harvest MCP：健康、容量、性能）又能<b>操作</b>（ONTAP MCP：开通、保护、变更）你的存储环境——存储运维从"看仪表盘、提工单"变成"直接对话"。</p>
+  <button class="btn" id="vOpen" type="button" style="margin-top:12px">▶ 观看 4 分钟讲解视频</button>
 
   <div class="flow">
     <div class="node"><b>💬 自然语言</b><span>"哪些卷快满了？扩容它们"</span></div>
@@ -1135,6 +1145,13 @@ async function runScen(id){
   }
 }
 function replayScen(){ if(curScen)runScen(curScen); }
+</script>
+<script>
+const vDlg=document.getElementById('vDlg'), vPlayer=document.getElementById('vPlayer');
+document.getElementById('vOpen').onclick=()=>{vDlg.showModal(); vPlayer.play().catch(()=>{});};
+document.getElementById('vClose').onclick=()=>vDlg.close();
+vDlg.addEventListener('click',e=>{if(e.target===vDlg)vDlg.close();});
+vDlg.addEventListener('close',()=>vPlayer.pause());
 </script>
 </body>
 </html>
