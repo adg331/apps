@@ -43,6 +43,7 @@
   .badge.o{background:#e8f1fc;color:var(--blue)}
   .badge.d{background:#f1eafc;color:#6a3fc4}
   .badge.k{background:#fdf3e3;color:#b26a00}
+  .badge.a{background:#e5f4fb;color:#0a6e96}
   /* ---------- cards ---------- */
   .grid{display:grid;gap:16px;margin-top:20px}
   .g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
@@ -221,47 +222,50 @@
   </table>
 
   <h2>NetApp 官方 MCP 服务器目录</h2>
-  <p class="sub">除以上两大核心外，NetApp 正在构建覆盖全产品线的 MCP 服务器家族（github.com/NetApp/mcp）：</p>
+  <p class="sub">官方目录（github.com/NetApp/mcp，2026-10 更新）按"想让 AI 做什么"选服务器，当前共 8 个条目、11 个服务器：</p>
   <table>
-    <tr><th>MCP 服务器</th><th>类型</th><th>功能</th><th>适用产品</th></tr>
-    <tr><td><b>ONTAP MCP</b> <span class="badge o">核心</span></td><td>远程 (HTTP)</td><td>ONTAP 集群管理：多集群、卷生命周期、数据保护、NFS/CIFS 访问控制</td><td class="sm">AFX / AFF / FAS / FSx for ONTAP / CVO / Select</td></tr>
-    <tr><td><b>Harvest MCP</b> <span class="badge h">核心</span></td><td>本地 + 远程</td><td>查询 Harvest 采集的 ONTAP、StorageGRID、E-Series、Cisco 指标</td><td class="sm">Harvest 监控栈</td></tr>
-    <tr><td><b>AI Data Engine (AIDE) MCP</b></td><td>Agent 侧适配器 (stdio)</td><td>将 AIDE Retrieval/RAG Endpoint 封装为 <code>netapp_data_engine_search</code> 工具；应用也可直接调用该 API</td><td class="sm">AFX + AIDE / 企业私有与混合云 RAG</td></tr>
-    <tr><td><b>NetApp Docs MCP</b> <span class="badge k">新</span></td><td>远程 (HTTP) · NetApp 托管</td><td>检索 docs.netapp.com 已发布的官方产品文档：搜索、取回原文、基于文档问答；APIM 订阅 key 认证，目前仅英文</td><td class="sm">NetApp 全产品线公开文档</td></tr>
-    <tr><td><b>DataOps Toolkit MCP · ONTAP</b></td><td>本地 (stdio)</td><td>终端用户自助卷开通与管理（Python）</td><td class="sm">ONTAP 全家族</td></tr>
-    <tr><td><b>DataOps Toolkit MCP · ANF</b></td><td>本地 (stdio)</td><td>Azure NetApp Files 自助卷开通与管理</td><td class="sm">Azure NetApp Files</td></tr>
-    <tr><td><b>DataOps Toolkit MCP · GCNV</b></td><td>本地 (stdio)</td><td>Google Cloud NetApp Volumes 自助卷开通与管理</td><td class="sm">Google Cloud NetApp Volumes</td></tr>
-    <tr><td><b>DataOps Toolkit MCP · K8s</b></td><td>本地 (stdio)</td><td>Kubernetes 中自助开通卷与 JupyterLab 工作区（基于 Trident CSI）</td><td class="sm">NetApp Trident</td></tr>
-    <tr style="color:var(--muted)"><td><s>Workload Factory GenAI KB MCP</s> <span class="badge" style="background:#eef1f5;color:#6b7a90">已归档</span></td><td>Agent 侧适配器 (stdio)</td><td>查询 AWS 侧 Workload Factory GenAI 知识库。2026-08-20 已移入仓库 <code>archive/</code> 目录，不再列入当前官方目录</td><td class="sm">—</td></tr>
+    <tr><th>MCP 服务器</th><th>运行方式</th><th>功能</th><th>适用产品</th></tr>
+    <tr><td><b>ONTAP MCP</b> <span class="badge o">操作 · 核心</span></td><td>自托管 HTTP（容器 / Helm）</td><td>跨多集群管理 ONTAP：卷、SVM、快照、SnapMirror、QoS、NFS/SMB、LUN/igroup、iSCSI/FCP/NVMe、DNS、网络接口；只读模式；26.07 起原生支持 OAuth 与 HTTPS</td><td class="sm">AFX / AFF / FAS / FSx for ONTAP / CVO / Select</td></tr>
+    <tr><td><b>Harvest MCP</b> <span class="badge h">观察 · 核心</span></td><td>本地 stdio 或自托管 HTTP</td><td>查询 Harvest 采集的 ONTAP、StorageGRID、E-Series 与 Cisco Nexus 当前和历史指标；只查询，不改配置</td><td class="sm">现有 Harvest + Prometheus / VictoriaMetrics</td></tr>
+    <tr><td><b>Google Cloud NetApp Volumes MCP</b> <span class="badge o">操作</span> <span class="badge a">新</span></td><td>本地 stdio 或自托管 HTTP/SSE（npm）</td><td>GCNV 控制面：存储池、NFS/SMB/iSCSI 卷、快照、备份、复制、AD、KMS、配额；有意不提供删除操作</td><td class="sm">Google Cloud NetApp Volumes</td></tr>
+    <tr><td><b>DataOps Toolkit MCP · ONTAP</b> <span class="badge d">自助</span></td><td>本地 stdio（Python）</td><td>数据集自助：卷创建/挂载/克隆/快照、SnapMirror、FlexCache、SMB 共享、qtree 与 qtree 指标</td><td class="sm">AFX / AFF / FAS / FSx / CVO / Select</td></tr>
+    <tr><td><b>DataOps Toolkit MCP · ANF</b> <span class="badge d">自助</span></td><td>本地 stdio（Python）</td><td>NFS/SMB 卷开通、克隆、快照与跨区域复制</td><td class="sm">Azure NetApp Files</td></tr>
+    <tr><td><b>DataOps Toolkit MCP · GCNV</b> <span class="badge d">自助</span></td><td>本地 stdio（Python）</td><td>卷开通、克隆、快照与复制</td><td class="sm">Google Cloud NetApp Volumes</td></tr>
+    <tr><td><b>DataOps Toolkit MCP · K8s</b> <span class="badge d">自助</span></td><td>本地 stdio（Python）</td><td>JupyterLab 工作区与持久卷的创建、克隆、快照，以及 FlexCache</td><td class="sm">K8s + Trident（后端可为 AFF/FAS/FSx/ANF/GCNV/CVO）</td></tr>
+    <tr><td><b>NetApp Docs MCP</b> <span class="badge k">知识</span></td><td>NetApp 托管远程 HTTP</td><td>检索 docs.netapp.com 已发布文档：搜索、取回原文、基于文档问答；订阅 key 认证，目前仅英文</td><td class="sm">NetApp 全产品线公开文档</td></tr>
+    <tr><td><b>Active IQ MCP</b> <span class="badge a">洞察 · 新</span></td><td>NetApp 托管远程 HTTP · 只读</td><td>基于 AutoSupport 的风险与修复建议、安全建议、升级建议、支持案例、合同与容量预测；个人访问令牌（PAT）认证，需加入早期访问计划</td><td class="sm">Digital Advisor 已纳管的 ONTAP / E-Series / StorageGRID</td></tr>
+    <tr><td><b>DII MCP</b> <span class="badge a">洞察 · 预览</span></td><td>DII 租户远程 HTTP · 只读</td><td>26 个只读工具：库存、性能与容量遥测、日志事件、告警与监控、采集器健康、通知规则、K8s 采集器</td><td class="sm">Data Infrastructure Insights 租户</td></tr>
+    <tr><td><b>Digital Coach MCP</b> <span class="badge a">洞察 · 早期访问</span></td><td>NetApp 托管远程 HTTP · 只读</td><td>7 个工具融合 Digital Advisor、Hardware Universe、知识库、文档、EMS 与 AutoSupport，给出健康评分、根因与分步修复建议</td><td class="sm">Active IQ 账户（Digital Coach 角色）</td></tr>
+    <tr style="color:var(--muted)"><td><s>AIDE MCP</s> <span class="badge" style="background:#eef1f5;color:#6b7a90">已移出目录</span></td><td>本地 stdio</td><td>封装 AIDE 1.0 的 RAG 检索接口。2026-08-28 从官方目录移除；AIDE 1.1 已改为元数据服务形态</td><td class="sm">—</td></tr>
+    <tr style="color:var(--muted)"><td><s>Workload Factory GenAI KB MCP</s> <span class="badge" style="background:#eef1f5;color:#6b7a90">已归档</span></td><td>本地 stdio</td><td>查询 AWS 侧 Workload Factory GenAI 知识库。2026-08-20 移入仓库 <code>archive/</code> 目录</td><td class="sm">—</td></tr>
   </table>
-  <h2>AIDE MCP 与 NetApp Docs MCP：企业私有知识 vs 官方公开文档</h2>
+  <h2>名字相近，用途不同：怎么选</h2>
   <table>
-    <tr><th>对比项</th><th>AIDE MCP</th><th>NetApp Docs MCP</th></tr>
-    <tr><td><b>核心定位</b></td><td>AIDE 企业数据检索能力的 Agent 接入层</td><td>NetApp 托管的官方文档检索服务</td></tr>
-    <tr><td><b>真正执行检索的后端</b></td><td>AIDE Retrieval/RAG Endpoint</td><td>docs.netapp.com 已发布文档（NetApp 侧索引）</td></tr>
-    <tr><td><b>数据范围</b></td><td>ONTAP / AFX 管理的企业私有数据；本地或混合云 AI 平台</td><td>仅公开产品文档，不接收私有数据，不接触租户或现场环境数据；目前仅英文</td></tr>
-    <tr><td><b>MCP Server 位置</b></td><td>由 MCP Client 在 Agent 侧以 stdio 拉起；“stdio”描述通信方式，不代表知识库部署在本地</td><td>远程 HTTP，零部署：直接连接 <code>https://docs.netapp.com/mcp</code></td></tr>
-    <tr><td><b>认证</b></td><td>OAuth2（PKCE / 设备码），配置保存在 <code>~/.netapp</code></td><td>APIM 订阅 key，放在请求头 <code>Ocp-Apim-Subscription-Key</code>；发邮件至 ng-docs-mcp@netapp.com 申请</td></tr>
-    <tr><td><b>工具</b></td><td><code>netapp_data_engine_search</code></td><td><code>netapp_docs_search</code> / <code>netapp_docs_fetch</code> / <code>netapp_docs_ask</code> / <code>health_check</code></td></tr>
-    <tr><td><b>是否管理存储</b></td><td colspan="2">否。两者都只做知识查询；可在同一 Agent 中并存，按问题分别查企业资料与官方说法</td></tr>
+    <tr><th>想让 AI 做的事</th><th>选</th><th>而不是</th></tr>
+    <tr><td>查官方产品文档，给出有出处的答案</td><td><span class="badge k">Docs MCP</span></td><td class="sm">运维类 MCP。Docs MCP 只读公开文档，不读取、也不改动任何现场环境</td></tr>
+    <tr><td>跨多集群做 ONTAP 存储管理</td><td><span class="badge o">ONTAP MCP</span></td><td class="sm">DataOps Toolkit · ONTAP：后者是本地小工具集，只面向数据集与工作区自助</td></tr>
+    <tr><td>完整管理 GCNV 控制面（池、保护、安全、NAS/SAN）</td><td><span class="badge o">GCNV MCP</span></td><td class="sm">DataOps Toolkit · GCNV：后者只做卷、克隆、快照与复制</td></tr>
+    <tr><td>基于自建监控栈查看当前与历史遥测</td><td><span class="badge h">Harvest MCP</span></td><td class="sm">DII MCP：后者面向 DII 租户，额外覆盖采集器、通知与维护窗口</td></tr>
+    <tr><td>把 Digital Advisor 的结构化记录交给自己的 Agent 推理</td><td><span class="badge a">Active IQ MCP</span></td><td class="sm">Digital Coach MCP：后者直接给出多源综合的根因分析与修复方案</td></tr>
   </table>
-  <p class="sub" style="font-size:13px;margin-top:10px">注：此前的 Workload Factory GenAI KB MCP 已于 2026-08-20 移入 NetApp/mcp 仓库的 <code>archive/</code> 目录，本页不再演示。</p>
+  <p class="sub" style="font-size:13px;margin-top:10px">观察类与洞察类 MCP 都只读；需要执行变更时，由 AI 转交 ONTAP MCP 或 GCNV MCP 完成，并按"安全授权"一章控制权限。</p>
   <button class="btn" onclick="go('arch')">查看架构 →</button>
 </section>
 
 <!-- ================= 架构 ================= -->
 <section class="page" id="p-arch">
   <h1>系统<span class="accent">架构</span></h1>
-  <p class="sub">一个对话入口，四条能力路径：<span class="badge h">Harvest MCP</span> 复用现有监控管道做观察，<span class="badge o">ONTAP MCP</span> 直连集群 REST API 做操作，<span class="badge d">DataOps Toolkit MCP ×4</span> 以本地 stdio 方式提供跨 ONTAP / Azure / Google / K8s 的自助服务，<span class="badge k">知识检索 MCP ×2</span>（AIDE、NetApp Docs）让企业文档与官方文档都可被检索并溯源。<b>点击图中组件</b>查看详细说明。</p>
+  <p class="sub">一个对话入口，四条能力路径：<span class="badge h">Harvest MCP</span> 复用现有监控管道做观察，<span class="badge o">ONTAP MCP</span> 直连集群 REST API 做操作，<span class="badge d">DataOps Toolkit MCP ×4</span> 以本地 stdio 方式提供跨 ONTAP / Azure / Google / K8s 的自助服务，<span class="badge a">NetApp 托管 MCP ×4</span>（Docs、Active IQ、DII、Digital Coach）以远程 HTTP 只读提供官方文档与运维洞察。图中未画出 GCNV MCP（Google Cloud 原生控制面管理）。<b>点击图中组件</b>查看详细说明。</p>
 
   <div class="arch-wrap">
     <div class="arch-svg">
-      <svg viewBox="0 0 900 915" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+      <svg viewBox="0 0 900 985" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
         <defs>
           <marker id="ahT" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#00857c"/></marker>
           <marker id="ahB" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#0067C5"/></marker>
           <marker id="ahD" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#7a4fd0"/></marker>
           <marker id="ahK" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#b26a00"/></marker>
+          <marker id="ahA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#0a6e96"/></marker>
         </defs>
         <!-- clients -->
         <g class="arch-node" data-k="clients">
@@ -316,7 +320,7 @@
           <rect x="732" y="100" width="139" height="34" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
           <text x="801" y="122" text-anchor="middle" fill="#33475f" font-size="11.5">StorageGRID</text>
           <rect x="732" y="142" width="139" height="34" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
-          <text x="801" y="164" text-anchor="middle" fill="#33475f" font-size="11.5">E-Series（预览）</text>
+          <text x="801" y="164" text-anchor="middle" fill="#33475f" font-size="11.5">E-Series</text>
           <rect x="732" y="184" width="139" height="34" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
           <text x="801" y="206" text-anchor="middle" fill="#33475f" font-size="11.5">Cisco Nexus 交换机</text>
         </g>
@@ -355,8 +359,8 @@
         <text x="450" y="278" text-anchor="middle" fill="#8896aa" font-size="11.5">🔭 观察（Harvest MCP）＋ 🔧 操作（ONTAP MCP）＝ AI 存储运维闭环</text>
         <!-- arrows to local stdio lanes -->
         <line x1="80" y1="375" x2="245" y2="650" stroke="#7a4fd0" stroke-width="2" marker-end="url(#ahD)" class="dash"/>
-        <line x1="130" y1="375" x2="245" y2="833" stroke="#b26a00" stroke-width="2" marker-end="url(#ahK)" class="dash"/>
-        <text x="120" y="560" text-anchor="middle" fill="#8896aa" font-size="10.5">本地 stdio</text>
+        <line x1="130" y1="375" x2="245" y2="860" stroke="#0a6e96" stroke-width="2" marker-end="url(#ahA)" class="dash"/>
+        <text x="120" y="560" text-anchor="middle" fill="#8896aa" font-size="10.5">stdio / 远程 HTTP</text>
         <!-- DataOps Toolkit MCP -->
         <g class="arch-node" data-k="dops">
           <rect class="main" x="250" y="570" width="205" height="192" rx="12" fill="#f3eefc" stroke="#7a4fd0"/>
@@ -385,26 +389,34 @@
         </g>
         <line x1="455" y1="666" x2="533" y2="666" stroke="#7a4fd0" stroke-width="2" marker-end="url(#ahD)" class="dash"/>
         <text x="494" y="654" text-anchor="middle" fill="#7a4fd0" font-size="10.5">API / CSI</text>
-        <!-- Knowledge MCP -->
+        <!-- NetApp-hosted MCP -->
         <g class="arch-node" data-k="kmcp">
-          <rect class="main" x="250" y="782" width="205" height="118" rx="12" fill="#fdf3e3" stroke="#b26a00"/>
-          <text x="352" y="810" text-anchor="middle" fill="#7a4a00" font-size="15" font-weight="700">知识检索 MCP ×2</text>
-          <text x="352" y="828" text-anchor="middle" fill="#b26a00" font-size="11">RAG 检索 · 企业私有 + 官方文档</text>
-          <rect x="268" y="840" width="169" height="25" rx="7" fill="#ffffff" stroke="#f0dcb8"/>
-          <text x="352" y="857" text-anchor="middle" fill="#33475f" font-size="11.5">AIDE MCP（AI Data Engine）</text>
-          <rect x="268" y="869" width="169" height="25" rx="7" fill="#ffffff" stroke="#f0dcb8"/>
-          <text x="352" y="886" text-anchor="middle" fill="#33475f" font-size="11.5">NetApp Docs MCP（远程）</text>
+          <rect class="main" x="250" y="782" width="205" height="186" rx="12" fill="#e9f5fb" stroke="#0a6e96"/>
+          <text x="352" y="810" text-anchor="middle" fill="#064f6d" font-size="15" font-weight="700">NetApp 托管 MCP ×4</text>
+          <text x="352" y="828" text-anchor="middle" fill="#0a6e96" font-size="11">远程 HTTP · 只读 · 文档与洞察</text>
+          <rect x="268" y="840" width="169" height="25" rx="7" fill="#ffffff" stroke="#bfe0ee"/>
+          <text x="352" y="857" text-anchor="middle" fill="#33475f" font-size="11.5">Docs MCP · 官方文档</text>
+          <rect x="268" y="870" width="169" height="25" rx="7" fill="#ffffff" stroke="#bfe0ee"/>
+          <text x="352" y="887" text-anchor="middle" fill="#33475f" font-size="11.5">Active IQ MCP · 风险/升级</text>
+          <rect x="268" y="900" width="169" height="25" rx="7" fill="#ffffff" stroke="#bfe0ee"/>
+          <text x="352" y="917" text-anchor="middle" fill="#33475f" font-size="11.5">DII MCP · 租户遥测（预览）</text>
+          <rect x="268" y="930" width="169" height="25" rx="7" fill="#ffffff" stroke="#bfe0ee"/>
+          <text x="352" y="947" text-anchor="middle" fill="#33475f" font-size="11.5">Digital Coach（早期访问）</text>
         </g>
         <g class="arch-node" data-k="ktargets">
-          <rect class="main" x="540" y="787" width="200" height="108" rx="12" fill="#ffffff" stroke="#c6d4e6"/>
-          <text x="640" y="813" text-anchor="middle" fill="#17263c" font-size="13" font-weight="700">知识数据源</text>
+          <rect class="main" x="540" y="787" width="200" height="176" rx="12" fill="#ffffff" stroke="#c6d4e6"/>
+          <text x="640" y="813" text-anchor="middle" fill="#17263c" font-size="13" font-weight="700">NetApp 侧数据源</text>
           <rect x="556" y="826" width="168" height="29" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
-          <text x="640" y="845" text-anchor="middle" fill="#33475f" font-size="11.5">AIDE RAG / 向量索引</text>
-          <rect x="556" y="861" width="168" height="29" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
-          <text x="640" y="880" text-anchor="middle" fill="#33475f" font-size="11.5">docs.netapp.com 官方文档</text>
+          <text x="640" y="845" text-anchor="middle" fill="#33475f" font-size="11.5">docs.netapp.com 官方文档</text>
+          <rect x="556" y="859" width="168" height="29" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
+          <text x="640" y="878" text-anchor="middle" fill="#33475f" font-size="11.5">Digital Advisor · AutoSupport</text>
+          <rect x="556" y="892" width="168" height="29" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
+          <text x="640" y="911" text-anchor="middle" fill="#33475f" font-size="11.5">DII 租户 · 库存与告警</text>
+          <rect x="556" y="925" width="168" height="29" rx="7" fill="#f0f5fb" stroke="#dbe4f0"/>
+          <text x="640" y="944" text-anchor="middle" fill="#33475f" font-size="11.5">HWU · 知识库 · EMS</text>
         </g>
-        <line x1="455" y1="841" x2="533" y2="841" stroke="#b26a00" stroke-width="2" marker-end="url(#ahK)" class="dash"/>
-        <text x="494" y="829" text-anchor="middle" fill="#b26a00" font-size="10.5">RAG / HTTPS</text>
+        <line x1="455" y1="875" x2="533" y2="875" stroke="#0a6e96" stroke-width="2" marker-end="url(#ahA)" class="dash"/>
+        <text x="494" y="863" text-anchor="middle" fill="#0a6e96" font-size="10.5">HTTPS · 只读</text>
       </svg>
     </div>
     <div id="archDetail">
@@ -419,8 +431,8 @@
     <div class="card"><span class="badge h">Harvest MCP</span><h3 style="margin-top:8px">统一指标模型</h3><p>ONTAP、StorageGRID、E-Series、Cisco 用一致的开放指标模型，跨平台提问一次到位；Grafana 仪表盘依然可用，二者互补。</p></div>
     <div class="card"><span class="badge o">ONTAP MCP</span><h3 style="margin-top:8px">带护栏的"双手"</h3><p>每个工具标注 readOnly / idempotent / destructive 提示；--read-only 模式仅暴露只读工具；集中凭证，调用不带密码。</p></div>
     <div class="card"><span class="badge d">DataOps MCP</span><h3 style="margin-top:8px">本地 stdio · 零门槛</h3><p>uvx 一条命令即可拉起，凭证与配置留在本地；面向终端用户自助服务，覆盖本地 ONTAP 与 Azure / Google 云、K8s。</p></div>
-    <div class="card"><span class="badge k">知识 MCP</span><h3 style="margin-top:8px">RAG 检索有出处</h3><p>AIDE 检索企业私有文档（OAuth2，数据不出企业边界），Docs MCP 检索 docs.netapp.com 官方文档；AI 回答都可溯源到具体文件或页面。</p></div>
-    <div class="card"><span class="badge h">观察</span> <span class="badge o">操作</span> <span class="badge k">知识</span><h3 style="margin-top:8px">同一对话，全栈协同</h3><p>一个 mcp.json 可同时接入远程 HTTP 与本地 stdio 服务器，AI 在同一对话流内查指标、做变更、检索知识。</p></div>
+    <div class="card"><span class="badge a">托管 MCP</span><h3 style="margin-top:8px">零部署、只读</h3><p>Docs、Active IQ、DII、Digital Coach 都由 NetApp 或 DII 租户托管，客户端只需配 URL 与令牌；全部只读，结果受登录身份的权限范围限制。</p></div>
+    <div class="card"><span class="badge h">观察</span> <span class="badge a">洞察</span> <span class="badge o">操作</span><h3 style="margin-top:8px">同一对话，全栈协同</h3><p>一个 mcp.json 可同时接入远程 HTTP 与本地 stdio 服务器，AI 在同一对话流内查指标、看风险、查文档、做变更。</p></div>
   </div>
 </section>
 
@@ -457,8 +469,8 @@
       <div class="q">发现无保护卷 → 让 ONTAP MCP 配快照策略</div></div>
   </div>
 
-  <h2 style="margin-top:44px"><span class="badge o">ONTAP MCP</span>　工具目录（80+）</h2>
-  <p class="sub">每个工具对应一个定义良好的 ONTAP REST API 工作流。点击分类展开。</p>
+  <h2 style="margin-top:44px"><span class="badge o">ONTAP MCP</span>　工具目录（26.07 · 88 个）</h2>
+  <p class="sub">每个工具对应一个定义良好的 ONTAP REST API 工作流；查询统一走 API 发现与 <code>ontap_get</code>。点击分类展开。默认 <code>legacy</code> 模式下每类资源分别注册 update / delete 工具；<code>--tool-mode multiplex</code> 改为每类一个 <code>modify_*</code>，工具数更少，官方表示后续版本只保留这种方式。</p>
   <div class="legend"><span class="dot" style="background:var(--teal)"></span>青色 = 只读/查询类　<span class="dot" style="background:#d18b1f"></span>橙色 = 写入/变更类（带 destructiveHint 护栏）</div>
   <div id="toolList" style="margin-top:18px"></div>
 
@@ -485,41 +497,49 @@
       <p style="font-size:12.5px;color:var(--muted);margin-top:8px">基于 Trident CSI 自助开通 K8s 卷与 JupyterLab 工作区。</p></div>
   </div>
 
-  <h2 style="margin-top:44px"><span class="badge k">知识检索 MCP ×2</span>　企业知识 + 官方文档</h2>
+  <h2 style="margin-top:44px"><span class="badge a">NetApp 托管 MCP ×4</span>　官方文档 + 运维洞察（只读）</h2>
   <div class="grid g2" style="margin-top:16px">
-    <div class="qa"><h4>🧠 AIDE MCP（AI Data Engine）</h4>
-      <div class="q" style="font-family:var(--mono);font-size:12px">netapp_data_engine_search</div>
-      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">暴露 AIDE 的 RAG 检索 API：基于向量语义相似度找到最相关的企业文档，AI 回答自带出处。OAuth2（PKCE / 设备码）认证，配置保存在本地 ~/.netapp。</p>
-      <div class="q">"在我们的产品文档里找关于 SnapMirror 切换步骤的说明"</div></div>
     <div class="qa"><h4>📚 NetApp Docs MCP（docs.netapp.com）</h4>
       <div class="q" style="font-family:var(--mono);font-size:12px">netapp_docs_search · netapp_docs_fetch · netapp_docs_ask · health_check</div>
-      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">NetApp 托管的远程 MCP：search 找相关页面，fetch 取回整页结构化原文，ask 基于官方文档直接生成答案。只含公开文档，目前仅英文；APIM 订阅 key 认证。</p>
-      <div class="q">"按最新官方文档核对 ONTAP 9.17 SnapMirror active sync 支持哪些拓扑"</div></div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">search 找相关页面，fetch 取回整页原文，ask 基于官方文档生成答案。只含公开文档，目前仅英文；订阅 key 认证。</p>
+      <div class="q">"按最新官方文档核对 SnapMirror active sync 支持哪些拓扑"</div></div>
+    <div class="qa"><h4>🩺 Active IQ MCP（Digital Advisor）</h4>
+      <div class="q" style="font-family:var(--mono);font-size:12px">search · summary · risks · upgradeAdvisor · capacityForecast · cases · autosupport</div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">基于系统已上传的 AutoSupport：风险与修复建议、升级就绪检查、18 个月容量预测、支持案例与合同。另有只读 GraphQL 查询。PAT 认证，需加入早期访问计划。</p>
+      <div class="q">"哪些集群有关键风险？升级到新版本前有哪些阻断项？"</div></div>
+    <div class="qa"><h4>📡 DII MCP（Data Infrastructure Insights · 预览）</h4>
+      <div class="q" style="font-family:var(--mono);font-size:12px">26 个只读工具 · 9 个领域</div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">采集单元、告警与监控、数据采集器、日志事件、维护窗口、通知规则、基础设施对象与指标、K8s 采集器。端点为 <code>https://&lt;DII_HOST_URL&gt;/api/v1/mcp</code>。</p>
+      <div class="q">"列出最近 7 天的严重存储告警，并检查哪些采集器数据已过期"</div></div>
+    <div class="qa"><h4>🧑‍⚕️ Digital Coach MCP（早期访问）</h4>
+      <div class="q" style="font-family:var(--mono);font-size:12px">run_health_check · get_change_summary · ask_netapp_knowledge · get_hardware_configuration …</div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">7 个工具综合 Digital Advisor、Hardware Universe、知识库、文档、EMS 与 AutoSupport，输出风险评分、根因与分步修复建议。JWT/OAuth 令牌，60 分钟过期。</p>
+      <div class="q">"对这个集群做一次深度健康检查，按风险排序给出修复步骤"</div></div>
   </div>
 </section>
 
 <!-- ================= 场景 ================= -->
 <section class="page" id="p-scenarios">
   <h1>典型<span class="accent">使用场景</span></h1>
-  <p class="sub">覆盖官方目录全部四类服务器：<span class="badge h">观察</span> Harvest MCP、<span class="badge o">操作</span> ONTAP MCP、<span class="badge d">自助服务</span> DataOps Toolkit MCP、<span class="badge k">知识检索</span> AIDE / Docs MCP，以及跨服务器联动闭环。每个场景都可以在"交互演示"页中模拟运行。</p>
+  <p class="sub">覆盖官方目录的主要用途：<span class="badge h">观察</span> Harvest MCP、<span class="badge o">操作</span> ONTAP MCP、<span class="badge d">自助服务</span> DataOps Toolkit MCP、<span class="badge a">洞察 + 知识</span> Active IQ / Docs MCP，以及跨服务器联动闭环。每个场景都可以在"交互演示"页中模拟运行。</p>
   <div class="grid g3 scen" id="scenCards"></div>
 </section>
 
 <!-- ================= 演示 ================= -->
 <section class="page" id="p-demo">
   <h1>交互式<span class="accent">演示</span></h1>
-  <p class="sub">模拟 AI 助手调用 NetApp 官方 MCP 服务器家族完成任务的交互过程：<span class="badge h">Harvest 观察</span> <span class="badge o">ONTAP 操作</span> <span class="badge d">DataOps 自助服务</span> <span class="badge k">AIDE / Docs 知识检索</span>（演示数据，未连接真实环境，部分工具名称为示意）。选择左侧场景开始播放。</p>
+  <p class="sub">模拟 AI 助手调用 NetApp 官方 MCP 服务器家族完成任务的交互过程：<span class="badge h">Harvest 观察</span> <span class="badge o">ONTAP 操作</span> <span class="badge d">DataOps 自助服务</span> <span class="badge a">Active IQ / Docs 洞察与知识</span>（演示数据，未连接真实环境，部分工具名称为示意）。选择左侧场景开始播放。</p>
   <div class="demo-wrap">
     <div class="demo-side" id="demoSide"></div>
     <div class="chat">
       <div class="chat-head">
-        <div class="st"></div><b>AI 存储助手</b><span>harvest-mcp · ontap-mcp · dataops-mcp · aide-mcp · wf-kb-mcp</span>
+        <div class="st"></div><b>AI 存储助手</b><span>harvest-mcp · ontap-mcp · dataops-mcp · activeiq-mcp · docs-mcp</span>
         <button class="btn ghost" style="margin:0 0 0 auto;padding:5px 12px" onclick="replayScen()">↻ 重播</button>
       </div>
       <div class="chat-body" id="chatBody">
-        <div class="msg ai"><div class="who">AI 助手</div>你好！我已接入 NetApp 官方 MCP 服务器家族：<b>Harvest MCP</b>（观察）、<b>ONTAP MCP</b>（操作）、<b>DataOps Toolkit MCP</b>（自助服务）与 <b>AIDE / Docs MCP</b>（知识检索）。请从左侧选择一个演示场景，或想象你直接输入了自然语言指令。</div>
+        <div class="msg ai"><div class="who">AI 助手</div>你好！我已接入 NetApp 官方 MCP 服务器家族：<b>Harvest MCP</b>（观察）、<b>ONTAP MCP</b>（操作）、<b>DataOps Toolkit MCP</b>（自助服务）与 <b>Active IQ / Docs MCP</b>（洞察与知识）。请从左侧选择一个演示场景，或想象你直接输入了自然语言指令。</div>
       </div>
-      <div class="chat-foot"><span class="hint">💡 自动逐步播放 · 工具调用按服务器着色：<span class="badge h">Harvest</span> <span class="badge o">ONTAP</span> <span class="badge d">DataOps</span> <span class="badge k">AIDE / Docs</span></span></div>
+      <div class="chat-foot"><span class="hint">💡 自动逐步播放 · 工具调用按服务器着色：<span class="badge h">Harvest</span> <span class="badge o">ONTAP</span> <span class="badge d">DataOps</span> <span class="badge a">Active IQ / Docs</span></span></div>
     </div>
   </div>
 </section>
@@ -527,7 +547,7 @@
 <!-- ================= 安全授权 ================= -->
 <section class="page" id="p-security">
   <h1>安全与<span class="accent">分级授权</span></h1>
-  <p class="sub">ONTAP MCP 用 <code style="font-family:var(--mono);font-size:12.5px">ontap.yaml</code> 中注册的<b>集群管理员账户</b>、经 REST API over HTTPS 与存储通讯，凭证只留在服务器端，客户端与每次调用都不接触密码。它本身<b>没有原生的多用户分级</b>——分级授权需要在其周围搭三层来实现，其中 ONTAP RBAC 是不可绕过的底线。</p>
+  <p class="sub">ONTAP MCP 用 <code style="font-family:var(--mono);font-size:12.5px">ontap.yaml</code> 中注册的<b>集群管理员账户</b>、经 REST API over HTTPS 与存储通讯，凭证只留在服务器端，客户端与每次调用都不接触密码。26.07 起它可以原生校验 OAuth 令牌并通过 HTTPS 提供服务，能挡住未授权访问；但所有调用仍以同一个 ONTAP 账户执行，<b>没有按用户映射权限的分级</b>——分级授权仍需在其周围搭三层来实现，其中 ONTAP RBAC 是不可绕过的底线。</p>
 
   <h2>分级授权：三层架构</h2>
   <p class="sub">用户身份在<b>网关层</b>进入系统，"级别"由<b>连到哪个 MCP 实例</b>决定，最终强制由 <b>ONTAP RBAC</b> 完成。</p>
@@ -611,7 +631,7 @@
   <div class="grid g2">
     <div class="card"><span class="badge k">③ 底线</span><h3 style="margin-top:8px">ONTAP RBAC 专用账户</h3><p>为每个级别建专用 ONTAP 账户并授予对应角色（只读 / 开通 / 管理）。强制点在存储侧，无法绕过——这是最可靠的一层，务必先做。建议用专用最小权限账户，而非直接拿超级管理员。</p></div>
     <div class="card"><span class="badge o">② 隔离</span><h3 style="margin-top:8px">多 MCP 实例分级</h3><p>一个实例绑定一个账户。只读实例叠加 <code style="font-family:var(--mono);font-size:12px">--read-only</code> 双保险；不同实例在 ontap.yaml 注册不同集群子集，还能按团队/环境隔离。用户"属于哪级"= 被允许连到哪个端点。</p></div>
-    <div class="card"><span class="badge k">① 识别</span><h3 style="margin-top:8px">前置认证网关</h3><p>在 MCP 端点前放认证网关：SSO/OAuth 识别登录用户 → 按组路由到对应级别实例或过滤工具 → 记录操作。用户身份在这一层进入系统，是细粒度分级与按人审计的关键。</p></div>
+    <div class="card"><span class="badge k">① 识别</span><h3 style="margin-top:8px">前置认证网关</h3><p>在 MCP 端点前放认证网关：SSO/OAuth 识别登录用户 → 按组路由到对应级别实例或过滤工具 → 记录操作。ONTAP MCP 26.07 自带的 OAuth 校验（issuer / audience / scope）可作为每个实例的准入门槛，但不区分用户权限，按人分级与审计仍靠网关。</p></div>
     <div class="card"><span class="badge h">＋ 加固</span><h3 style="margin-top:8px">网络与工具护栏</h3><p>网段/防火墙限制谁能触达管理级端点；工具自带 readOnly / idempotent / destructive 提示；高危操作走独立实例并要求人工确认。多层叠加，单点被绕过仍有兜底。</p></div>
   </div>
 
@@ -620,7 +640,7 @@
   <div class="grid g2">
     <div class="card"><span class="badge k">最贴合</span><h3 style="margin-top:8px">MCP / Agentic 专用网关</h3><p>专为保护 MCP / Agent 工具调用设计，由网关在上游处理 OAuth 2.1、下发短期令牌，MCP 服务器不持凭证：<b>Pomerium</b>（身份感知）、<b>Microsoft MCP Gateway</b>（K8s / Entra ID）、<b>Kong</b>（原生 MCP OAuth 2.1）、<b>Solo agentgateway</b>（含 DCR）、<b>Hypr MCP Gateway</b>（一键 OAuth）。</p></div>
     <div class="card"><span class="badge o">识别到人</span><h3 style="margin-top:8px">企业身份提供商（IdP）</h3><p>网关把认证委托给 IdP，这是"用户身份"的真正来源：<b>Okta</b>、<b>Microsoft Entra ID</b>、<b>Auth0</b>、<b>Keycloak</b>（开源）、<b>WorkOS</b>。选型通常取决于企业现有的 SSO。</p></div>
-    <div class="card"><span class="badge h">复用现有</span><h3 style="margin-top:8px">通用 API 网关 / 反向代理</h3><p>复用现有基础设施、自建路由与工具过滤：<b>Kong</b>、<b>APISIX</b>、<b>Envoy</b>、<b>NGINX / OpenResty</b>、<b>AWS API Gateway</b>、<b>Azure API Management</b>。负责终止 TLS、校验令牌、按组路由到不同 MCP 实例。</p></div>
+    <div class="card"><span class="badge h">复用现有</span><h3 style="margin-top:8px">通用 API 网关 / 反向代理</h3><p>复用现有基础设施、自建路由与工具过滤：<b>Kong</b>、<b>APISIX</b>、<b>Envoy</b>、<b>NGINX / OpenResty</b>、<b>AWS API Gateway</b>、<b>Azure API Management</b>。负责终止 TLS、校验令牌、按组路由到不同 MCP 实例。网关不转发 SSE 时，ONTAP MCP 可加 <code style="font-family:var(--mono);font-size:12px">--json-response</code>。</p></div>
     <div class="card"><span class="badge k">选型建议</span><h3 style="margin-top:8px">怎么选</h3><p>贴合 MCP 最省事：<b>Pomerium</b> 或 <b>Microsoft MCP Gateway</b>（K8s / Azure 环境）。已有 SSO：网关只做"验令牌 + 按组路由"，认证交给现有 <b>Okta / Entra</b>，改动最小。全开源自建：<b>Keycloak + Kong / APISIX</b>。</p></div>
   </div>
   <p class="sub" style="font-size:13px;margin-top:12px">⚠️ 无论选哪个网关，它只解决"识别用户 + 路由到对应级别实例 + 审计"这一层；<b>最终强制仍落在 ONTAP RBAC 专用账户上</b>，网关被绕过时 RBAC 才是兜底。</p>
@@ -632,7 +652,7 @@
     <tr><td><span class="badge o">运维</span></td><td class="sm">存储运维 / 应用团队自助</td><td class="sm">开通实例</td><td class="sm">role-provision</td><td class="sm">建卷、导出策略、快照、QoS 等日常开通</td></tr>
     <tr><td><span class="badge k">管理</span></td><td class="sm">存储管理员 / 架构师</td><td class="sm">管理实例（独立审计）</td><td class="sm">role-admin（全部）</td><td class="sm">删除、SnapMirror 切换/回切等高危操作</td></tr>
   </table>
-  <p class="sub" style="font-size:13px;margin-top:12px">一句话：ONTAP MCP 无原生多用户分级——靠 <b>ONTAP RBAC 强制 + 多实例隔离 + SSO 网关识别</b> 三层实现，RBAC 是绕不过的底线，网关是"识别到人"与审计的关键。</p>
+  <p class="sub" style="font-size:13px;margin-top:12px">一句话：ONTAP MCP 的原生 OAuth 只做准入，不做按用户分级——靠 <b>ONTAP RBAC 强制 + 多实例隔离 + SSO 网关识别</b> 三层实现，RBAC 是绕不过的底线，网关是"识别到人"与审计的关键。</p>
   <button class="btn" onclick="go('deploy')">查看部署 →</button>
 </section>
 
@@ -675,14 +695,21 @@
   -p 8083:8083 \
   -v /path/to/your/ontap.yaml:/opt/mcp/ontap.yaml \
   ghcr.io/netapp/ontap-mcp:latest \
-  start --port 8083 --host 0.0.0.0   <span class="c"># 可加 --read-only 只读模式</span></pre>
+  start --port 8083 --host 0.0.0.0   <span class="c"># 可加 --read-only 只读模式</span>
+
+<span class="c"># Kubernetes 环境也可用官方 Helm chart 部署（26.07 起）</span></pre>
       <pre class="code"><span class="c"># ontap.yaml — 集中注册集群凭证（一次注册，多集群纳管）</span>
 <span class="k">Pollers:</span>
   <span class="k">cluster1:</span>
     addr: <span class="s">10.0.0.1</span>
     username: <span class="s">admin</span>
     password: <span class="s">********</span>
-    use_insecure_tls: true</pre>
+    use_insecure_tls: true
+
+<span class="c"># 可选：26.07 起原生 OAuth，校验 Bearer 令牌（另有 tls 段启用 HTTPS）</span>
+<span class="k">McpAuth:</span>
+  issuer: <span class="s">https://your-idp/realms/REALM</span>
+  audience: <span class="s">https://ontap-mcp.example.com</span></pre>
     </div></div>
     <div class="step"><div class="num">2</div><div style="flex:1">
       <h3>开始对话</h3>
@@ -717,27 +744,23 @@ uvx --from netapp-dataops-traditional netapp_dataops_cli.py config</pre>
   </div>
 
   <div class="dep know">
-    <h2><span class="badge k">AIDE MCP</span>　Agent 侧适配器（连接 AIDE RAG）</h2>
-    <p class="sub" style="font-size:14px">以下配置仅适用于 AIDE MCP。前提：Python ≥ 3.10 · uv · AIDE Retrieval/RAG Endpoint 与 OAuth2 应用信息（PKCE 或设备码流程）。MCP Server 在 Agent 侧运行，真正的检索由 AIDE 后端完成。</p>
+    <h2><span class="badge a">Active IQ MCP / DII MCP</span>　远程 HTTP（只读，无需部署）</h2>
+    <p class="sub" style="font-size:14px">两者都由托管端提供服务，客户端只需写入端点与令牌。Active IQ MCP 需先获得 Digital Advisor API 访问权限并加入早期访问计划；DII MCP 为预览功能，需要 DII 租户与有读取权限的用户或服务身份。</p>
     <div class="step"><div class="num">1</div><div style="flex:1">
-      <h3>创建 ~/.netapp 认证配置</h3>
-      <pre class="code">{
-  <span class="k">"rag_search_api_endpoint_url"</span>: <span class="s">"https://your-aide/api"</span>,
-  <span class="k">"auth_flow"</span>: <span class="s">"pkce"</span>,
-  <span class="k">"token_request_endpoint_url"</span>: <span class="s">"https://login.microsoftonline.com/&lt;tenant&gt;/oauth2/v2.0/authorize"</span>,
-  <span class="k">"token_exchange_endpoint_url"</span>: <span class="s">"https://login.microsoftonline.com/&lt;tenant&gt;/oauth2/v2.0/token"</span>,
-  <span class="k">"token_request_params"</span>: { <span class="k">"client_id"</span>: <span class="s">"your_client_id"</span>, <span class="k">"redirect_uri"</span>: <span class="s">"http://localhost:8888"</span>, <span class="k">"use_pkce"</span>: true }
-}
-<span class="c"># chmod 600 ~/.netapp（首次工具调用时触发浏览器认证）</span></pre>
+      <h3>获取端点与令牌</h3>
+      <p style="font-size:13.5px;color:var(--muted)"><b>Active IQ</b>：端点在加入早期访问计划时提供，令牌为 Digital Advisor 个人访问令牌（PAT）。<b>DII</b>：在 Admin &gt; API Access &gt; MCP Configuration 选择客户端、生成令牌并复制配置片段。令牌不要写进提示词、截图或代码仓库。</p>
     </div></div>
     <div class="step"><div class="num">2</div><div style="flex:1">
-      <h3>在 mcp.json 中注册 AIDE MCP</h3>
+      <h3>在 mcp.json 中注册</h3>
       <pre class="code">{
   <span class="k">"servers"</span>: {
-    <span class="k">"netapp-aide-mcp"</span>: {
-      <span class="k">"type"</span>: <span class="s">"stdio"</span>,
-      <span class="k">"command"</span>: <span class="s">"uvx"</span>,
-      <span class="k">"args"</span>: [<span class="s">"--from"</span>, <span class="s">"netapp-aide-mcp"</span>, <span class="s">"server"</span>]
+    <span class="k">"netapp-digital-advisor"</span>: {
+      <span class="k">"type"</span>: <span class="s">"http"</span>, <span class="k">"url"</span>: <span class="s">"&lt;MCP_ENDPOINT_URL&gt;"</span>,
+      <span class="k">"headers"</span>: { <span class="k">"Authorization"</span>: <span class="s">"&lt;PERSONAL_ACCESS_TOKEN&gt;"</span> }
+    },
+    <span class="k">"netapp-dii"</span>: {
+      <span class="k">"type"</span>: <span class="s">"http"</span>, <span class="k">"url"</span>: <span class="s">"https://&lt;DII_HOST_URL&gt;/api/v1/mcp"</span>
+      <span class="c">// 认证信息按 DII 生成的配置片段填写</span>
     }
   }
 }</pre>
@@ -774,11 +797,11 @@ uvx --from netapp-dataops-traditional netapp_dataops_cli.py config</pre>
     <span class="k">"harvest-mcp"</span>: { <span class="k">"type"</span>: <span class="s">"http"</span>,  <span class="k">"url"</span>: <span class="s">"http://your-server-ip:8082"</span> },
     <span class="k">"ontap-mcp"</span>:   { <span class="k">"type"</span>: <span class="s">"http"</span>,  <span class="k">"url"</span>: <span class="s">"http://your-server-ip:8083"</span> },
     <span class="k">"dataops-ontap"</span>: { <span class="k">"type"</span>: <span class="s">"stdio"</span>, <span class="k">"command"</span>: <span class="s">"uvx"</span>, <span class="k">"args"</span>: [<span class="s">"--from"</span>,<span class="s">"netapp-dataops-traditional"</span>,<span class="s">"netapp_dataops_ontap_mcp.py"</span>] },
-    <span class="k">"netapp-aide-mcp"</span>: { <span class="k">"type"</span>: <span class="s">"stdio"</span>, <span class="k">"command"</span>: <span class="s">"uvx"</span>, <span class="k">"args"</span>: [<span class="s">"--from"</span>,<span class="s">"netapp-aide-mcp"</span>,<span class="s">"server"</span>] },
+    <span class="k">"netapp-digital-advisor"</span>: { <span class="k">"type"</span>: <span class="s">"http"</span>, <span class="k">"url"</span>: <span class="s">"&lt;MCP_ENDPOINT_URL&gt;"</span>, <span class="k">"headers"</span>: { <span class="k">"Authorization"</span>: <span class="s">"&lt;PAT&gt;"</span> } },
     <span class="k">"netapp-docs"</span>: { <span class="k">"type"</span>: <span class="s">"http"</span>,  <span class="k">"url"</span>: <span class="s">"https://docs.netapp.com/mcp"</span>, <span class="k">"headers"</span>: { <span class="k">"Ocp-Apim-Subscription-Key"</span>: <span class="s">"&lt;your-key&gt;"</span> } }
   }
 }</pre>
-    <p style="font-size:13.5px;color:var(--muted);margin-top:10px">远程 HTTP 与 Agent 侧 stdio 服务器可共存于一个配置。AIDE MCP 与 Docs MCP 可同时注册：前者查企业私有资料，后者查官方公开文档，二者认证与后端彼此独立，AI 按问题自行选择或联合使用。</p>
+    <p style="font-size:13.5px;color:var(--muted);margin-top:10px">远程 HTTP 与本地 stdio 服务器可共存于一个配置。AI 按问题选择服务器：Harvest 看指标、Active IQ 看风险与升级建议、Docs 查官方文档、ONTAP 执行变更；各服务器的认证彼此独立。</p>
     <button class="btn" onclick="go('demo')">回到交互演示 →</button>
   </div>
 </section>
@@ -789,11 +812,14 @@ uvx --from netapp-dataops-traditional netapp_dataops_cli.py config</pre>
   资料来源：
   <a href="https://github.com/NetApp/mcp" target="_blank">NetApp MCP 服务器目录</a>
   <a href="https://github.com/NetApp/ontap-mcp" target="_blank">ONTAP MCP</a>
-  <a href="https://netapp.github.io/harvest/nightly/mcp/overview/" target="_blank">Harvest MCP 文档</a>
+  <a href="https://netapp.github.io/harvest/latest/mcp/overview/" target="_blank">Harvest MCP 文档</a>
   <a href="https://community.netapp.com/t5/Tech-ONTAP-Blogs/Harvest-Speaks-New-AI-Ready-Observability-Across-All-Your-NetApp-systems/ba-p/465909" target="_blank">Harvest Speaks 博客</a>
   <a href="https://community.netapp.com/t5/Tech-ONTAP-Blogs/New-ONTAP-MCP-AI-that-Modernizes-Your-Storage-Operations/ba-p/465968" target="_blank">ONTAP MCP 博客</a>
   <a href="https://github.com/NetApp/netapp-dataops-toolkit/blob/main/netapp_dataops_traditional/docs/mcp_server.md" target="_blank">DataOps Toolkit MCP</a>
-  <a href="https://github.com/NetApp/aide-mcp-server" target="_blank">AIDE MCP</a>
+  <a href="https://github.com/NetApp/ontap-mcp/releases/tag/v26.07.0" target="_blank">ONTAP MCP 26.07 发布说明</a>
+  <a href="https://github.com/NetApp/gcnv-mcp-server" target="_blank">GCNV MCP</a>
+  <a href="https://docs.netapp.com/us-en/digital-advisor-automation/learn-digital-advisor-mcp.html" target="_blank">Active IQ MCP</a>
+  <a href="https://docs.netapp.com/us-en/data-infrastructure-insights/mcp_overview.html" target="_blank">DII MCP</a>
   <a href="https://docs.netapp.com/us-en/about/mcp-server-learn.html" target="_blank">NetApp Docs MCP</a>
   <a href="https://docs.netapp.com/us-en/about/mcp-developer-reference.html" target="_blank">Docs MCP 开发者参考</a>
   <a href="https://www.pomerium.com/blog/top-5-agentic-gateways-for-securing-mcp-tool-calls-in-2026" target="_blank">MCP Agentic 网关(Pomerium)</a>
@@ -813,17 +839,17 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.p
 
 /* ============ architecture detail ============ */
 const archInfo={
-  clients:{t:'MCP 客户端',d:'任何支持 MCP 标准的 AI 助手都可以同时接入两个 Server：',li:['Claude Desktop / Claude Code：对话式存储运维','GitHub Copilot（VS Code 等 IDE）：开发场景内查询与申请存储','自研 Agent：基于 MCP SDK 构建企业专属存储机器人','一个 mcp.json 即可同时配置 harvest-mcp 与 ontap-mcp']},
+  clients:{t:'MCP 客户端',d:'任何支持 MCP 标准的 AI 助手都可以同时接入两个 Server：',li:['Claude Desktop / Claude Code：对话式存储运维','GitHub Copilot（VS Code 等 IDE）、Cursor：开发场景内查询与申请存储','自研 Agent：基于 MCP SDK 构建企业专属存储机器人','一个 mcp.json 可同时配置本地 stdio 与远程 HTTP 服务器']},
   hmcp:{t:'Harvest MCP Server（观察）',d:'轻量服务，坐落在你已有的指标管道之上：',li:['将自然语言问题转换为对时序库的结构化查询','覆盖健康检查、容量分析、性能诊断、增长趋势','支持本地 stdio 与远程 HTTP 两种接入方式','不替代仪表盘和告警，而是让探索式分析更快更易','若 Harvest 已部署，启用 MCP 只需多跑一个容器']},
   tsdb:{t:'时序数据库',d:'Harvest MCP 的数据底座，复用现有监控栈：',li:['支持 Prometheus、VictoriaMetrics（InfluxDB 亦可作为导出端）','存储 Harvest 采集的性能、容量、健康、硬件遥测','通过 HARVEST_TSDB_URL 环境变量指向即可','Grafana 仪表盘继续可用，与 MCP 查询互补']},
-  pollers:{t:'Harvest Pollers',d:'NetApp 开源可观测性的主力采集器（Apache 2.0）：',li:['多年生产验证，规模化采集硬件与性能指标','统一的开放指标模型（Prometheus 标准）','为 E-Series 提供与 ONTAP/StorageGRID 一致的体验','附带成套的官方 Grafana 仪表盘']},
-  sources:{t:'被监控系统',d:'Harvest 统一纳管整个 NetApp 数据资产：',li:['ONTAP 集群（AFF / FAS / FSx / CVO 等）','StorageGRID 对象存储','E-Series 阵列（预览，已成为一等公民）','Cisco Nexus 交换机——存储网络也在视野内']},
-  omcp:{t:'ONTAP MCP Server（操作）',d:'轻量 Go 服务，以 Docker 容器交付：',li:['托管工具 Schema：每个工具对应一个明确的管理动作','参数校验与护栏：动作可预测、结果结构化','集中凭证管理：ontap.yaml 一次注册，调用无需带凭证','多集群路由：单一端点纳管全部集群','支持 --read-only（只读）与 --stateless（代理兼容）']},
+  pollers:{t:'Harvest Pollers',d:'NetApp 开源可观测性的主力采集器（Apache 2.0）：',li:['多年生产验证，规模化采集硬件与性能指标','统一的开放指标模型（Prometheus 标准）','E-Series 与 ONTAP、StorageGRID 使用一致的指标体验','附带成套的官方 Grafana 仪表盘']},
+  sources:{t:'被监控系统',d:'Harvest 统一纳管整个 NetApp 数据资产：',li:['ONTAP 集群（AFF / FAS / FSx / CVO 等）','StorageGRID 对象存储','E-Series 阵列','Cisco Nexus 交换机——存储网络也在视野内']},
+  omcp:{t:'ONTAP MCP Server（操作）',d:'轻量 Go 服务，以 Docker 容器交付：',li:['托管工具 Schema：每个工具对应一个明确的管理动作','参数校验与护栏：动作可预测、结果结构化','集中凭证管理：ontap.yaml 一次注册，调用无需带凭证','多集群路由：单一端点纳管全部集群','支持 --read-only（只读）、--stateless 与 --json-response（代理兼容）','26.07 起原生 OAuth、HTTPS，并提供 Helm chart']},
   clusters:{t:'ONTAP 集群',d:'MCP Server 通过 ONTAP REST API 与集群通信：',li:['支持 AFX / AFF / FAS / ONTAP Select / FSx for ONTAP / CVO','需要集群管理员凭证与网络连通','所有操作最终都是标准 REST API 调用，可审计','返回结果被规范化后交给 AI 继续编排后续步骤']},
   dops:{t:'DataOps Toolkit MCP（自助服务 ×4）',d:'面向开发者/数据科学家的 Python 本地 stdio 服务器家族：',li:['ONTAP 版：卷创建 / FlexClone 克隆 / 快照 / SnapMirror / FlexCache / CIFS','Azure NetApp Files 版：ANF 卷自助开通与管理','Google Cloud NetApp Volumes 版：GCNV 卷自助开通与管理','Kubernetes 版：基于 Trident CSI 自助开通卷与 JupyterLab 工作区','uvx 一条命令即可运行，无需预装（netapp-dataops-traditional）']},
   dtargets:{t:'自助服务对象',d:'DataOps Toolkit MCP 覆盖本地与三大云的数据管理：',li:['ONTAP：近乎瞬时的卷开通、克隆与快照（FlexClone）','Azure NetApp Files：Azure 原生文件服务','Google Cloud NetApp Volumes：GCP 原生文件服务','Kubernetes：Trident CSI 驱动的 PVC 与 AI/ML 工作区']},
-  kmcp:{t:'知识检索 MCP（两条独立路径）',d:'MCP 负责把后端检索能力标准化为 Agent 工具，本身不执行 RAG：',li:['AIDE MCP：Agent 侧 stdio 拉起，暴露 netapp_data_engine_search，连接 AIDE Retrieval/RAG Endpoint','AIDE 应用也可绕过 MCP，直接调用 RAG API','NetApp Docs MCP：NetApp 托管的远程 HTTP 服务，提供 search / fetch / ask / health_check 四个工具','两者身份、权限与后端彼此独立；Workload Factory GenAI KB MCP 已于 2026-08 归档']},
-  ktargets:{t:'两个独立知识来源',d:'数据位置和治理边界由所选来源决定：',li:['AIDE：AFX / ONTAP 上的企业私有数据，本地或混合云，数据不出企业边界','docs.netapp.com：NetApp 公开发布的产品文档，目前仅英文','Docs MCP 不接收私有数据，适合核对兼容性、规格与操作步骤的官方说法','回答应附出处：企业文档注明文件与章节，官方文档注明 docs.netapp.com 页面链接']}
+  kmcp:{t:'NetApp 托管 MCP（远程 HTTP · 只读）',d:'客户端只需配置 URL 与令牌，无需部署；全部只读：',li:['Docs MCP：search / fetch / ask / health_check，检索 docs.netapp.com 公开文档，订阅 key 认证','Active IQ MCP：search、summary、risks、upgradeAdvisor、cases、autosupport 等，PAT 认证，需加入早期访问计划','DII MCP（预览）：26 个只读工具，令牌在 DII 的 Admin > API Access > MCP Configuration 生成','Digital Coach MCP（早期访问）：7 个综合推理工具，JWT/OAuth 令牌 60 分钟过期']},
+  ktargets:{t:'NetApp 侧数据源',d:'数据来自 NetApp 已掌握或租户内的信息，不需要直连现场设备：',li:['docs.netapp.com：已发布的产品文档，目前仅英文','Digital Advisor：系统已上传的 AutoSupport 分析结果','DII 租户：采集器汇总的库存、遥测、日志与告警','Hardware Universe、知识库、EMS 事件：供 Digital Coach 综合推理','结果均受登录身份权限限制；需要变更时交由 ONTAP MCP 等操作类服务器执行']}
 };
 document.querySelectorAll('.arch-node').forEach(n=>{
   n.addEventListener('click',()=>{
@@ -844,7 +870,8 @@ const toolCats=[
   {ic:'📁',name:'CIFS/SMB 共享',desc:'Windows 文件共享管理',tools:[['create_cifs_share',1],['update_cifs_share',1],['delete_cifs_share',1]]},
   {ic:'📤',name:'NFS 导出策略',desc:'导出策略与规则的访问控制',tools:[['create_nfs_export_policies',1],['update_nfs_export_policies',1],['delete_nfs_export_policies',1],['create_nfs_export_policies_rules',1],['update_nfs_export_policies_rules',1],['delete_nfs_export_policies_rules',1]]},
   {ic:'📈',name:'性能管理（QoS）',desc:'QoS 策略查询与管理',tools:[['list_qos_policies',0],['create_qos_policy',1],['update_qos_policy',1],['delete_qos_policy',1]]},
-  {ic:'🏢',name:'SVM 管理',desc:'Storage VM 的创建与管理',tools:[['create_svm',1],['update_svm',1],['delete_svm',1]]},
+  {ic:'🏢',name:'SVM 管理',desc:'Storage VM 的创建与管理，以及 SVM 对等清理',tools:[['create_svm',1],['update_svm',1],['delete_svm',1],['delete_svm_peer',1]]},
+  {ic:'🧩',name:'NFS / CIFS 服务与 DNS',desc:'SVM 级协议服务与名称解析（26.07 新增）',tools:[['create_nfs_service',1],['update_nfs_service',1],['delete_nfs_service',1],['create_cifs_service',1],['update_cifs_service',1],['delete_cifs_service',1],['create_dns',1],['delete_dns',1]]},
   {ic:'🗂️',name:'Qtree 管理',desc:'Qtree 子目录级管理',tools:[['create_qtree',1],['update_qtree',1],['delete_qtree',1]]},
   {ic:'🌐',name:'网络接口',desc:'IP 逻辑接口（LIF）管理',tools:[['create_network_ip_interface',1],['update_network_ip_interface',1],['delete_network_ip_interface',1]]},
   {ic:'🧱',name:'LUN 与 igroup（SAN）',desc:'块存储 LUN、启动器组与映射',tools:[['create_lun',1],['update_lun',1],['delete_lun',1],['create_igroup',1],['update_igroup',1],['delete_igroup',1],['add_igroup_initiator',1],['remove_igroup_initiator',1],['create_lun_map',1],['delete_lun_map',1]]},
@@ -979,19 +1006,21 @@ const scenarios=[
     R({volumes:[{pvc:'ntap-dvp-ds-alice',size:'2TB',status:'Bound',backend:'ONTAP-NAS'}]}),
     {type:'ai',text:'✅ 工作区 <span class="kw">ds-alice</span> 已就绪：访问地址 <span class="kw">http://k8s.corp.local:30888</span>，2TB 持久卷已 Bound（ONTAP-NAS 后端）。之后还可以对整个工作区做克隆/快照，实验分支管理像管代码一样轻。'}
    ]},
-  /* ---- 知识检索类 ---- */
-  {id:'aide',grp:'k',ic:'🧠',name:'企业知识库 RAG 问答',brief:'AIDE 企业文档 + 官方文档核对',
-   card:'"去我们知识库找 SnapMirror 回切的标准步骤"——AIDE MCP 检索企业运维文档，Docs MCP 用官方文档核对命令，答案带出处。',
+  /* ---- 洞察与知识类 ---- */
+  {id:'aiq',grp:'k',ic:'🩺',name:'风险巡检与升级准备',brief:'Active IQ 风险与升级建议 + 官方文档核对',
+   card:'"哪些集群有关键风险？能不能升级？"——Active IQ MCP 基于 AutoSupport 给出风险与升级阻断项，Docs MCP 用官方文档核对升级路径。',
    steps:[
-    {type:'user',text:'客户问 SnapMirror 切换到 DR 站点后如何回切。去我们的知识库里找标准步骤，再用官方文档核对一遍，总结成 checklist，注明出处。'},
-    {type:'ai',text:'我先用 AIDE MCP 检索企业内部文档，再用 NetApp Docs MCP 查官方文档核对关键命令（Docs MCP 目前仅支持英文，我用英文检索）。'},
-    T('k','netapp_data_engine_search',{query:'SnapMirror failover failback 回切标准流程',top_k:3}),
-    R({results:[{doc:'DR-Runbook-v3.pdf',section:'§4.2 回切流程',score:0.93},{doc:'ONTAP数据保护指南.docx',section:'snapmirror resync',score:0.89},{doc:'容灾演练记录-2025Q4.md',section:'问题与改进',score:0.81}]}),
-    T('w','netapp_docs_search',{query:'SnapMirror reactivate original source volume after disaster recovery'}),
-    R({results:[{title:'Reactivate the original source volume',site:'docs.netapp.com/us-en/ontap'},{title:'Resynchronize a SnapMirror relationship',site:'docs.netapp.com/us-en/ontap'}]}),
-    T('w','netapp_docs_fetch',{page:'Reactivate the original source volume'}),
-    R({steps:['snapmirror create (reverse: DR → source)','snapmirror resync','snapmirror quiesce / break','snapmirror resync (original direction)']}),
-    {type:'ai',text:'📋 依据 <span class="kw">DR-Runbook v3 §4.2</span>，并与官方文档 <span class="kw">Reactivate the original source volume</span> 核对一致，回切 checklist：<br>① 确认 DR 端业务静默、数据一致；<br>② <code style="font-family:var(--mono);font-size:12px">resync</code> 建立反向同步（DR → 生产），等待追平；<br>③ 割接窗口内 <code style="font-family:var(--mono);font-size:12px">break</code> 反向关系，业务切回生产；<br>④ 原方向 <code style="font-family:var(--mono);font-size:12px">resync</code> 恢复正常保护。<br>2025Q4 演练记录提示：第②步注意带宽限速避免影响生产。以上每一步我都可以用 ONTAP MCP 直接执行。'}
+    {type:'user',text:'看一下华东区域这批 ONTAP 集群：有哪些高风险问题？准备在季度窗口升级，帮我列出阻断项，并用官方文档核对升级路径。'},
+    {type:'ai',text:'我先用 Active IQ MCP 定位这批系统并拉取风险和升级建议，再用 Docs MCP 查官方升级文档核对（Docs MCP 目前仅支持英文，我用英文检索）。'},
+    T('k','search',{text:'华东生产'}),
+    R({watchlist:'华东生产',clusters:['sh-prod-01','sh-prod-02','hz-dr-01']}),
+    T('k','risks',{watchlist:'华东生产',severity:['critical','high']}),
+    R({critical:1,high:3,top:[{cluster:'sh-prod-01',risk:'SP 固件存在已知缺陷',action:'升级 SP 固件'},{cluster:'hz-dr-01',risk:'卷未启用自主勒索防护',action:'启用 ARP'}]}),
+    T('k','upgradeAdvisor',{cluster:'sh-prod-01',target:'推荐版本'}),
+    R({blockers:1,warnings:2,blocker:'需先升级 SP 固件',warnings_detail:['一个 LIF 不在 home port','存在未完成的 SnapMirror 传输']}),
+    T('w','netapp_docs_search',{query:'ONTAP upgrade prechecks and supported upgrade paths'}),
+    R({results:[{title:'Prepare for an ONTAP upgrade',site:'docs.netapp.com/us-en/ontap'},{title:'Supported ONTAP upgrade paths',site:'docs.netapp.com/us-en/ontap'}]}),
+    {type:'ai',text:'📋 华东 3 个集群共 <span class="kw">1 个严重、3 个高风险</span>。升级前须处理：<br>① sh-prod-01 先升级 SP 固件（升级阻断项）；<br>② 让 LIF 回到 home port，等待 SnapMirror 传输完成（警告项）；<br>③ hz-dr-01 建议启用自主勒索防护。<br>升级路径已与官方文档 <span class="kw">Supported ONTAP upgrade paths</span> 核对。以上只读结论；需要执行的变更，我可以转交 ONTAP MCP，在你确认后操作。'}
    ]},
   /* ---- 联动闭环 ---- */
   {id:'loop',grp:'x',ic:'🔁',name:'巡检 + 扩容闭环',brief:'Harvest 发现问题 → ONTAP 解决问题',
@@ -1027,14 +1056,14 @@ const scenarios=[
 ];
 
 /* scenario cards */
-const grpBadge={h:'<span class="badge h">Harvest MCP · 观察</span>',o:'<span class="badge o">ONTAP MCP · 操作</span>',d:'<span class="badge d">DataOps Toolkit MCP · 自助服务</span>',k:'<span class="badge k">AIDE / Docs MCP · 知识检索</span>',x:'<span class="badge h">观察</span> + <span class="badge o">操作</span>'};
+const grpBadge={h:'<span class="badge h">Harvest MCP · 观察</span>',o:'<span class="badge o">ONTAP MCP · 操作</span>',d:'<span class="badge d">DataOps Toolkit MCP · 自助服务</span>',k:'<span class="badge a">Active IQ / Docs MCP · 洞察与知识</span>',x:'<span class="badge h">观察</span> + <span class="badge o">操作</span>'};
 document.getElementById('scenCards').innerHTML=scenarios.map(s=>
   '<div class="card">'+grpBadge[s.grp]+'<div class="ic" style="margin-top:8px">'+s.ic+'</div><h3>'+s.name+'</h3><p>'+s.card+'</p>'+
   '<button class="btn" style="margin-top:auto;align-self:flex-start" onclick="runScen(\''+s.id+'\')">▶ 在演示中运行</button></div>'
 ).join('');
 
 /* demo sidebar with groups */
-const grpNames={h:'🔭 观察 · HARVEST MCP',o:'🔧 操作 · ONTAP MCP',d:'🧪 自助服务 · DATAOPS TOOLKIT MCP',k:'📚 知识检索 · AIDE / Docs MCP',x:'🔁 观察 + 操作 · 联动闭环'};
+const grpNames={h:'🔭 观察 · HARVEST MCP',o:'🔧 操作 · ONTAP MCP',d:'🧪 自助服务 · DATAOPS TOOLKIT MCP',k:'🩺 洞察与知识 · ACTIVE IQ / DOCS MCP',x:'🔁 观察 + 操作 · 联动闭环'};
 let sideHtml='',lastGrp='';
 scenarios.forEach(s=>{
   if(s.grp!==lastGrp){sideHtml+='<div class="grp">'+grpNames[s.grp]+'</div>';lastGrp=s.grp;}
@@ -1049,7 +1078,7 @@ const body=()=>document.getElementById('chatBody');
 function scrollDown(){const b=body();b.scrollTop=b.scrollHeight;}
 function el(html){const d=document.createElement('div');d.innerHTML=html;return d.firstElementChild;}
 function fmt(o){return JSON.stringify(o,null,2);}
-const srvMeta={h:{n:'Harvest MCP',b:'h',c:''},o:{n:'ONTAP MCP',b:'o',c:' o'},d:{n:'DataOps MCP',b:'d',c:' d'},k:{n:'AIDE MCP',b:'k',c:' k'},w:{n:'Docs MCP',b:'k',c:' k'}};
+const srvMeta={h:{n:'Harvest MCP',b:'h',c:''},o:{n:'ONTAP MCP',b:'o',c:' o'},d:{n:'DataOps MCP',b:'d',c:' d'},k:{n:'Active IQ MCP',b:'a',c:' k'},w:{n:'Docs MCP',b:'k',c:' k'}};
 
 async function typeText(node,text,token,speed){
   const plain=text.replace(/<[^>]+>/g,'');
