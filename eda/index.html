@@ -3,387 +3,1061 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EDA 数据流与 NetApp AFX 企业级存储价值演示</title>
+<title>EDA 数据流与 NetApp AFX · 交互演示</title>
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
 <style>
 :root{
-  --bg:#f3f6fb; --bg2:#ffffff; --panel:#ffffff; --panel2:#f2f6fc;
-  --line:#d8e2ef; --txt:#17293f; --txt2:#46607c; --dim:#7c90a8;
-  --blue:#0067c5; --cyan:#0e93c9; --teal:#0b9d7c; --orange:#d9871c; --red:#d64545;
-  --grad:linear-gradient(135deg,#0067c5,#19b1e6);
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--txt);font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;min-height:100vh}
-body::before{content:"";position:fixed;inset:0;background:
-  radial-gradient(ellipse 60% 40% at 70% -10%,rgba(0,103,197,.08),transparent),
-  radial-gradient(ellipse 50% 35% at 10% 110%,rgba(25,177,230,.07),transparent);pointer-events:none}
-.wrap{max-width:1280px;margin:0 auto;padding:24px 28px 60px;position:relative}
-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px}
-.logo{display:flex;align-items:center;gap:12px}
-.logo-mark{width:38px;height:38px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;letter-spacing:-.5px}
-h1{font-size:21px;font-weight:700}
-h1 span{color:var(--blue)}
-.sub{color:var(--txt2);font-size:13px;margin:4px 0 18px}
-.badge{font-size:12px;color:var(--blue);border:1px solid rgba(0,103,197,.35);border-radius:20px;padding:5px 14px;background:rgba(0,103,197,.06)}
-/* tabs */
-.tabs{display:flex;gap:8px;margin:10px 0 22px;flex-wrap:wrap}
-.tab{padding:10px 20px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--txt2);cursor:pointer;font-size:14px;transition:.25s;user-select:none;box-shadow:0 1px 3px rgba(23,41,63,.05)}
-.tab:hover{color:var(--blue);border-color:var(--blue)}
-.tab.on{background:var(--grad);color:#fff;border-color:transparent;font-weight:600;box-shadow:0 4px 14px rgba(0,103,197,.3)}
-.page{display:none;animation:fade .4s}
-.page.on{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(23,41,63,.05)}
-h2{font-size:17px;margin-bottom:6px}
-h2 em{font-style:normal;color:var(--blue)}
-.hint{color:var(--dim);font-size:12.5px;margin-bottom:14px}
-/* ---------- pipeline ---------- */
-.pipe-zone{margin-bottom:16px}
-.phase-label{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--txt2);margin:14px 0 10px}
-.phase-label b{color:var(--txt);font-size:14px}
-.phase-label .tag{font-size:11px;padding:2px 10px;border-radius:12px}
-.tag.fe{background:rgba(14,147,201,.1);color:var(--cyan);border:1px solid rgba(14,147,201,.35)}
-.tag.be{background:rgba(217,135,28,.1);color:var(--orange);border:1px solid rgba(217,135,28,.35)}
-.pipe-row{display:flex;align-items:stretch;gap:0}
-.stage{flex:1;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;cursor:pointer;transition:.25s;text-align:center;position:relative;min-width:0}
-.stage:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,103,197,.12)}
-.stage.sel{border-color:var(--blue);background:linear-gradient(160deg,rgba(25,177,230,.1),rgba(0,103,197,.08));box-shadow:0 0 0 3px rgba(0,103,197,.12)}
-.stage .ico{font-size:22px;margin-bottom:6px}
-.stage .nm{font-size:13.5px;font-weight:650;line-height:1.3}
-.stage .en{font-size:10.5px;color:var(--dim);margin-top:3px;letter-spacing:.2px}
-.stage .cap{margin-top:7px;font-size:10.5px;color:var(--blue);background:rgba(0,103,197,.08);border-radius:8px;padding:2px 6px;display:inline-block}
-.conn{width:46px;flex:none;display:flex;align-items:center;justify-content:center;position:relative}
-.conn::before{content:"";position:absolute;left:4px;right:4px;top:50%;height:2px;background:#c3d2e5}
-.conn::after{content:"";position:absolute;right:2px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-left-color:#c3d2e5}
-.dot{position:absolute;top:50%;left:0;width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px rgba(0,103,197,.6);transform:translateY(-50%);animation:flow 1.6s linear infinite;opacity:0}
-.dot.d2{animation-delay:.8s}
-@keyframes flow{0%{left:2px;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:calc(100% - 10px);opacity:0}}
-.turn{display:flex;justify-content:center;margin:2px 0}
-.turn svg{opacity:.85}
-/* detail panel */
-.detail{margin-top:18px;display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
-@media(max-width:900px){.detail{grid-template-columns:1fr}}
-.d-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.d-head .ico{font-size:28px}
-.d-head .t{font-size:16.5px;font-weight:700}
-.d-head .e{font-size:12px;color:var(--dim)}
-.kv{display:grid;grid-template-columns:86px 1fr;gap:8px 12px;font-size:13px}
-.kv .k{color:var(--dim);padding-top:1px}
-.kv .v{color:var(--txt);line-height:1.55}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-size:11.5px;padding:3px 10px;border-radius:14px;background:rgba(0,103,197,.07);border:1px solid rgba(0,103,197,.25);color:#0b5aa5}
-.afx-box{background:linear-gradient(160deg,rgba(11,157,124,.06),rgba(0,103,197,.04));border:1px solid rgba(11,157,124,.35)}
-.afx-box h3{font-size:14px;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.afx-box ul{list-style:none}
-.afx-box li{font-size:13px;line-height:1.6;padding:6px 0 6px 22px;position:relative;color:var(--txt);border-bottom:1px dashed rgba(11,157,124,.2)}
-.afx-box li:last-child{border:none}
-.afx-box li::before{content:"✓";position:absolute;left:2px;color:var(--teal);font-weight:700}
-.io-meter{margin-top:14px}
-.io-meter .row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:12px}
-.io-meter .lb{width:98px;color:var(--txt2);flex:none}
-.io-meter .bar{flex:1;height:9px;background:rgba(23,41,63,.07);border-radius:6px;overflow:hidden}
-.io-meter .fill{height:100%;border-radius:6px;background:var(--grad);width:0;transition:width .8s ease}
-.io-meter .pc{width:38px;text-align:right;color:var(--blue);font-weight:600;flex:none}
-/* R/W split bar */
-.rw-wrap{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
-.rw-title{font-size:12px;color:var(--txt2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.rw-title b{color:var(--txt)}
-.rw-bar{display:flex;height:24px;border-radius:8px;overflow:hidden;background:rgba(23,41,63,.06)}
-.rw-bar .rd,.rw-bar .wr{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap;transition:width .8s ease;min-width:0;overflow:hidden}
-.rw-bar .rd{background:linear-gradient(90deg,#0067c5,#19b1e6)}
-.rw-bar .wr{background:linear-gradient(90deg,#0b9d7c,#3cc9a7)}
-.rw-legend{display:flex;gap:16px;margin-top:6px;font-size:11px;color:var(--dim)}
-.rw-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.rw-legend .li-r i{background:#0e83d4}.rw-legend .li-w i{background:#0b9d7c}
-.rw-note{font-size:11.5px;color:var(--dim);margin-top:6px;line-height:1.5}
-.autobtn{margin-left:auto;display:flex;gap:8px}
-button.btn{background:var(--grad);border:none;color:#fff;padding:9px 20px;border-radius:9px;font-size:13.5px;cursor:pointer;font-weight:600;transition:.2s;font-family:inherit}
-button.btn:hover{filter:brightness(1.08);box-shadow:0 4px 14px rgba(0,103,197,.35)}
-button.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt2)}
-button.btn.ghost:hover{border-color:var(--blue);color:var(--blue);box-shadow:none}
-/* ---------- tab2 data ---------- */
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:900px){.grid2{grid-template-columns:1fr}}
-.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-@media(max-width:900px){.stat-strip{grid-template-columns:repeat(2,1fr)}}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(23,41,63,.05)}
-.stat .num{font-size:25px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.stat .lb{font-size:12px;color:var(--txt2);margin-top:5px;line-height:1.4}
-.hbar{margin:10px 0}
-.hbar .t{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
-.hbar .t b{color:var(--txt)}.hbar .t span{color:var(--blue);font-weight:600}
-.hbar .bg{height:12px;background:rgba(23,41,63,.07);border-radius:7px;overflow:hidden}
-.hbar .fg{height:100%;border-radius:7px;width:0;transition:width 1s cubic-bezier(.2,.7,.3,1)}
-.cmp-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
-.cmp-table th{background:rgba(0,103,197,.08);padding:10px 8px;font-size:12.5px;text-align:left;color:#0b5aa5}
-.cmp-table td{padding:9px 8px;border-bottom:1px solid var(--line);color:var(--txt2);line-height:1.45;vertical-align:top}
-.cmp-table td:first-child{color:var(--txt);font-weight:600;white-space:nowrap}
-.cmp-table tr:last-child td{border:none}
-.fe-c{color:var(--cyan)!important}.be-c{color:var(--orange)!important}
-/* ---------- tab3 AFX ---------- */
-.arch{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;overflow:hidden;box-shadow:0 2px 10px rgba(23,41,63,.05)}
-.arch svg{width:100%;height:auto;display:block}
-.vcards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
-@media(max-width:900px){.vcards{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.vcards{grid-template-columns:1fr}}
-.vc{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;transition:.25s;cursor:default;box-shadow:0 2px 8px rgba(23,41,63,.05)}
-.vc:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 8px 20px rgba(11,157,124,.15)}
-.vc .ic{font-size:22px;margin-bottom:8px}
-.vc .tt{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--txt)}
-.vc .tt small{display:block;font-weight:400;font-size:10.5px;color:var(--dim);margin-top:2px}
-.vc p{font-size:12.5px;color:var(--txt2);line-height:1.6}
-/* ---------- tab4 race ---------- */
-.race-ctrl{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:18px}
-.race-ctrl label{font-size:13px;color:var(--txt2)}
-input[type=range]{accent-color:var(--blue);width:180px;vertical-align:middle}
-.lane{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-bottom:14px}
-.lane .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:14px}
-.lane .hd b{font-size:14.5px}
-.lane .hd .tm{font-variant-numeric:tabular-nums;color:var(--blue);font-weight:700}
-.lane.legacy .hd .tm{color:var(--orange)}
-.track{height:26px;background:rgba(23,41,63,.07);border-radius:8px;position:relative;overflow:hidden}
-.track .prog{position:absolute;inset:0 auto 0 0;width:0;border-radius:8px;transition:none}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+
+/* ══════════ EDA 专用组件 ══════════ */
+/* 幕 2 · 流程 */
+.pipe{display:grid;grid-template-columns:150px 1fr;gap:9px 12px;align-items:center}
+.lane-lb b{display:block;font-size:13px}
+.lane-lb span{font-size:11px;color:var(--dim)}
+.lane-lb.fe b{color:#0b78b0} .lane-lb.be b{color:var(--orange)}
+.stgs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.stg{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:8px 11px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:9px;box-shadow:var(--sh)}
+.stg:hover{border-color:var(--blue2);transform:translateY(-2px)}
+.stg.sel{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.08),rgba(0,103,197,.02));box-shadow:0 3px 12px rgba(0,103,197,.16)}
+.stg .ic{font-size:19px}
+.stg .nm{font-size:12.8px;font-weight:750;line-height:1.3}
+.stg .cp{font-family:var(--mono);font-size:10px;color:var(--blue)}
+.dhd{display:flex;align-items:center;gap:11px;margin-bottom:8px}
+.dico{font-size:26px}
+.dnm{font-size:16px;font-weight:800}
+.den{font-size:11.5px;color:var(--faint)}
+.drow{display:grid;grid-template-columns:70px 1fr;gap:10px;font-size:12.6px;padding:4px 0;color:var(--ink)}
+.drow>span{color:var(--faint)}
+.dchips{display:flex;flex-wrap:wrap;gap:5px}
+.dchips i{font-style:normal;font-size:11.5px;color:var(--blue);background:rgba(0,103,197,.07);border:1px solid rgba(0,103,197,.2);border-radius:99px;padding:1px 9px}
+.mini{font-size:11.5px;color:var(--dim);margin-bottom:6px;display:flex;justify-content:space-between}
+.mrow{display:grid;grid-template-columns:76px 1fr 36px;gap:8px;align-items:center;font-size:11.5px;color:var(--dim);margin-bottom:5px}
+.mrow .bg,.bl .bg,.cmpbar .bg{height:9px;background:var(--panel3);border-radius:99px;overflow:hidden}
+.mrow .fg,.bl .fg,.cmpbar .fg{height:100%;width:0;border-radius:99px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.mrow .fg{background:linear-gradient(90deg,var(--blue),#19b1e6)}
+.mrow b{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink)}
+.rw{display:flex;height:22px;border-radius:7px;overflow:hidden;background:var(--panel3)}
+.rw div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;width:0;transition:width .8s cubic-bezier(.2,.8,.2,1);white-space:nowrap;overflow:hidden}
+.rw .r{background:linear-gradient(90deg,#0067c5,#19b1e6)} .rw .w{background:linear-gradient(90deg,#0c8e86,#3cc3a8)}
+.rwnote{font-size:11.5px;color:var(--dim);margin-top:7px}
+/* 条形 */
+.vh{font-size:13.5px;font-weight:750;margin-bottom:12px}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bl{display:grid;grid-template-columns:190px 1fr 50px;gap:12px;align-items:center;font-size:12.6px;color:var(--dim)}
+.bl .bg{height:14px}
+.bl b{font-family:var(--mono);color:var(--ink);text-align:right}
+/* 图示说明 */
+.archmsg{margin-top:9px;font-size:12.6px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:38px}
+.pls{animation:pls 2s infinite}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.35}}
+#newNode,#newShelf{transition:opacity .45s}
+#mvVol{transition:transform .9s cubic-bezier(.5,.1,.2,1)}
+/* 幕 9 · 滑块 */
+.sl{display:grid;grid-template-columns:110px 1fr 80px;gap:12px;align-items:center;font-size:12.6px;color:var(--dim);margin-bottom:8px}
+.sl input{accent-color:var(--blue);width:100%}
+.sl b{font-family:var(--mono);color:var(--blue);text-align:right}
+.cmpbar{display:grid;grid-template-columns:110px 1fr 80px;gap:12px;align-items:center;font-size:12.6px;color:var(--dim);margin-top:12px}
+.cmpbar .bg{height:22px;border-radius:7px}
+.cmpbar .fg{border-radius:7px}
+.cmpbar b{font-family:var(--mono);color:var(--ink);text-align:right}
+/* 幕 12 · 回归赛跑 */
+.lane{border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin-bottom:11px;background:var(--panel2)}
+.lhd{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13.5px}
+.lhd .tm{font-family:var(--mono);font-weight:800;color:var(--blue)}
+.lane.legacy .lhd .tm{color:var(--orange)}
+.trk{height:28px;background:rgba(21,35,65,.07);border-radius:8px;position:relative;overflow:hidden}
+.trk .prog{position:absolute;inset:0 auto 0 0;width:0;border-radius:8px}
 .lane.afx .prog{background:linear-gradient(90deg,#0067c5,#19b1e6)}
-.lane.legacy .prog{background:linear-gradient(90deg,#d9871c,#f2b45c)}
-.track .jobs{position:absolute;inset:0;display:flex;align-items:center;padding-left:10px;font-size:11.5px;color:#17293f;font-weight:600;text-shadow:0 1px 2px rgba(255,255,255,.6)}
-.lane .meta{display:flex;gap:22px;margin-top:9px;font-size:12px;color:var(--dim)}
-.lane .meta b{color:var(--txt2)}
-.race-note{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.6}
-.result-banner{display:none;margin-top:14px;padding:14px 18px;border-radius:12px;background:linear-gradient(135deg,rgba(11,157,124,.08),rgba(25,177,230,.06));border:1px solid rgba(11,157,124,.4);font-size:14px;line-height:1.6}
-.result-banner b{color:var(--teal)}
-footer{margin-top:34px;text-align:center;color:var(--dim);font-size:11.5px;line-height:1.7}
-.pulse{animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.lane.legacy .prog{background:linear-gradient(90deg,#d5820f,#f2b45c)}
+.trk .jobs{position:absolute;inset:0;display:flex;align-items:center;padding-left:11px;font-size:11.8px;font-weight:650;color:var(--ink)}
+.lmeta{display:flex;gap:22px;margin-top:8px;font-size:12px;color:var(--faint);flex-wrap:wrap}
+.lmeta b{color:var(--dim)}
+.result{display:none;margin-top:4px;padding:11px 15px;border-radius:11px;background:rgba(14,154,98,.07);border:1px solid rgba(14,154,98,.3);font-size:13px}
+.result b{color:var(--green)}
+@media(max-width:1080px){.pipe{grid-template-columns:1fr}.stgs{grid-template-columns:repeat(2,minmax(0,1fr))}.bl{grid-template-columns:120px 1fr 44px}}
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
 <header>
-  <div class="logo">
-    <div class="logo-mark">N</div>
-    <div>
-      <h1>EDA 全流程数据挑战 <span>×</span> NetApp AFX 企业级存储</h1>
-    </div>
-  </div>
-  <div class="badge">交互式客户演示 · Interactive Demo</div>
+  <div class="brand"><b>NetApp AFX × EDA</b><span>SEMICONDUCTOR · 2026</span></div>
+  <nav id="nav"></nav>
 </header>
-<div class="sub">从 RTL 到 Tapeout：看清每个阶段的数据流与 IO 特征，理解解耦式全闪存储如何加速芯片研发</div>
 
-<div class="tabs">
-  <div class="tab on" data-p="p1">① EDA 流程与数据流</div>
-  <div class="tab" data-p="p2">② 数据类型与 IO 特征</div>
-  <div class="tab" data-p="p3">③ AFX 架构与价值</div>
-  <div class="tab" data-p="p4">④ 场景对比演示</div>
-</div>
+<div class="stage">
+  <div class="track" id="track">
 
-<!-- ================= PAGE 1 ================= -->
-<div class="page on" id="p1">
-  <div class="card pipe-zone">
-    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px">
-      <div>
-        <h2>芯片设计全流程 <em>数据流动画</em></h2>
-        <div class="hint">点击任意阶段查看数据类型、IO 特征与 AFX 价值；数据包沿流程持续流动</div>
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp AFX · EDA Storage</span></div>
+      <div class="big an" style="--d:.14s">EDA 全流程数据流</div>
+      <div class="sub an" style="--d:.26s">从 RTL 到 Tapeout，看清每个阶段的 IO 特征与存储瓶颈</div>
+      <p class="desc an" style="--d:.34s">芯片研发同时产生数亿小文件和 TB 级大文件。本演示逐阶段拆解数据形态与 IO 模式，说明解耦式全闪存储 NetApp AFX 如何让计算农场与 EDA License 少等 IO。</p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">EDA 数据流</div>
+        <div class="chip" data-jump="4">IO 特征</div>
+        <div class="chip" data-jump="6">AFX 架构</div>
+        <div class="chip" data-jump="9">数据管理</div>
+        <div class="chip" data-jump="12">回归演示</div>
+        <div class="chip" data-jump="13">选型与 POC</div>
       </div>
-      <div class="autobtn">
+      <div class="an" style="--d:.56s;margin-top:30px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>Overview</span></div>
+        <h1>一套存储，两种<span class="g">截然不同的负载</span></h1>
+        <p class="lead">前端验证是海量小文件与元数据风暴，后端签核是大文件与持续带宽。点击下方任一章节直接进入。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="dc" style="--ac:#0067c5" data-jump="2"><div class="hd"><span class="nm">EDA 数据流</span><span class="ct">2 幕</span></div>
+          <ul><li>8 个阶段的数据类型与规模</li><li>前端与后端负载对照</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#0e93c9" data-jump="4"><div class="hd"><span class="nm">IO 特征</span><span class="ct">2 幕</span></div>
+          <ul><li>文件规模与大小分布</li><li>元数据瓶颈如何传导到 License</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#6a5ad4" data-jump="6"><div class="hd"><span class="nm">AFX 架构</span><span class="ct">3 幕</span></div>
+          <ul><li>控制器与存储柜解耦扩展</li><li>单一存储池与零拷贝卷移动</li><li>pNFS 并行直连</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#0c8e86" data-jump="9"><div class="hd"><span class="nm">数据管理</span><span class="ct">3 幕</span></div>
+          <ul><li>FlexClone 工作区与 IP 保护</li><li>FlexCache 多站点与 QoS</li><li>全局重删与分层</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#d5820f" data-jump="12"><div class="hd"><span class="nm">回归演示</span><span class="ct">1 幕</span></div>
+          <ul><li>夜间回归：双控 NAS 与 AFX 对照</li><li>机制示意，非实测</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#0e9a62" data-jump="13"><div class="hd"><span class="nm">选型与 POC</span><span class="ct">2 幕</span></div>
+          <ul><li>7 项 POC 验证方法</li><li>版本前提与价值总结</li></ul><div class="go">进入 →</div></div>
+      </div>
+      <div class="kpis an" style="--d:.2s;margin-top:13px">
+        <div class="kpi"><b>8</b><span>覆盖的设计阶段：规格 → Tapeout</span></div>
+        <div class="kpi v"><b>NAS + S3</b><span>AFX 提供的数据访问协议</span></div>
+        <div class="kpi t"><b>SAZ</b><span>全部磁盘组成的单一存储池</span></div>
+        <div class="kpi o"><b>POC</b><span>所有收益以客户负载实测为准</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 全流程数据流 ══════════════════ -->
+  <section class="scene" data-sec="EDA 数据流" data-nav="全流程数据流">
+    <div class="wrap">
+      <div class="an" style="display:flex;align-items:flex-end;gap:16px">
+        <div style="flex:1">
+          <div class="secmark" style="--ac:#0067c5"><i></i><span>EDA 数据流 · 01</span></div>
+          <h1>芯片设计全流程 <span class="g">每个阶段的数据与 IO</span></h1>
+          <p class="lead">点击任意阶段，查看核心数据、文件特征、IO 模式与 AFX 在该阶段的作用；也可以自动轮播讲解。</p>
+        </div>
         <button class="btn" id="autoBtn">▶ 自动讲解</button>
       </div>
-    </div>
-
-    <div class="phase-label"><b>前端设计</b><span class="tag fe">Front-End · 海量小文件 · 元数据密集</span></div>
-    <div class="pipe-row" id="rowFE"></div>
-
-    <div class="turn">
-      <svg width="60" height="34" viewBox="0 0 60 34"><path d="M50 2 v12 a8 8 0 0 1 -8 8 H10" fill="none" stroke="#c3d2e5" stroke-width="2"/><path d="M14 16 l-6 6 6 6" fill="none" stroke="#c3d2e5" stroke-width="2"/></svg>
-    </div>
-
-    <div class="phase-label"><b>后端设计与签核</b><span class="tag be">Back-End · 大文件 · 带宽密集</span></div>
-    <div class="pipe-row" id="rowBE"></div>
-
-    <div class="detail">
-      <div class="card" id="stageDetail" style="border-color:rgba(0,103,197,.3)">
-        <div class="d-head"><div class="ico" id="dIco">🧩</div>
-          <div><div class="t" id="dName">—</div><div class="e" id="dEn">—</div></div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="pipe an" style="--d:.1s">
+        <div class="lane-lb fe"><b>前端设计</b><span>海量小文件 · 元数据密集</span></div>
+        <div class="stgs" id="rowFE"></div>
+        <div class="lane-lb be"><b>后端设计与签核</b><span>大文件 · 带宽密集</span></div>
+        <div class="stgs" id="rowBE"></div>
+      </div>
+      <div class="g23 an" style="--d:.16s;margin-top:13px">
+        <div class="panel">
+          <div class="dhd"><span class="dico" id="dIco"></span><div><div class="dnm" id="dName"></div><div class="den" id="dEn"></div></div></div>
+          <div class="drow"><span>核心数据</span><div id="dTypes" class="dchips"></div></div>
+          <div class="drow"><span>文件特征</span><div id="dFiles"></div></div>
+          <div class="drow"><span>IO 模式</span><div id="dIO"></div></div>
+          <div class="drow"><span>典型规模</span><div id="dScale"></div></div>
+          <div class="drow"><span>存储痛点</span><div id="dPain" style="color:var(--red)"></div></div>
+          <div class="hr" style="margin:10px 0"></div>
+          <div class="g2" style="gap:18px">
+            <div><div class="mini">IO 压力相对强度（示意）</div><div id="dMeters"></div></div>
+            <div>
+              <div class="mini">典型读写比例 <b id="rwLabel" style="color:var(--blue)"></b></div>
+              <div class="rw"><div class="r" id="rwRead"></div><div class="w" id="rwWrite"></div></div>
+              <div class="rwnote" id="rwNote"></div>
+            </div>
+          </div>
         </div>
-        <div class="kv">
-          <div class="k">核心数据</div><div class="v"><div class="chips" id="dTypes"></div></div>
-          <div class="k">文件特征</div><div class="v" id="dFiles">—</div>
-          <div class="k">IO 模式</div><div class="v" id="dIO">—</div>
-          <div class="k">典型规模</div><div class="v" id="dScale">—</div>
-          <div class="k">存储痛点</div><div class="v" id="dPain" style="color:#c14a4a">—</div>
-        </div>
-        <div class="io-meter" id="dMeters"></div>
-        <div class="rw-wrap">
-          <div class="rw-title"><b>典型 IO 读写比例</b><span id="rwLabel" style="color:var(--blue);font-weight:600">—</span></div>
-          <div class="rw-bar"><div class="rd" id="rwRead"></div><div class="wr" id="rwWrite"></div></div>
-          <div class="rw-legend"><span class="li-r"><i></i>读 Read</span><span class="li-w"><i></i>写 Write</span></div>
-          <div class="rw-note" id="rwNote"></div>
+        <div class="panel tint">
+          <h3>NetApp AFX 在该阶段的作用</h3>
+          <div id="dAfx"></div>
         </div>
       </div>
-      <div class="card afx-box">
-        <h3>🚀 NetApp AFX 在该阶段的价值</h3>
-        <ul id="dAfx"></ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 前端 vs 后端 ══════════════════ -->
+  <section class="scene" data-sec="EDA 数据流" data-nav="前端与后端">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>EDA 数据流 · 02</span></div>
+        <h1>前端与后端：<span class="g">两种负载，一套存储</span></h1>
+        <p class="lead">同一个项目的前端验证与后端签核共享设计数据，但对存储的要求几乎相反。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="tw an" style="--d:.12s">
+        <table class="dt">
+          <thead><tr><th style="width:120px">维度</th><th><span class="tag b">前端</span> RTL / 仿真验证</th><th><span class="tag warn">后端</span> P&amp;R / 签核 / Tapeout</th></tr></thead>
+          <tbody>
+            <tr><td class="h">数据形态</td><td>数百万到数亿个小文件：源码、脚本、日志、Coverage DB、testbench</td><td>GB 到百 GB 级大文件：设计库 DB、GDSII/OASIS、SPEF、寄生参数</td></tr>
+            <tr><td class="h">IO 模式</td><td>随机读加高频元数据操作，读写混合</td><td>大块顺序读写，checkpoint 突发写入</td></tr>
+            <tr><td class="h">并发特征</td><td>数千到数万个短作业（回归测试），毛刺型高并发</td><td>少量长周期大作业（可达数天），单流带宽要求高</td></tr>
+            <tr><td class="h">性能诉求</td><td>元数据操作响应时间与吞吐，直接决定作业排队</td><td>持续吞吐带宽，稳定供数给大内存计算机</td></tr>
+            <tr><td class="h">存储风险</td><td>元数据瓶颈 → farm 与 License 空转，回归窗口拉长</td><td>带宽不足 → 签核迭代变慢，tapeout 节点延期</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="split an" style="--d:.2s;margin-top:13px">
+        <div class="panel"><div class="flag r" style="margin-bottom:9px">控制器与磁盘绑定扩展</div>
+          <div class="li warn">回归高峰需要元数据能力，却只能连同容量一起买</div>
+          <div class="li warn">签核数据增长需要容量，却要连同控制器一起扩</div></div>
+        <div class="arrowx" style="text-align:center">→</div>
+        <div class="panel"><div class="flag" style="margin-bottom:9px">AFX 解耦扩展</div>
+          <div class="li ok">元数据与带宽不够：加控制器节点</div>
+          <div class="li ok">容量不够：加 NVMe 存储柜，两者互不绑定</div></div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<!-- ================= PAGE 2 ================= -->
-<div class="page" id="p2">
-  <div class="stat-strip">
-    <div class="stat"><div class="num" data-count="500000000" data-fmt="yi">—</div><div class="lb">单个大型 SoC 项目文件总数<br>可达数亿级</div></div>
-    <div class="stat"><div class="num" data-count="80" data-fmt="pct">—</div><div class="lb">前端 NFS 操作中元数据操作<br>(LOOKUP/GETATTR) 占比可达</div></div>
-    <div class="stat"><div class="num" data-count="10000" data-fmt="plus">—</div><div class="lb">回归验证并发作业数<br>计算农场核数可达数万</div></div>
-    <div class="stat"><div class="num" data-count="10" data-fmt="pb">—</div><div class="lb">先进工艺项目全生命周期<br>数据量可达 PB 级</div></div>
-  </div>
-
-  <div class="grid2">
-    <div class="card">
-      <h2>文件大小分布 <em>（前端设计目录典型画像）</em></h2>
-      <div class="hint">EDA 前端以源码、脚本、日志、临时文件为主 —— 小文件占绝对主导</div>
-      <div class="hbar"><div class="t"><b>&lt; 4 KB</b><span>~45%</span></div><div class="bg"><div class="fg" data-w="45" style="background:linear-gradient(90deg,#0067c5,#19b1e6)"></div></div></div>
-      <div class="hbar"><div class="t"><b>4 KB – 128 KB</b><span>~40%</span></div><div class="bg"><div class="fg" data-w="40" style="background:linear-gradient(90deg,#0067c5,#3cc9a7)"></div></div></div>
-      <div class="hbar"><div class="t"><b>128 KB – 10 MB</b><span>~12%</span></div><div class="bg"><div class="fg" data-w="12" style="background:linear-gradient(90deg,#d9871c,#f2b45c)"></div></div></div>
-      <div class="hbar"><div class="t"><b>&gt; 10 MB（波形/DB/GDS）</b><span>~3%</span></div><div class="bg"><div class="fg" data-w="3" style="background:linear-gradient(90deg,#c14a4a,#e88585)"></div></div></div>
-      <div class="hint" style="margin-top:12px">⚠️ 文件数量多 ≠ 容量大：数亿小文件考验的是<b style="color:var(--blue)">元数据性能</b>，而非带宽</div>
+  <!-- ══════════════════ 幕 4 · 数据规模与文件分布 ══════════════════ -->
+  <section class="scene" data-sec="IO 特征" data-nav="规模与文件分布">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e93c9"><i></i><span>IO 特征 · 01</span></div>
+        <h1>文件数量多，<span class="g">不等于容量大</span></h1>
+        <p class="lead">大型 SoC 项目的难点首先是文件数量：数亿小文件考验的是元数据处理能力，而不是带宽。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="kpis an" style="--d:.1s">
+        <div class="kpi"><b class="num" data-count="300000000" data-fmt="yi">0</b><span>单个大型 SoC 项目文件总数可达数亿</span></div>
+        <div class="kpi v"><b class="num" data-count="65" data-fmt="pct">0</b><span>回归高峰 NFS 操作中元数据操作的占比（经验值）</span></div>
+        <div class="kpi o"><b class="num" data-count="50000" data-fmt="plus">0</b><span>回归验证并发作业数，计算农场核数可达数万</span></div>
+        <div class="kpi t"><b class="num" data-count="10" data-fmt="pb">0</b><span>先进工艺项目全生命周期数据量可达 PB 级</span></div>
+      </div>
+      <div class="g23 an" style="--d:.16s;margin-top:13px">
+        <div class="viz">
+          <h3 class="vh">前端设计目录的文件大小分布</h3>
+          <div class="bars" id="sizeBars">
+            <div class="bl"><span>&lt; 4 KB</span><div class="bg"><div class="fg" data-w="45" style="background:linear-gradient(90deg,#0067c5,#19b1e6)"></div></div><b>~45%</b></div>
+            <div class="bl"><span>4 KB – 128 KB</span><div class="bg"><div class="fg" data-w="40" style="background:linear-gradient(90deg,#0e93c9,#5cc8ef)"></div></div><b>~40%</b></div>
+            <div class="bl"><span>128 KB – 10 MB</span><div class="bg"><div class="fg" data-w="12" style="background:linear-gradient(90deg,#6a5ad4,#9b8ee3)"></div></div><b>~12%</b></div>
+            <div class="bl"><span>&gt; 10 MB（波形 / DB / GDS）</span><div class="bg"><div class="fg" data-w="3" style="background:linear-gradient(90deg,#d5820f,#f2b45c)"></div></div><b>~3%</b></div>
+          </div>
+          <p class="note">比例为行业经验值，因项目、工艺与工具链而异；可用客户目录扫描结果替换。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel">
+            <h3>小文件从哪里来</h3>
+            <div class="li"><b>源码与脚本</b>：Verilog/VHDL、头文件、Makefile，目录层级深</div>
+            <div class="li"><b>回归产物</b>：每次回归生成百万级日志、结果与临时文件</div>
+            <div class="li"><b>工具中间文件</b>：编译缓存、lock 文件、依赖检查</div>
+          </div>
+          <div class="panel tint">
+            <h3>对存储意味着什么</h3>
+            <div class="li ok"><b>元数据先于带宽成为瓶颈</b>：查找、属性检查远多于数据读写</div>
+            <div class="li ok"><b>扩展要看元数据能力</b>：只加容量无法缓解作业排队</div>
+          </div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="card">
-      <h2>NFS 操作构成 <em>（回归验证高峰期）</em></h2>
-      <div class="hint">验证农场数千作业同时扫描目录、检查依赖 —— 元数据操作是第一瓶颈</div>
-      <div class="hbar"><div class="t"><b>LOOKUP / GETATTR / ACCESS</b><span>~65%</span></div><div class="bg"><div class="fg" data-w="65" style="background:linear-gradient(90deg,#0067c5,#19b1e6)"></div></div></div>
-      <div class="hbar"><div class="t"><b>READ（随机小 IO 为主）</b><span>~22%</span></div><div class="bg"><div class="fg" data-w="22" style="background:linear-gradient(90deg,#0067c5,#3cc9a7)"></div></div></div>
-      <div class="hbar"><div class="t"><b>WRITE（日志/波形/结果）</b><span>~10%</span></div><div class="bg"><div class="fg" data-w="10" style="background:linear-gradient(90deg,#d9871c,#f2b45c)"></div></div></div>
-      <div class="hbar"><div class="t"><b>其他（CREATE/REMOVE…）</b><span>~3%</span></div><div class="bg"><div class="fg" data-w="3" style="background:linear-gradient(90deg,#8a99ab,#b8c4d2)"></div></div></div>
-      <div class="hint" style="margin-top:12px">💡 传统 NAS 元数据能力不随容量扩展 → 作业排队、License 空转、farm 利用率下降</div>
+  <!-- ══════════════════ 幕 5 · 元数据瓶颈 ══════════════════ -->
+  <section class="scene" data-sec="IO 特征" data-nav="元数据瓶颈">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e93c9"><i></i><span>IO 特征 · 02</span></div>
+        <h1>元数据瓶颈如何<span class="g">传导到 License 成本</span></h1>
+        <p class="lead">验证农场数千作业同时扫描目录、检查依赖，元数据操作往往是第一瓶颈。点击右侧步骤看它如何层层放大。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g32 an" style="--d:.12s">
+        <div class="viz">
+          <h3 class="vh">回归高峰期的 NFS 操作构成</h3>
+          <div class="bars" id="opsBars">
+            <div class="bl"><span>LOOKUP / GETATTR / ACCESS</span><div class="bg"><div class="fg" data-w="65" style="background:linear-gradient(90deg,#d33a5c,#ef7a92)"></div></div><b>~65%</b></div>
+            <div class="bl"><span>READ（随机小 IO 为主）</span><div class="bg"><div class="fg" data-w="22" style="background:linear-gradient(90deg,#0067c5,#19b1e6)"></div></div><b>~22%</b></div>
+            <div class="bl"><span>WRITE（日志 / 波形 / 结果）</span><div class="bg"><div class="fg" data-w="10" style="background:linear-gradient(90deg,#0e9a62,#4cc795)"></div></div><b>~10%</b></div>
+            <div class="bl"><span>其他（CREATE / REMOVE…）</span><div class="bg"><div class="fg" data-w="3" style="background:#9aa6c2"></div></div><b>~3%</b></div>
+          </div>
+          <p class="note">比例为行业经验值；POC 中可用客户 farm 的 nfsstat 统计实测。</p>
+        </div>
+        <div>
+          <div class="steps" id="chainSteps">
+            <div class="st on" data-i="0"><div class="n">01</div><div class="l">元数据排队</div></div>
+            <div class="st" data-i="1"><div class="n">02</div><div class="l">作业等 IO</div></div>
+            <div class="st" data-i="2"><div class="n">03</div><div class="l">farm 空转</div></div>
+            <div class="st" data-i="3"><div class="n">04</div><div class="l">License 空转</div></div>
+            <div class="st" data-i="4"><div class="n">05</div><div class="l">回归窗口拉长</div></div>
+          </div>
+          <div class="stbody"><h4 id="chainT"></h4><p id="chainD"></p></div>
+          <div class="panel tint" style="margin-top:13px">
+            <h3>讲解要点</h3>
+            <div class="li ok">EDA 环境里最贵的往往不是存储，而是 <b>EDA License 与工程师时间</b></div>
+            <div class="li ok">控制器固定的双控架构，元数据能力不随容量扩展；要缓解排队，需要能<b>按需增加处理能力</b>的架构</div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card" style="margin-top:16px">
-    <h2>前端 vs 后端 <em>工作负载对比</em></h2>
-    <table class="cmp-table">
-      <tr><th style="width:120px">维度</th><th class="fe-c">前端（RTL / 仿真验证）</th><th class="be-c">后端（P&amp;R / 签核 / Tapeout）</th></tr>
-      <tr><td>数据形态</td><td class="fe-c">数百万~数亿小文件：源码、脚本、日志、Coverage DB、testbench</td><td class="be-c">GB~百 GB 级大文件：设计库 DB、GDSII/OASIS、SPEF、寄生参数</td></tr>
-      <tr><td>IO 模式</td><td class="fe-c">随机读 + 高频元数据操作，读写混合</td><td class="be-c">大块顺序读写、checkpoint 突发写入</td></tr>
-      <tr><td>并发特征</td><td class="fe-c">数千~数万个短作业（回归测试），毛刺型高并发</td><td class="be-c">少量长周期大作业（数天），单流带宽要求高</td></tr>
-      <tr><td>性能诉求</td><td class="fe-c">元数据 OPS、低时延（μs 级影响作业吞吐）</td><td class="be-c">吞吐带宽 GB/s、大内存机的稳定供数</td></tr>
-      <tr><td>存储风险</td><td class="fe-c">元数据瓶颈 → farm/License 空转，回归窗口拉长</td><td class="be-c">带宽不足 → 签核迭代变慢，tapeout 节点延期</td></tr>
-    </table>
-    <div class="hint" style="margin-top:12px">✅ 同一套存储需要同时服务两种截然不同的负载 —— 这正是 <b style="color:var(--teal)">AFX 解耦架构（性能与容量独立扩展）</b>的用武之地</div>
-  </div>
-</div>
-
-<!-- ================= PAGE 3 ================= -->
-<div class="page" id="p3">
-  <div class="card arch">
-    <h2>AFX <em>解耦式（Disaggregated）全闪架构</em></h2>
-    <div class="hint">性能层与容量层独立扩展 · 单一命名空间 · ONTAP 企业级数据管理</div>
-    <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
-      <defs>
-        <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0067c5"/><stop offset="1" stop-color="#19b1e6"/></linearGradient>
-        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#0e93c9"/></marker>
-      </defs>
-      <!-- compute farm -->
-      <rect x="60" y="18" width="880" height="86" rx="12" fill="rgba(0,103,197,.05)" stroke="#c3d2e5"/>
-      <text x="500" y="42" text-anchor="middle" fill="#17293f" font-size="15" font-weight="700">EDA 计算农场（数千台计算节点 / 数万核 · LSF / SLURM 调度）</text>
-      <g fill="rgba(14,147,201,.08)" stroke="#0e93c9" stroke-width="1">
-        <rect x="120" y="58" width="90" height="30" rx="5"/><rect x="230" y="58" width="90" height="30" rx="5"/>
-        <rect x="340" y="58" width="90" height="30" rx="5"/><rect x="450" y="58" width="90" height="30" rx="5"/>
-        <rect x="560" y="58" width="90" height="30" rx="5"/><rect x="670" y="58" width="90" height="30" rx="5"/>
-        <rect x="780" y="58" width="90" height="30" rx="5"/>
-      </g>
-      <g fill="#46607c" font-size="11" text-anchor="middle">
-        <text x="165" y="77">仿真作业</text><text x="275" y="77">回归测试</text><text x="385" y="77">综合</text>
-        <text x="495" y="77">P&amp;R</text><text x="605" y="77">DRC/LVS</text><text x="715" y="77">STA 签核</text><text x="825" y="77">AI 辅助设计</text>
-      </g>
-      <!-- network -->
-      <text x="500" y="130" text-anchor="middle" fill="#7c90a8" font-size="12">高速以太网 · NFS / pNFS / RDMA　—　pNFS 客户端自动直连数据所在节点，负载天然均衡</text>
-      <g stroke="#0e93c9" stroke-width="1.6" marker-end="url(#arr)" opacity=".8">
-        <line x1="260" y1="106" x2="260" y2="152" class="pulse"/>
-        <line x1="420" y1="106" x2="420" y2="152" class="pulse" style="animation-delay:.5s"/>
-        <line x1="580" y1="106" x2="580" y2="152" class="pulse" style="animation-delay:1s"/>
-        <line x1="740" y1="106" x2="740" y2="152" class="pulse" style="animation-delay:1.5s"/>
-      </g>
-      <!-- performance nodes -->
-      <rect x="60" y="158" width="880" height="96" rx="12" fill="rgba(14,147,201,.04)" stroke="#0e93c9"/>
-      <text x="90" y="182" fill="#0b5aa5" font-size="14" font-weight="700">性能层 · AFX 控制器节点（Scale-Out，按性能需求独立扩展）</text>
-      <g>
-        <rect x="90" y="196" width="150" height="44" rx="8" fill="url(#gBlue)"/><text x="165" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">AFX 节点 1</text>
-        <rect x="260" y="196" width="150" height="44" rx="8" fill="url(#gBlue)"/><text x="335" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">AFX 节点 2</text>
-        <rect x="430" y="196" width="150" height="44" rx="8" fill="url(#gBlue)"/><text x="505" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">AFX 节点 3</text>
-        <rect x="600" y="196" width="150" height="44" rx="8" fill="url(#gBlue)" opacity=".5"/><text x="675" y="222" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">节点 N …</text>
-        <rect x="770" y="196" width="150" height="44" rx="8" fill="rgba(11,157,124,.08)" stroke="#0b9d7c" stroke-dasharray="5 4"/><text x="845" y="217" text-anchor="middle" fill="#0b9d7c" font-size="11.5" font-weight="700">＋ 在线扩性能</text><text x="845" y="232" text-anchor="middle" fill="#0b9d7c" font-size="10">无需迁移数据</text>
-      </g>
-      <!-- fabric -->
-      <text x="500" y="278" text-anchor="middle" fill="#7c90a8" font-size="12">存储网络 Fabric（NVMe 共享访问 · 任意节点可访问任意数据）</text>
-      <g stroke="#0b9d7c" stroke-width="1.4" opacity=".7" marker-end="url(#arr)">
-        <line x1="300" y1="254" x2="300" y2="300" class="pulse" style="animation-delay:.3s"/>
-        <line x1="500" y1="254" x2="500" y2="300" class="pulse" style="animation-delay:.9s"/>
-        <line x1="700" y1="254" x2="700" y2="300" class="pulse" style="animation-delay:1.4s"/>
-      </g>
-      <!-- capacity -->
-      <rect x="60" y="306" width="880" height="96" rx="12" fill="rgba(11,157,124,.04)" stroke="#0b9d7c"/>
-      <text x="90" y="330" fill="#0b9d7c" font-size="14" font-weight="700">容量层 · NVMe 全闪存储柜（FlexGroup 单一命名空间 · 高级容量均衡自动分布数据）</text>
-      <g fill="rgba(11,157,124,.08)" stroke="#0b9d7c">
-        <rect x="90" y="344" width="185" height="44" rx="8"/><rect x="295" y="344" width="185" height="44" rx="8"/>
-        <rect x="500" y="344" width="185" height="44" rx="8"/>
-      </g>
-      <rect x="705" y="344" width="185" height="44" rx="8" fill="none" stroke="#0b9d7c" stroke-dasharray="5 4"/>
-      <g fill="#0a6e58" font-size="12" text-anchor="middle" font-weight="600">
-        <text x="182" y="370">NVMe 存储柜 1</text><text x="387" y="370">NVMe 存储柜 2</text><text x="592" y="370">NVMe 存储柜 3</text>
-      </g>
-      <text x="797" y="366" text-anchor="middle" fill="#0b9d7c" font-size="11.5" font-weight="700">＋ 在线扩容量</text>
-      <text x="797" y="381" text-anchor="middle" fill="#0b9d7c" font-size="10">PB 级扩展</text>
-    </svg>
-  </div>
-
-  <div class="vcards">
-    <div class="vc"><div class="ic">🧬</div><div class="tt">性能容量解耦扩展<small>Disaggregated Scale-Out</small></div><p>回归高峰只加性能节点，数据增长只加 NVMe 容量柜，互不绑定。告别传统 NAS "为性能买容量、为容量买性能" 的浪费。</p></div>
-    <div class="vc"><div class="ic">⚡</div><div class="tt">极致元数据性能<small>Metadata at Scale</small></div><p>全 NVMe + 集群化元数据处理，从容应对数亿小文件与数万并发作业的 LOOKUP/GETATTR 风暴，让 farm 与 EDA License 不再空转。</p></div>
-    <div class="vc"><div class="ic">🔀</div><div class="tt">pNFS 并行直连<small>Parallel NFS (NFSv4.1+)</small></div><p>计算农场客户端通过 pNFS 自动直连数据所在的性能节点，IO 路径最短、无跨节点转发；数万客户端流量天然均衡分布，无需手工规划挂载点，彻底消除单节点/单网口热点。</p></div>
-    <div class="vc"><div class="ic">⚖️</div><div class="tt">FlexGroup + 高级容量均衡<small>Advanced Capacity Balancing</small></div><p>单一 FlexGroup 承载数千亿文件并自动打散到所有节点并行处理；高级容量均衡在写入时按各成员卷实际水位智能分配新数据，避免个别成员卷写满导致作业失败，全程无需人工重平衡。</p></div>
-    <div class="vc"><div class="ic">🌐</div><div class="tt">单一命名空间<small>Single Namespace</small></div><p>前端后端、多个项目共享统一数据平面，无数据孤岛、无手工搬移；容量与性能在集群内自动均衡。</p></div>
-    <div class="vc"><div class="ic">🛰️</div><div class="tt">FlexCache 多站点协同<small>Global Collaboration</small></div><p>跨地域研发中心秒级看到同一份"唯一真相"数据，热数据就近缓存加速本地 farm，广域链路占用大幅下降。</p></div>
-    <div class="vc"><div class="ic">🧪</div><div class="tt">FlexClone 秒级克隆<small>Instant Workspaces</small></div><p>为每位工程师/每次回归秒级克隆完整项目工作区，几乎零空间开销 —— 并行验证、bug 复现、what-if 实验不再等待拷贝。</p></div>
-    <div class="vc"><div class="ic">🛡️</div><div class="tt">IP 资产安全<small>Snapshot · ARP 勒索防护</small></div><p>芯片设计数据即核心 IP。不可变 Snapshot 快速回滚误删/损坏，内置自主勒索软件防护（ARP/AI）实时侦测异常加密行为。</p></div>
-    <div class="vc"><div class="ic">🎚️</div><div class="tt">QoS 多项目隔离<small>Multi-Tenancy</small></div><p>多项目、多团队共享集群时按项目设定性能保障与上限，关键 tapeout 项目永远优先，避免"吵闹邻居"。</p></div>
-    <div class="vc"><div class="ic">📦</div><div class="tt">数据缩减与分层<small>Efficiency &amp; Tiering</small></div><p>重删/压缩降低全闪成本；冷项目数据可自动分层至对象存储/云端，在线归档历史版本，释放高性能层空间。</p></div>
-    <div class="vc"><div class="ic">🤖</div><div class="tt">面向 AI 时代<small>AI-Ready Infrastructure</small></div><p>同一平台支撑 AI 辅助设计（ML 驱动的 PPA 优化、日志分析）所需的高吞吐数据管道，EDA 与 AI 负载共享数据、统一治理。</p></div>
-  </div>
-</div>
-
-<!-- ================= PAGE 4 ================= -->
-<div class="page" id="p4">
-  <div class="card">
-    <h2>回归验证场景 <em>传统 NAS vs NetApp AFX</em></h2>
-    <div class="hint">模拟一次夜间回归：数千个仿真作业并发提交，观察存储元数据/IO 能力对完成时间的影响（示意演示，非实测数据）</div>
-    <div class="race-ctrl">
-      <label>并发作业数：<b id="jobsLbl" style="color:var(--blue)">5000</b></label>
-      <input type="range" id="jobsRange" min="1000" max="20000" step="1000" value="5000">
-      <button class="btn" id="raceBtn">▶ 开始演示</button>
-      <button class="btn ghost" id="raceReset">重置</button>
+  <!-- ══════════════════ 幕 6 · 解耦架构 ══════════════════ -->
+  <section class="scene" data-sec="AFX 架构" data-nav="解耦架构">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>AFX 架构 · 01</span></div>
+        <h1>AFX <span class="g">解耦式全闪架构</span></h1>
+        <p class="lead">控制器节点与 NVMe 存储柜分开扩展，经集群内部网络互联。切换下方按钮，看两种扩展分别发生在哪里。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-arch="base" data-toggle-group="arch">当前规模</button>
+            <button class="btn" data-arch="perf" data-toggle-group="arch">回归高峰：加控制器</button>
+            <button class="btn" data-arch="cap" data-toggle-group="arch">数据增长：加存储柜</button>
+          </div>
+          <svg viewBox="0 0 820 400" id="archSvg" style="max-height:440px">
+            <rect x="20" y="10" width="780" height="78" rx="12" fill="rgba(0,103,197,.05)" stroke="#c3d2e5"/>
+            <text x="410" y="34" text-anchor="middle" fill="#152341" font-size="14" font-weight="750">EDA 计算农场 · 数千台计算节点 · LSF / SLURM 调度</text>
+            <g font-size="11" text-anchor="middle" fill="#46607c">
+              <rect x="48" y="46" width="94" height="28" rx="6" fill="#fff" stroke="#93b6e4"/><text x="95" y="64">仿真作业</text>
+              <rect x="152" y="46" width="94" height="28" rx="6" fill="#fff" stroke="#93b6e4"/><text x="199" y="64">回归测试</text>
+              <rect x="256" y="46" width="94" height="28" rx="6" fill="#fff" stroke="#93b6e4"/><text x="303" y="64">综合</text>
+              <rect x="360" y="46" width="94" height="28" rx="6" fill="#fff" stroke="#93b6e4"/><text x="407" y="64">P&amp;R</text>
+              <rect x="464" y="46" width="94" height="28" rx="6" fill="#fff" stroke="#93b6e4"/><text x="511" y="64">DRC / LVS</text>
+              <rect x="568" y="46" width="94" height="28" rx="6" fill="#fff" stroke="#93b6e4"/><text x="615" y="64">STA 签核</text>
+              <rect x="672" y="46" width="100" height="28" rx="6" fill="#fff" stroke="#93b6e4"/><text x="722" y="64">AI 辅助设计</text>
+            </g>
+            <g stroke="#0e93c9" stroke-width="1.6" marker-end="url(#ar)" opacity=".8">
+              <line x1="180" y1="90" x2="180" y2="136" class="pls"/><line x1="340" y1="90" x2="340" y2="136" class="pls" style="animation-delay:.4s"/>
+              <line x1="500" y1="90" x2="500" y2="136" class="pls" style="animation-delay:.8s"/><line x1="660" y1="90" x2="660" y2="136" class="pls" style="animation-delay:1.2s"/>
+            </g>
+            <text x="410" y="117" text-anchor="middle" fill="#5c6a8a" font-size="11.5" paint-order="stroke" stroke="#f6f9fe" stroke-width="7" stroke-linejoin="round">客户端网络 · NFSv3 / NFSv4.1（pNFS）/ SMB / S3</text>
+            <rect x="20" y="140" width="780" height="92" rx="12" fill="rgba(0,103,197,.04)" stroke="#0e93c9"/>
+            <text x="42" y="163" fill="#0b5aa5" font-size="13" font-weight="750">控制器节点 · 按元数据与带宽需求扩展</text>
+            <g id="nodes" font-size="12" font-weight="700" text-anchor="middle" fill="#fff">
+              <rect x="42" y="176" width="136" height="42" rx="8" fill="url(#gB)"/><text x="110" y="202">AFX 节点 1</text>
+              <rect x="190" y="176" width="136" height="42" rx="8" fill="url(#gB)"/><text x="258" y="202">AFX 节点 2</text>
+              <rect x="338" y="176" width="136" height="42" rx="8" fill="url(#gB)"/><text x="406" y="202">AFX 节点 3</text>
+              <rect x="486" y="176" width="136" height="42" rx="8" fill="url(#gB)"/><text x="554" y="202">AFX 节点 4</text>
+              <g id="newNode" opacity="0"><rect x="634" y="176" width="146" height="42" rx="8" fill="url(#gV)"/><text x="707" y="202">＋ 新增节点</text></g>
+            </g>
+            <g stroke="#0c8e86" stroke-width="1.5" marker-end="url(#arT)" opacity=".75">
+              <line x1="230" y1="234" x2="230" y2="276" class="pls" style="animation-delay:.2s"/><line x1="410" y1="234" x2="410" y2="276" class="pls" style="animation-delay:.7s"/><line x1="590" y1="234" x2="590" y2="276" class="pls" style="animation-delay:1.1s"/>
+            </g>
+            <text x="410" y="259" text-anchor="middle" fill="#5c6a8a" font-size="11.5" paint-order="stroke" stroke="#f4f8fd" stroke-width="7" stroke-linejoin="round">集群内部网络 · NVMe-oF over RoCE · 每个节点都能读写全部磁盘</text>
+            <rect x="20" y="280" width="780" height="104" rx="12" fill="rgba(12,142,134,.04)" stroke="#0c8e86"/>
+            <text x="42" y="303" fill="#0a6e68" font-size="13" font-weight="750">NVMe 存储柜 · 组成存储可用区 SAZ（单一存储池）</text>
+            <g font-size="12" font-weight="650" text-anchor="middle" fill="#0a6e68">
+              <rect x="42" y="318" width="176" height="48" rx="8" fill="rgba(12,142,134,.08)" stroke="#0c8e86"/><text x="130" y="347">存储柜 1</text>
+              <rect x="232" y="318" width="176" height="48" rx="8" fill="rgba(12,142,134,.08)" stroke="#0c8e86"/><text x="320" y="347">存储柜 2</text>
+              <rect x="422" y="318" width="176" height="48" rx="8" fill="rgba(12,142,134,.08)" stroke="#0c8e86"/><text x="510" y="347">存储柜 3</text>
+              <g id="newShelf" opacity="0"><rect x="612" y="318" width="168" height="48" rx="8" fill="rgba(14,154,98,.16)" stroke="#0e9a62" stroke-width="2"/><text x="696" y="347" fill="#0e9a62">＋ 新增存储柜</text></g>
+            </g>
+            <defs>
+              <linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0067c5"/><stop offset="1" stop-color="#19b1e6"/></linearGradient>
+              <linearGradient id="gV" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6a5ad4"/><stop offset="1" stop-color="#9b8ee3"/></linearGradient>
+              <marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#0e93c9"/></marker>
+              <marker id="arT" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#0c8e86"/></marker>
+            </defs>
+          </svg>
+          <div class="archmsg" id="archMsg"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>架构要点</h3>
+            <div class="li"><b>控制器节点</b>：运行 AFX 专用的 ONTAP 版本，对外提供 NFS、SMB 与 S3</div>
+            <div class="li"><b>NVMe 存储柜</b>：经 NVMe-oF over RoCE 接入，所有节点共享访问</div>
+            <div class="li"><b>存储可用区 SAZ</b>：全部磁盘组成一个存储池，没有聚合（aggregate）</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对 EDA 的价值</h3>
+            <div class="li ok"><b>回归高峰</b>：加控制器节点，元数据与带宽处理能力随之增加</div>
+            <div class="li ok"><b>项目数据增长</b>：加存储柜，不必为容量多买控制器</div>
+            <div class="li ok"><b>前后端共存</b>：小文件与大文件负载由同一集群分担</div>
+          </div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="lane legacy">
-      <div class="hd"><b>🗄️ 传统双控 NAS</b><span class="tm" id="tLegacy">00:00</span></div>
-      <div class="track"><div class="prog" id="pLegacy"></div><div class="jobs" id="jLegacy">等待开始…</div></div>
-      <div class="meta"><span>元数据瓶颈：<b>并发越高越拥塞</b></span><span>farm 利用率：<b id="uLegacy">—</b></span><span>License 空转：<b id="lLegacy">—</b></span></div>
+  <!-- ══════════════════ 幕 7 · SAZ 与零拷贝卷移动 ══════════════════ -->
+  <section class="scene" data-sec="AFX 架构" data-nav="单一存储池">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>AFX 架构 · 02</span></div>
+        <h1>单一存储池：<span class="g">平衡负载不再搬数据</span></h1>
+        <p class="lead">传统架构里卷属于某个节点的聚合，换节点就要拷贝数据；AFX 的卷数据放在共享的 SAZ 中，换节点只是切换归属。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-mv="agg" data-toggle-group="mv">传统：聚合绑定节点</button>
+            <button class="btn on" data-mv="saz" data-toggle-group="mv">AFX：共享 SAZ</button>
+            <button class="btn sm" id="mvPlay" style="margin-left:auto">▶ 把热点卷移到节点 B</button>
+          </div>
+          <svg viewBox="0 0 640 300" id="mvSvg" style="max-height:360px">
+            <rect x="40" y="20" width="200" height="70" rx="12" fill="#eaf2fd" stroke="#93b6e4"/>
+            <text x="140" y="50" text-anchor="middle" font-size="13" font-weight="750" fill="#123a7a">节点 A</text>
+            <text x="140" y="70" text-anchor="middle" font-size="11" fill="#5c6a8a" id="mvLoadA">负载：高（热点项目）</text>
+            <rect x="400" y="20" width="200" height="70" rx="12" fill="#eaf2fd" stroke="#93b6e4"/>
+            <text x="500" y="50" text-anchor="middle" font-size="13" font-weight="750" fill="#123a7a">节点 B</text>
+            <text x="500" y="70" text-anchor="middle" font-size="11" fill="#5c6a8a" id="mvLoadB">负载：低</text>
+            <g id="mvAgg">
+              <rect x="40" y="170" width="200" height="90" rx="12" fill="#fff6ea" stroke="#e6ad67"/><text x="140" y="250" text-anchor="middle" font-size="11" fill="#9a5d0a">节点 A 的聚合</text>
+              <rect x="400" y="170" width="200" height="90" rx="12" fill="#fff6ea" stroke="#e6ad67"/><text x="500" y="250" text-anchor="middle" font-size="11" fill="#9a5d0a">节点 B 的聚合</text>
+              <line x1="140" y1="90" x2="140" y2="170" stroke="#e6ad67" stroke-width="2"/><line x1="500" y1="90" x2="500" y2="170" stroke="#e6ad67" stroke-width="2"/>
+            </g>
+            <g id="mvSaz">
+              <rect x="40" y="170" width="560" height="90" rx="12" fill="rgba(12,142,134,.06)" stroke="#0c8e86"/><text x="320" y="250" text-anchor="middle" font-size="11" fill="#0a6e68">存储可用区 SAZ · 所有节点共享访问</text>
+              <line x1="140" y1="90" x2="140" y2="170" stroke="#0c8e86" stroke-width="2" stroke-dasharray="4 4"/><line x1="500" y1="90" x2="500" y2="170" stroke="#0c8e86" stroke-width="2" stroke-dasharray="4 4"/>
+            </g>
+            <g id="mvVol"><rect x="80" y="186" width="120" height="40" rx="8" fill="url(#gB2)"/><text x="140" y="211" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">项目卷 · 热点</text></g>
+            <path id="mvOwner" d="M140 90 L140 186" stroke="#0067c5" stroke-width="3"/>
+            <text id="mvCopy" x="320" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#d33a5c" opacity="0">拷贝数据中… 0%</text>
+            <defs><linearGradient id="gB2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0067c5"/><stop offset="1" stop-color="#6a5ad4"/></linearGradient></defs>
+          </svg>
+          <div class="archmsg" id="mvMsg"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>自动拓扑管理</h3>
+            <div class="li"><b>自动平衡</b>：AFX 检测到节点间不平衡时，在节点之间调整卷的归属</div>
+            <div class="li"><b>零拷贝</b>：所有节点都能访问 SAZ，卷移动不需要实际拷贝数据</div>
+            <div class="li"><b>扩节点后</b>：已有的卷自动分摊到新节点</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>FlexGroup · 高级容量均衡</h3>
+            <div class="li ok"><b>海量文件</b>：单个 FlexGroup 承载项目全部文件，成员卷分布在各节点并行处理</div>
+            <div class="li ok"><b>默认开启</b>：AFX 上的 FlexGroup 默认启用高级容量均衡，按成员卷水位分配新数据，减少个别成员卷写满导致作业失败</div>
+          </div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="lane afx">
-      <div class="hd"><b>🚀 NetApp AFX（解耦全闪）</b><span class="tm" id="tAfx">00:00</span></div>
-      <div class="track"><div class="prog" id="pAfx"></div><div class="jobs" id="jAfx">等待开始…</div></div>
-      <div class="meta"><span>元数据性能：<b>随节点线性扩展</b></span><span>farm 利用率：<b id="uAfx">—</b></span><span>License 空转：<b id="lAfx">—</b></span></div>
+  <!-- ══════════════════ 幕 8 · pNFS ══════════════════ -->
+  <section class="scene" data-sec="AFX 架构" data-nav="pNFS 并行直连">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>AFX 架构 · 03</span></div>
+        <h1>pNFS：<span class="g">客户端直连数据所在节点</span></h1>
+        <p class="lead">NFSv3 下所有流量先到挂载的那个节点，再在集群内转发；NFSv4.1 的 pNFS 让客户端拿到数据位置后直接访问对应节点。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-pn="v3" data-toggle-group="pn">NFSv3 · 单一挂载点</button>
+            <button class="btn on" data-pn="pnfs" data-toggle-group="pn">NFSv4.1 · pNFS</button>
+          </div>
+          <svg viewBox="0 0 640 300" id="pnSvg" style="max-height:360px">
+            <g font-size="11" text-anchor="middle" fill="#123a7a" font-weight="700">
+              <rect x="30" y="20" width="120" height="44" rx="9" fill="#eaf2fd" stroke="#93b6e4"/><text x="90" y="47">farm 客户端 1</text>
+              <rect x="190" y="20" width="120" height="44" rx="9" fill="#eaf2fd" stroke="#93b6e4"/><text x="250" y="47">farm 客户端 2</text>
+              <rect x="350" y="20" width="120" height="44" rx="9" fill="#eaf2fd" stroke="#93b6e4"/><text x="410" y="47">farm 客户端 3</text>
+              <rect x="510" y="20" width="120" height="44" rx="9" fill="#eaf2fd" stroke="#93b6e4"/><text x="570" y="47">farm 客户端 4</text>
+            </g>
+            <g font-size="12" text-anchor="middle" fill="#fff" font-weight="700">
+              <rect x="40" y="200" width="160" height="50" rx="9" fill="url(#gB3)" id="pnA"/><text x="120" y="230">节点 A</text>
+              <rect x="240" y="200" width="160" height="50" rx="9" fill="url(#gB3)"/><text x="320" y="230">节点 B</text>
+              <rect x="440" y="200" width="160" height="50" rx="9" fill="url(#gB3)"/><text x="520" y="230">节点 C</text>
+            </g>
+            <g id="pnV3" stroke="#d33a5c" stroke-width="2.4" fill="none">
+              <path d="M90 64 L120 200"/><path d="M250 64 L130 200"/><path d="M410 64 L140 200"/><path d="M570 64 L150 200"/>
+              <path d="M200 238 Q260 280 300 250" stroke-dasharray="5 4"/><path d="M200 242 Q360 300 500 250" stroke-dasharray="5 4"/>
+            </g>
+            <g id="pnP" stroke="#0e9a62" stroke-width="2.4" fill="none">
+              <path d="M90 64 L110 200"/><path d="M250 64 L310 200"/><path d="M410 64 L330 200"/><path d="M570 64 L530 200"/>
+            </g>
+            <text id="pnMsg" x="320" y="290" text-anchor="middle" font-size="12" fill="#5c6a8a"></text>
+            <defs><linearGradient id="gB3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0067c5"/><stop offset="1" stop-color="#19b1e6"/></linearGradient></defs>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>带来的变化</h3>
+            <div class="li"><b>减少跨节点转发</b>：数据读写直接落到持有该卷的节点</div>
+            <div class="li"><b>流量分散</b>：farm 流量分布到各节点，缓解单节点、单网口热点</div>
+            <div class="li"><b>减少挂载规划</b>：不必为了均衡负载手工拆分挂载点</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>使用前提</h3>
+            <div class="li warn"><b>客户端</b>：farm 主机的内核与 NFS 客户端需支持 NFSv4.1 及以上</div>
+            <div class="li warn"><b>验证</b>：POC 中抽样确认 pNFS 实际生效，并记录 nconnect 等挂载参数的效果</div>
+          </div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="result-banner" id="raceResult"></div>
-    <div class="race-note">💡 讲解要点：EDA 环境中最贵的不是存储，而是 <b style="color:var(--txt)">EDA License 与工程师时间</b>。存储每拖慢 1 小时回归，意味着数千份 License 与整个计算农场同步空转。AFX 通过解耦扩展的元数据与 IO 能力，直接缩短回归窗口、加快设计迭代节奏（本演示为示意模型，实际收益以 POC 实测为准）。</div>
-  </div>
-</div>
+  <!-- ══════════════════ 幕 9 · FlexClone 与 IP 保护 ══════════════════ -->
+  <section class="scene" data-sec="数据管理" data-nav="工作区与 IP 保护">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>数据管理 · 01</span></div>
+        <h1>秒级工作区，<span class="g">守住设计 IP</span></h1>
+        <p class="lead">FlexClone 只记录与源卷的差异，生成完整项目工作区不需要整份拷贝；Snapshot 与 ARP/AI 保护流片版本和核心 IP。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <h3 class="vh">工作区所需容量：整份拷贝 vs FlexClone（示意）</h3>
+          <div class="sl"><label>工程师人数</label><input type="range" id="fcN" min="10" max="300" step="10" value="80"><b id="fcNv"></b></div>
+          <div class="sl"><label>单个工作区大小</label><input type="range" id="fcS" min="20" max="500" step="10" value="200"><b id="fcSv"></b></div>
+          <div class="sl"><label>每人修改比例</label><input type="range" id="fcC" min="1" max="30" step="1" value="5"><b id="fcCv"></b></div>
+          <div class="cmpbar"><span>整份拷贝</span><div class="bg"><div class="fg" id="fcFull" style="background:linear-gradient(90deg,#d5820f,#f2b45c)"></div></div><b id="fcFullV"></b></div>
+          <div class="cmpbar"><span>FlexClone</span><div class="bg"><div class="fg" id="fcClone" style="background:linear-gradient(90deg,#0e9a62,#4cc795)"></div></div><b id="fcCloneV"></b></div>
+          <p class="note">示意算法：整份拷贝 = 人数 × 工作区大小；FlexClone ≈ 人数 × 工作区大小 × 修改比例（未计入 Snapshot 与元数据开销）。实际以客户数据实测为准。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>FlexClone 工作区</h3>
+            <div class="li"><b>即时可用</b>：为每位工程师或每次回归生成完整项目副本</div>
+            <div class="li"><b>并行实验</b>：bug 复现、what-if 分析各用独立副本，互不干扰</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>IP 资产保护</h3>
+            <div class="li ok"><b>Snapshot</b>：定时保护源码与设计库，误删、损坏可快速回滚</div>
+            <div class="li ok"><b>ARP/AI</b>：内置的勒索软件检测，基于机器学习识别异常加密行为</div>
+            <div class="li ok"><b>流片版本</b>：关键里程碑保留 Snapshot，便于审计与复用</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<footer>NetApp AFX × EDA 场景交互演示 · 仅供客户交流使用 · 性能数据为示意，实际以 POC 测试为准</footer>
-</div>
+  <!-- ══════════════════ 幕 10 · FlexCache 与 QoS ══════════════════ -->
+  <section class="scene" data-sec="数据管理" data-nav="多站点与多项目">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>数据管理 · 02</span></div>
+        <h1>多站点协同，<span class="g">多项目隔离</span></h1>
+        <p class="lead">跨地域研发中心共享同一份设计数据；多个项目共用一个集群时，用 QoS 保障关键 tapeout。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g2 an" style="--d:.12s">
+        <div class="panel">
+          <h3>FlexCache 多站点协同</h3>
+          <div class="li"><b>就近缓存</b>：热点设计数据与只读工艺库缓存到远端 farm 附近</div>
+          <div class="li"><b>单一源数据</b>：各站点读到的是同一份源卷，减少手工同步</div>
+          <div class="li"><b>减少广域传输</b>：重复读取在本地命中，不再反复跨广域链路</div>
+          <div class="li warn"><b>AFX 限制</b>：可与 AFF/FAS 互为 FlexCache 源或缓存，但不支持 write-back 模式</div>
+        </div>
+        <div class="panel">
+          <h3>QoS 多项目隔离</h3>
+          <div class="li"><b>性能下限与上限</b>：按项目设定保障值与上限，减少"吵闹邻居"干扰</div>
+          <div class="li"><b>两级嵌套</b>：可同时对 SVM 与其下的卷设置 QoS 策略</div>
+          <div class="li"><b>关键期优先</b>：tapeout 前把签核项目的保障值调高，其他项目限速</div>
+        </div>
+      </div>
+      <div class="g3 an" style="--d:.2s;margin-top:13px">
+        <div class="vc"><span class="k">SCENARIO</span><div class="t">异地验证中心</div><div class="d">总部维护源卷，异地 farm 通过 FlexCache 读取 testbench 与工艺库。</div></div>
+        <div class="vc"><span class="k">SCENARIO</span><div class="t">多项目并行</div><div class="d">多个芯片项目共用集群，按项目阶段动态调整 QoS 保障值。</div></div>
+        <div class="vc"><span class="k">SCENARIO</span><div class="t">与现有 ONTAP 互通</div><div class="d">AFX 可通过 SnapMirror 与 FlexCache 和现有 AFF/FAS 交换数据，适合分阶段迁移。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · 效率与分层 ══════════════════ -->
+  <section class="scene" data-sec="数据管理" data-nav="重删与分层">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>数据管理 · 03</span></div>
+        <h1>全局重删与分层：<span class="g">控制全闪成本</span></h1>
+        <p class="lead">EDA 项目有大量相似的工作区和多版本工艺库；ONTAP 9.19.1 起 AFX 的重删范围扩大到整个存储池。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="vc"><span class="k">ONTAP 9.19.1 · 默认开启</span><div class="t">全局重删</div><div class="d">跨 SAZ 内所有卷消除重复数据块，适合大量相似工作区、多版本库与重复的回归产物。</div></div>
+        <div class="vc"><span class="k">ONTAP 9.19.1 · 默认开启</span><div class="t">动态存储效率</div><div class="d">检测到大规模写入时暂缓压缩与重删，吞吐回落后自动恢复，避免回归高峰被效率任务拖慢。</div></div>
+        <div class="vc"><span class="k">ONTAP 9.19.1 P3 起</span><div class="t">FabricPool 分层</div><div class="d">把不活跃的冷项目数据分层到对象存储，释放全闪空间，历史项目仍可在线访问。</div></div>
+      </div>
+      <div class="g2 an" style="--d:.2s;margin-top:13px">
+        <div class="panel">
+          <h3>EDA 数据的生命周期</h3>
+          <div class="steps" style="margin-bottom:0">
+            <div class="st" style="cursor:default"><div class="n">活跃</div><div class="l">开发与回归</div></div>
+            <div class="st" style="cursor:default"><div class="n">收敛</div><div class="l">签核与 tapeout</div></div>
+            <div class="st" style="cursor:default"><div class="n">归档</div><div class="l">冷数据分层</div></div>
+            <div class="st" style="cursor:default"><div class="n">复用</div><div class="l">下个项目克隆 IP</div></div>
+          </div>
+        </div>
+        <div class="panel tint">
+          <h3>面向 AI 辅助设计</h3>
+          <div class="li ok"><b>同一数据平台</b>：ML 驱动的 PPA 优化、日志分析直接读取设计数据，不必另建副本</div>
+          <div class="li ok"><b>S3 访问</b>：AFX 同时提供 S3，便于数据管道按对象方式读取</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · 回归演示 ══════════════════ -->
+  <section class="scene" data-sec="回归演示" data-nav="夜间回归对照">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>回归演示</span></div>
+        <h1>夜间回归：<span class="g">双控 NAS 与 AFX 对照</span></h1>
+        <p class="lead">数千个仿真作业同时提交，观察元数据处理能力对完成时间的影响。曲线与倍数来自示意模型，不是实测数据。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="panel an" style="--d:.12s">
+        <div class="btnrow" style="margin-bottom:14px">
+          <span style="font-size:13px;color:var(--dim)">并发作业数：<b id="jobsLbl" style="color:var(--blue)">5,000</b></span>
+          <input type="range" id="jobsRange" min="1000" max="20000" step="1000" value="5000" style="width:220px">
+          <button class="btn on" id="raceBtn">▶ 开始演示</button>
+          <button class="btn" id="raceReset">重置</button>
+        </div>
+        <div class="lane legacy">
+          <div class="lhd"><b>控制器固定的双控 NAS</b><span class="tm" id="tLegacy">00:00</span></div>
+          <div class="trk"><div class="prog" id="pLegacy"></div><div class="jobs" id="jLegacy">等待开始…</div></div>
+          <div class="lmeta"><span>元数据：<b>并发越高越拥塞</b></span><span>farm 利用率：<b id="uLegacy">—</b></span><span>License 空转：<b id="lLegacy">—</b></span></div>
+        </div>
+        <div class="lane afx">
+          <div class="lhd"><b>NetApp AFX（解耦全闪）</b><span class="tm" id="tAfx">00:00</span></div>
+          <div class="trk"><div class="prog" id="pAfx"></div><div class="jobs" id="jAfx">等待开始…</div></div>
+          <div class="lmeta"><span>元数据：<b>随节点扩展</b></span><span>farm 利用率：<b id="uAfx">—</b></span><span>License 空转：<b id="lAfx">—</b></span></div>
+        </div>
+        <div class="result" id="raceResult"></div>
+        <p class="note">示意模型：并发越高，固定控制器的元数据排队越明显；完成时间、利用率与倍数仅用于说明机制，实际收益以 POC 实测为准。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · POC 验证 ══════════════════ -->
+  <section class="scene" data-sec="选型与 POC" data-nav="POC 验证">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>选型与 POC · 01</span></div>
+        <h1>POC 验证：<span class="g">用客户自己的负载说话</span></h1>
+        <p class="lead">前面的比例与收益均为行业经验值或示意模型，建议在 POC 中用真实回归与签核作业实测以下各项。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="tw an" style="--d:.12s">
+        <table class="dt">
+          <thead><tr><th style="width:130px">验证项</th><th>关注问题</th><th>建议方法</th></tr></thead>
+          <tbody>
+            <tr><td class="h">元数据吞吐</td><td>回归高峰时 LOOKUP / GETATTR 的响应时间与可承载的操作数</td><td>SPECstorage Solution 2020 的 EDA_BLENDED 负载，或回放客户的 nfsstat / 作业 trace</td></tr>
+            <tr><td class="h">回归墙钟时间</td><td>同一批作业在现有存储与 AFX 上的完成时间、farm 利用率</td><td>选一次真实夜间回归，固定作业数与计算资源对比</td></tr>
+            <tr><td class="h">扩展线性度</td><td>增加控制器节点后，元数据与带宽是否按比例提升</td><td>分别在 N 与 N+2 个节点下重跑同一负载</td></tr>
+            <tr><td class="h">客户端与协议</td><td>farm 主机是否支持 NFSv4.1 / pNFS，挂载参数如何设定</td><td>抽样主机确认 pNFS 生效，记录 nconnect 等参数的效果</td></tr>
+            <tr><td class="h">工作区克隆</td><td>FlexClone 生成完整项目工作区的耗时与空间开销</td><td>按工程师人数批量克隆，统计时间与 SAZ 容量变化</td></tr>
+            <tr><td class="h">数据缩减</td><td>真实工作区、工艺库与波形数据的全局重删与压缩比</td><td>导入代表性项目数据集后查看 SAZ 数据缩减报告</td></tr>
+            <tr><td class="h">多站点协同</td><td>远端 farm 经 FlexCache 读取热点数据的首次与后续访问时延</td><td>在两站点间建立 FlexCache，对比本地读与跨站读</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · 选型与总结 ══════════════════ -->
+  <section class="scene" data-sec="选型与 POC" data-nav="选型与总结">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>选型与 POC · 02</span></div>
+        <h1>选型说明与<span class="g">价值总结</span></h1>
+        <p class="lead">什么情况下适合 AFX、需要满足哪些前提，以及它为 EDA 团队解决的核心问题。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="panel"><h3>适合 AFX 的信号</h3>
+          <div class="li ok">回归规模持续增长，元数据成为瓶颈</div>
+          <div class="li ok">前端小文件与后端大文件需要同一套存储</div>
+          <div class="li ok">性能与容量的增长节奏不一致</div></div>
+        <div class="panel"><h3>版本与功能前提</h3>
+          <div class="li warn">AFX 运行专用的 ONTAP 版本，只提供 NAS 与 S3，不支持 SAN</div>
+          <div class="li warn">全局重删需 ONTAP 9.19.1；FabricPool 需 9.19.1 P3</div>
+          <div class="li warn">FlexCache 不支持 write-back 模式</div></div>
+        <div class="panel"><h3>与现有环境共存</h3>
+          <div class="li">AFX 节点不能与 AFF/FAS 混在同一集群</div>
+          <div class="li">可通过 SnapMirror 与 FlexCache 和现有 ONTAP 系统互通</div>
+          <div class="li">适合按项目分阶段迁移数据</div></div>
+      </div>
+      <div class="g4 an" style="--d:.2s;margin-top:13px">
+        <div class="vc"><span class="k">FARM</span><div class="t">减少作业等 IO</div><div class="d">元数据能力随控制器扩展，缓解回归高峰排队。</div></div>
+        <div class="vc"><span class="k">LICENSE</span><div class="t">License 少空转</div><div class="d">作业更快拿到数据，昂贵的 EDA License 用在计算上。</div></div>
+        <div class="vc"><span class="k">ITERATION</span><div class="t">迭代更快</div><div class="d">FlexClone 工作区与更短的回归窗口，加快设计迭代。</div></div>
+        <div class="vc"><span class="k">IP</span><div class="t">IP 有保障</div><div class="d">Snapshot、ARP/AI 与多站点协同，守护核心设计资产。</div></div>
+      </div>
+      <div class="panel tint an" style="--d:.28s;margin-top:13px">
+        <h3>参考资料</h3>
+        <div class="li">NetApp AFX 文档：docs.netapp.com/us-en/ontap-afx（How AFX differs from AFF and FAS、FAQ、What's new in ONTAP 9.19.1，2026-10 查阅）</div>
+        <div class="li">SPECstorage Solution 2020 EDA_BLENDED 负载说明：spec.org/storage2020</div>
+        <p class="note">文中文件分布、操作占比与回归演示均为行业经验值或示意模型，不构成性能承诺。</p>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
 
 <script>
-/* ================= stage data ================= */
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+
+/* ═══════════ 幕 2 · 全流程数据流 ═══════════ */
 const STAGES=[
  {id:"spec",row:"fe",ico:"📐",nm:"规格与架构",en:"Spec & Architecture",cap:"GB 级",
   types:["需求文档","架构模型","SystemC/TLM","算法参考模型"],
@@ -393,7 +1067,7 @@ const STAGES=[
   pain:"多团队协作的版本一致性；与后续阶段共享同一命名空间",
   meters:[["元数据压力",15],["随机小 IO",20],["顺序带宽",5],["并发规模",10]],
   rw:[60,40],rwNote:"文档/模型协作编辑，读写较均衡，读略多（评审、引用参考模型）",
-  afx:["单一命名空间：架构文档与设计数据统一管理，全流程可追溯","Snapshot 保护关键规格基线版本","多协议访问（NFS/SMB），设计与文档团队无缝协作"]},
+  afx:["架构文档与设计数据放在同一存储，全流程可追溯","Snapshot 保护关键规格基线版本","NFS 与 SMB 同时访问，设计与文档团队共享数据"]},
  {id:"rtl",row:"fe",ico:"⌨️",nm:"RTL 设计",en:"RTL Coding",cap:"数百 GB",
   types:["Verilog/VHDL 源码","头文件/宏","Makefile/脚本","Git/版本库"],
   files:"数十万~数百万个 KB 级小文件，目录层级深，编辑与编译高频",
@@ -402,7 +1076,7 @@ const STAGES=[
   pain:"目录遍历慢、编译 IO 等待、工程师工作区拷贝耗时",
   meters:[["元数据压力",60],["随机小 IO",55],["顺序带宽",10],["并发规模",40]],
   rw:[70,30],rwNote:"编译/lint 反复读取源码与头文件，写主要是编辑保存与编译产物",
-  afx:["NVMe 级低时延加速编译与 lint 检查","FlexGroup 将数百万源码小文件自动分布到全部节点，目录遍历不再卡顿","FlexClone 秒级克隆个人工作区，零等待开工","Snapshot 定时保护源码，误删秒级恢复"]},
+  afx:["全闪低时延加快编译与 lint 检查","FlexGroup 将数百万源码小文件分布到各节点，缓解目录遍历卡顿","FlexClone 即时生成个人工作区，不必等待整份拷贝","Snapshot 定时保护源码，误删可快速恢复"]},
  {id:"sim",row:"fe",ico:"🔬",nm:"仿真与验证",en:"Simulation & Verification",cap:"数十~百 TB",
   types:["Testbench/UVM","波形 FSDB/VCD","仿真日志","Coverage DB","回归结果"],
   files:"存储压力最大的阶段：数千万小文件（日志/脚本）+ 大波形文件（GB 级）混合",
@@ -411,7 +1085,7 @@ const STAGES=[
   pain:"元数据瓶颈导致作业排队 → farm 与 License 空转 → 回归窗口拉长、迭代变慢",
   meters:[["元数据压力",95],["随机小 IO",85],["顺序带宽",55],["并发规模",98]],
   rw:[55,45],rwNote:"读设计/testbench + 大量写日志、波形、覆盖率数据，写占比全流程最高的阶段之一",
-  afx:["解耦架构：回归高峰按需增加性能节点，元数据能力线性扩展","pNFS 让数万 farm 客户端自动直连数据所在节点，流量均衡无热点","FlexGroup 自动打散百万级小文件，高级容量均衡避免成员卷写满导致作业失败","FlexClone 为每次回归秒级克隆环境，并行验证","FlexCache 将热点设计数据缓存到 farm 附近，跨站点协同验证"]},
+  afx:["解耦架构：回归高峰按需增加控制器节点，元数据处理能力随之扩展","pNFS 让 farm 客户端直连数据所在节点，流量分散到各节点","FlexGroup 分布百万级小文件，高级容量均衡减少成员卷写满导致的作业失败","FlexClone 为每次回归即时生成独立环境，并行验证","FlexCache 将热点设计数据缓存到 farm 附近，跨站点协同验证"]},
  {id:"syn",row:"fe",ico:"🧮",nm:"逻辑综合",en:"Synthesis",cap:"TB 级",
   types:["门级网表 Netlist","标准单元库 .lib/.db","SDC 约束","综合报告"],
   files:"读密集：反复加载 GB 级工艺库与 IP 库；输出网表与报告",
@@ -420,7 +1094,7 @@ const STAGES=[
   pain:"库文件读取热点拥塞；多版本工艺库管理复杂",
   meters:[["元数据压力",45],["随机小 IO",50],["顺序带宽",45],["并发规模",55]],
   rw:[85,15],rwNote:"典型读密集：工艺库/IP 库被反复共享读取，仅阶段性写出网表与报告",
-  afx:["全闪高并发共享读，消除库文件热点","FlexCache 分发只读库到多站点/多集群","重删压缩显著降低多版本库的空间占用"]},
+  afx:["全闪高并发共享读，缓解库文件热点","FlexCache 分发只读库到多站点/多集群","全局重删与压缩降低多版本库的空间占用"]},
  {id:"pnr",row:"be",ico:"🗺️",nm:"布局布线 P&R",en:"Place & Route",cap:"数 TB/块",
   types:["DEF/LEF","设计数据库(ICC2/Innovus DB)","中间 GDSII","Checkpoint"],
   files:"单文件大（GB~数十 GB），设计数据库目录结构复杂",
@@ -429,7 +1103,7 @@ const STAGES=[
   pain:"checkpoint 写入慢拖长作业；作业失败重跑代价巨大",
   meters:[["元数据压力",30],["随机小 IO",35],["顺序带宽",85],["并发规模",45]],
   rw:[60,40],rwNote:"读设计库与网表，周期性 checkpoint/DB 保存带来大块突发写",
-  afx:["NVMe 高带宽吞吐，checkpoint 写入不再是瓶颈","Snapshot 保护关键设计数据库，失败快速回退","解耦扩展：带宽需求增长时在线扩性能节点"]},
+  afx:["NVMe 全闪带宽缓解 checkpoint 写入等待","Snapshot 保护关键设计数据库，失败快速回退","解耦扩展：带宽需求增长时在线增加控制器节点"]},
  {id:"drc",row:"be",ico:"🔍",nm:"物理验证",en:"DRC / LVS",cap:"数 TB",
   types:["GDSII/OASIS","Rule Deck 规则文件","验证结果 DB","错误报告"],
   files:"读取超大版图文件 + 规则文件；多进程分布式验证",
@@ -438,7 +1112,7 @@ const STAGES=[
   pain:"版图读取时间直接拉长验证迭代周期",
   meters:[["元数据压力",25],["随机小 IO",30],["顺序带宽",90],["并发规模",60]],
   rw:[80,20],rwNote:"以并行读取超大 GDSII/规则文件为主，写仅为结果 DB 与报告",
-  afx:["多节点聚合带宽，分布式验证供数无瓶颈","pNFS/多路径将大文件读流量分散到多个性能节点","QoS 确保验证任务与其他负载互不干扰"]},
+  afx:["多节点聚合带宽，支撑分布式验证并行读取","pNFS 将大文件读流量分散到多个控制器节点","QoS 确保验证任务与其他负载互不干扰"]},
  {id:"signoff",row:"be",ico:"✅",nm:"签核 Signoff",en:"STA · EM/IR · 功耗",cap:"数 TB",
   types:["SPEF 寄生参数","SDF 时序","多 Corner 时序库","功耗/IR 分析 DB"],
   files:"多 corner × 多 mode 并发分析，大文件密集读取",
@@ -447,7 +1121,7 @@ const STAGES=[
   pain:"tapeout 前迭代最密集，任何 IO 等待都在消耗流片窗口",
   meters:[["元数据压力",30],["随机小 IO",35],["顺序带宽",80],["并发规模",65]],
   rw:[85,15],rwNote:"多 corner 并行加载 SPEF/时序库，读密集；写以分析报告为主",
-  afx:["稳定低时延大带宽，支撑多 corner 并行签核","关键期 QoS 最高优先级保障","FlexClone 快速复制签核数据集做 what-if 分析"]},
+  afx:["稳定的低时延与带宽，支撑多 corner 并行签核","关键期用 QoS 提高签核项目的保障值","FlexClone 快速复制签核数据集做 what-if 分析"]},
  {id:"tape",row:"be",ico:"🏭",nm:"Tapeout 交付",en:"Tapeout & Archive",cap:"数百 GB~TB",
   types:["最终 GDSII/OASIS","交付清单","全项目归档","IP 库沉淀"],
   files:"数十~数百 GB 最终版图；整个项目数据进入归档生命周期",
@@ -456,127 +1130,221 @@ const STAGES=[
   pain:"IP 资产长期保全、合规审计、下个项目快速复用",
   meters:[["元数据压力",15],["随机小 IO",15],["顺序带宽",70],["并发规模",20]],
   rw:[35,65],rwNote:"写为主：最终版图落盘与全项目归档批量写入，读为交付校验",
-  afx:["不可变 Snapshot + ARP 勒索防护，守护流片版本与 IP 资产","冷数据自动分层至对象存储/云，降低归档成本","历史项目在线可查，新项目 FlexClone 秒级复用 IP"]}
+  afx:["不可变 Snapshot + ARP 勒索防护，守护流片版本与 IP 资产","冷数据经 FabricPool 分层至对象存储（ONTAP 9.19.1 P3 起），降低归档成本","历史项目在线可查，新项目用 FlexClone 快速复用 IP"]}
 ];
-
-/* build pipeline */
-function buildRow(rowId,ids){
-  const row=document.getElementById(rowId);
-  ids.forEach((s,i)=>{
-    if(i>0){const c=document.createElement("div");c.className="conn";c.innerHTML='<div class="dot"></div><div class="dot d2"></div>';row.appendChild(c);}
-    const d=document.createElement("div");d.className="stage";d.dataset.id=s.id;
-    d.innerHTML=`<div class="ico">${s.ico}</div><div class="nm">${s.nm}</div><div class="en">${s.en}</div><div class="cap">${s.cap}</div>`;
-    d.onclick=()=>{stopAuto();select(s.id);};
+function buildRow(rowId, list){
+  const row = $('#'+rowId);
+  list.forEach(s=>{
+    const d = document.createElement('div');
+    d.className = 'stg'; d.dataset.id = s.id;
+    d.innerHTML = `<span class="ic">${s.ico}</span><div><div class="nm">${s.nm}</div><div class="cp">${s.cap}</div></div>`;
+    d.addEventListener('click', ()=>{ stopAuto(); select(s.id); });
     row.appendChild(d);
   });
 }
-buildRow("rowFE",STAGES.filter(s=>s.row==="fe"));
-buildRow("rowBE",STAGES.filter(s=>s.row==="be"));
-
+buildRow('rowFE', STAGES.filter(s=>s.row==='fe'));
+buildRow('rowBE', STAGES.filter(s=>s.row==='be'));
 function select(id){
-  const s=STAGES.find(x=>x.id===id);
-  document.querySelectorAll(".stage").forEach(e=>e.classList.toggle("sel",e.dataset.id===id));
-  dIco.textContent=s.ico;dName.textContent=s.nm;dEn.textContent=s.en;
-  dTypes.innerHTML=s.types.map(t=>`<span class="chip">${t}</span>`).join("");
-  dFiles.textContent=s.files;dIO.textContent=s.io;dScale.textContent=s.scale;dPain.textContent=s.pain;
-  dAfx.innerHTML=s.afx.map(a=>`<li>${a}</li>`).join("");
-  dMeters.innerHTML=s.meters.map(m=>`<div class="row"><div class="lb">${m[0]}</div><div class="bar"><div class="fill" data-w="${m[1]}"></div></div><div class="pc">${m[1]}%</div></div>`).join("");
-  /* R/W ratio */
-  const[r,w]=s.rw;
-  rwLabel.textContent=`读 ${r}% : 写 ${w}%`;
-  rwRead.style.width="0%";rwWrite.style.width="0%";
-  rwRead.textContent=`读 ${r}%`;rwWrite.textContent=`写 ${w}%`;
-  rwNote.textContent=s.rwNote;
+  const s = STAGES.find(x=>x.id===id);
+  $$('.stg').forEach(e=> e.classList.toggle('sel', e.dataset.id===id));
+  $('#dIco').textContent = s.ico; $('#dName').textContent = s.nm; $('#dEn').textContent = s.en;
+  $('#dTypes').innerHTML = s.types.map(t=>`<i>${t}</i>`).join('');
+  $('#dFiles').textContent = s.files; $('#dIO').textContent = s.io;
+  $('#dScale').textContent = s.scale; $('#dPain').textContent = s.pain;
+  $('#dAfx').innerHTML = s.afx.map(a=>`<div class="li ok">${a}</div>`).join('');
+  $('#dMeters').innerHTML = s.meters.map(m=>`<div class="mrow"><span>${m[0]}</span><div class="bg"><div class="fg" data-w="${m[1]}"></div></div><b>${m[1]}</b></div>`).join('');
+  const [r,w] = s.rw;
+  $('#rwLabel').textContent = `读 ${r}% : 写 ${w}%`;
+  const rr = $('#rwRead'), ww = $('#rwWrite');
+  rr.style.width = ww.style.width = '0';
+  rr.textContent = `读 ${r}%`; ww.textContent = `写 ${w}%`;
+  $('#rwNote').textContent = s.rwNote;
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    dMeters.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%");
-    rwRead.style.width=r+"%";rwWrite.style.width=w+"%";
+    $$('#dMeters .fg').forEach(f=> f.style.width = f.dataset.w + '%');
+    rr.style.width = r + '%'; ww.style.width = w + '%';
   }));
 }
-select("sim");
-
-/* auto tour */
-let autoTimer=null,autoIdx=0;
-const autoBtn=document.getElementById("autoBtn");
-function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;autoBtn.textContent="▶ 自动讲解";}}
-autoBtn.onclick=()=>{
-  if(autoTimer){stopAuto();return;}
-  autoIdx=0;select(STAGES[0].id);autoBtn.textContent="⏸ 停止讲解";
-  autoTimer=setInterval(()=>{autoIdx=(autoIdx+1)%STAGES.length;select(STAGES[autoIdx].id);},4500);
-};
-
-/* tabs */
-document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
-  document.querySelectorAll(".page").forEach(x=>x.classList.remove("on"));
-  t.classList.add("on");document.getElementById(t.dataset.p).classList.add("on");
-  if(t.dataset.p==="p2")animatePage2();
-  if(t.dataset.p!=="p1")stopAuto();
+select('sim');
+let autoTimer = null, autoIdx = 0;
+const autoBtn = $('#autoBtn');
+function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer = null; autoBtn.textContent = '▶ 自动讲解'; autoBtn.classList.remove('on'); } }
+autoBtn.addEventListener('click', ()=>{
+  if(autoTimer){ stopAuto(); return; }
+  autoIdx = 0; select(STAGES[0].id); autoBtn.textContent = '⏸ 停止讲解'; autoBtn.classList.add('on');
+  autoTimer = setInterval(()=>{ autoIdx = (autoIdx+1) % STAGES.length; select(STAGES[autoIdx].id); }, 4500);
 });
 
-/* page2 anim */
-let p2done=false;
-function animatePage2(){
-  document.querySelectorAll("#p2 .fg").forEach(f=>{f.style.width="0";requestAnimationFrame(()=>requestAnimationFrame(()=>f.style.width=f.dataset.w+"%"));});
-  if(p2done)return;p2done=true;
-  document.querySelectorAll("#p2 .num").forEach(n=>{
-    const target=+n.dataset.count,fmt=n.dataset.fmt,t0=performance.now(),dur=1400;
-    function tick(t){
-      const p=Math.min(1,(t-t0)/dur),v=Math.round(target*(1-Math.pow(1-p,3)));
-      n.textContent=fmt==="yi"?(v/100000000).toFixed(v>=100000000?0:1)+" 亿+":fmt==="pct"?v+"%":fmt==="plus"?v.toLocaleString()+"+":v+" PB+";
-      if(p<1)requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
+/* ═══════════ 幕 4/5 · 计数与条形 ═══════════ */
+function growBars(sel){
+  $$(sel+' .fg').forEach(f=>{ f.style.width = '0'; requestAnimationFrame(()=>requestAnimationFrame(()=> f.style.width = f.dataset.w + '%')); });
+}
+function countUp(){
+  $$('.num').forEach(n=>{
+    const target = +n.dataset.count, fmt = n.dataset.fmt, t0 = performance.now(), dur = 1300;
+    (function tick(t){
+      const p = Math.min(1, (t-t0)/dur), v = Math.round(target*(1-Math.pow(1-p,3)));
+      n.textContent = fmt==='yi' ? (v/1e8).toFixed(v>=1e8?0:1)+' 亿+' : fmt==='pct' ? v+'%' : fmt==='plus' ? v.toLocaleString()+'+' : v+' PB+';
+      if(p<1) requestAnimationFrame(tick);
+    })(t0);
   });
 }
-
-/* ============ race demo ============ */
-const jobsRange=document.getElementById("jobsRange"),jobsLbl=document.getElementById("jobsLbl");
-jobsRange.oninput=()=>jobsLbl.textContent=(+jobsRange.value).toLocaleString();
-let raceRAF=null;
-function fmt(sec){const m=Math.floor(sec/60),s=Math.floor(sec%60);return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");}
-function resetRace(){
-  if(raceRAF)cancelAnimationFrame(raceRAF);raceRAF=null;
-  pLegacy.style.width=pAfx.style.width="0";
-  jLegacy.textContent=jAfx.textContent="等待开始…";
-  tLegacy.textContent=tAfx.textContent="00:00";
-  uLegacy.textContent=lLegacy.textContent=uAfx.textContent=lAfx.textContent="—";
-  raceResult.style.display="none";
-  raceBtn.textContent="▶ 开始演示";
+const CHAIN = [
+  ['元数据排队','数千个作业同时 LOOKUP / GETATTR，固定数量的控制器处理不过来，请求开始排队，响应时间上升。'],
+  ['作业等 IO','每个仿真作业启动时要检查大量依赖文件，元数据响应一慢，作业就停在 IO 等待上。'],
+  ['farm 空转','计算节点已分配给作业，但 CPU 在等存储，计算农场的有效利用率下降。'],
+  ['License 空转','EDA 工具 License 在作业运行期间被占用，等 IO 的时间同样消耗 License。'],
+  ['回归窗口拉长','夜间回归跑不完，第二天的设计迭代被推迟，影响整体项目节奏。']
+];
+function chain(i){
+  $$('#chainSteps .st').forEach((s,k)=> s.classList.toggle('on', k===i));
+  $('#chainT').textContent = CHAIN[i][0]; $('#chainD').textContent = CHAIN[i][1];
 }
-document.getElementById("raceReset").onclick=resetRace;
-document.getElementById("raceBtn").onclick=()=>{
-  if(raceRAF){resetRace();return;}
-  resetRace();raceBtn.textContent="■ 停止";
-  const jobs=+jobsRange.value;
-  const afxTime=8+jobs/20000*6;
-  const legFactor=1.8+Math.pow(jobs/5000,1.35)*0.9;
-  const legTime=afxTime*legFactor;
-  const wallScale=3600/afxTime*1.0;
-  const t0=performance.now();
-  uAfx.textContent="92%";lAfx.textContent="极低";
-  uLegacy.textContent=Math.max(20,Math.round(92/legFactor))+"%";
-  lLegacy.textContent="严重（排队等待 IO）";
+$$('#chainSteps .st').forEach(s=> s.addEventListener('click', ()=> chain(+s.dataset.i)));
+chain(0);
+
+/* ═══════════ 幕 6 · 解耦架构 ═══════════ */
+const ARCH = {
+  base:['','','当前规模：4 个控制器节点共享 3 个存储柜组成的 SAZ。'],
+  perf:['1','','回归高峰：新增控制器节点，元数据与带宽处理能力增加；已有卷由 AFX 自动分摊到新节点，不需要拷贝数据。'],
+  cap :['','1','数据增长：新增存储柜，磁盘自动加入 SAZ，所有节点立即可用；不必为容量多买控制器。']
+};
+$$('[data-arch]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-arch]').forEach(x=> x.classList.toggle('on', x===b));
+  const a = ARCH[b.dataset.arch];
+  $('#newNode').style.opacity = a[0] ? 1 : 0;
+  $('#newShelf').style.opacity = a[1] ? 1 : 0;
+  $('#archMsg').textContent = a[2];
+}));
+
+/* ═══════════ 幕 7 · 卷移动 ═══════════ */
+let mvMode = 'saz', mvTimer = null;
+function mvReset(){
+  clearInterval(mvTimer); mvTimer = null;
+  $('#mvVol').style.transform = ''; $('#mvOwner').setAttribute('d','M140 90 L140 186');
+  $('#mvCopy').setAttribute('opacity','0');
+  $('#mvLoadA').textContent = '负载：高（热点项目）'; $('#mvLoadB').textContent = '负载：低';
+  $('#mvPlay').disabled = false;
+}
+$$('[data-mv]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-mv]').forEach(x=> x.classList.toggle('on', x===b));
+  mvMode = b.dataset.mv; mvReset();
+  $('#mvAgg').style.display = mvMode==='agg' ? '' : 'none';
+  $('#mvSaz').style.display = mvMode==='saz' ? '' : 'none';
+  $('#mvMsg').textContent = mvMode==='agg'
+    ? '传统架构：卷的数据存放在节点 A 的聚合里。要把它移到节点 B，必须把全部数据拷贝到节点 B 的聚合。'
+    : 'AFX：卷的数据在共享的 SAZ 中，任何节点都能访问。移到节点 B 只需切换归属。';
+}));
+$('#mvPlay').addEventListener('click', ()=>{
+  mvReset(); $('#mvPlay').disabled = true;
+  const done = ()=>{ $('#mvLoadA').textContent = '负载：均衡'; $('#mvLoadB').textContent = '负载：均衡'; $('#mvPlay').disabled = false; };
+  if(mvMode === 'saz'){
+    $('#mvOwner').setAttribute('d','M500 90 L200 200');
+    $('#mvMsg').textContent = 'AFX：只切换卷的归属节点，数据留在 SAZ 原处，不产生拷贝流量。';
+    setTimeout(done, 950);
+  } else {
+    const c = $('#mvCopy'); c.setAttribute('opacity','1'); let p = 0;
+    $('#mvMsg').textContent = '传统架构：先把整卷数据拷贝到节点 B 的聚合，期间占用磁盘与网络带宽。';
+    mvTimer = setInterval(()=>{
+      p += 4; c.textContent = '拷贝数据中… ' + Math.min(p,100) + '%';
+      if(p >= 100){ clearInterval(mvTimer); mvTimer = null; c.setAttribute('opacity','0');
+        $('#mvVol').style.transform = 'translateX(360px)'; $('#mvOwner').setAttribute('d','M500 90 L500 186'); setTimeout(done, 950); }
+    }, 90);
+  }
+});
+
+/* ═══════════ 幕 8 · pNFS ═══════════ */
+$$('[data-pn]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-pn]').forEach(x=> x.classList.toggle('on', x===b));
+  const p = b.dataset.pn === 'pnfs';
+  $('#pnV3').style.display = p ? 'none' : '';
+  $('#pnP').style.display = p ? '' : 'none';
+  $('#pnMsg').textContent = p ? 'pNFS：客户端获取数据位置后，直接访问持有该卷的节点'
+                              : 'NFSv3：流量集中到挂载的节点 A，再经集群内部转发到其他节点（虚线）';
+}));
+
+/* ═══════════ 幕 9 · FlexClone 容量示意 ═══════════ */
+function fmtTB(gb){ return gb >= 1024 ? (gb/1024).toFixed(1)+' TB' : Math.round(gb)+' GB'; }
+function fc(){
+  const n = +$('#fcN').value, s = +$('#fcS').value, c = +$('#fcC').value;
+  $('#fcNv').textContent = n + ' 人'; $('#fcSv').textContent = s + ' GB'; $('#fcCv').textContent = c + '%';
+  const full = n*s, clone = n*s*c/100;
+  $('#fcFull').style.width = '100%'; $('#fcClone').style.width = Math.max(1, clone/full*100) + '%';
+  $('#fcFullV').textContent = fmtTB(full); $('#fcCloneV').textContent = fmtTB(clone);
+}
+['#fcN','#fcS','#fcC'].forEach(id=> $(id).addEventListener('input', fc));
+fc();
+
+/* ═══════════ 幕 12 · 回归赛跑（示意模型） ═══════════ */
+const jobsRange = $('#jobsRange');
+jobsRange.addEventListener('input', ()=> $('#jobsLbl').textContent = (+jobsRange.value).toLocaleString());
+let raceRAF = null;
+const mmss = sec=> String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(Math.floor(sec%60)).padStart(2,'0');
+function resetRace(){
+  if(raceRAF) cancelAnimationFrame(raceRAF); raceRAF = null;
+  $('#pLegacy').style.width = $('#pAfx').style.width = '0';
+  $('#jLegacy').textContent = $('#jAfx').textContent = '等待开始…';
+  $('#tLegacy').textContent = $('#tAfx').textContent = '00:00';
+  ['#uLegacy','#lLegacy','#uAfx','#lAfx'].forEach(id=> $(id).textContent = '—');
+  $('#raceResult').style.display = 'none';
+  $('#raceBtn').textContent = '▶ 开始演示';
+}
+$('#raceReset').addEventListener('click', resetRace);
+$('#raceBtn').addEventListener('click', ()=>{
+  if(raceRAF){ resetRace(); return; }
+  resetRace(); $('#raceBtn').textContent = '■ 停止';
+  const jobs = +jobsRange.value;
+  const afxTime = 5 + jobs/20000*3;
+  const legFactor = 1.8 + Math.pow(jobs/5000,1.35)*0.9;
+  const legTime = afxTime*legFactor, wallScale = 3600/afxTime, t0 = performance.now();
+  const legAnim = afxTime*Math.min(legFactor, 1 + (legFactor-1)*.3);   // 动画时长压缩，读数仍按模型比例
+  $('#uAfx').textContent = '高'; $('#lAfx').textContent = '低';
+  $('#uLegacy').textContent = legFactor > 3 ? '低' : '中'; $('#lLegacy').textContent = '高（排队等待 IO）';
   function step(t){
-    const el=(t-t0)/1000;
-    const pa=Math.min(1,el/afxTime);
-    const pl=Math.min(1,1-Math.pow(1-Math.min(1,el/legTime),0.62));
-    pAfx.style.width=(pa*100).toFixed(1)+"%";
-    pLegacy.style.width=(pl*100).toFixed(1)+"%";
-    jAfx.textContent=`已完成 ${Math.round(pa*jobs).toLocaleString()} / ${jobs.toLocaleString()} 作业`;
-    jLegacy.textContent=`已完成 ${Math.round(pl*jobs).toLocaleString()} / ${jobs.toLocaleString()} 作业${pl<1&&pa>=1?"（仍在排队…）":""}`;
-    tAfx.textContent=fmt(Math.min(el,afxTime)*wallScale/60);
-    tLegacy.textContent=fmt(Math.min(el,legTime)*wallScale/60);
-    if(pa>=1&&pl>=1){
-      raceBtn.textContent="▶ 重新演示";raceRAF=null;
-      const speedup=(legTime/afxTime).toFixed(1);
-      raceResult.style.display="block";
-      raceResult.innerHTML=`🏁 <b>AFX 提前完成回归</b>：相同 ${jobs.toLocaleString()} 个并发作业下，示意完成时间缩短约 <b>${speedup}×</b>。回归窗口缩短 = 每天多一轮设计迭代 = <b>License 与计算农场投资价值最大化</b>。`;
+    const el = (t-t0)/1000;
+    const pa = Math.min(1, el/afxTime);
+    const pl = Math.min(1, 1-Math.pow(1-Math.min(1, el/legAnim), .62));
+    $('#pAfx').style.width = (pa*100).toFixed(1)+'%'; $('#pLegacy').style.width = (pl*100).toFixed(1)+'%';
+    $('#jAfx').textContent = `已完成 ${Math.round(pa*jobs).toLocaleString()} / ${jobs.toLocaleString()} 作业`;
+    $('#jLegacy').textContent = `已完成 ${Math.round(pl*jobs).toLocaleString()} / ${jobs.toLocaleString()} 作业${pl<1&&pa>=1?'（仍在排队…）':''}`;
+    $('#tAfx').textContent = mmss(Math.min(el,afxTime)*wallScale/60);
+    $('#tLegacy').textContent = mmss(Math.min(el,legAnim)/legAnim*legTime*wallScale/60);
+    if(pa>=1 && pl>=1){
+      $('#raceBtn').textContent = '▶ 重新演示'; raceRAF = null;
+      const r = $('#raceResult'); r.style.display = 'block';
+      r.innerHTML = `<b>示意结论</b>：在这个模型里，${jobs.toLocaleString()} 个并发作业下 AFX 先完成回归，并发越高差距越大。回归窗口缩短，意味着每天可以多一轮设计迭代；实际差距需在 POC 中用客户回归实测。`;
       return;
     }
-    raceRAF=requestAnimationFrame(step);
+    raceRAF = requestAnimationFrame(step);
   }
-  raceRAF=requestAnimationFrame(step);
-};
+  raceRAF = requestAnimationFrame(step);
+});
+
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav !== '全流程数据流') stopAuto();
+  if(nav === '规模与文件分布') setTimeout(()=>{ growBars('#sizeBars'); countUp(); }, 320);
+  if(nav === '元数据瓶颈') setTimeout(()=> growBars('#opsBars'), 320);
+}
+
+/* 初始化 */
+go(0, true);
+})();
 </script>
 </body>
 </html>
