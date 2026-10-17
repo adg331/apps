@@ -6,10 +6,10 @@
 <script>document.documentElement.classList.add("access-gate-pending")</script>
 <link rel="stylesheet" href="./assets/access-gate.css">
 <script defer src="./assets/access-gate.js"></script>
-<meta name="description" content="ADG331 的网页应用与交互演示入口">
+<meta name="description" content="NetApp Demo Bay：NetApp 存储技术与 AI 数据管理平台交互演示入口">
 <meta name="theme-color" content="#0067c5">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230067c5'/%3E%3Ccircle cx='32' cy='32' r='12' fill='white'/%3E%3C/svg%3E">
-<title>ADG331 · Apps</title>
+<title>NetApp Demo Bay</title>
 <style>
   :root{
     color-scheme:light;
@@ -201,18 +201,67 @@
     *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
     html{scroll-behavior:auto}
   }
+  /* ══ 视觉语言与访问验证页统一：渐变底 + 漂移光晕 + 节点网络 + 流光描边 ══ */
+  @property --ring{syntax:"<angle>";inherits:false;initial-value:0deg}
+  body{background:linear-gradient(160deg,var(--netapp-blue) 0%,var(--netapp-blue-deep) 72%) fixed}
+  body::before{z-index:0;-webkit-mask-image:radial-gradient(ellipse at 50% 38%,black,transparent 80%);mask-image:radial-gradient(ellipse at 50% 38%,black,transparent 80%)}
+  body::after{content:"";position:fixed;right:-14vw;bottom:-210px;width:62vw;height:360px;pointer-events:none;z-index:0;border:1px solid rgba(255,255,255,.14);border-radius:50%;box-shadow:0 0 0 44px rgba(255,255,255,.03),0 0 0 88px rgba(255,255,255,.02)}
+  .aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .aurora::before,.aurora::after{content:"";position:absolute;width:60vmax;height:60vmax;border-radius:50%;will-change:transform}
+  .aurora::before{left:-20vmax;top:-24vmax;background:radial-gradient(circle,rgba(26,167,255,.5),transparent 62%);animation:drift-a 17s ease-in-out infinite alternate}
+  .aurora::after{right:-22vmax;bottom:-28vmax;background:radial-gradient(circle,rgba(92,225,230,.3),transparent 62%);animation:drift-b 23s ease-in-out infinite alternate}
+  #net{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
+  #net.ready{opacity:1}
+  main,footer{position:relative;z-index:1}
+
+  /* 头图改为半透明玻璃，让光晕与网络透出来 */
+  .band{background:rgba(0,58,112,.58);-webkit-backdrop-filter:blur(14px) saturate(1.25);backdrop-filter:blur(14px) saturate(1.25)}
+  .band.scrolled{background:rgba(0,46,92,.94)}
+  .led{animation:led 2.4s ease-in-out infinite}
+  h1{text-shadow:0 0 34px rgba(142,220,255,.32)}
+  .sec-head h2{display:inline-flex;align-items:center;gap:10px}
+  .sec-head h2::before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.14),0 0 14px rgba(255,255,255,.7);animation:led 2.4s ease-in-out infinite}
+  .sec-tools .sec-head h2::before{background:#c9d4e2;box-shadow:0 0 0 4px rgba(255,255,255,.08)}
+
+  /* 卡片：悬停时出现绕圈流光描边、外发光、跟随鼠标的高光与轻微 3D 倾斜 */
+  .slot:not(.empty){--rx:0deg;--ry:0deg;--gx:50%;--gy:0px;transition:transform .28s ease-out,box-shadow .3s ease,border-color .3s ease,opacity .6s ease}
+  .slot:not(.empty):hover{transform:perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-6px);border-color:rgba(255,255,255,.9);
+    box-shadow:0 26px 58px rgba(0,42,82,.34),0 0 42px rgba(142,220,255,.38)}
+  .slot:not(.empty)::after{content:"";position:absolute;inset:0;z-index:4;border-radius:inherit;padding:1.5px;pointer-events:none;opacity:0;transition:opacity .3s ease;
+    background:conic-gradient(from var(--ring),transparent 0 18%,#8edcff 32%,transparent 46% 68%,#fff 82%,transparent 96%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+    animation:ring 6s linear infinite}
+  .slot:not(.empty)::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .3s ease;
+    background:radial-gradient(420px circle at var(--gx) var(--gy),rgba(26,167,255,.12),transparent 62%)}
+  .slot:not(.empty):hover::after,.slot:not(.empty):hover::before{opacity:1}
+  .slot.tool:not(.empty)::after{background:conic-gradient(from var(--ring),transparent 0 18%,#c9d4e2 32%,transparent 46% 68%,#fff 82%,transparent 96%)}
+
+  /* 入场：验证通过后卡片依次升起，折叠下方的卡片滚动到视口时再升起 */
+  .js-reveal .slot.pre{opacity:0;transform:translateY(26px) scale(.98)}
+  .js-reveal .slot.in{transition:opacity .6s ease var(--d,0s),transform .7s cubic-bezier(.2,.7,.2,1) var(--d,0s),box-shadow .3s ease,border-color .3s ease}
+
+  @keyframes ring{to{--ring:360deg}}
+  @keyframes led{50%{box-shadow:0 0 0 7px rgba(255,255,255,.07),0 0 26px rgba(255,255,255,1)}}
+  @keyframes drift-a{to{transform:translate(14vmax,9vmax) scale(1.15)}}
+  @keyframes drift-b{to{transform:translate(-12vmax,-10vmax) scale(1.2)}}
+  @media (prefers-reduced-motion:reduce){
+    .aurora::before,.aurora::after,.led,.sec-head h2::before,.slot::after{animation:none}
+    .js-reveal .slot.pre{opacity:1;transform:none}
+  }
 </style>
 </head>
 <body>
+<div class="aurora" aria-hidden="true"></div>
+<canvas id="net" aria-hidden="true"></canvas>
 
 <div class="band">
   <canvas id="stream" aria-hidden="true"></canvas>
 
   <nav class="topbar" aria-label="页面导航">
     <div class="wrap">
-      <a class="brand" href="./" aria-label="ADG331 Apps 首页">
+      <a class="brand" href="./" aria-label="NetApp Demo Bay 首页">
         <span class="led" aria-hidden="true"></span>
-        <span class="brand-text">ADG331 · APPS</span>
+        <span class="brand-text">NETAPP · DEMO BAY</span>
       </a>
       <div class="topbar-tools">
       <nav class="bays" aria-label="展位快速跳转">
@@ -431,7 +480,7 @@
 <footer>
   <div class="wrap">
     <span>需要访问密码请联系 <a href="mailto:enyang.fu@lenovonetapp.com">enyang.fu@lenovonetapp.com</a></span>
-    <span class="mono">ADG331 / 2026</span>
+    <span class="mono">NETAPP DEMO BAY / 2026</span>
   </div>
 </footer>
 
@@ -641,6 +690,115 @@ if (renderer) {
   // 点击弹层外的遮罩关闭
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
   dlg.addEventListener('close', () => player.pause());
+})();
+</script>
+<script>
+/* ══ 全页节点网络（与访问验证页同一母题，密度与亮度更低，避免干扰卡片阅读） ══ */
+(() => {
+  const canvas = document.getElementById('net');
+  const ctx = canvas.getContext && canvas.getContext('2d');
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!ctx || REDUCED) { canvas.hidden = true; return; }
+  const LINK = 140, pointer = { x: 0, y: 0, on: false };
+  let w = 0, h = 0, nodes = [], pulses = [], raf = null, last = 0;
+  function node() {
+    const a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 10, z = .35 + Math.random() * .65;
+    return { x: Math.random() * w, y: Math.random() * h, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, ix: 0, iy: 0, z, r: .7 + z * 1.5 };
+  }
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    w = innerWidth; h = innerHeight;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const want = Math.max(30, Math.min(100, Math.round(w * h / 16000)));
+    while (nodes.length < want) nodes.push(node());
+    nodes.length = want; pulses = [];
+  }
+  function frame(t) {
+    const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
+    ctx.clearRect(0, 0, w, h);
+    for (const n of nodes) {
+      if (pointer.on) {
+        const dx = n.x - pointer.x, dy = n.y - pointer.y, d2 = dx * dx + dy * dy;
+        if (d2 < 22500 && d2 > 1) { const d = Math.sqrt(d2), f = (1 - d / 150) * 40 * dt; n.ix += dx / d * f; n.iy += dy / d * f; }
+      }
+      const k = Math.exp(-2.4 * dt); n.ix *= k; n.iy *= k;
+      n.x += (n.vx + n.ix) * dt; n.y += (n.vy + n.iy) * dt;
+      if (n.x < -20) n.x = w + 20; else if (n.x > w + 20) n.x = -20;
+      if (n.y < -20) n.y = h + 20; else if (n.y > h + 20) n.y = -20;
+    }
+    ctx.lineWidth = 1; ctx.strokeStyle = '#ffffff';
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+      const a = nodes[i], b = nodes[j], dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
+      if (d2 > LINK * LINK) continue;
+      ctx.globalAlpha = (1 - Math.sqrt(d2) / LINK) * .16 * Math.min(a.z, b.z);
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      if (pulses.length < 8 && Math.random() < .0003) pulses.push({ a, b, t: 0, sp: .5 + Math.random() * .6 });
+    }
+    if (pointer.on) {
+      ctx.strokeStyle = '#8edcff';
+      for (const n of nodes) {
+        const d = Math.hypot(n.x - pointer.x, n.y - pointer.y);
+        if (d > 170) continue;
+        ctx.globalAlpha = (1 - d / 170) * .32;
+        ctx.beginPath(); ctx.moveTo(pointer.x, pointer.y); ctx.lineTo(n.x, n.y); ctx.stroke();
+      }
+    }
+    ctx.fillStyle = '#bfeaff';
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      const p = pulses[i]; p.t += dt * p.sp;
+      if (p.t >= 1 || Math.hypot(p.a.x - p.b.x, p.a.y - p.b.y) > LINK * 1.5) { pulses.splice(i, 1); continue; }
+      const x = p.a.x + (p.b.x - p.a.x) * p.t, y = p.a.y + (p.b.y - p.a.y) * p.t, env = Math.sin(p.t * Math.PI);
+      ctx.globalAlpha = .14 * env; ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = .85 * env; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 6.2832); ctx.fill();
+    }
+    ctx.fillStyle = '#ffffff';
+    for (const n of nodes) { ctx.globalAlpha = .25 + n.z * .35; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.2832); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    raf = requestAnimationFrame(frame);
+  }
+  const start = () => { if (raf === null) { last = performance.now(); raf = requestAnimationFrame(frame); } };
+  const stop = () => { if (raf !== null) { cancelAnimationFrame(raf); raf = null; } };
+  resize(); canvas.classList.add('ready'); start();
+  addEventListener('resize', () => { clearTimeout(resize.t); resize.t = setTimeout(resize, 150); });
+  addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.on = e.pointerType === 'mouse'; }, { passive: true });
+  document.addEventListener('pointerleave', () => { pointer.on = false; });
+  document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
+})();
+
+/* ══ 卡片：跟随鼠标的倾斜与高光；验证通过后依次升起 ══ */
+(() => {
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const slots = [...document.querySelectorAll('.slot:not(.empty)')];
+  if (!REDUCED && matchMedia('(hover: hover)').matches) {
+    for (const el of slots) {
+      el.addEventListener('pointermove', e => {
+        const r = el.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+        el.style.setProperty('--ry', ((px - .5) * 5).toFixed(2) + 'deg');
+        el.style.setProperty('--rx', ((.5 - py) * 4).toFixed(2) + 'deg');
+        el.style.setProperty('--gx', (e.clientX - r.left) + 'px');
+        el.style.setProperty('--gy', (e.clientY - r.top) + 'px');
+      });
+      el.addEventListener('pointerleave', () => { el.style.setProperty('--rx', '0deg'); el.style.setProperty('--ry', '0deg'); });
+    }
+  }
+  if (REDUCED || !('IntersectionObserver' in window)) return;
+  document.documentElement.classList.add('js-reveal');
+  slots.forEach(el => el.classList.add('pre'));
+  const io = new IntersectionObserver(entries => {
+    const shown = entries.filter(e => e.isIntersecting).map(e => e.target);
+    shown.forEach((el, i) => {
+      el.style.setProperty('--d', (i * .07).toFixed(2) + 's');
+      el.classList.add('in'); el.classList.remove('pre'); io.unobserve(el);
+      setTimeout(() => { el.classList.remove('in'); el.style.removeProperty('--d'); }, 1200 + i * 70);
+    });
+  }, { threshold: .12 });
+  // 访问验证遮罩期间页面不可见，等遮罩撤掉后再开始观察，入场动画才不会在看不见时播完
+  const begin = () => slots.forEach(el => io.observe(el));
+  const root = document.documentElement;
+  if (!root.classList.contains('access-gate-pending')) begin();
+  else new MutationObserver((_, mo) => { if (!root.classList.contains('access-gate-pending')) { mo.disconnect(); setTimeout(begin, 120); } })
+    .observe(root, { attributes: true, attributeFilter: ['class'] });
 })();
 </script>
 </body>

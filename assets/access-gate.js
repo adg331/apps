@@ -47,9 +47,9 @@
   };
 
   const REDUCED = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const WARP_AT = 380;    // 解锁后多久开始“跃迁”
-  const IRIS_AT = 900;    // 多久开始开圆形光圈
-  const IRIS_MS = 760;
+  const WARP_AT = 160;    // 解锁后多久开始“跃迁”
+  const IRIS_AT = 380;    // 多久开始开圆形光圈
+  const IRIS_MS = 480;
 
   function buildGate() {
     const gate = document.createElement("div");
@@ -58,7 +58,7 @@
     gate.innerHTML = `
       <div class="access-gate__aurora" aria-hidden="true"></div>
       <canvas class="access-gate__fx" aria-hidden="true"></canvas>
-      <div class="access-gate__brand"><span class="access-gate__led" aria-hidden="true"></span>ADG331 / APPS</div>
+      <div class="access-gate__brand"><span class="access-gate__led" aria-hidden="true"></span>NETAPP / DEMO BAY</div>
       <div class="access-gate__stage">
         <div class="access-gate__tilt">
           <div class="access-gate__glow" aria-hidden="true"></div>

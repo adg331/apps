@@ -86,7 +86,7 @@ html.access-gate-pending body { visibility: hidden; }
 .access-gate .access-gate__stage {
   width: min(420px, 100%); perspective: 1100px;
   animation: access-gate-in .7s cubic-bezier(.2,.7,.2,1) backwards;
-  transition: transform .55s cubic-bezier(.5,0,.8,.4), opacity .45s ease, filter .45s ease;
+  transition: transform .32s cubic-bezier(.5,0,.8,.4), opacity .28s ease, filter .28s ease;
 }
 .access-gate .access-gate__tilt { position: relative; transition: transform .28s ease-out; will-change: transform; --ag-gx: 50%; --ag-gy: 0px; }
 .access-gate .access-gate__glow {
