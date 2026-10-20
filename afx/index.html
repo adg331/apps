@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp AFX 平台 · 交互演示</title>
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>NetApp AFX</b><span>INSIDE AFX · INSIGHT 2026</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp INSIGHT 2026 · BKO1003 Inside AFX</span></div>
+      <div class="big an" style="--d:.14s">NetApp AFX</div>
+      <div class="sub an" style="--d:.26s">解耦的 ONTAP：架构、版本演进与落地负载</div>
+      <p class="desc an" style="--d:.34s">
+        控制器与容量独立扩展、所有节点共享一个容量池，同时保留 ONTAP 的企业数据管理能力。
+        从架构原理讲到 9.19.1 / 9.20.1 的新能力、NFS 调优口径，以及发布一年后的落地负载。
+      </p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">架构</div>
+        <div class="chip" data-jump="5">ONTAP 9.19.1</div>
+        <div class="chip" data-jump="7">ONTAP 9.20.1</div>
+        <div class="chip" data-jump="9">NFS 性能</div>
+        <div class="chip" data-jump="11">落地与负载</div>
+      </div>
+      <div class="an" style="--d:.56s;margin-top:30px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an"><span class="eyebrow">Overview</span>
+        <h1>AFX 一页看懂：<span class="g">五个问题</span></h1>
+        <p class="lead">点击卡片跳转到对应章节。KV cache 与 EDA 两个负载有独立的演示页，本页只做概述并给出链接。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="dc" style="--ac:#0067c5" data-jump="2">
+          <div class="hd"><span class="nm">架构：解耦了什么</span><span class="ct">3 幕</span></div>
+          <ul><li>所有节点访问所有盘，容量是一个共享池</li><li>与统一 ONTAP 的组件对照</li><li>4 节点性能对比与 AFX 2K 控制器</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#0e9a62" data-jump="5">
+          <div class="hd"><span class="nm">9.19.1：变大、变省</span><span class="ct">2 幕</span></div>
+          <ul><li>全局去重与原生分层</li><li>32 节点、32 PB、FlexGroup 512 成员卷</li><li>跨文件顺序预读</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#0c8e86" data-jump="7">
+          <div class="hd"><span class="nm">9.20.1：更耐故障、更能并行</span><span class="ct">2 幕</span></div>
+          <ul><li>磁盘框弹性：单框故障数据仍可访问</li><li>分布式 FlexClone</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#6a5ad4" data-jump="9">
+          <div class="hd"><span class="nm">NFS：性能怎么来的</span><span class="ct">2 幕</span></div>
+          <ul><li>nconnect、会话中继、pNFS 各管什么</li><li>NetApp 公布数字的测试配置</li><li>NFSv4.x 每个版本的提升</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#d5820f" data-jump="11">
+          <div class="hd"><span class="nm">落地：用在哪里</span><span class="ct">2 幕</span></div>
+          <ul><li>GPU 即服务、EDA、量化交易、ADAS</li><li>负载从训练转向推理</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#123a7a" data-jump="13">
+          <div class="hd"><span class="nm">总结与参考</span><span class="ct">1 幕</span></div>
+          <ul><li>五个要点</li><li>相关演示：KV cache、EDA、ONTAP 9.20.1</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+      </div>
+      <div class="kpis an" style="--d:.2s;margin-top:14px">
+        <div class="kpi"><b>140 GB/s</b><span>4 节点 · 24 块盘的顺序读（AFX 1K / 2K）</span></div>
+        <div class="kpi v"><b>+70%</b><span>AFX 2K 对比 1K 的写性能（9.19.1）</span></div>
+        <div class="kpi g"><b>32 · 32 PB</b><span>单集群节点数 · 单个存储可用区容量</span></div>
+        <div class="kpi o"><b>9.57 : 1</b><span>全局去重后的最高效率比（vdbench）</span></div>
+      </div>
+      <p class="note an" style="--d:.26s">性能与效率数字为 NetApp 在 BKO1003 中公布的测试值，非性能承诺；结果随配置、负载与数据而异。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 解耦架构 ══════════════════ -->
+  <section class="scene" data-sec="架构" data-nav="解耦的 ONTAP">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>架构 · 01</span></div>
+        <h1>AFX：<span class="g">把控制器和容量拆开的 ONTAP</span></h1>
+        <p class="lead">统一存储里，每块盘归属一个节点，以聚合（aggregate）的形式提供容量；AFX 里所有节点都能访问所有盘，容量是一个共享池，称为存储可用区（SAZ）。切换对比两种架构。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-arch="uni" data-toggle-group="arch">统一存储（Unified）</button>
+            <button class="btn on" data-arch="afx" data-toggle-group="arch">AFX（解耦）</button>
+            <span class="hint" style="margin-left:auto" id="archHint"></span>
+          </div>
+          <svg viewBox="0 0 640 300" id="archSvg" style="max-height:330px"></svg>
+          <p class="note">示意图依据 BKO1003 第 4–5 页、BKO3018 第 9–10 页重绘。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>AFX 的三个组件</h3>
+            <div class="li"><b>存储控制器</b>：每台运行一个 ONTAP 实例。</div>
+            <div class="li"><b>集群互联</b>：以太网，连接所有节点与存储框，负责节点间的数据通信。</div>
+            <div class="li"><b>存储框</b>：NVMe 容量加入集群，汇成单一存储池。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>独立扩展</h3>
+            <div class="li ok"><b>要性能</b>：加控制器。</div>
+            <div class="li ok"><b>要容量</b>：加存储框。</div>
+            <div class="li"><b>不变的部分</b>：快照、复制、克隆、多租户、勒索防护、静态与传输加密等 ONTAP 企业能力。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 组件对照 ══════════════════ -->
+  <section class="scene" data-sec="架构" data-nav="与统一 ONTAP 对照">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>架构 · 02</span></div>
+        <h1>同一个 ONTAP，<span class="g">两种形态</span></h1>
+        <p class="lead">AFX 是为高性能 NAS 负载演进出的 ONTAP 形态。下表逐项对照组件差异；底部能力两种形态都具备，均为 ONTAP 内置，无需附加许可。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g2">
+        <div class="tw an" style="--d:.12s">
+          <table class="dt">
+            <thead><tr><th style="width:100px">组件</th><th>统一 ONTAP</th><th>解耦 ONTAP（AFX）</th></tr></thead>
+            <tbody>
+              <tr><td class="h">磁盘</td><td>每块盘归属一个节点</td><td style="color:var(--blue);font-weight:650">所有节点可访问所有盘</td></tr>
+              <tr><td class="h">容量</td><td>聚合，每个节点可有多个</td><td style="color:var(--blue);font-weight:650">共享容量池，无节点归属、无物理聚合，作为一个整体管理</td></tr>
+              <tr><td class="h">FlexVol</td><td>单节点、单聚合，最大 300 TB</td><td>单节点、无聚合，最大 300 TB</td></tr>
+              <tr><td class="h">FlexGroup</td><td colspan="2">跨多个节点与磁盘，并行性能，最大 60 PB（AFX 32 节点在 9.19.1 起可寻址 150 PB）</td></tr>
+              <tr><td class="h">共有</td><td colspan="2">多租户 SVM、HA 对、数据 / 管理 LIF、高速低延迟后端网络</td></tr>
+              <tr><td class="h">访问协议</td><td>NAS · SAN · 对象</td><td>NFS · SMB · S3（不提供块协议）</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel an" style="--d:.16s">
+          <h3>SVM：集群范围的多租户</h3>
+          <div class="li">每个 SVM 有独立的卷、权限、导出策略、名称服务与防病毒设置。</div>
+          <div class="li">独立网络；IPspace 允许不同租户复用同一 IP 地址段。</div>
+          <div class="li">可限制每个 SVM 的容量或卷数，按 SVM 分配物理容量，避免超分配。</div>
+          <div class="li">设置性能上限或下限，避免"霸道负载"；按 SVM 设置用户、组、qtree 配额。</div>
+        </div>
+      </div>
+      <div class="g4 an" style="--d:.22s;margin-top:13px">
+        <div class="vc"><span class="k">PROTECTION</span><div class="t">Snapshot · SnapMirror</div><div class="d">零拷贝时间点副本、即时恢复；1:1、扇出或级联，同步或异步复制。</div></div>
+        <div class="vc"><span class="k">EFFICIENCY</span><div class="t">去重 · FlexClone</div><div class="d">秒级可写副本，写入前不占容量；AFX 起去重覆盖整个 SAZ。</div></div>
+        <div class="vc"><span class="k">SECURITY</span><div class="t">ARP · 加密 · 多租户</div><div class="d">基于快照的勒索防护与 AI/ML 异常检测；静态与传输加密。</div></div>
+        <div class="vc"><span class="k">ACCESS</span><div class="t">NFS · SMB · S3</div><div class="d">同一份数据可按文件或对象访问；GUI、REST 与 CLI 统一管理。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · 性能演进 ══════════════════ -->
+  <section class="scene" data-sec="架构" data-nav="性能与 AFX 2K">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>架构 · 03</span></div>
+        <h1>4 个节点：<span class="g">更少的盘，更高的吞吐</span></h1>
+        <p class="lead">同样 4 个控制器，AFF A90 用 96 块盘、AFX 只用 24 块盘（1 个框）。第二代控制器 AFX 2K 配合 ONTAP 9.19.1，写吞吐再提升约 70%。切换读写查看。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-pf="r" data-toggle-group="pf">顺序读 GB/s</button>
+            <button class="btn" data-pf="w" data-toggle-group="pf">顺序写 GB/s</button>
+          </div>
+          <svg viewBox="0 0 640 250" id="pfSvg" style="max-height:290px"></svg>
+          <p class="note">依据 BKO1003 第 6 页公布的配置与结果（AFF A90 为 4 个框的等效配置）。NetApp 公布值，非性能承诺。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>AFX 2K 控制器</h3>
+            <div class="li"><b>CPU</b>：2 × 48 核 @ 2.3 GHz，更高主频利于延迟敏感路径与元数据路径。</div>
+            <div class="li"><b>内存 / NVRAM</b>：1 TB DRAM；NVRAM12 与 NVRAM12-EX 各 64 GB，写入更快。</div>
+            <div class="li"><b>网络</b>：400 GbE（CX7 卡），客户端、HA / 集群、存储端口均为 400G。</div>
+            <div class="li warn"><b>供电</b>：仅支持高压交流（2000W 钛金电源），不支持低压交流与直流。</div>
+          </div>
+          <div class="kpis an" style="--d:.24s;grid-template-columns:repeat(2,1fr)">
+            <div class="kpi v"><b>~70%</b><span>AFX 2K 较 1K 的写性能提升（9.19.1），来自网络、NVRAM 与 CPU</span></div>
+            <div class="kpi"><b>17.2–17.3</b><span>9.20.1 单节点写吞吐目标 GB/s（方向性目标）</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 全局去重与分层 ══════════════════ -->
+  <section class="scene" data-sec="ONTAP 9.19.1" data-nav="全局去重与分层">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>ONTAP 9.19.1 · 01</span></div>
+        <h1>去重与分层：<span class="g">两件事同时做</span></h1>
+        <p class="lead">9.19.1 把去重范围从单个卷扩大到整个存储可用区，并在 9.19.1 P3 起提供原生分层。讲者口径：AFX 是同时支持去重与分层的 AI 存储。切换查看去重域。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-dd="vol" data-toggle-group="dd">此前 · 按卷去重</button>
+            <button class="btn on" data-dd="saz" data-toggle-group="dd">9.19.1 · SAZ 全局去重</button>
+          </div>
+          <svg viewBox="0 0 640 170" id="ddSvg" style="max-height:190px"></svg>
+          <div class="tw" style="margin-top:12px">
+            <table class="dt">
+              <thead><tr><th>vdbench 数据集</th><th>9.18.1 效率比</th><th>9.19.1 效率比</th><th>提升</th></tr></thead>
+              <tbody>
+                <tr><td class="h">去重比 5 · 压缩比 2</td><td>7.72 : 1</td><td style="color:var(--blue);font-weight:700">9.57 : 1</td><td>+23.96%</td></tr>
+                <tr><td class="h">去重比 4 · 压缩比 2</td><td>6.57 : 1</td><td style="color:var(--blue);font-weight:700">7.64 : 1</td><td>+16.28%</td></tr>
+                <tr><td class="h">去重比 3 · 压缩比 2</td><td>5.09 : 1</td><td style="color:var(--blue);font-weight:700">6.06 : 1</td><td>+19.04%</td></tr>
+                <tr><td class="h">去重比 2 · 压缩比 2</td><td>3.84 : 1</td><td style="color:var(--blue);font-weight:700">4.21 : 1</td><td>+9.63%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>全局去重</h3>
+            <div class="li">去重域越大，能找到的重复数据越多，存储效率节省越大。</div>
+            <div class="li"><b>9 : 1</b>：预发布测试中观测到的数据缩减比，效率随负载与数据类型而异。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>原生分层 <span class="tag warn">9.19.1 P3 起</span></h3>
+            <div class="li">无需管理员干预，就能降低性能层的已用容量。</div>
+            <div class="li">分层策略可按冷数据时长设定，或只分层快照。</div>
+            <div class="li ok">全闪容量留给活跃数据。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · 规模与预读 ══════════════════ -->
+  <section class="scene" data-sec="ONTAP 9.19.1" data-nav="规模与预读">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>ONTAP 9.19.1 · 02</span></div>
+        <h1>更大的集群、更大的 FlexGroup，<span class="g">零丢帧的顺序读</span></h1>
+        <p class="lead">9.19.1 同步放大了节点数、容量和 FlexGroup 上限，并为"成千上万个按序编号的文件"这类负载加入跨文件顺序预读。点击帧序列查看预读。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="kpis an" style="--d:.1s;grid-template-columns:repeat(5,1fr)">
+        <div class="kpi"><b>32</b><span>AFX 2K 控制器，单集群</span></div>
+        <div class="kpi v"><b>32 PB</b><span>单个 SAZ：最多 25 个框、60 TB NVMe SSD</span></div>
+        <div class="kpi g"><b>512</b><span>FlexGroup 成员卷（32 节点集群）</span></div>
+        <div class="kpi o"><b>1 万亿</b><span>每个 FlexGroup 的文件数</span></div>
+        <div class="kpi t"><b>150 PB</b><span>每个 FlexGroup 可寻址容量（512 × 300 TB）</span></div>
+      </div>
+      <div class="g23" style="margin-top:13px">
+        <div class="viz an" style="--d:.16s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <span style="font-size:12.5px;font-weight:700">跨文件顺序预读 · 媒体帧序列</span>
+            <button class="btn sm" id="raPlay" style="margin-left:auto">▶ 播放读取过程</button>
+          </div>
+          <svg viewBox="0 0 640 150" id="raSvg"></svg>
+          <div class="lg"><span><i style="background:#0067c5"></i>当前请求</span><span><i style="background:#6a5ad4"></i>已预读入内存</span><span><i style="background:#c9d4e6"></i>尚未读取</span></div>
+          <p class="note">示意。NetApp 测试结果：30,000 个 4K 帧、30 个客户端各 30 FPS，零丢帧。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.2s">
+            <h3>扩容规划须知</h3>
+            <div class="li warn">32 PB 需要以 9.19.1 或更高版本<b>新部署</b>的集群；以 9.17.1 / 9.18.1 部署的集群，不重新初始化无法扩展到 16 PB 以上。</div>
+            <div class="li warn">连接 15 个及以上存储框时，需要更大的集群交换机（Cisco 9808）。</div>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>跨文件顺序预读</h3>
+            <div class="li">命名相似的文件被预先读入内存，下一帧的预读在请求前就已开始。</div>
+            <div class="li ok">适合帧序列、按时间分片的仿真结果等顺序编号文件。9.20.1 起扩展到统一闪存。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · 磁盘框弹性 ══════════════════ -->
+  <section class="scene" data-sec="ONTAP 9.20.1" data-nav="磁盘框弹性">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>ONTAP 9.20.1 · 01</span></div>
+        <h1>磁盘框弹性：<span class="g">坏掉整个磁盘框，数据仍可访问</span></h1>
+        <p class="lead">RAID-TEC 最多容忍 3 块盘同时故障，AFX 的一个 RAID 组最多 96 块盘。此前 RAID 组按整框排布，坏一个框就是坏 24 块盘；9.20.1 把每个 RAID 组分散到多个框，每框只放 3 块。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn sm" data-sr="old" data-toggle-group="sr">9.19.1 及之前</button>
+            <button class="btn sm on" data-sr="new" data-toggle-group="sr">9.20.1 磁盘框弹性</button>
+            <button class="btn dg sm" id="srFail" style="margin-left:auto">⚡ 模拟第 2 框故障</button>
+            <button class="btn sm" id="srReset">复原</button>
+          </div>
+          <div id="srGrid" style="display:flex;flex-direction:column;gap:5px"></div>
+          <div class="lg" id="srLg"></div>
+          <p class="note">示意：8 个磁盘框 × 24 块盘，简化为不画校验盘与备盘。布局依据 BKO1003 第 21–24 页。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="srTitle">结果</h3>
+            <div id="srBody"></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>使用约束</h3>
+            <div class="li warn"><b>可选、默认关闭</b>：只能在创建集群时启用。</div>
+            <div class="li">每个 RAID 组在每个框上 3 块盘，RAID 组总大小随之变化；RAID 组最少 8 块盘。</div>
+            <div class="li">最少 3 个框，建议 8 个以上；96 块盘的 RAID 组需要 32 个框。</div>
+            <div class="li">每个 RAID 组 1 块备盘，另有全局备盘池。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · 分布式 FlexClone ══════════════════ -->
+  <section class="scene" data-sec="ONTAP 9.20.1" data-nav="分布式 FlexClone">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>ONTAP 9.20.1 · 02</span></div>
+        <h1>分布式 FlexClone：<span class="g">克隆不再挤在一个节点</span></h1>
+        <p class="lead">ONTAP 的卷归属于节点，FlexClone 建在父卷所在节点，每个父卷最多 255 个克隆。同一负载的大量克隆压在一个节点上，就会撞上单节点资源上限。9.20.1 起 AFX 的克隆可以分布到多个节点。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-fc="old" data-toggle-group="fc">9.19.1 及之前</button>
+            <button class="btn on" data-fc="new" data-toggle-group="fc">9.20.1 · 分布式</button>
+          </div>
+          <svg viewBox="0 0 640 260" id="fcSvg" style="max-height:290px"></svg>
+          <p class="note">示意图依据 BKO1003 第 25–26 页。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>机制</h3>
+            <div class="li">克隆先在父卷所在节点创建，再<b>无需拆分</b>地移动到其他节点（BKO3018 口径）。</div>
+            <div class="li">AFX 的所有节点共享同一个容量池，移动克隆不需要搬数据。</div>
+            <div class="li ok">减少单节点瓶颈，提高并行负载的性能。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>适合的负载</h3>
+            <div class="li ok"><b>EDA</b>：夜间回归为每个作业克隆工作区（详见 Bay 10 EDA 演示）。</div>
+            <div class="li ok"><b>软件开发</b>：大量构建与测试并行使用代码副本。</div>
+            <div class="li ok"><b>媒体制作</b>：多个团队并行处理同一素材的副本。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · NFS 三种手段 ══════════════════ -->
+  <section class="scene" data-sec="NFS 性能" data-nav="nconnect / 会话中继 / pNFS">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>NFS 性能 · 01</span></div>
+        <h1>三种手段，<span class="g">各管一件事</span></h1>
+        <p class="lead">nconnect 和会话中继解决"连接不够多"，pNFS 解决"连到了错误的节点"。三者正交，可以叠加。切换查看有无 pNFS 时一次读取的路径。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-pn="off" data-toggle-group="pn">不用 pNFS</button>
+            <button class="btn on" data-pn="on" data-toggle-group="pn">pNFS</button>
+            <span class="hint" style="margin-left:auto" id="pnHint"></span>
+          </div>
+          <svg viewBox="0 0 640 250" id="pnSvg" style="max-height:290px"></svg>
+          <p class="note">依据 BKO1003 第 29–31 页重绘：file.bin 位于 datavol，datavol 在 node4。客户端无需特殊软件或代理。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>三种手段</h3>
+            <div class="li"><b>nconnect</b>：同一个 IP 上最多 16 条连接，提高单个接口的并行度。用于没有会话中继的 NFSv3。</div>
+            <div class="li"><b>会话中继</b>：把同样的思路扩展到同一节点的多个 IP，用满更多端口；吞吐高于单用 nconnect。需要 NFSv4.1。</div>
+            <div class="li"><b>pNFS</b>：数据局部性映射，把客户端直接导向数据实际所在的节点，避开后端互联。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>最容易误解的一点</h3>
+            <div class="li warn">pNFS <b>不</b>并行化单个文件的访问。单文件内的并行来自 GPUDirect，或 nconnect / 会话中继；pNFS 并行的是 FlexGroup 里的不同文件。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · 测试配置与版本提升 ══════════════════ -->
+  <section class="scene" data-sec="NFS 性能" data-nav="测试配置与版本提升">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>NFS 性能 · 02</span></div>
+        <h1>标称数字怎么来的：<span class="g">一句话的配置</span></h1>
+        <p class="lead">"NFSv4.1、开启 pNFS、开启会话中继、FlexGroup 每节点 16 个成员卷、大 I/O。"NetApp 公布的每一个 AFX 数字、每一次 NVIDIA 认证测试都用这套配置；用 NFSv3 默认参数和小 I/O 测，复现不了这些数字。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g5 an" style="--d:.1s;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px">
+        <div class="vc"><span class="k">PROTOCOL</span><div class="t">NFSv4.1</div><div class="d">不用 v3：会话中继需要 v4.1。</div></div>
+        <div class="vc"><span class="k">LOCALITY</span><div class="t">开启 pNFS</div><div class="d">客户端落到持有其数据的节点。</div></div>
+        <div class="vc"><span class="k">CONNECTIONS</span><div class="t">会话中继</div><div class="d">每节点多个 IP，用满端口。</div></div>
+        <div class="vc"><span class="k">NAMESPACE</span><div class="t">FlexGroup</div><div class="d">每节点 16 个成员卷，用满每个节点。</div></div>
+        <div class="vc"><span class="k">I/O SIZE</span><div class="t">大读写块</div><div class="d">小 rsize / wsize 是最常见的自设瓶颈。</div></div>
+      </div>
+      <div class="g23" style="margin-top:13px">
+        <div class="viz an" style="--d:.16s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <span style="font-size:12px;color:var(--dim)">NFSv4.x 基准：</span>
+            <button class="btn sm on" data-nb="2" data-toggle-group="nb">EDA</button>
+            <button class="btn sm" data-nb="1" data-toggle-group="nb">软件构建</button>
+            <button class="btn sm" data-nb="0" data-toggle-group="nb">AI 图像</button>
+          </div>
+          <svg viewBox="0 0 640 170" id="nbSvg" style="max-height:200px"></svg>
+          <p class="note">依据 BKO1003 第 34 页。测试为 2 节点、2 个框的 AFX 集群，最小支持配置为 4 节点。NetApp 公布值，非性能承诺。</p>
+        </div>
+        <div class="panel an" style="--d:.2s">
+          <h3>NFSv4.x 每个版本都在变快</h3>
+          <div class="li"><b>顺序读</b>：220 GB/s（9.17.1）→ 283 GB/s（9.18.1），提升 29%。</div>
+          <div class="li"><b>顺序写</b>：70.6 GB/s → 77.7 GB/s，提升 10%。</div>
+          <div class="li"><b>元数据负载</b>：NFSv4.x 与 NFSv3 的差距缩小到 15% 以内。</div>
+          <div class="li ok">同一套硬件随 ONTAP 版本升级持续提升，升级本身就是性能手段。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · 落地案例 ══════════════════ -->
+  <section class="scene" data-sec="落地与负载" data-nav="落地案例">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>落地与负载 · 01</span></div>
+        <h1>发布一年后：<span class="g">AFX 在哪些负载里落地</span></h1>
+        <p class="lead">AI 云 / GPU 即服务、EDA、量化交易、媒体与娱乐、公共部门，交付方式包括 NetApp 一体机和合作伙伴方案。点击案例查看详情。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.1s" id="csCards">
+        <div class="vc cs" data-cs="0" style="cursor:pointer"><span class="k">AI 云 · 已具名</span><div class="t">SK Telecom POC</div><div class="d">虚拟化 GPU 即服务</div></div>
+        <div class="vc cs" data-cs="1" style="cursor:pointer"><span class="k">GPU 即服务 · 国际</span><div class="t">24 节点 / 20 PB</div><div class="d">AI 工厂即服务</div></div>
+        <div class="vc cs" data-cs="2" style="cursor:pointer"><span class="k">EDA</span><div class="t">32 节点 / 6 PB</div><div class="d">芯片验证与回归测试</div></div>
+        <div class="vc cs" data-cs="3" style="cursor:pointer"><span class="k">量化交易 · ADAS</span><div class="t">8 节点 / 2 PB · 12 节点</div><div class="d">研究分析 · 模型训练</div></div>
+      </div>
+      <div class="g23" style="margin-top:13px">
+        <div class="stbody an" style="--d:.16s;min-height:200px"><h4 id="csH"></h4><div id="csB"></div></div>
+        <div class="panel tint an" style="--d:.2s">
+          <h3>覆盖的行业</h3>
+          <div class="li"><b>AI 云 / 新型云</b>：GPU 即服务与企业 AI 平台。</div>
+          <div class="li"><b>EDA</b>：大规模的 scratch、验证与回归。</div>
+          <div class="li"><b>量化交易</b>：延迟敏感的研究与回测。</div>
+          <div class="li"><b>媒体与娱乐</b>：渲染农场与后期制作。</div>
+          <div class="li"><b>公共部门</b>：政府与国防。</div>
+        </div>
+      </div>
+      <p class="note an" style="--d:.24s">除 SK Telecom 外均为匿名化描述，依据 BKO1003 第 3、7、8 页。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · 负载演进 ══════════════════ -->
+  <section class="scene" data-sec="落地与负载" data-nav="负载演进">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>落地与负载 · 02</span></div>
+        <h1>从批处理到实时推理：<span class="g">负载变了，存储要求也变了</span></h1>
+        <p class="lead">早期 AI / HPC 以训练为主，追求吞吐；进入落地阶段后以推理为主，追求延迟与 IOPS。切换阶段查看两种画像。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="btnrow an" style="--d:.08s;margin-bottom:12px">
+        <button class="btn" data-wl="1" data-toggle-group="wl">早期 AI / HPC：训练为主</button>
+        <button class="btn on" data-wl="2" data-toggle-group="wl">落地阶段：推理为主</button>
+      </div>
+      <div class="g23">
+        <div class="tw an" style="--d:.12s">
+          <table class="dt" id="wlTable">
+            <thead><tr><th style="width:110px">维度</th><th>早期 AI / HPC</th><th>落地阶段</th></tr></thead>
+            <tbody>
+              <tr><td class="h">负载</td><td>约 80% 训练，可预测、按计划的批处理</td><td>80–90% 推理，实时、面向用户、不可预测</td></tr>
+              <tr><td class="h">I/O 模式</td><td>大块顺序读</td><td>小块随机、高并发的"元数据风暴"</td></tr>
+              <tr><td class="h">架构</td><td>并行文件系统</td><td>高性能文件与对象存储</td></tr>
+              <tr><td class="h">目标</td><td>最大化吞吐（GB/s）</td><td>亚毫秒延迟、最大化 IOPS</td></tr>
+              <tr><td class="h">检查点</td><td>同步：训练暂停，GPU 空闲</td><td>异步：后台进行，不暂停</td></tr>
+              <tr><td class="h">GPUDirect</td><td>对性能重要</td><td>基本要求</td></tr>
+              <tr><td class="h">部署</td><td>裸金属</td><td>GPU 即服务</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>新出现的负载</h3>
+            <div class="li"><b>智能体</b>：安全边界变得关键。</div>
+            <div class="li"><b>记忆 / 上下文</b>：KV cache。</div>
+            <div class="li"><b>分析</b>：开放表格式。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>KV cache：读多、对延迟敏感</h3>
+            <div class="li">小块、高频、延迟敏感，更接近 OLTP 而不是顺序吞吐。讲者口径：ONTAP 有三十年 OLTP 积累，AFX 并非勉强适配推理。</div>
+            <div class="li ok">NetApp 实测（vLLM + LMCache）：系统整体处理速度最高 +201%（对比纯 GPU 显存）。完整数据与测试条件见 <a href="../kv-cache/index.html" style="color:var(--blue);font-weight:700">Bay 04 KV Cache 演示</a>。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · 总结 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="总结与参考">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#123a7a"><i></i><span>总结</span></div>
+        <h1>AFX 的<span class="g">五个要点</span></h1>
+        <p class="lead">依据 BKO1003 的结论整理。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="vc"><span class="k">01 · 架构</span><div class="t">解耦带来的速度与规模</div><div class="d">控制器与容量独立扩展，同时保留 ONTAP 的兼容性与企业级韧性；已在关键行业落地。</div></div>
+        <div class="vc"><span class="k">02 · 硬件</span><div class="t">AFX 2K 面向未来优化</div><div class="d">网络、NVRAM 与 CPU 合计带来约 70% 的写性能提升；9.20.1 目标单节点写 17.2–17.3 GB/s。</div></div>
+        <div class="vc"><span class="k">03 · 软件</span><div class="t">联邦而非无限变大的集群</div><div class="d">讲者口径：面向检查点写入的改进随 9.20.1 交付，是这条路线的第一步。</div></div>
+        <div class="vc"><span class="k">04 · 配置</span><div class="t">配置决定能否发挥架构优势</div><div class="d">NFSv4.1、pNFS、会话中继、FlexGroup 可按需求调优；测试时先对齐配置口径。</div></div>
+        <div class="vc"><span class="k">05 · 负载</span><div class="t">为多样性而建</div><div class="d">AI 负载变化很快，从训练到推理、KV cache、智能体与分析，平台要为未来的能力留出空间。</div></div>
+        <div class="vc"><span class="k">相关演示</span><div class="t">继续看</div><div class="d"><a href="../kv-cache/index.html" style="color:var(--blue)">Bay 04 KV Cache</a> · <a href="../eda/index.html" style="color:var(--blue)">Bay 10 EDA</a> · <a href="../ontap-9201/index.html" style="color:var(--blue)">Bay 11 ONTAP 9.20.1</a> · <a href="../novus/index.html" style="color:var(--blue)">Bay 02 Novus</a></div></div>
+      </div>
+      <div class="panel an" style="--d:.2s;margin-top:13px">
+        <h3>参考资料</h3>
+        <div class="li"><b>BKO1003</b> · Inside AFX: The Architecture Behind Enterprise AI at Scale（NetApp INSIGHT 2026）</div>
+        <div class="li"><b>BKO3018</b> · Mastering ONTAP Fundamentals and Latest Innovations（NetApp INSIGHT 2026），用于组件对照与 FlexClone 机制</div>
+        <div class="li"><b>KV cache 测试博文</b>：NetApp 社区 "Comparing KV cache offloading frameworks for vLLM"</div>
+        <p class="note">本页依据 INSIGHT 2026 场次材料整理（2026-09）。性能数字为 NetApp 公布值，方向性目标不构成承诺；功能与时间以 NetApp 正式发布为准。</p>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+/* ═══════════ 幕内交互：每个交互图示一段，命名对应幕名 ═══════════ */
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text != null) e.textContent = text;
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const C = {blue:'#0067c5', violet:'#6a5ad4', green:'#0e9a62', orange:'#d5820f', red:'#d33a5c', teal:'#0c8e86',
+  ink:'#152341', dim:'#5c6a8a', faint:'#8d97b2', line:'#dce3ef', line2:'#c9d4e6', deep:'#123a7a'};
+function box(svg, x, y, w, h, t, sub, o){
+  o = o || {};
+  el('rect', {x, y, width:w, height:h, rx:10, fill:o.fill||'#eaf2fd', stroke:o.stroke||'#93b6e4', 'stroke-width':o.sw||1.2}, svg);
+  el('text', {x:x+w/2, y:y+h/2+(sub?-2:4), 'text-anchor':'middle', 'font-size':o.fs||12.5, 'font-weight':750, fill:o.ink||C.deep}, svg, t);
+  if(sub) el('text', {x:x+w/2, y:y+h/2+14, 'text-anchor':'middle', 'font-size':10, fill:C.dim}, svg, sub);
+}
+function arrowDefs(svg){
+  const d = el('defs', {}, svg);
+  [['ag',C.faint],['ab',C.blue],['ao',C.orange],['av',C.violet],['agr',C.green],['ar',C.red]].forEach(([id,c])=>{
+    const m = el('marker', {id, viewBox:'0 0 10 10', refX:9, refY:5, markerWidth:7, markerHeight:7, orient:'auto'}, d);
+    el('path', {d:'M0 0L10 5L0 10z', fill:c}, m);
+  });
+}
+function line(svg, d, c, mk, o){ o=o||{}; return el('path', Object.assign({d, stroke:c, 'stroke-width':o.w||2, fill:'none', 'marker-end':mk?`url(#${mk})`:''}, o.dash?{'stroke-dasharray':o.dash}:{}), svg); }
+/* 步骤条：同一 data-grp 内互斥，回调收到步骤序号 */
+function steps(grp, fn){
+  const sts = $$(`.st[data-grp="${grp}"]`);
+  sts.forEach(st=> st.addEventListener('click', ()=>{
+    sts.forEach(x=> x.classList.toggle('on', x===st)); fn(+st.dataset.step);
+  }));
+  fn(+(sts.find(s=> s.classList.contains('on')) || sts[0]).dataset.step);
+}
+function growBars(svg){
+  $$('rect[data-w]', svg).forEach(r=>{
+    r.style.transition = 'width .7s cubic-bezier(.2,.7,.3,1)';
+    requestAnimationFrame(()=> requestAnimationFrame(()=> r.setAttribute('width', r.dataset.w)));
+  });
+}
+
+/* ── AFX：解耦的 ONTAP ── */
+$$('[data-arch]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-arch]').forEach(x=> x.classList.toggle('on', x===b));
+  const afx = b.dataset.arch === 'afx', svg = $('#archSvg'); svg.innerHTML = ''; arrowDefs(svg);
+  const NC = [C.blue, C.violet, C.teal, C.orange];
+  el('rect', {x:20, y:118, width:600, height:22, rx:6, fill:'#eef3fb', stroke:C.line2}, svg);
+  el('text', {x:320, y:133, 'text-anchor':'middle', 'font-size':11, fill:C.dim}, svg, afx ? '高速低延迟以太网（集群互联）' : '高速低延迟后端网络');
+  [0,1,2,3].forEach(i=>{
+    const x = 30 + i*150;
+    box(svg, x, 30, 130, 60, '节点 ' + (i+1), afx ? 'AFX 控制器' : (i%2 ? 'HA 对 · B' : 'HA 对 · A'), {fill:'#fff', stroke:NC[i]});
+    line(svg, `M${x+65} 90 L${x+65} 118`, C.faint);
+  });
+  if(afx){
+    el('rect', {x:30, y:165, width:580, height:120, rx:14, fill:'#f3f8ff', stroke:C.blue, 'stroke-width':1.6}, svg);
+    el('text', {x:46, y:186, 'font-size':12, 'font-weight':800, fill:C.blue}, svg, '共享容量池 · 存储可用区（SAZ）');
+    for(let s=0; s<3; s++){
+      for(let d=0; d<16; d++) el('rect', {x:46 + d*34, y:200 + s*26, width:28, height:18, rx:3, fill:'#cfe0f7', stroke:'#93b6e4'}, svg);
+    }
+    [0,1,2,3].forEach(i=> line(svg, `M${95+i*150} 140 L${95+i*150} 165`, C.blue, 'ab'));
+    $('#archHint').textContent = '所有节点访问所有盘';
+  } else {
+    [0,1,2,3].forEach(i=>{
+      const x = 30 + i*150;
+      el('rect', {x, y:165, width:130, height:120, rx:12, fill:'#fff', stroke:NC[i], 'stroke-width':1.4}, svg);
+      el('text', {x:x+65, y:184, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:NC[i]}, svg, '聚合 · 节点 ' + (i+1) + ' 独占');
+      for(let s=0; s<3; s++) for(let d=0; d<4; d++) el('rect', {x:x+12+d*28, y:196+s*26, width:24, height:18, rx:3, fill:'#fff', stroke:NC[i]}, svg);
+      line(svg, `M${x+65} 140 L${x+65} 165`, NC[i], null);
+    });
+    $('#archHint').textContent = '每块盘归属一个节点';
+  }
+}));
+
+/* ── AFX 性能演进 ── */
+const PF = [['AFF A90','9.18.1 · 4 节点 · 96 盘',80,17.2,C.faint],['AFX 1K','9.18.1 · 4 节点 · 24 盘',140,40,C.blue],['AFX 2K','9.19.1 · 4 节点 · 24 盘',140,68,C.violet]];
+$$('[data-pf]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-pf]').forEach(x=> x.classList.toggle('on', x===b));
+  const r = b.dataset.pf === 'r', svg = $('#pfSvg'); svg.innerHTML = '';
+  PF.forEach((p,i)=>{
+    const y = 20 + i*78, v = r ? p[2] : p[3], w = 400 * v / 150;
+    el('text', {x:0, y:y+20, 'font-size':14, 'font-weight':800, fill:C.ink}, svg, p[0]);
+    el('text', {x:0, y:y+38, 'font-size':10.5, fill:C.faint}, svg, p[1]);
+    el('rect', {x:150, y:y+8, width:400, height:34, rx:8, fill:'#eef3fb'}, svg);
+    const bar = el('rect', {x:150, y:y+8, width:0, height:34, rx:8, fill:p[4]}, svg);
+    bar.style.transition = 'width .7s cubic-bezier(.2,.7,.3,1)';
+    requestAnimationFrame(()=> requestAnimationFrame(()=> bar.setAttribute('width', w)));
+    el('text', {x:150 + w + 10, y:y+31, 'font-size':16, 'font-weight':800, fill:p[4] === C.faint ? C.dim : p[4], 'font-family':'monospace'}, svg, v + ' GB/s');
+  });
+}));
+
+
+/* ── 全局去重 ── */
+$$('[data-dd]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-dd]').forEach(x=> x.classList.toggle('on', x===b));
+  const g = b.dataset.dd === 'saz', svg = $('#ddSvg'); svg.innerHTML = '';
+  const blk = [['A','B','C'],['A','D','B'],['C','A','E']];
+  const COL = {A:C.blue, B:C.violet, C:C.teal, D:C.orange, E:C.green};
+  const seen = {};
+  blk.forEach((v,i)=>{
+    const x = 20 + i*205;
+    el('rect', {x, y:22, width:185, height:96, rx:12, fill:'#fff', stroke: g ? C.line2 : C.blue, 'stroke-width': g ? 1.2 : 2, 'stroke-dasharray': g ? '' : '6 4'}, svg);
+    el('text', {x:x+92, y:42, 'text-anchor':'middle', 'font-size':12, 'font-weight':750, fill:C.deep}, svg, 'VOL' + (i+1));
+    v.forEach((k,j)=>{
+      const dup = g ? !!seen[k] : v.indexOf(k) !== j;
+      seen[k] = true;
+      el('rect', {x:x+16+j*56, y:56, width:44, height:44, rx:8, fill: dup ? '#fff' : COL[k], stroke:COL[k], 'stroke-width':1.6, 'stroke-dasharray': dup ? '4 3' : ''}, svg);
+      el('text', {x:x+38+j*56, y:84, 'text-anchor':'middle', 'font-size':14, 'font-weight':800, fill: dup ? COL[k] : '#fff'}, svg, k);
+    });
+  });
+  if(g) el('rect', {x:10, y:12, width:620, height:116, rx:14, fill:'none', stroke:C.green, 'stroke-width':2.2, 'stroke-dasharray':'7 5'}, svg);
+  const stored = g ? 5 : 9;
+  el('text', {x:320, y:156, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':750, fill: g ? C.green : C.blue}, svg,
+    (g ? '去重域 = 整个 SAZ：跨卷的重复块也被消除' : '去重域 = 单个卷：跨卷的重复块各存一份') + ' · 实存 ' + stored + ' / 9 块（示意）');
+}));
+
+/* ── AFX 性能演进 ── */
+const PFX = [['AFF A90','9.18.1 · 4 节点 · 96 块盘',80,17.2,C.faint],['AFX 1K','9.18.1 · 4 节点 · 24 块盘',140,40,C.blue],['AFX 2K','9.19.1 · 4 节点 · 24 块盘',140,68,C.violet]];
+$$('[data-pf]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-pf]').forEach(x=> x.classList.toggle('on', x===b));
+  const r = b.dataset.pf === 'r', svg = $('#pfSvg'); svg.innerHTML = '';
+  PFX.forEach((p,i)=>{
+    const y = 14 + i*78, v = r ? p[2] : p[3], w = 380 * v / 150;
+    el('text', {x:0, y:y+20, 'font-size':14, 'font-weight':800, fill:C.ink}, svg, p[0]);
+    el('text', {x:0, y:y+38, 'font-size':10.5, fill:C.faint}, svg, p[1]);
+    el('rect', {x:160, y:y+8, width:380, height:34, rx:8, fill:'#eef3fb'}, svg);
+    el('rect', {x:160, y:y+8, width:0, height:34, rx:8, fill:p[4], 'data-w':w}, svg);
+    el('text', {x:160 + w + 10, y:y+31, 'font-size':16, 'font-weight':800, fill:p[4] === C.faint ? C.dim : p[4], 'font-family':'monospace'}, svg, v + ' GB/s');
+  });
+  growBars(svg);
+}));
+
+/* ── 跨文件顺序预读 ── */
+let raTimer = null;
+function raDraw(cur){
+  const svg = $('#raSvg'); svg.innerHTML = '';
+  for(let k=0; k<10; k++){
+    const x = 10 + k*62, req = k === cur, pre = k > cur && k <= cur + 3, done = k < cur;
+    el('rect', {x, y:40, width:52, height:64, rx:8, fill: req ? C.blue : pre ? '#e6e1fb' : done ? '#eef3fb' : '#fff', stroke: req ? C.blue : pre ? C.violet : C.line2}, svg);
+    el('text', {x:x+26, y:77, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill: req ? '#fff' : pre ? C.violet : C.faint}, svg, 'F' + (k+1));
+  }
+  el('text', {x:10 + cur*62 + 26, y:28, 'text-anchor':'middle', 'font-size':11, fill:C.blue, 'font-weight':700}, svg, '请求');
+  if(cur < 9) el('text', {x:10 + (cur+2)*62 + 26, y:126, 'text-anchor':'middle', 'font-size':11, fill:C.violet, 'font-weight':700}, svg, '已在内存，读取无需等待');
+}
+function raPlay(){ clearInterval(raTimer); let c = 0; raDraw(0); raTimer = setInterval(()=>{ c++; raDraw(c); if(c >= 9) clearInterval(raTimer); }, 650); }
+$('#raPlay').addEventListener('click', raPlay);
+raDraw(1);
+
+/* ── 分布式 FlexClone ── */
+$$('[data-fc]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-fc]').forEach(x=> x.classList.toggle('on', x===b));
+  const nw = b.dataset.fc === 'new', svg = $('#fcSvg'); svg.innerHTML = '';
+  el('rect', {x:20, y:214, width:600, height:30, rx:8, fill:'#eef6fb', stroke:C.teal}, svg);
+  el('text', {x:320, y:234, 'text-anchor':'middle', 'font-size':11.5, 'font-weight':700, fill:C.teal}, svg, '共享容量池 · 存储可用区（SAZ）');
+  const per = nw ? [[0,1],[2,3],[4,5],[6,7]] : [[0,1,2,3,4,5,6,7],[],[],[]];
+  per.forEach((cl,i)=>{
+    const x = 20 + i*155, busy = cl.length > 4;
+    el('rect', {x, y:10, width:135, height:190, rx:12, fill:'#fff', stroke: busy ? C.red : C.line2, 'stroke-width': busy ? 2 : 1.2}, svg);
+    el('text', {x:x+67, y:30, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':750, fill:C.deep}, svg, '节点 ' + (i+1));
+    if(i === 0){
+      el('rect', {x:x+12, y:40, width:111, height:22, rx:6, fill:C.deep}, svg);
+      el('text', {x:x+67, y:55, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:'#fff'}, svg, 'VOL1（父卷）');
+    }
+    cl.forEach((c,k)=>{
+      const cx = x + 12 + (k%2)*57, cy = (i===0 ? 70 : 44) + Math.floor(k/2)*30;
+      el('rect', {x:cx, y:cy, width:54, height:24, rx:6, fill:C.teal, opacity:.88}, svg);
+      el('text', {x:cx+27, y:cy+16, 'text-anchor':'middle', 'font-size':10.5, 'font-weight':700, fill:'#fff'}, svg, 'CLONE' + (c+1));
+    });
+    if(busy) el('text', {x:x+67, y:190, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:C.red}, svg, '单节点资源瓶颈');
+  });
+}));
+
+/* ── NFSv4.x 基准 ── */
+// 增幅取讲者材料印出的数值（AI 图像第一档印为 +16%）
+const NB = [['AI 图像',[209000,239000,326000],['+16%','+36%']],['软件构建',[600000,950000,1048000],['+58%','+10%']],['EDA',[480000,881000,1038000],['+84%','+18%']]];
+$$('[data-nb]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-nb]').forEach(x=> x.classList.toggle('on', x===b));
+  const [n,v,dl] = NB[+b.dataset.nb], svg = $('#nbSvg'); svg.innerHTML = '';
+  const mx = 1100000, cols = [C.faint, C.blue, C.violet];
+  ['9.17.1','9.18.1','9.19.1'].forEach((ver,i)=>{
+    const y = 8 + i*52, w = 400 * v[i] / mx;
+    el('text', {x:0, y:y+25, 'font-size':13, 'font-weight':750, fill:C.ink}, svg, 'ONTAP ' + ver);
+    el('rect', {x:110, y:y+6, width:400, height:30, rx:7, fill:'#eef3fb'}, svg);
+    el('rect', {x:110, y:y+6, width:0, height:30, rx:7, fill:cols[i], 'data-w':w}, svg);
+    const d = i ? '  ' + dl[i-1] : '';
+    el('text', {x:110 + w + 10, y:y+27, 'font-size':14, 'font-weight':800, fill: i ? cols[i] : C.dim, 'font-family':'monospace'}, svg, v[i].toLocaleString('en-US') + d);
+  });
+  growBars(svg);
+}));
+
+/* ── 落地案例 ── */
+const CS = [
+  ['SK Telecom：虚拟化 GPU 云上的 AFX POC', ['<div class="li">在 SK Telecom 的 AI 云上验证：裸金属性能最高但多租户复杂、缺乏弹性；虚拟化在 AFX 上兼顾弹性、效率与安全多租户。</div>','<div class="kpis" style="margin-top:8px"><div class="kpi g"><b>99%+</b><span>虚拟化环境达到的裸金属性能（借助 GDS）</span></div><div class="kpi"><b>40–50%</b><span>GDS 减少的 CPU 消耗</span></div><div class="kpi v"><b>−36%</b><span>KV cache 扩展到 AFX 后的 TTFT</span></div></div>']],
+  ['国际 GPU 即服务：24 节点 / 20 PB', ['<div class="li"><b>负载</b>：AI 工厂即服务。</div>','<div class="li ok">为 GPU 即服务提供高性能存储。</div>','<div class="li ok">安全多租户，适合服务提供商模式。</div>']],
+  ['EDA：32 节点 / 6 PB', ['<div class="li"><b>负载</b>：芯片验证与回归测试的高性能文件存储。</div>','<div class="li ok">讲者口径：NetApp 过去 10 年以上零停机的记录。</div>','<div class="li">EDA 数据流、元数据瓶颈与 POC 方法见 <a href="../eda/index.html" style="color:var(--blue);font-weight:700">Bay 10 EDA 演示</a>。</div>']],
+  ['量化交易 8 节点 / 2 PB · ADAS 12 节点', ['<div class="li"><b>量化交易</b>：分析、量化与仿真；关键研究负载由网络韧性能力保护。</div>','<div class="li"><b>ADAS</b>：模型训练；同时用上存储效率与分层。</div>']]
+];
+function csPick(i){
+  $$('#csCards .cs').forEach(c=> c.style.borderColor = +c.dataset.cs === i ? 'var(--blue)' : '');
+  $('#csH').textContent = CS[i][0]; $('#csB').innerHTML = CS[i][1].join('');
+}
+$$('#csCards .cs').forEach(c=> c.addEventListener('click', ()=> csPick(+c.dataset.cs)));
+csPick(0);
+/* ── AFX 磁盘框弹性 ── */
+const SR_COL = ['#0067c5','#6a5ad4','#0c8e86','#d5820f','#0e9a62','#d33a5c','#2f6fe0','#8a5a2b'];
+let srMode = 'new', srFailed = false;
+function srDraw(){
+  const g = $('#srGrid'); g.innerHTML = '';
+  const lost = {};
+  for(let s=0; s<8; s++){
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px';
+    const dead = srFailed && s === 1;
+    row.innerHTML = `<span class="mono" style="width:44px;font-size:10.5px;color:${dead?C.red:C.faint}">框 ${s+1}</span>`;
+    for(let d=0; d<24; d++){
+      const rg = srMode === 'old' ? (s < 4 ? 0 : 1) : Math.floor(d/3);
+      if(dead) lost[rg] = (lost[rg]||0) + 1;
+      const c = document.createElement('span');
+      c.style.cssText = `width:17px;height:15px;border-radius:3px;background:${dead?'#f6d4dc':SR_COL[rg]};opacity:${dead?1:.82};${dead?'outline:1px solid '+C.red:''}`;
+      row.appendChild(c);
+    }
+    g.appendChild(row);
+  }
+  const rgs = srMode === 'old' ? 2 : 8;
+  $('#srLg').innerHTML = Array.from({length:rgs}, (_,i)=> `<span><i style="background:${SR_COL[i]}"></i>RG${i+1}</span>`).join('');
+  let title, body;
+  if(!srFailed){
+    title = srMode === 'old' ? '布局：RAID 组按整框排布' : '布局：每个 RAID 组每框只占 3 块';
+    body = srMode === 'old'
+      ? '<div class="li">RG1 占框 1–4（96 块），RG2 占框 5–8。</div><div class="li warn">一个框有 24 块盘，远超 RAID-TEC 的 3 块容错。</div>'
+      : '<div class="li">8 个 RAID 组，每组在每个框上各放 3 块盘。</div><div class="li ok">任何一个框坏掉，每个 RAID 组最多只丢 3 块盘。</div>';
+  } else if(srMode === 'old'){
+    title = '结果：RG1 不可访问';
+    body = `<div class="li warn"><b>RG1 丢失 ${lost[0]} 块盘</b>，超过 RAID-TEC 的 3 块上限。</div><div class="li warn">RG1 上的数据不可访问，整框成为单点故障；RG2 仍正常。</div>`;
+  } else {
+    title = '结果：数据仍可访问';
+    body = `<div class="li ok"><b>每个 RAID 组只丢 ${lost[0]} 块盘</b>，在 RAID-TEC 容错范围内。</div><div class="li ok">数据保持可用，同时自动开始恢复。</div>`;
+  }
+  $('#srTitle').textContent = title; $('#srBody').innerHTML = body;
+}
+$$('[data-sr]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-sr]').forEach(x=> x.classList.toggle('on', x===b)); srMode = b.dataset.sr; srDraw();
+}));
+$('#srFail').addEventListener('click', ()=>{ srFailed = true; srDraw(); });
+$('#srReset').addEventListener('click', ()=>{ srFailed = false; srDraw(); });
+
+/* ── 分布式 FlexClone ── */
+$$('[data-fc]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-fc]').forEach(x=> x.classList.toggle('on', x===b));
+  const nw = b.dataset.fc === 'new', svg = $('#fcSvg'); svg.innerHTML = '';
+  el('rect', {x:20, y:214, width:600, height:30, rx:8, fill:'#eef6fb', stroke:C.teal}, svg);
+  el('text', {x:320, y:234, 'text-anchor':'middle', 'font-size':11.5, 'font-weight':700, fill:C.teal}, svg, '共享容量池 · 存储可用区（SAZ）');
+  const per = nw ? [[0,1],[2,3],[4,5],[6,7]] : [[0,1,2,3,4,5,6,7],[],[],[]];
+  per.forEach((cl,i)=>{
+    const x = 20 + i*155, busy = cl.length > 4;
+    el('rect', {x, y:10, width:135, height:190, rx:12, fill:'#fff', stroke: busy ? C.red : C.line2, 'stroke-width': busy ? 2 : 1.2}, svg);
+    el('text', {x:x+67, y:30, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':750, fill:C.deep}, svg, '节点 ' + (i+1));
+    if(i === 0){
+      el('rect', {x:x+12, y:40, width:111, height:22, rx:6, fill:C.deep}, svg);
+      el('text', {x:x+67, y:55, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:'#fff'}, svg, 'VOL1（父卷）');
+    }
+    cl.forEach((c,k)=>{
+      const cx = x + 12 + (k%2)*57, cy = (i===0 ? 70 : 44) + Math.floor(k/2)*30;
+      el('rect', {x:cx, y:cy, width:54, height:24, rx:6, fill:C.teal, opacity:.88}, svg);
+      el('text', {x:cx+27, y:cy+16, 'text-anchor':'middle', 'font-size':10.5, 'font-weight':700, fill:'#fff'}, svg, 'CLONE' + (c+1));
+    });
+    if(busy) el('text', {x:x+67, y:190, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:C.red}, svg, '单节点资源瓶颈');
+  });
+}));
+
+/* ── AFX 测试配置：pNFS ── */
+$$('[data-pn]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-pn]').forEach(x=> x.classList.toggle('on', x===b));
+  const on = b.dataset.pn === 'on', svg = $('#pnSvg'); svg.innerHTML = ''; arrowDefs(svg);
+  box(svg, 20, 90, 120, 60, 'NFS 客户端', '标准 NAS 客户端', {fill:'#fff'});
+  const nodes = [[220,'node1','10.10.10.11'],[330,'node2',''],[440,'node3',''],[550,'node4','10.10.10.10']];
+  nodes.forEach(([x,n,ip],i)=>{
+    const has = i === 3;
+    box(svg, x-45, 70, 90, 70, n, has ? 'datavol · file.bin' : ip, {fill: has ? '#f3f0fd' : '#fff', stroke: has ? C.violet : C.line2});
+    if(ip && has) el('text', {x, y:160, 'text-anchor':'middle', 'font-size':10, fill:C.faint, 'font-family':'monospace'}, svg, ip);
+  });
+  el('rect', {x:175, y:190, width:420, height:20, rx:6, fill:'#eef3fb', stroke:C.line2}, svg);
+  el('text', {x:385, y:204, 'text-anchor':'middle', 'font-size':10.5, fill:C.dim}, svg, '后端集群网络');
+  if(on){
+    line(svg, 'M140 112 L180 112 L180 40 L550 40 L550 68', C.green, 'agr', {w:3});
+    el('text', {x:365, y:32, 'text-anchor':'middle', 'font-size':11.5, fill:C.green, 'font-weight':700}, svg, 'LAYOUTGET / GETDEVINFO 后，直连 node4（10.10.10.10）');
+    $('#pnHint').textContent = '直达数据所在节点';
+  } else {
+    line(svg, 'M140 120 L173 120', C.orange, 'ao', {w:3});
+    line(svg, 'M220 140 L220 200 L550 200 L550 142', C.orange, 'ao', {w:3, dash:'6 5'});
+    el('text', {x:220, y:60, 'text-anchor':'middle', 'font-size':11, fill:C.orange, 'font-weight':700}, svg, '挂载 10.10.10.11');
+    el('text', {x:385, y:236, 'text-anchor':'middle', 'font-size':11.5, fill:C.red, 'font-weight':700}, svg, '间接访问：经后端网络转发，增加 CPU 与延迟开销');
+    $('#pnHint').textContent = '经后端网络间接访问';
+  }
+}));
+
+/* ── 负载演进：阶段列高亮 ── */
+$$('[data-wl]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-wl]').forEach(x=> x.classList.toggle('on', x===b));
+  const c = +b.dataset.wl;
+  $$('#wlTable tr').forEach(tr=> Array.from(tr.children).forEach((td,i)=>{
+    td.style.background = i === c ? 'rgba(106,90,212,.08)' : '';
+    if(i > 0) td.style.color = i === c ? 'var(--ink)' : '';
+    if(i > 0 && td.tagName === 'TD') td.style.fontWeight = i === c ? '650' : '';
+  }));
+}));
+
+
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav === '性能与 AFX 2K') setTimeout(()=> $('[data-pf].on').click(), 320);
+  if(nav === '规模与预读') setTimeout(raPlay, 420);
+  if(nav === '测试配置与版本提升') setTimeout(()=> $('[data-nb].on').click(), 320);
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+</body>
+</html>

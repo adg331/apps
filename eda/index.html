@@ -346,7 +346,7 @@ footer{
         <div class="dc" style="--ac:#d5820f" data-jump="12"><div class="hd"><span class="nm">回归演示</span><span class="ct">1 幕</span></div>
           <ul><li>夜间回归：双控 NAS 与 AFX 对照</li><li>机制示意，非实测</li></ul><div class="go">进入 →</div></div>
         <div class="dc" style="--ac:#0e9a62" data-jump="13"><div class="hd"><span class="nm">选型与 POC</span><span class="ct">2 幕</span></div>
-          <ul><li>7 项 POC 验证方法</li><li>版本前提与价值总结</li></ul><div class="go">进入 →</div></div>
+          <ul><li>9 项 POC 验证方法</li><li>版本前提与价值总结</li></ul><div class="go">进入 →</div></div>
       </div>
       <div class="kpis an" style="--d:.2s;margin-top:13px">
         <div class="kpi"><b>8</b><span>覆盖的设计阶段：规格 → Tapeout</span></div>
@@ -702,6 +702,7 @@ footer{
             <h3>使用前提</h3>
             <div class="li warn"><b>客户端</b>：farm 主机的内核与 NFS 客户端需支持 NFSv4.1 及以上</div>
             <div class="li warn"><b>验证</b>：POC 中抽样确认 pNFS 实际生效，并记录 nconnect 等挂载参数的效果</div>
+            <div class="li"><b>单文件并行</b>：pNFS 让不同文件落到各自节点；单个大文件内部的并行来自 nconnect / 会话中继</div>
           </div>
         </div>
       </div>
@@ -732,6 +733,7 @@ footer{
             <h3>FlexClone 工作区</h3>
             <div class="li"><b>即时可用</b>：为每位工程师或每次回归生成完整项目副本</div>
             <div class="li"><b>并行实验</b>：bug 复现、what-if 分析各用独立副本，互不干扰</div>
+            <div class="li ok"><b>ONTAP 9.20.1 分布式 FlexClone</b>：此前克隆与父卷同在一个节点；9.20.1 起 AFX 上的克隆可分布到多个节点，批量回归克隆不再挤占单节点资源</div>
           </div>
           <div class="panel tint an" style="--d:.24s">
             <h3>IP 资产保护</h3>
@@ -858,11 +860,17 @@ footer{
             <tr><td class="h">回归墙钟时间</td><td>同一批作业在现有存储与 AFX 上的完成时间、farm 利用率</td><td>选一次真实夜间回归，固定作业数与计算资源对比</td></tr>
             <tr><td class="h">扩展线性度</td><td>增加控制器节点后，元数据与带宽是否按比例提升</td><td>分别在 N 与 N+2 个节点下重跑同一负载</td></tr>
             <tr><td class="h">客户端与协议</td><td>farm 主机是否支持 NFSv4.1 / pNFS，挂载参数如何设定</td><td>抽样主机确认 pNFS 生效，记录 nconnect 等参数的效果</td></tr>
+            <tr><td class="h">测试配置</td><td>测试配置是否与 NetApp 公布数字的口径一致</td><td>NFSv4.1、开启 pNFS 与会话中继、FlexGroup 每节点 16 个成员卷、大 rsize / wsize；沿用 NFSv3 默认参数与小 I/O 会显著低估 AFX</td></tr>
+            <tr><td class="h">单卷场景</td><td>scratch 等单卷热点负载能否用满控制器</td><td>ONTAP 9.20.1 起单卷性能提升（单卷 EDA 基准为 9.18.1 的 140%，NetApp 公布值），按现网单卷负载复测</td></tr>
             <tr><td class="h">工作区克隆</td><td>FlexClone 生成完整项目工作区的耗时与空间开销</td><td>按工程师人数批量克隆，统计时间与 SAZ 容量变化</td></tr>
             <tr><td class="h">数据缩减</td><td>真实工作区、工艺库与波形数据的全局重删与压缩比</td><td>导入代表性项目数据集后查看 SAZ 数据缩减报告</td></tr>
             <tr><td class="h">多站点协同</td><td>远端 farm 经 FlexCache 读取热点数据的首次与后续访问时延</td><td>在两站点间建立 FlexCache，对比本地读与跨站读</td></tr>
           </tbody>
         </table>
+      </div>
+      <div class="g2 an" style="--d:.18s;margin-top:13px">
+        <div class="vc"><span class="k">NetApp 公布 · NFSv4.x EDA 基准</span><div class="t">48 万 → 88.1 万 → 103.8 万</div><div class="d">ONTAP 9.17.1 → 9.18.1（+84%）→ 9.19.1（+18%），同一硬件随软件版本提升。测试为 2 节点 AFX，最小支持配置为 4 节点。</div></div>
+        <div class="vc"><span class="k">NetApp 公布 · 客户规模</span><div class="t">EDA 客户：32 节点 / 6 PB</div><div class="d">用于芯片验证与回归测试的高性能文件存储。可作 POC 规模参照，实际收益以客户负载实测为准。</div></div>
       </div>
     </div>
   </section>

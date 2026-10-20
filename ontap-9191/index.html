@@ -251,6 +251,7 @@ footer{
         <div class="chip" data-jump="10">数据保护</div>
         <div class="chip" data-jump="13">安全增强</div>
         <div class="chip" data-jump="16">AFX 增强</div>
+        <div class="chip" data-jump="19">更多增强</div>
       </div>
       <div class="an" style="--d:.56s;margin-top:30px">
         <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
@@ -293,8 +294,8 @@ footer{
           <div class="go">查看详解 →</div>
         </div>
         <div class="dc" style="--ac:#d5820f" data-jump="16">
-          <div class="hd"><span class="nm">AFX</span><span class="ct">4 项</span></div>
-          <ul><li>支持 32 节点规模</li><li>跨文件顺序读（CFSR）</li><li>全局重复数据删除</li><li>动态存储效率</li></ul>
+          <div class="hd"><span class="nm">AFX</span><span class="ct">7 项</span></div>
+          <ul><li>支持 32 节点规模</li><li>跨文件顺序读（CFSR）</li><li>全局重复数据删除</li><li>动态存储效率</li><li>AFX 2K 控制器 · FlexGroup 512 成员卷 · 原生分层</li></ul>
           <div class="go">查看详解 →</div>
         </div>
       </div>
@@ -1448,7 +1449,7 @@ footer{
               <text id="dedupLbl" x="280" y="142" text-anchor="middle" font-size="11.5" fill="#5c6a8a">重删域范围</text>
             </svg>
           </div>
-          <p class="note">测试仍在进行中，量化的效率提升数据计划于 9.19.1 GA 版本发布。</p>
+          <p class="note">NetApp 公布的 vdbench 测试（数据集重删比 2–5、压缩比 2）：存储效率比从 9.18.1 的 3.84 : 1 – 7.72 : 1 提升到 9.19.1 的 4.21 : 1 – 9.57 : 1，提升 9.6% – 24%。效率比随负载与数据类型而异。</p>
         </div>
 
         <div class="panel an" style="--d:.18s">
@@ -1493,6 +1494,89 @@ footer{
     </div>
   </section>
 
+  <!-- ══════════════════ 幕 17b · AFX 2K / FlexGroup / 分层 ══════════════════ -->
+  <section class="scene" data-sec="AFX" data-nav="AFX 2K / 扩展 / 分层">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>AFX 增强 · 05 / 07</span></div>
+        <h1>AFX 2K 控制器、更大的 FlexGroup 与 <span class="g">原生分层</span></h1>
+        <p class="lead">32 节点之外，9.19.1 还同步放大了 FlexGroup 的规模上限，新增第二代 AFX 2K 控制器，并让 AFX 同时具备分层与全局重删。以下内容依据 INSIGHT 2026 场次 BKO1003。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g3 an" style="--d:.12s">
+        <div class="panel">
+          <h3>AFX 2K 控制器 <span class="tag new">NEW</span></h3>
+          <div class="kpis" style="margin:4px 0 10px"><div class="kpi o"><b>最高 +70%</b><span>写性能，AFX 2K 对比 AFX 1K（ONTAP 9.19.1）</span></div></div>
+          <div class="li">第二代存储控制器，提升来自网络、NVRAM 与 CPU 三方面。</div>
+          <div class="li">单集群可无缝扩展到 32 个 AFX 2K 控制器。</div>
+          <p class="note">NetApp 公布值，非性能承诺。</p>
+        </div>
+        <div class="panel">
+          <h3>FlexGroup 规模上限 <span class="tag new">NEW</span></h3>
+          <div class="kpis" style="margin:4px 0 10px">
+            <div class="kpi v"><b>512</b><span>成员卷（32 节点集群）</span></div>
+            <div class="kpi v"><b>1 万亿</b><span>每个 FlexGroup 的文件数</span></div>
+          </div>
+          <div class="li">单个 FlexGroup 可寻址容量最高 <b>150 PB</b>（512 × 每卷 300 TB）。</div>
+          <div class="li">针对更多成员卷做了性能优化。</div>
+        </div>
+        <div class="panel">
+          <h3>原生分层 <span class="tag warn">9.19.1 P3 起</span></h3>
+          <div class="li">AFX 同时支持分层与重删，冷数据自动移出性能层，<b>无需管理员干预</b>。</div>
+          <div class="li">分层策略可按冷数据时长设定，或仅分层快照。</div>
+          <div class="li ok">高性能层只保留活跃数据，全闪容量用在需要的地方。</div>
+        </div>
+      </div>
+
+      <div class="panel tint an" style="--d:.2s;margin-top:13px">
+        <h3>扩容规划须知</h3>
+        <div class="g2">
+          <div class="li warn"><b>32 PB 存储可用区</b>：需要以 ONTAP 9.19.1 或更高版本<b>新部署</b>的集群。以 9.17.1 / 9.18.1 部署的 AFX 集群，不重新初始化无法扩展到 16 PB 以上。</div>
+          <div class="li warn"><b>集群交换机</b>：连接 15 个及以上磁盘框的大容量配置，需要更大的集群交换机（Cisco 9808）。容量来自最多 25 个磁盘框、60 TB NVMe SSD。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 17c · 更多增强 ══════════════════ -->
+  <section class="scene" data-sec="更多增强" data-nav="更多增强">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>更多增强</span></div>
+        <h1>其他值得关注的 <span class="g">9.19.1 增强</span></h1>
+        <p class="lead">前面各幕之外，9.19.1 在网络、虚拟化、Kubernetes、多租户运维与安全上还有一批改进。按领域筛选。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="btnrow an" style="--d:.1s;margin-bottom:12px">
+        <button class="btn on" data-more="all">全部</button>
+        <button class="btn" data-more="perf">性能</button>
+        <button class="btn" data-more="ops">运维与自动化</button>
+        <button class="btn" data-more="sec">安全</button>
+        <button class="btn" data-more="ha">业务连续性</button>
+      </div>
+
+      <div class="tw an" style="--d:.14s">
+        <table class="dt" id="moreTbl">
+          <thead><tr><th style="width:240px">增强项</th><th style="width:120px">领域</th><th>说明与价值</th></tr></thead>
+          <tbody>
+            <tr data-m="perf"><td class="h">TCP RACK（RFC 8985）</td><td><span class="tag b">性能</span></td><td>按每个分段的发送时间戳与 SACK 判断丢包，并用探测报文引出 ACK，避免退回重传超时（RTO）。拥塞的广域网链路上丢包恢复更快，改善远程 NAS 客户端与复制性能。</td></tr>
+            <tr data-m="perf"><td class="h">拷贝卸载改进</td><td><span class="tag b">性能</span></td><td>主机发出标准拷贝命令，ONTAP 自动选择最合适的拷贝引擎，在阵列内完成；加速虚拟机克隆、迁移与模板部署。默认开启。</td></tr>
+            <tr data-m="ops"><td class="h">Trident 均衡放置</td><td><span class="tag ok">运维与自动化</span></td><td>Kubernetes 中由 Trident 创建的 PVC 可按均衡放置分布到集群各节点，避免卷集中在少数节点。</td></tr>
+            <tr data-m="ops"><td class="h">SVM 范围的卷移动</td><td><span class="tag ok">运维与自动化</span></td><td>9.19.1 之前只能由集群管理员移动卷；现在 SVM 管理员即可执行，多租户环境下权限划分更细。</td></tr>
+            <tr data-m="ops"><td class="h">非 root 用户异步删除</td><td><span class="tag ok">运维与自动化</span></td><td>异步删除可快速删除文件数量极多的目录并释放空间；此前只允许 root 使用，现在开放给非 root 用户。</td></tr>
+            <tr data-m="sec"><td class="h">kTLS 增强</td><td><span class="tag warn">安全</span></td><td>加密后端集群网络，硬件加速降低性能开销，并可回退到 IPsec 以提高韧性。</td></tr>
+            <tr data-m="sec"><td class="h">NFSv4.2 细粒度开关</td><td><span class="tag warn">安全</span></td><td>可用命令选项启用或禁用 NFSv4.2，防止客户端意外协商到 NFSv4.2 挂载。</td></tr>
+            <tr data-m="ha"><td class="h">MetroCluster HTTPS Mediator</td><td><span class="tag new">业务连续性</span></td><td>Mediator 改用 HTTPS 连接，配置更简单也更安全。</td></tr>
+            <tr data-m="ha"><td class="h">MetroCluster 支持 S3 存储桶</td><td><span class="tag new">业务连续性</span></td><td>MetroCluster IP 部署中可复制 ONTAP S3 存储桶，对象数据同样获得同城容灾保护。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note an" style="--d:.2s">依据 INSIGHT 2026 场次 BKO3018《Mastering ONTAP Fundamentals and Latest Innovations》中标注 "Delivered in 9.19.1" 的条目；细节以 NetApp 正式发布说明为准。</p>
+    </div>
+  </section>
+
   <!-- ══════════════════ 幕 18 · 平台支持 ══════════════════ -->
   <section class="scene" data-sec="平台" data-nav="平台支持">
     <div class="wrap">
@@ -1516,7 +1600,7 @@ footer{
           <table class="dt" id="platTbl">
             <thead><tr><th style="width:112px">产品线</th><th>ONTAP 9.19.1 支持型号</th></tr></thead>
             <tbody>
-              <tr data-p="AFX"><td class="h">AFX 系统</td><td class="mono">AFX 1K <span class="tag new">NEW</span></td></tr>
+              <tr data-p="AFX"><td class="h">AFX 系统</td><td class="mono">AFX 1K · AFX 2K <span class="tag new">NEW</span></td></tr>
               <tr data-p="AFF"><td class="h">AFF · A 系列</td><td class="mono">C190 · A150 · A220 · A250 · A400 · A800 · A900 · A70 · A90 · A1K · A50 · A30 · A20</td></tr>
               <tr data-p="AFF"><td class="h">AFF · C 系列</td><td class="mono">C250 · C400 · C800 · C60 · C30 · C80</td></tr>
               <tr data-p="ASA"><td class="h">ASA 系统</td><td class="mono">A150 · A250 · A400 · A800 · A900 · A70 · A90 · A1K · A50 · A30 · A20 · C30</td></tr>
@@ -1544,6 +1628,7 @@ footer{
             <h3>升级前检查清单</h3>
             <div class="li">确认所有节点型号均在支持列表内，尤其是混合型号集群。</div>
             <div class="li">评估拟启用的新特性对平台的限定：<b>动态存储效率、CFSR、全局重删、32 节点</b>仅适用于 AFX。</div>
+            <div class="li">AFX 计划扩展到 16 PB 以上时，确认集群是否以 9.19.1 或更高版本部署。</div>
             <div class="li">SM-as for NAS 与 AIX 透明切换对集群节点数与配置模式有特定要求。</div>
             <div class="li">规划 SnapMirror Cloud 桶数量与 URL 寻址方式（超过 6 桶时）。</div>
           </div>
@@ -2166,6 +2251,15 @@ $$('[data-plat]').forEach(b=> b.addEventListener('click', ()=>{
   const f = b.dataset.plat;
   $$('#platTbl tbody tr').forEach(tr=>{
     tr.style.display = (f==='all' || tr.dataset.p===f) ? '' : 'none';
+  });
+}));
+
+/* ═══════════ 幕 17c · 更多增强筛选 ═══════════ */
+$$('[data-more]').forEach(b=> b.addEventListener('click', ()=>{
+  $$('[data-more]').forEach(x=> x.classList.toggle('on', x===b));
+  const f = b.dataset.more;
+  $$('#moreTbl tbody tr').forEach(tr=>{
+    tr.style.display = (f==='all' || tr.dataset.m===f) ? '' : 'none';
   });
 }));
 

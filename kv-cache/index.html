@@ -294,11 +294,41 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
 .termDesc b{color:var(--txt)}
 .termDesc .tag2{display:inline-block; color:var(--cyan); font-weight:700; margin-right:3px}
 
+/* ===== 幕6 NetApp 实测 / 幕7 框架与展望 ===== */
+.msGrid{display:grid; grid-template-columns:1fr 1.15fr; gap:18px}
+.msGrid .panel{padding:16px 18px}
+.segRow{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px}
+.segRow .lb{font-size:12px; color:var(--dim); font-weight:700}
+.msBar{display:grid; grid-template-columns:130px 1fr 132px; gap:10px; align-items:center; margin:12px 0}
+.msBar .nm{font-size:13px; font-weight:700}
+.msBar .nm small{display:block; font-size:11px; color:var(--faint); font-weight:400}
+.msBar .v{font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap}
+.cfg{width:100%; border-collapse:collapse; font-size:12.5px}
+.cfg td{padding:5px 8px; border-bottom:1px solid var(--line)}
+.cfg td:first-child{color:var(--dim); width:92px; font-weight:700}
+.cvRow{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--dim)}
+.cvRow input{flex:1}
+.cvLg{display:flex; gap:16px; flex-wrap:wrap; font-size:11.5px; color:var(--dim); margin-top:6px}
+.chipT{display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; margin:0 5px 3px 0; background:#eef2fa; color:var(--dim); border:1px solid var(--line)}
+.chipT.on{background:rgba(0,103,197,.12); color:var(--cyan); border-color:rgba(0,103,197,.35)}
+.tag.ok2{background:rgba(15,157,99,.12); color:var(--green)}
+.tag.wait{background:rgba(217,123,22,.12); color:var(--dram)}
+.tierList{display:flex; flex-direction:column; gap:7px}
+.tierRow{display:grid; grid-template-columns:58px 150px 1fr; gap:10px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:5px 12px; background:var(--panel); font-size:12.5px}
+#vfTable td{padding:5px 10px}
+#cvTable td{padding:6px 10px}
+.tierRow .g{font-weight:800; color:#fff; border-radius:6px; text-align:center; padding:3px 0; font-size:12.5px}
+.tierRow .n{font-weight:800}
+.tierRow .d{color:var(--dim)}
+.tierRow.hi{border-color:var(--teal); box-shadow:0 0 0 2px rgba(13,143,128,.14); background:linear-gradient(90deg,#effaf8,#fff)}
+.liS{font-size:12.5px; line-height:1.7; color:var(--dim); margin-bottom:7px}
+.liS b{color:var(--txt)}
+
 @media (max-width:1100px){
   .grid2,.chatWrap{grid-template-columns:1fr}
   .cards{grid-template-columns:repeat(2,1fr)}
   .scnGrid{grid-template-columns:repeat(2,1fr)}
-  .scnDetail,.lowerRow,.ladder{grid-template-columns:1fr}
+  .scnDetail,.lowerRow,.ladder,.msGrid{grid-template-columns:1fr}
   .termGrid{grid-template-columns:1fr 1fr}
   .tabs{display:none}
 }
@@ -527,6 +557,97 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
   <div class="note">※ 数据均为各论文在其自身硬件与负载条件下的自报结果，非 NetApp 实测，不同论文之间、与前几幕示意值之间均不可直接比较；"对共享存储层的含义"为基于论文观测的推导，需结合实际负载验证。资料来源：USENIX FAST '26 论文 SolidAttention、CacheSlide、Bidaw、AITURBO、PPC/modelFS。</div>
 </section>
 
+<!-- ═══════ 幕6 · NetApp 实测：共享存储层 ═══════ -->
+<section class="scene" id="sc5n">
+  <h1>NetApp 实测：共享存储层让同样的 GPU <span class="hl">产出更多 token</span></h1>
+  <div class="sub">前几幕讲机制，这一幕看实测。INSIGHT 2026 场次 BKO1025 用 vLLM + LMCache 多轮问答基准，对比三种 KV Cache 配置：仅 GPU 显存、GPU + CPU 内存、再加 ONTAP 共享存储层。</div>
+  <div class="msGrid">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="panel">
+        <div class="dt"><span class="bar"></span>观测值汇总：GPU + CPU + ONTAP（pNFS over RDMA）的最大改善幅度</div>
+        <div class="segRow">
+          <span class="lb">对比基线：</span>
+          <button class="gdsBtn" data-msb="gpu">仅 GPU 显存</button>
+          <button class="gdsBtn on" data-msb="cpu">GPU + CPU 内存</button>
+        </div>
+        <div id="msBars"></div>
+        <div class="note" style="margin-top:4px">均为"最高"值，来自一次特定基准测试的观测值，非性能承诺；结果随模型、负载与复用率而异。</div>
+      </div>
+      <div class="panel">
+        <div class="dt"><span class="bar"></span>测试条件</div>
+        <table class="cfg"><tbody>
+          <tr><td>基准</td><td>vLLM + LMCache 多轮问答，持续 20 分钟</td></tr>
+          <tr><td>负载</td><td>每用户 20 轮，QPS = 2</td></tr>
+          <tr><td>模型 / 算力</td><td>Qwen3-8B；2 个实例，每实例 1 × NVIDIA A100</td></tr>
+          <tr><td>CPU 内存层</td><td>每实例 100 GB</td></tr>
+          <tr><td>共享层</td><td>ONTAP，pNFS v4.1 over RDMA</td></tr>
+        </tbody></table>
+        <div class="note" style="margin-top:8px">规模偏小（8B 模型、单卡实例），用于说明机制；更大模型与集群需按实际负载验证。</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>上下文越长，共享存储层的优势越明显</div>
+      <div class="segRow">
+        <button class="gdsBtn on" data-cvm="ttft">首 token 时间 TTFT</button>
+        <button class="gdsBtn" data-cvm="dec">单请求解码吞吐</button>
+        <span style="margin-left:auto; font-size:12px; color:var(--faint)" id="cvHint"></span>
+      </div>
+      <svg viewBox="0 0 640 300" id="cvSvg" style="width:100%; max-height:280px"></svg>
+      <div class="cvRow">首轮提示长度 <input type="range" id="cvX" min="0" max="6" step="1" value="4"><b class="kpi" id="cvXV" style="color:var(--txt); width:58px; text-align:right">26K</b></div>
+      <div class="cvLg">
+        <span><span class="sw" style="background:#d97b16"></span>仅 GPU 显存（A100）</span>
+        <span><span class="sw" style="background:#0f9d63"></span>GPU + CPU 内存（每实例 100 GB）</span>
+        <span><span class="sw" style="background:#6f5bd6"></span>GPU + CPU + ONTAP 共享存储</span>
+      </div>
+      <table class="res" id="cvTable"></table>
+      <div class="note">曲线数值由讲者材料第 11、12 页图表读取，为近似值。短提示（≤ 11K）三条线几乎重合；仅 GPU 从 16K 起被容量击穿，GPU + CPU 撑到 21K；加入共享层后拐点最晚、斜率最缓。</div>
+    </div>
+  </div>
+  <div class="note">资料来源：NetApp INSIGHT 2026 场次 BKO1025《Boost LLM throughput 157% with shared KV cache》（2026-09-29）；测试记录见 NetApp 社区博文 "KV cache offloading with vLLM, LMCache and ONTAP pNFS"。本幕数字为观测值，与第 1–4 幕的示意模型不可直接比较。</div>
+</section>
+
+<!-- ═══════ 幕7 · 框架组合与 CMX 展望 ═══════ -->
+<section class="scene" id="sc5v">
+  <h1>已验证的框架组合，与 <span class="hl">G3.5 上下文内存层</span></h1>
+  <div class="sub">共享存储通过 KV Cache 管理器接入推理引擎，不需要改引擎本身。下表是 NetApp 已验证的组合，可按平台筛选；下方是 NVIDIA 提出的下一个层级。</div>
+  <div class="panel">
+    <div class="segRow">
+      <span class="lb">按平台筛选：</span>
+      <button class="gdsBtn on" data-vf="all">全部</button>
+      <button class="gdsBtn" data-vf="ONTAP">ONTAP / AFX</button>
+      <button class="gdsBtn" data-vf="Novus">NetApp Novus</button>
+      <button class="gdsBtn" data-vf="EF">EF 系列 + Lustre</button>
+      <button class="gdsBtn" data-vf="StorageGRID">StorageGRID</button>
+      <span style="margin-left:auto; font-size:12px; color:var(--faint)" id="vfCount"></span>
+    </div>
+    <table class="res" id="vfTable">
+      <thead><tr><th style="width:90px">推理引擎</th><th style="width:210px">KV Cache 管理器</th><th style="width:150px">存储后端</th><th>已验证平台</th><th style="width:96px">说明</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="note">验证矩阵依据讲者材料第 15 页。"横比推荐"依据 NetApp 2026 年 8 月社区博文中的多方案对比；LMCache 多进程模式当时因不支持抢占恢复而暂不推荐，上游已于 v0.5.6 补上，NetApp 尚未发布重测结果。</div>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>NVIDIA 的上下文内存层级（G1–G4，加入 G3.5）</div>
+      <div class="tierList">
+        <div class="tierRow"><span class="g" style="background:var(--hbm)">G1</span><span class="n">GPU 显存 · HBM</span><span class="d">活跃 KV：正在解码的会话</span></div>
+        <div class="tierRow"><span class="g" style="background:var(--dram)">G2</span><span class="n">系统内存</span><span class="d">显存放不下时的第一级溢出</span></div>
+        <div class="tierRow"><span class="g" style="background:var(--nvme)">G3</span><span class="n">本地存储</span><span class="d">温 KV 复用；故障域与 GPU 节点绑定</span></div>
+        <div class="tierRow hi"><span class="g" style="background:var(--teal)">G3.5</span><span class="n">上下文内存 · CMX</span><span class="d">高带宽、可共享；换盘不碰 GPU 节点</span></div>
+        <div class="tierRow"><span class="g" style="background:var(--net)">G4</span><span class="n">网络存储</span><span class="d">冷 / 共享 KV；规模化后单 GPU 带宽有限</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>展望：CMX、STX 与 NetApp</div>
+      <div class="liS"><b>CMX 是什么</b>：介于本地盘（G3）与网络存储（G4）之间的高带宽、可共享 KV Cache 层，按可扩展单元（SU）共享，可多租户、可在不触碰 GPU 节点的情况下维护。</div>
+      <div class="liS"><b>CMX 与 STX</b>：STX 是 NVIDIA 以 BlueField-4 为核心的 AI 原生存储模块化参考架构；CMX 是基于 STX 的第一个机架级实现，专门承载 KV Cache（首发时名为 ICMS）。NVIDIA 口径为合作伙伴于 2026 年下半年提供。</div>
+      <div class="liS"><b>NetApp 的位置</b>：讲者材料标注 NVIDIA 与 NetApp 正在联合设计与研发上下文内存存储，尚未公布产品名称与上市时间。</div>
+      <div class="liS"><b>现在能做什么</b>：先在现有推理框架上用 G4 共享层（ONTAP / AFX、Novus）验证收益，再评估引入 G3.5 的时机。</div>
+      <div class="note" style="margin-top:4px">层级与属性依据讲者材料第 17 页（NVIDIA 提供）；STX 说明依据 NVIDIA 公开资料。属方向性信息，以 NVIDIA 与 NetApp 正式发布为准。</div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════ 幕6 · 总结 ═══════ -->
 <section class="scene" id="sc5">
   <h1>NetApp AFX：让 KV Cache 成为<span class="hl">可管理的存储资产</span></h1>
@@ -544,7 +665,7 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
     <span class="flowNode" style="border-color:var(--net); color:var(--net)">AFX 池 · 归档/共享</span>
   </div>
   <div class="quote">「 <span class="hl">让算力回归计算，让存储承载记忆</span> 」</div>
-  <div class="note" style="text-align:center; margin-top:14px">本页所有性能数字均为示意值，用于演示机制；可在源码 MODELS / CAPS 中替换为实测数据。<br>
+  <div class="note" style="text-align:center; margin-top:14px">除「NetApp 实测」一幕外，本页性能数字均为示意值，用于演示机制；可在源码 MODELS / CAPS 中替换为实测数据。<br>
   注：本演示聚焦 <b>AFX 存储</b>承载的 KV Cache 分层数据路径；<b>NetApp AIDE</b>（AI Data Engine）为 AFX 之上的数据服务层，不在本演示范围内。</div>
 </section>
 
@@ -657,7 +778,7 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
       </div>
     </div>
 
-    <div class="note">※ 本页为存储背景听众定制的 AI 推理扫盲卡片，术语与第 1–6 幕内容一一对应；如需面向更广泛/非技术听众，可在此基础上进一步简化措辞。</div>
+    <div class="note">※ 本页为存储背景听众定制的 AI 推理扫盲卡片，术语与第 1–8 幕内容一一对应；如需面向更广泛/非技术听众，可在此基础上进一步简化措辞。</div>
   </div>
 </section>
 
@@ -667,7 +788,7 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
   <button class="navBtn" id="prevB">‹</button>
   <div class="dots" id="dots"></div>
   <button class="navBtn" id="nextB">›</button>
-  <span style="margin-left:14px">← → 或数字键 1–7 · 鼠标滚轮翻页 · 建议全屏（F11）投屏演示</span>
+  <span style="margin-left:14px">← → 或数字键 1–9 · 鼠标滚轮翻页 · 建议全屏（F11）投屏演示</span>
 </footer>
 
 <script>
@@ -720,8 +841,8 @@ const fmtTok = kb => kb>=1024 ? (kb/1024).toFixed(2)+' MB' : kb>=100 ? kb.toFixe
 const sleep = ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ═══════════ 导航 ═══════════ */
-const SCENES = ['sc1','sc2','sc3','sc4','sc5f','sc5','sc6'];
-const NAMES  = ['① 显存墙','② 分层架构','③ 命中演示','④ TTFT 对比','⑤ 业界研究','⑥ 价值总结','⑦ 术语速查'];
+const SCENES = ['sc1','sc2','sc3','sc4','sc5f','sc5n','sc5v','sc5','sc6'];
+const NAMES  = ['① 显存墙','② 分层架构','③ 命中演示','④ TTFT 对比','⑤ 业界研究','⑥ NetApp 实测','⑦ 框架与展望','⑧ 价值总结','⑨ 术语速查'];
 let cur = 0;
 const tabsEl = $('tabs'), dotsEl = $('dots');
 SCENES.forEach((_,i)=>{
@@ -743,7 +864,7 @@ document.addEventListener('keydown',e=>{
   if($('vDlg').open) return;
   if(e.key==='ArrowRight'||e.key==='PageDown') show(cur+1);
   else if(e.key==='ArrowLeft'||e.key==='PageUp') show(cur-1);
-  else if(e.key>='1'&&e.key<='7') show(+e.key-1);
+  else if(e.key>='1'&&e.key<='9') show(+e.key-1);
 });
 
 /* ═══════════ 讲解视频弹层 ═══════════ */
@@ -1162,12 +1283,90 @@ function s4update(){
 }
 $('s4ctx').oninput=s4update; $('s4hit').oninput=s4update;
 
+/* ═══════════ 幕6 · NetApp 实测（BKO1025 观测值；曲线为读图近似值） ═══════════ */
+const SVGNS='http://www.w3.org/2000/svg';
+const sv=(tag,attrs,parent,text)=>{ const e=document.createElementNS(SVGNS,tag);
+  for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!==undefined) e.textContent=text; parent.appendChild(e); return e; };
+const MS={
+  gpu:[['系统整体处理速度','越高越好',201,'提升'],['单请求平均 TTFT','越低越好',99,'下降'],['单请求平均解码吞吐','越高越好',223,'提升']],
+  cpu:[['系统整体处理速度','越高越好',157,'提升'],['单请求平均 TTFT','越低越好',86,'下降'],['单请求平均解码吞吐','越高越好',174,'提升']]
+};
+function msDraw(b){
+  document.querySelectorAll('[data-msb]').forEach(x=>x.classList.toggle('on',x.dataset.msb===b));
+  $('msBars').innerHTML=MS[b].map(([n,h,v,d])=>{
+    const up=d==='提升', col=up?'linear-gradient(90deg,#8b7bff,#5f4fd0)':'linear-gradient(90deg,#3ee08c,#1fa568)';
+    return `<div class="msBar"><div class="nm">${n}<small>${h}</small></div><div class="barOuter"><div class="barIn" data-w="${Math.min(v,230)/230*100}" style="background:${col}"></div></div><div class="v" style="color:${up?'var(--violet)':'var(--green)'}">最高 ${v}% ${d}</div></div>`;
+  }).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('#msBars .barIn').forEach(e=>e.style.width=e.dataset.w+'%')));
+}
+document.querySelectorAll('[data-msb]').forEach(x=>x.onclick=()=>msDraw(x.dataset.msb));
+
+const CV_X=[6000,11000,16000,21000,26000,31000,36000];
+const CV={
+  ttft:{name:'平均首 token 时间',unit:'秒',better:'越低越好',max:200,step:40,
+    s:[[0.1,0.4,42.8,74.8,106.3,140.8,175.4],[0.1,0.2,0.5,1.9,64.0,115.2,139.3],[0.1,0.2,0.3,0.8,12.2,30.5,54.3]]},
+  dec:{name:'单请求平均解码吞吐',unit:'token/s',better:'越高越好',max:80,step:20,
+    s:[[67.5,53.2,25.7,7.7,7.4,7.7,6.5],[67.2,58.3,48.8,27.5,17.4,11.5,12.5],[66.8,59.2,51.8,32.0,22.9,24.9,26.7]]}
+};
+const CV_C=['#d97b16','#0f9d63','#6f5bd6'], CV_N=['仅 GPU','GPU + CPU','+ 共享存储'];
+let cvM='ttft';
+function cvDraw(){
+  const m=CV[cvM], xi=+$('cvX').value, svg=$('cvSvg'); svg.innerHTML='';
+  const L=52,R=620,T=14,B=262, px=i=>L+(R-L)*i/6, py=v=>B-(B-T)*v/m.max;
+  for(let v=0;v<=m.max;v+=m.step){
+    sv('line',{x1:L,x2:R,y1:py(v),y2:py(v),stroke:'#d9e0ef','stroke-width':1},svg);
+    sv('text',{x:L-8,y:py(v)+4,'text-anchor':'end','font-size':11,fill:'#8b94b3'},svg,v);
+  }
+  CV_X.forEach((x,i)=>sv('text',{x:px(i),y:B+18,'text-anchor':'middle','font-size':11,fill:'#8b94b3'},svg,(x/1000)+'K'));
+  sv('text',{x:R,y:B+36,'text-anchor':'end','font-size':11,fill:'#5b6788'},svg,m.name+'（'+m.unit+'，'+m.better+'）');
+  sv('rect',{x:px(xi)-16,y:T,width:32,height:B-T,rx:6,fill:'rgba(0,103,197,.07)'},svg);
+  m.s.forEach((s,k)=>{
+    sv('polyline',{points:s.map((v,i)=>px(i)+','+py(v)).join(' '),fill:'none',stroke:CV_C[k],'stroke-width':2.6,'stroke-linejoin':'round'},svg);
+    s.forEach((v,i)=>sv('circle',{cx:px(i),cy:py(v),r:i===xi?5.5:3,fill:i===xi?'#fff':CV_C[k],stroke:CV_C[k],'stroke-width':2},svg));
+  });
+  $('cvXV').textContent=(CV_X[xi]/1000)+'K';
+  $('cvHint').textContent=m.better;
+  const base=m.s[1][xi], sh=m.s[2][xi];
+  let cmp;
+  if(cvM==='ttft') cmp = base<1 ? '两者都在 1 秒以内，差异不明显' : '较 GPU + CPU 下降 '+Math.round((1-sh/base)*100)+'%';
+  else cmp = '较 GPU + CPU '+(sh>=base?'提升 ':'变化 ')+Math.round((sh/base-1)*100)+'%';
+  $('cvTable').innerHTML='<tbody>'+m.s.map((s,k)=>`<tr><td style="color:${CV_C[k]};font-weight:700">${CV_N[k]}</td><td class="num" style="text-align:right">${s[xi].toFixed(1)} ${m.unit}</td></tr>`).join('')
+    +`<tr style="background:rgba(111,91,214,.06)"><td style="color:var(--violet);font-weight:700">共享层收益（${CV_X[xi]/1000}K）</td><td style="text-align:right;color:var(--violet);font-weight:700">${cmp}</td></tr></tbody>`;
+}
+document.querySelectorAll('[data-cvm]').forEach(x=>x.onclick=()=>{
+  document.querySelectorAll('[data-cvm]').forEach(y=>y.classList.toggle('on',y===x)); cvM=x.dataset.cvm; cvDraw(); });
+$('cvX').oninput=cvDraw;
+
+/* ═══════════ 幕7 · 已验证组合（讲者材料第 15 页） ═══════════ */
+const VF=[
+  ['vLLM','原生卸载连接器','文件系统',['Novus|NetApp Novus（pNFS v4.2）','ONTAP|ONTAP（pNFS v4.1 / RDMA）'],'rec'],
+  ['vLLM','LMCache（进程内模式）','文件系统',['ONTAP|ONTAP（pNFS v4.1 / RDMA）','EF|EF 系列 + Lustre'],'rec'],
+  ['vLLM','LMCache（进程内模式）','S3',['StorageGRID|StorageGRID（S3）'],''],
+  ['vLLM','LMCache（多进程模式）','NIXL 动态 GDS',['Novus|NetApp Novus（pNFS v4.2）','ONTAP|ONTAP（pNFS v4.1 / RDMA）'],'mp'],
+  ['vLLM','LMCache（多进程模式）','文件系统（原生）',['Novus|NetApp Novus（pNFS v4.2）','ONTAP|ONTAP（pNFS v4.1 / RDMA）'],'mp'],
+  ['vLLM','TensorMesh Platform','文件系统（原生）',['Novus|NetApp Novus（pNFS v4.2）','ONTAP|ONTAP（pNFS v4.1 / RDMA）'],''],
+  ['SGLang','HiCache','NIXL GDS_MT',['ONTAP|ONTAP（pNFS v4.1 / RDMA）'],'']
+];
+function vfDraw(f){
+  document.querySelectorAll('[data-vf]').forEach(x=>x.classList.toggle('on',x.dataset.vf===f));
+  let n=0;
+  $('vfTable').tBodies[0].innerHTML=VF.map(([e,m,b,ps,flag])=>{
+    const hit=f==='all'||ps.some(p=>p.split('|')[0]===f); if(hit) n++;
+    const plats=ps.map(p=>{ const [k,t]=p.split('|'); return `<span class="chipT${f!=='all'&&k===f?' on':''}">${t}</span>`; }).join('');
+    const note=flag==='rec'?'<span class="tag ok2">横比推荐</span>':flag==='mp'?'<span class="tag wait">待重测</span>':'';
+    return `<tr style="opacity:${hit?1:.28}"><td><b>${e}</b></td><td>${m}</td><td>${b}</td><td>${plats}</td><td>${note}</td></tr>`;
+  }).join('');
+  $('vfCount').textContent='匹配 '+n+' / '+VF.length+' 组';
+}
+document.querySelectorAll('[data-vf]').forEach(x=>x.onclick=()=>vfDraw(x.dataset.vf));
+
 /* ═══════════ 初始化 ═══════════ */
 applySliderRanges();
 switchModel('gqa70b');
 setGDS(true);
 show(0);
 setTimeout(s4update,50);
+msDraw('cpu'); cvDraw(); vfDraw('all');
 </script>
 </body>
 </html>

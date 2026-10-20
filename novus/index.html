@@ -814,6 +814,7 @@ table.dt tr.hide{display:none}
             <div class="li"><b>数据节点</b>：HA 对中 1 个节点故障不影响服务；盘级由 RAID-DP / RAID-TEC 保护。</div>
             <div class="li"><b>Data Director</b>：每个三节点副本组可容忍 1 台故障。</div>
             <div class="li"><b>分片隔离</b>：元数据按键值范围分片，整组失效时影响限于该组持有的范围，而非整个命名空间。</div>
+            <div class="li"><b>客户端切换</b>：租户 VIP（/32）经 eBGP + BFD 宣告，按源 IP 做 ECMP，请求只导向就绪的副本。</div>
           </div>
         </div>
       </div>
@@ -940,7 +941,7 @@ table.dt tr.hide{display:none}
             <div class="li"><b>命名空间</b>：在元数据层按租户隔离。</div>
             <div class="li"><b>网络</b>：通过子网 / VLAN 隔离。</div>
             <div class="li"><b>节点池</b>：可为租户分配专属的 Data Director、命名空间与键值存储。</div>
-            <div class="li"><b>身份与密钥</b>：每租户独立的身份提供方与加密密钥管理。</div>
+            <div class="li"><b>身份与密钥</b>：每租户独立的身份提供方与加密密钥（另有服务器级密钥）；租户下线时对其目录数据做加密粉碎。</div>
             <div class="li"><b>数据节点</b>：可为租户分配专属数据节点。</div>
           </div>
           <div class="panel tint an" style="--d:.24s">
@@ -1026,6 +1027,7 @@ table.dt tr.hide{display:none}
             <tr data-s="ok"><td class="h">pNFS / NFSv4.2 Flex Files</td><td><span class="tag ok">首发支持</span></td><td>含 NFS over RDMA、nconnect、NVIDIA GPUDirect Storage</td></tr>
             <tr data-s="ok"><td class="h">多租户隔离</td><td><span class="tag ok">首发支持</span></td><td>命名空间、VLAN、节点池、每租户身份与密钥、专属数据节点</td></tr>
             <tr data-s="ok"><td class="h">静态数据加密</td><td><span class="tag ok">首发支持</span></td><td>自加密盘、卷级加密</td></tr>
+            <tr data-s="ok"><td class="h">单节点性能</td><td><span class="tag ok">首发支持</span></td><td>不开去重与压缩时，每节点读 47 GB/s、写 16 GB/s，随集群扩展线性增长（NetApp 公布值，非性能承诺）</td></tr>
             <tr data-s="ok"><td class="h">AFF A90 数据节点</td><td><span class="tag ok">首发支持</span></td><td>AFF A90 for NetApp Novus；Data Director 运行在合格 x86 服务器（默认裸金属）</td></tr>
             <tr data-s="plan"><td class="h">软件定义数据节点</td><td><span class="tag warn">后续规划</span></td><td>ONTAP SDS 运行在第三方 x86 服务器上（KVM 优化）作为数据节点，GA 目标 Q1 CY27；同时提供云控制服务（存储供给、可观测性、IAM、机群管理）</td></tr>
             <tr data-s="plan"><td class="h">S3 / S3 over RDMA</td><td><span class="tag warn">后续规划</span></td><td>对象访问在路线图中</td></tr>
@@ -1080,6 +1082,7 @@ table.dt tr.hide{display:none}
             <div class="li"><b>支持路径</b>：对客户而言 Novus 是 NetApp 支持的整体方案；元数据服务器的硬件问题由其厂商处理。</div>
             <div class="li"><b>规模测算</b>：Fusion 等 NetApp 工具将更新以支持 Novus，按 GPU 目标测算带宽与节点数。</div>
             <div class="li"><b>生态</b>：Supermicro 同时提供机柜级算力、网络、供电与液冷，与 NetApp 软件组合交付 AI 工厂。</div>
+            <div class="li"><b>参考网络</b>：Arista 7060DX5 构成全 CLOS（16 spine / 22 leaf，704 个 400G 端口 1:1 无阻塞），启用 PFC / ECN / 动态负载均衡。</div>
           </div>
         </div>
       </div>
