@@ -98,7 +98,7 @@
   .sec-head h2{margin:0;font-size:17px;font-weight:750;letter-spacing:-.01em;color:#fff}
   .sec-head .mono{color:rgba(255,255,255,.64)}
   .bay{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
-  /* 10 张卡：1440 以上 4 列（4+4+2），1800 以上 5 列（正好两行） */
+  /* 每组 4–6 张卡：1440 以上 4 列，1800 以上 5 列 */
   @media (min-width:1440px){
     .bay{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
     .body{padding:15px 18px 17px}
@@ -148,7 +148,34 @@
   .vdlg video{display:block;width:100%;max-height:calc(100vh - 100px);aspect-ratio:16/9;background:#000}
   .addr b,.addr .state{flex:0 0 auto;white-space:nowrap}
   .addr .tag{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 9px;border-color:var(--netapp-blue);background:var(--netapp-blue);color:#fff;font-size:11px;letter-spacing:.1em;box-shadow:0 2px 6px rgba(0,103,197,.22)}
-  .sec-tools{margin-top:52px}
+  /* ── 分组：标题即折叠开关 ─────────────────────────── */
+  .grp + .grp{margin-top:46px}
+  .grp-btn{display:inline-flex;align-items:center;gap:10px;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+  .grp-btn::after{content:"";width:7px;height:7px;margin:0 2px 3px 2px;border-right:2px solid rgba(255,255,255,.7);border-bottom:2px solid rgba(255,255,255,.7);transform:rotate(45deg);transition:transform .2s ease}
+  .grp-btn[aria-expanded="false"]::after{transform:rotate(-45deg);margin-bottom:0}
+  .grp-btn:hover::after{border-color:#fff}
+  .grp-btn:focus-visible{outline:2px solid #fff;outline-offset:4px;border-radius:4px}
+  .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border:1px solid rgba(255,255,255,.4);border-radius:10px;font-family:var(--mono);font-size:11px;font-weight:700;color:rgba(255,255,255,.82)}
+  .grp.closed .sec-head{margin-bottom:0;border-bottom-style:dashed;border-bottom-color:rgba(255,255,255,.28)}
+  .grp.closed .bay,.grp.miss,.slot.miss{display:none}
+  .grp.closed + .grp{margin-top:26px}
+
+  /* ── 搜索栏 ───────────────────────────────────────── */
+  .finder{display:flex;align-items:center;gap:14px;margin-bottom:30px}
+  .find{position:relative;flex:0 1 460px;display:flex;align-items:center;min-width:0}
+  .find svg{position:absolute;left:13px;width:15px;height:15px;color:rgba(255,255,255,.7);pointer-events:none}
+  .find input{width:100%;height:40px;padding:0 40px 0 38px;border:1px solid rgba(255,255,255,.34);border-radius:9px;background:rgba(0,40,80,.32);color:#fff;font:inherit;font-size:14px;outline:none;transition:border-color .18s ease,background .18s ease}
+  .find input::placeholder{color:rgba(255,255,255,.52)}
+  .find input:focus{border-color:#fff;background:rgba(0,40,80,.5)}
+  .find input::-webkit-search-cancel-button{filter:invert(1)}
+  .find kbd{position:absolute;right:11px;padding:1px 7px;border:1px solid rgba(255,255,255,.34);border-radius:4px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);pointer-events:none}
+  .find input:focus ~ kbd,.find input:not(:placeholder-shown) ~ kbd{display:none}
+  .hits{color:rgba(255,255,255,.64);white-space:nowrap}
+  .fold-all{margin-left:auto;height:34px;padding:0 14px;border:1px solid rgba(255,255,255,.34);border-radius:8px;background:transparent;color:rgba(255,255,255,.86);font:inherit;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .18s ease,border-color .18s ease}
+  .fold-all:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.6)}
+  .fold-all:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .none{margin:8px 0 0;padding:28px;border:1px dashed rgba(255,255,255,.4);border-radius:12px;text-align:center;color:rgba(255,255,255,.72);font-size:14px}
+  .bays a.dim{opacity:.32}
   .bays .sep{flex:0 0 auto;width:1px;height:14px;margin:0 5px;background:rgba(255,255,255,.35)}
   .bays a.tool{padding:0 8px;letter-spacing:.12em}
   .slot.tool{border-color:rgba(255,255,255,.4);box-shadow:0 10px 26px rgba(0,49,96,.16)}
@@ -189,6 +216,14 @@
     .lede{margin-top:4px;font-size:12.5px;line-height:1.4;text-align:left;max-width:52ch}
     main{padding-top:26px}
     .bay{grid-template-columns:1fr;gap:16px}
+    .finder{gap:8px;margin-bottom:24px}
+    .find{flex:1 1 auto}
+    .find input{height:38px;font-size:13px}
+    .hits:empty{display:none}
+    .fold-all{height:38px;padding:0 11px}
+    .find kbd{display:none}
+    .grp-btn{font-size:16px}
+    .sec-head .mono{display:none}
     .visual img{filter:saturate(.95) brightness(.98)}
   }
   @media (max-width:480px){
@@ -269,20 +304,22 @@
       <div class="topbar-tools">
       <nav class="bays" aria-label="展位快速跳转">
         <a href="#bay01" title="Bay 01 · AIDE 2026 深度解析 · 制造业视角">01<span class="vh"> Bay 01 AIDE 2026 深度解析 · 制造业视角</span></a>
-        <a href="#bay02" title="Bay 02 · NetApp Novus · AI 工厂存储架构">02<span class="vh"> Bay 02 NetApp Novus · AI 工厂存储架构</span></a>
         <a href="#bay03" title="Bay 03 · LiSA 联想存储智能体">03<span class="vh"> Bay 03 LiSA 联想存储智能体</span></a>
-        <a href="#bay04" title="Bay 04 · KV Cache 分层加速">04<span class="vh"> Bay 04 KV Cache 分层加速</span></a>
         <a href="#bay05" title="Bay 05 · ONTAP MCP 运维演示">05<span class="vh"> Bay 05 ONTAP MCP 运维演示</span></a>
         <a href="#bay06" title="Bay 06 · NetApp MCP 全景演示">06<span class="vh"> Bay 06 NetApp MCP 全景演示</span></a>
-        <a href="#bay07" title="Bay 07 · SnapMirror active sync for NAS">07<span class="vh"> Bay 07 SnapMirror active sync for NAS</span></a>
-        <a href="#bay08" title="Bay 08 · 制造业勒索软件检测与恢复">08<span class="vh"> Bay 08 制造业勒索软件检测与恢复</span></a>
-        <a href="#bay09" title="Bay 09 · ONTAP 9.19.1 技术总览">09<span class="vh"> Bay 09 ONTAP 9.19.1 技术总览</span></a>
+        <a href="#bay15" title="Bay 15 · NetApp Console 本地部署与自治运维">15<span class="vh"> Bay 15 NetApp Console 本地部署与自治运维</span></a>
+        <span class="sep" aria-hidden="true"></span>
+        <a href="#bay02" title="Bay 02 · NetApp Novus · AI 工厂存储架构">02<span class="vh"> Bay 02 NetApp Novus · AI 工厂存储架构</span></a>
+        <a href="#bay04" title="Bay 04 · KV Cache 分层加速">04<span class="vh"> Bay 04 KV Cache 分层加速</span></a>
         <a href="#bay10" title="Bay 10 · EDA 数据流与 AFX">10<span class="vh"> Bay 10 EDA 数据流与 AFX</span></a>
-        <a href="#bay11" title="Bay 11 · ONTAP 9.20.1 新特性总览">11<span class="vh"> Bay 11 ONTAP 9.20.1 新特性总览</span></a>
         <a href="#bay12" title="Bay 12 · NetApp AFX 平台">12<span class="vh"> Bay 12 NetApp AFX 平台</span></a>
         <a href="#bay13" title="Bay 13 · NVIDIA STX / CMX 与 NetApp 对照">13<span class="vh"> Bay 13 NVIDIA STX / CMX 与 NetApp 对照</span></a>
         <a href="#bay14" title="Bay 14 · NetApp Lustre 与 EF80">14<span class="vh"> Bay 14 NetApp Lustre 与 EF80</span></a>
-        <a href="#bay15" title="Bay 15 · NetApp Console 本地部署与自治运维">15<span class="vh"> Bay 15 NetApp Console 本地部署与自治运维</span></a>
+        <span class="sep" aria-hidden="true"></span>
+        <a href="#bay07" title="Bay 07 · SnapMirror active sync for NAS">07<span class="vh"> Bay 07 SnapMirror active sync for NAS</span></a>
+        <a href="#bay08" title="Bay 08 · 制造业勒索软件检测与恢复">08<span class="vh"> Bay 08 制造业勒索软件检测与恢复</span></a>
+        <a href="#bay09" title="Bay 09 · ONTAP 9.19.1 技术总览">09<span class="vh"> Bay 09 ONTAP 9.19.1 技术总览</span></a>
+        <a href="#bay11" title="Bay 11 · ONTAP 9.20.1 新特性总览">11<span class="vh"> Bay 11 ONTAP 9.20.1 新特性总览</span></a>
         <span class="sep" aria-hidden="true"></span>
         <a class="tool" href="#tool01" title="内部工具 · Fusion 容量查询">工具<span class="vh"> 内部工具 Fusion 容量查询</span></a>
       </nav>
@@ -299,13 +336,25 @@
 </div>
 
 <main class="wrap">
-  <section aria-labelledby="apps-title">
+  <div class="finder" role="search">
+    <label class="find">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span class="vh">搜索展位</span>
+      <input id="q" type="search" placeholder="搜索标题、标签或编号，如 AFX / 勒索" autocomplete="off" spellcheck="false">
+      <kbd aria-hidden="true">/</kbd>
+    </label>
+    <span class="hits mono" id="hits" aria-live="polite"></span>
+    <button class="fold-all" id="foldAll" type="button">全部展开</button>
+  </div>
+  <p class="none" id="none" hidden>没有匹配的展位，换个关键词试试。</p>
+
+  <section class="grp closed" id="g-data" aria-labelledby="g-data-t">
     <div class="sec-head">
-      <h2 id="apps-title">应用与演示</h2>
-      <span class="mono">Bay 01 — 15</span>
+      <h2 id="g-data-t"><button class="grp-btn" type="button" aria-expanded="false" aria-controls="g-data-list">AI 数据管理与智能运维<span class="cnt">5</span></button></h2>
+      <span class="mono">DATA · AGENTS · OPS · Bay 01 03 05 06 15</span>
     </div>
 
-    <div class="bay">
+    <div class="bay" id="g-data-list">
 
       <article class="slot" id="bay01">
         <div class="addr mono"><b>Bay 01</b><span class="tag">AIDE v1.1</span><span class="state">在线</span></div>
@@ -322,21 +371,6 @@
         </div>
       </article>
 
-      <article class="slot" id="bay02">
-        <div class="addr mono"><b>Bay 02</b><span class="tag">NetApp Novus</span><span class="state">在线</span></div>
-        <div class="visual">
-          <img src="./assets/novus-preview.svg" alt="NetApp Novus 元数据与数据解耦架构示意图" width="800" height="450" loading="lazy">
-        </div>
-        <div class="body">
-          <h3>NetApp Novus · AI 工厂存储架构</h3>
-          <p>解耦式横向扩展架构：Data Director 管理命名空间，ONTAP 数据节点经 pNFS 并行直连，讲解 I/O 路径与扩展，含 4 分钟视频。</p>
-          <div class="acts">
-            <a class="act demo" href="./novus/" target="_blank" rel="noopener" aria-label="交互演示：NetApp Novus · AI 工厂存储架构（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./novus/novus-deep.mp4" data-title="NetApp Novus · AI 工厂存储架构">视频解说</button>
-          </div>
-        </div>
-      </article>
-
       <article class="slot" id="bay03">
         <div class="addr mono"><b>Bay 03</b><span class="tag">Lenovo LiSA</span><span class="state">在线</span></div>
         <div class="visual">
@@ -348,21 +382,6 @@
           <div class="acts">
             <a class="act demo" href="https://chinaeastse.github.io/LiSA/login.html" target="_blank" rel="noopener" aria-label="登录进入：LiSA 联想存储智能体（在新标签页打开）">登录进入</a>
             <button class="act vid" type="button" data-video="./lisa/lisa-deep.mp4" data-title="LiSA 联想存储智能体">视频解说</button>
-          </div>
-        </div>
-      </article>
-
-      <article class="slot" id="bay04">
-        <div class="addr mono"><b>Bay 04</b><span class="tag">NetApp AFX</span><span class="state">在线</span></div>
-        <div class="visual">
-          <img src="./assets/kv-cache-preview.svg" alt="NetApp AFX KV Cache 四级分层加速架构示意图" width="800" height="450" loading="lazy">
-        </div>
-        <div class="body">
-          <h3>KV Cache 分层加速</h3>
-          <p>KV Cache 在 HBM、DRAM、NVMe 与 AFX 共享池间的分层与命中，含 NetApp 实测数据、FAST '26 研究解读与 5 分钟视频。</p>
-          <div class="acts">
-            <a class="act demo" href="./kv-cache/" target="_blank" rel="noopener" aria-label="交互演示：KV Cache 分层加速（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./kv-cache/kv-deep.mp4" data-title="KV Cache 分层加速">视频解说</button>
           </div>
         </div>
       </article>
@@ -397,47 +416,57 @@
         </div>
       </article>
 
-      <article class="slot" id="bay07">
-        <div class="addr mono"><b>Bay 07</b><span class="tag">ONTAP NAS 双活</span><span class="state">在线</span></div>
+      <article class="slot" id="bay15">
+        <div class="addr mono"><b>Bay 15</b><span class="tag">NetApp Console</span><span class="state">在线</span></div>
         <div class="visual">
-          <img src="./assets/sm-as-nas-preview.svg" alt="SnapMirror active sync for NAS 双站点同步保护示意图" width="800" height="450" loading="lazy">
+          <img src="./assets/console-autonomy-preview.svg" alt="NetApp Console 本地部署与自治运维示意图" width="800" height="450" loading="lazy">
         </div>
         <div class="body">
-          <h3>SnapMirror active sync for NAS</h3>
-          <p>交互演示双站点 NAS 工作负载的同步复制、故障切换、规模规划与部署适配，含 5 分钟视频。</p>
+          <h3>Console 本地部署与自治运维</h3>
+          <p>19 幕：离线 OVA 与自带大模型、告警到修复、按意图配置、从 Unified Manager 迁移，以及自治资产概念与信任机制，含 5 分钟视频。</p>
           <div class="acts">
-            <a class="act demo" href="./sm-as-nas/" target="_blank" rel="noopener" aria-label="交互演示：SnapMirror active sync for NAS（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./sm-as-nas/smas-deep.mp4" data-title="SnapMirror active sync for NAS">视频解说</button>
+            <a class="act demo" href="./console-autonomy/" target="_blank" rel="noopener" aria-label="交互演示：NetApp Console 本地部署与自治运维（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./console-autonomy/console-deep.mp4" data-title="Console 本地部署与自治运维">视频解说</button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="grp closed" id="g-infra" aria-labelledby="g-infra-t">
+    <div class="sec-head">
+      <h2 id="g-infra-t"><button class="grp-btn" type="button" aria-expanded="false" aria-controls="g-infra-list">AI 与高性能基础设施<span class="cnt">6</span></button></h2>
+      <span class="mono">AI · HPC · AFX · Bay 02 04 10 12 13 14</span>
+    </div>
+
+    <div class="bay" id="g-infra-list">
+
+      <article class="slot" id="bay02">
+        <div class="addr mono"><b>Bay 02</b><span class="tag">NetApp Novus</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/novus-preview.svg" alt="NetApp Novus 元数据与数据解耦架构示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>NetApp Novus · AI 工厂存储架构</h3>
+          <p>解耦式横向扩展架构：Data Director 管理命名空间，ONTAP 数据节点经 pNFS 并行直连，讲解 I/O 路径与扩展，含 4 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./novus/" target="_blank" rel="noopener" aria-label="交互演示：NetApp Novus · AI 工厂存储架构（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./novus/novus-deep.mp4" data-title="NetApp Novus · AI 工厂存储架构">视频解说</button>
           </div>
         </div>
       </article>
 
-      <article class="slot" id="bay08">
-        <div class="addr mono"><b>Bay 08</b><span class="tag">ONTAP ARP/AI</span><span class="state">在线</span></div>
+      <article class="slot" id="bay04">
+        <div class="addr mono"><b>Bay 04</b><span class="tag">NetApp AFX</span><span class="state">在线</span></div>
         <div class="visual">
-          <img src="./assets/arp-ai-preview.svg" alt="ONTAP ARP AI 制造业勒索软件检测与恢复示意图" width="800" height="450" loading="lazy">
+          <img src="./assets/kv-cache-preview.svg" alt="NetApp AFX KV Cache 四级分层加速架构示意图" width="800" height="450" loading="lazy">
         </div>
         <div class="body">
-          <h3>制造业勒索软件检测与恢复</h3>
-          <p>交互展示异常加密行为的实时检测、快照锁定、告警响应与制造业务恢复路径，新增隔离库、主动扫描与干净恢复，含 5 分钟视频。</p>
+          <h3>KV Cache 分层加速</h3>
+          <p>KV Cache 在 HBM、DRAM、NVMe 与 AFX 共享池间的分层与命中，含 NetApp 实测数据、FAST '26 研究解读与 5 分钟视频。</p>
           <div class="acts">
-            <a class="act demo" href="./arp-ai-manufacturing/" target="_blank" rel="noopener" aria-label="交互演示：制造业勒索软件检测与恢复（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./arp-ai-manufacturing/arp-deep.mp4" data-title="制造业勒索软件检测与恢复">视频解说</button>
-          </div>
-        </div>
-      </article>
-
-      <article class="slot" id="bay09">
-        <div class="addr mono"><b>Bay 09</b><span class="tag">ONTAP 9.19.1 Release</span><span class="state">在线</span></div>
-        <div class="visual">
-          <img src="./assets/ontap-9191-preview.svg" alt="ONTAP 9.19.1 版本亮点特性总览示意图" width="800" height="450" loading="lazy">
-        </div>
-        <div class="body">
-          <h3>ONTAP 9.19.1 技术总览</h3>
-          <p>22 幕交互演示，覆盖 NAS、SAN、S3、业务连续性与纵深安全，以及 AFX 32 节点、AFX 2K 与原生分层，含 7 分钟视频。</p>
-          <div class="acts">
-            <a class="act demo" href="./ontap-9191/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP 9.19.1 技术总览（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./ontap-9191/o9191-deep.mp4" data-title="ONTAP 9.19.1 技术总览">视频解说</button>
+            <a class="act demo" href="./kv-cache/" target="_blank" rel="noopener" aria-label="交互演示：KV Cache 分层加速（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./kv-cache/kv-deep.mp4" data-title="KV Cache 分层加速">视频解说</button>
           </div>
         </div>
       </article>
@@ -453,20 +482,6 @@
           <div class="acts">
             <a class="act demo" href="./eda/" target="_blank" rel="noopener" aria-label="交互演示：EDA 数据流与 AFX（在新标签页打开）">交互演示</a>
             <button class="act vid" type="button" data-video="./eda/eda-deep.mp4" data-title="EDA 数据流与 AFX">视频解说</button>
-          </div>
-        </div>
-      </article>
-      <article class="slot" id="bay11">
-        <div class="addr mono"><b>Bay 11</b><span class="tag">ONTAP 9.20.1 Release</span><span class="state">在线</span></div>
-        <div class="visual">
-          <img src="./assets/ontap-9201-preview.svg" alt="ONTAP 9.20.1 新特性总览示意图" width="800" height="450" loading="lazy">
-        </div>
-        <div class="body">
-          <h3>ONTAP 9.20.1 新特性总览</h3>
-          <p>16 幕交互演示：单卷与单文件性能、均衡放置与效率视图、租户自助管理、FC 上的复制与 AFX 磁盘框弹性，含 5 分钟视频。</p>
-          <div class="acts">
-            <a class="act demo" href="./ontap-9201/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP 9.20.1 新特性总览（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./ontap-9201/o9201-deep.mp4" data-title="ONTAP 9.20.1 新特性">视频解说</button>
           </div>
         </div>
       </article>
@@ -515,31 +530,86 @@
           </div>
         </div>
       </article>
+    </div>
+  </section>
 
-      <article class="slot" id="bay15">
-        <div class="addr mono"><b>Bay 15</b><span class="tag">NetApp Console</span><span class="state">在线</span></div>
+  <section class="grp closed" id="g-ontap" aria-labelledby="g-ontap-t">
+    <div class="sec-head">
+      <h2 id="g-ontap-t"><button class="grp-btn" type="button" aria-expanded="false" aria-controls="g-ontap-list">ONTAP 版本与数据保护<span class="cnt">4</span></button></h2>
+      <span class="mono">ONTAP CORE · Bay 07 08 09 11</span>
+    </div>
+
+    <div class="bay" id="g-ontap-list">
+
+      <article class="slot" id="bay07">
+        <div class="addr mono"><b>Bay 07</b><span class="tag">ONTAP NAS 双活</span><span class="state">在线</span></div>
         <div class="visual">
-          <img src="./assets/console-autonomy-preview.svg" alt="NetApp Console 本地部署与自治运维示意图" width="800" height="450" loading="lazy">
+          <img src="./assets/sm-as-nas-preview.svg" alt="SnapMirror active sync for NAS 双站点同步保护示意图" width="800" height="450" loading="lazy">
         </div>
         <div class="body">
-          <h3>Console 本地部署与自治运维</h3>
-          <p>19 幕：离线 OVA 与自带大模型、告警到修复、按意图配置、从 Unified Manager 迁移，以及自治资产概念与信任机制，含 5 分钟视频。</p>
+          <h3>SnapMirror active sync for NAS</h3>
+          <p>交互演示双站点 NAS 工作负载的同步复制、故障切换、规模规划与部署适配，含 5 分钟视频。</p>
           <div class="acts">
-            <a class="act demo" href="./console-autonomy/" target="_blank" rel="noopener" aria-label="交互演示：NetApp Console 本地部署与自治运维（在新标签页打开）">交互演示</a>
-            <button class="act vid" type="button" data-video="./console-autonomy/console-deep.mp4" data-title="Console 本地部署与自治运维">视频解说</button>
+            <a class="act demo" href="./sm-as-nas/" target="_blank" rel="noopener" aria-label="交互演示：SnapMirror active sync for NAS（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./sm-as-nas/smas-deep.mp4" data-title="SnapMirror active sync for NAS">视频解说</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay08">
+        <div class="addr mono"><b>Bay 08</b><span class="tag">ONTAP ARP/AI</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/arp-ai-preview.svg" alt="ONTAP ARP AI 制造业勒索软件检测与恢复示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>制造业勒索软件检测与恢复</h3>
+          <p>交互展示异常加密行为的实时检测、快照锁定、告警响应与制造业务恢复路径，新增隔离库、主动扫描与干净恢复，含 5 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./arp-ai-manufacturing/" target="_blank" rel="noopener" aria-label="交互演示：制造业勒索软件检测与恢复（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./arp-ai-manufacturing/arp-deep.mp4" data-title="制造业勒索软件检测与恢复">视频解说</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay09">
+        <div class="addr mono"><b>Bay 09</b><span class="tag">ONTAP 9.19.1 Release</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/ontap-9191-preview.svg" alt="ONTAP 9.19.1 版本亮点特性总览示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>ONTAP 9.19.1 技术总览</h3>
+          <p>22 幕交互演示，覆盖 NAS、SAN、S3、业务连续性与纵深安全，以及 AFX 32 节点、AFX 2K 与原生分层，含 7 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./ontap-9191/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP 9.19.1 技术总览（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./ontap-9191/o9191-deep.mp4" data-title="ONTAP 9.19.1 技术总览">视频解说</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay11">
+        <div class="addr mono"><b>Bay 11</b><span class="tag">ONTAP 9.20.1 Release</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/ontap-9201-preview.svg" alt="ONTAP 9.20.1 新特性总览示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>ONTAP 9.20.1 新特性总览</h3>
+          <p>16 幕交互演示：单卷与单文件性能、均衡放置与效率视图、租户自助管理、FC 上的复制与 AFX 磁盘框弹性，含 5 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./ontap-9201/" target="_blank" rel="noopener" aria-label="交互演示：ONTAP 9.20.1 新特性总览（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./ontap-9201/o9201-deep.mp4" data-title="ONTAP 9.20.1 新特性">视频解说</button>
           </div>
         </div>
       </article>
     </div>
   </section>
 
-  <section class="sec-tools" aria-labelledby="tools-title">
+  <section class="grp closed sec-tools" id="g-tools" aria-labelledby="g-tools-t">
     <div class="sec-head">
-      <h2 id="tools-title">内部工具</h2>
+      <h2 id="g-tools-t"><button class="grp-btn" type="button" aria-expanded="false" aria-controls="g-tools-list">内部工具<span class="cnt">1</span></button></h2>
       <span class="mono">Tool 01</span>
     </div>
 
-    <div class="bay">
+    <div class="bay" id="g-tools-list">
 
       <article class="slot tool" id="tool01">
         <div class="addr mono"><b>Tool 01</b><span class="tag">NetApp Fusion</span><span class="state lock"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5.2" width="8" height="5.6" rx="1.2" fill="currentColor"/><path d="M3.9 5.2V3.8a2.1 2.1 0 0 1 4.2 0v1.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>需登录</span></div>
@@ -567,10 +637,92 @@
 </footer>
 
 <script>
+/* ══ 分组折叠 + 搜索筛选 ══ */
+(() => {
+  // 每次登录（浏览器会话）默认全部折叠；会话内记住展开了哪些组
+  const KEY = 'demobay.open';
+  const groups = [...document.querySelectorAll('.grp')];
+  const q = document.getElementById('q');
+  const hits = document.getElementById('hits');
+  const none = document.getElementById('none');
+  const foldAll = document.getElementById('foldAll');
+  const navLinks = [...document.querySelectorAll('.bays a')];
+  const load = () => { try { return new Set(JSON.parse(sessionStorage.getItem(KEY) || '[]')); } catch (e) { return new Set(); } };
+  const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(groups.filter(g => !g.classList.contains('closed')).map(g => g.id))); } catch (e) {} };
+
+  function setOpen(g, open) {
+    g.classList.toggle('closed', !open);
+    g.querySelector('.grp-btn').setAttribute('aria-expanded', String(open));
+  }
+  function syncFoldAll() {
+    foldAll.textContent = groups.some(g => !g.classList.contains('closed')) ? '全部折叠' : '全部展开';
+  }
+  const opened = load();
+  groups.forEach(g => {
+    setOpen(g, opened.has(g.id));
+    g.querySelector('.grp-btn').addEventListener('click', () => {
+      setOpen(g, g.classList.contains('closed')); save(); syncFoldAll();
+      dispatchEvent(new Event('scroll'));
+    });
+  });
+  syncFoldAll();
+  foldAll.addEventListener('click', () => {
+    const open = foldAll.textContent === '全部展开';
+    groups.forEach(g => setOpen(g, open)); save(); syncFoldAll();
+    dispatchEvent(new Event('scroll'));
+  });
+
+  // 顶栏跳转 / 带锚点打开：目标所在组若已折叠，先展开再滚动
+  function reveal(id) {
+    const el = document.getElementById(id);
+    const g = el && el.closest('.grp');
+    if (!g) return;
+    if (g.classList.contains('closed')) { setOpen(g, true); save(); syncFoldAll(); }
+    if (el.classList.contains('miss')) { q.value = ''; filter(); }
+  }
+  navLinks.forEach(a => a.addEventListener('click', () => reveal(a.getAttribute('href').slice(1))));
+  if (location.hash) { reveal(location.hash.slice(1)); requestAnimationFrame(() => document.getElementById(location.hash.slice(1))?.scrollIntoView()); }
+
+  // 搜索：匹配编号、标签、标题、描述；搜索期间忽略折叠状态
+  const slots = [...document.querySelectorAll('.grp .slot')];
+  const text = new Map(slots.map(el => [el, (el.id.replace(/\D/g, '') + ' ' + el.textContent).toLowerCase().replace(/\s+/g, ' ')]));
+  function filter() {
+    const terms = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const on = terms.length > 0;
+    let n = 0;
+    slots.forEach(el => {
+      const hit = !on || terms.every(t => text.get(el).includes(t));
+      el.classList.toggle('miss', !hit);
+      if (hit) n++;
+      const link = navLinks.find(a => a.getAttribute('href') === '#' + el.id);
+      if (link) link.classList.toggle('dim', !hit);
+    });
+    groups.forEach(g => {
+      const any = g.querySelector('.slot:not(.miss)');
+      g.classList.toggle('miss', on && !any);
+      if (on) g.classList.toggle('closed', false);
+      else g.classList.toggle('closed', g.querySelector('.grp-btn').getAttribute('aria-expanded') === 'false');
+    });
+    hits.textContent = on ? `${n} / ${slots.length}` : '';
+    none.hidden = !on || n > 0;
+    foldAll.hidden = on;
+    dispatchEvent(new Event('scroll'));
+  }
+  q.addEventListener('input', filter);
+  q.addEventListener('keydown', e => { if (e.key === 'Escape') { q.value = ''; filter(); q.blur(); } });
+  addEventListener('keydown', e => {
+    if (e.key === '/' && !e.metaKey && !e.ctrlKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) && !document.querySelector('dialog[open]')) {
+      e.preventDefault(); q.focus();
+    }
+  });
+})();
+</script>
+<script>
 document.querySelectorAll('.body p').forEach(p => { p.title = p.textContent.trim(); });
 (() => {
   const band = document.querySelector('.band');
-  const bays = [...document.querySelectorAll('.slot[id]')];
+  const all = [...document.querySelectorAll('.slot[id]')];
+  let bays = all;
   const links = new Map(
     [...document.querySelectorAll('.bays a')]
       .map(a => [a.getAttribute('href').slice(1), a])
@@ -607,6 +759,7 @@ document.querySelectorAll('.body p').forEach(p => { p.title = p.textContent.trim
   function sync() {
     queued = false;
     band.classList.toggle('scrolled', window.scrollY > 8);
+    bays = all.filter(el => el.offsetParent !== null);
     const on = new Set(current().map(el => el.id));
     for (const [id, a] of links) a.classList.toggle('on', on.has(id));
   }
