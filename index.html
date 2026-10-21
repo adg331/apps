@@ -280,6 +280,9 @@
         <a href="#bay10" title="Bay 10 · EDA 数据流与 AFX">10<span class="vh"> Bay 10 EDA 数据流与 AFX</span></a>
         <a href="#bay11" title="Bay 11 · ONTAP 9.20.1 新特性总览">11<span class="vh"> Bay 11 ONTAP 9.20.1 新特性总览</span></a>
         <a href="#bay12" title="Bay 12 · NetApp AFX 平台">12<span class="vh"> Bay 12 NetApp AFX 平台</span></a>
+        <a href="#bay13" title="Bay 13 · NVIDIA STX / CMX 与 NetApp 对照">13<span class="vh"> Bay 13 NVIDIA STX / CMX 与 NetApp 对照</span></a>
+        <a href="#bay14" title="Bay 14 · NetApp Lustre 与 EF80">14<span class="vh"> Bay 14 NetApp Lustre 与 EF80</span></a>
+        <a href="#bay15" title="Bay 15 · NetApp Console 本地部署与自治运维">15<span class="vh"> Bay 15 NetApp Console 本地部署与自治运维</span></a>
         <span class="sep" aria-hidden="true"></span>
         <a class="tool" href="#tool01" title="内部工具 · Fusion 容量查询">工具<span class="vh"> 内部工具 Fusion 容量查询</span></a>
       </nav>
@@ -299,7 +302,7 @@
   <section aria-labelledby="apps-title">
     <div class="sec-head">
       <h2 id="apps-title">应用与演示</h2>
-      <span class="mono">Bay 01 — 12</span>
+      <span class="mono">Bay 01 — 15</span>
     </div>
 
     <div class="bay">
@@ -416,10 +419,10 @@
         </div>
         <div class="body">
           <h3>制造业勒索软件检测与恢复</h3>
-          <p>交互展示异常加密行为的实时检测、快照锁定、告警响应与制造业务恢复路径。</p>
+          <p>交互展示异常加密行为的实时检测、快照锁定、告警响应与制造业务恢复路径，新增隔离库、主动扫描与干净恢复，含 5 分钟视频。</p>
           <div class="acts">
             <a class="act demo" href="./arp-ai-manufacturing/" target="_blank" rel="noopener" aria-label="交互演示：制造业勒索软件检测与恢复（在新标签页打开）">交互演示</a>
-            <span class="act off" aria-disabled="true">视频制作中</span>
+            <button class="act vid" type="button" data-video="./arp-ai-manufacturing/arp-deep.mp4" data-title="制造业勒索软件检测与恢复">视频解说</button>
           </div>
         </div>
       </article>
@@ -479,6 +482,51 @@
           <div class="acts">
             <a class="act demo" href="./afx/" target="_blank" rel="noopener" aria-label="交互演示：NetApp AFX 平台（在新标签页打开）">交互演示</a>
             <span class="act off" aria-disabled="true">视频制作中</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay13">
+        <div class="addr mono"><b>Bay 13</b><span class="tag">NVIDIA STX / CMX</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/nvidia-stx-preview.svg" alt="NVIDIA STX / CMX 与 NetApp 两条路线对照示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>AI 推理上下文存储：STX / CMX vs NetApp</h3>
+          <p>23 幕对照：G3.5 上下文层、八层架构拆解、NetApp 可复现路径与五厂商证据矩阵，含 9 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./nvidia-stx/" target="_blank" rel="noopener" aria-label="交互演示：AI 推理上下文存储对照（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./nvidia-stx/stx-deep.mp4" data-title="AI 推理上下文存储：STX / CMX vs NetApp">视频解说</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay14">
+        <div class="addr mono"><b>Bay 14</b><span class="tag">NetApp Lustre</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/lustre-preview.svg" alt="NetApp Lustre 与 EF80 并行文件系统示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>NetApp Lustre 与 EF80</h3>
+          <p>16 幕：Lustre 原理、E-Series 换代、2×2 构建块与线性扩展、Ansible 部署与故障注入、多租户、TUKE 超算案例，含 5 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./lustre/" target="_blank" rel="noopener" aria-label="交互演示：NetApp Lustre 与 EF80（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./lustre/lustre-deep.mp4" data-title="NetApp Lustre 与 EF80">视频解说</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="slot" id="bay15">
+        <div class="addr mono"><b>Bay 15</b><span class="tag">NetApp Console</span><span class="state">在线</span></div>
+        <div class="visual">
+          <img src="./assets/console-autonomy-preview.svg" alt="NetApp Console 本地部署与自治运维示意图" width="800" height="450" loading="lazy">
+        </div>
+        <div class="body">
+          <h3>Console 本地部署与自治运维</h3>
+          <p>19 幕：离线 OVA 与自带大模型、告警到修复、按意图配置、从 Unified Manager 迁移，以及自治资产概念与信任机制，含 5 分钟视频。</p>
+          <div class="acts">
+            <a class="act demo" href="./console-autonomy/" target="_blank" rel="noopener" aria-label="交互演示：NetApp Console 本地部署与自治运维（在新标签页打开）">交互演示</a>
+            <button class="act vid" type="button" data-video="./console-autonomy/console-deep.mp4" data-title="Console 本地部署与自治运维">视频解说</button>
           </div>
         </div>
       </article>

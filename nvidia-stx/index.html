@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>AI 推理上下文存储架构对照 · 交互演示</title>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi span.kc{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);margin-top:4px;padding-top:3px;border-top:1px dashed var(--line)}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+/* 紧凑版三态色标：用在行尾 / 表头 / 卡片标题里，不额外撑高行 */
+.tt{display:inline-block;font-family:var(--mono);font-style:normal;font-size:9px;font-weight:800;
+  line-height:1.55;border-radius:99px;padding:0 6px;margin-left:6px;white-space:nowrap;
+  border:1px solid;vertical-align:1px;letter-spacing:.2px}
+.tt.ok{color:var(--green);background:rgba(14,154,98,.1);border-color:rgba(14,154,98,.34)}
+.tt.warn{color:var(--orange);background:rgba(213,130,15,.1);border-color:rgba(213,130,15,.34)}
+.tt.new{color:var(--violet);background:rgba(106,90,212,.1);border-color:rgba(106,90,212,.34)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+
+/* ── 八层左右对照 ── */
+.lhd{display:grid;grid-template-columns:1fr 78px 1fr;background:var(--panel3);font-size:12.4px;font-weight:750;border-bottom:1px solid var(--line2)}
+.lhd div{padding:7px 12px;text-align:center}
+.lrow{display:grid;grid-template-columns:1fr 78px 1fr;border-bottom:1px dashed var(--line);cursor:pointer;transition:.16s}
+.lrow:last-child{border-bottom:none}
+.lrow:hover{background:rgba(0,103,197,.045)}
+.lrow.on{background:rgba(0,103,197,.08)}
+.lcell{padding:7px 12px;font-size:11.8px;color:var(--dim);line-height:1.45}
+.lcell b{display:block;color:var(--ink);font-weight:700;font-size:12.4px;margin-bottom:1px}
+.lcell.na b{color:#8d97b2}
+.lmid{display:grid;place-content:center;background:var(--panel3);border-left:1px solid var(--line);border-right:1px solid var(--line);font-family:var(--mono);font-size:9.5px;color:var(--dim);text-align:center;line-height:1.3;padding:4px 2px}
+.lrow.on .lmid{background:linear-gradient(160deg,var(--blue),var(--violet));color:#fff}
+#abbrScene table.dt th,#abbrScene table.dt td{padding:4px 10px;font-size:11.4px;line-height:1.4}
+#venTable th,#venTable td{padding:5px 9px;font-size:11.9px;line-height:1.42}
+#venTable thead th{font-size:10px}
+#qaTable th,#qaTable td{padding:6px 10px;font-size:11.8px;line-height:1.45}
+#qaTable thead th{font-size:10px}
+#abbrScene table.dt thead th{font-size:10px}
+#abbrScene .lead{margin-top:5px}
+a.src{font-size:10.5px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(0,103,197,.28);word-break:break-all;transition:.15s}
+a.src:hover{color:var(--violet);border-bottom-color:var(--violet)}
+input[type=range]{height:4px;border-radius:99px;background:var(--line2);appearance:none;outline:none}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:99px;background:#fff;border:2.5px solid var(--blue);cursor:pointer;box-shadow:0 1px 4px rgba(21,35,65,.2)}
+
+/* ══════════ 讲解视频弹层 ══════════ */
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>AI 推理上下文存储</b><span>NVIDIA STX / CMX  vs  NetApp · 2026-10</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ════ 0 · 封面 ════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">技术方案对照 · 2026-10</span></div>
+      <div class="big an" style="--d:.14s">AI 推理的<br>"上下文存储"这一层</div>
+      <div class="sub an" style="--d:.26s">NVIDIA STX / CMX 原生路线　vs　NetApp 当前公开方案</div>
+      <p class="desc an" style="--d:.34s">售前自学材料。全篇结论按公开证据强度分三档标注&mdash;&mdash;色标决定了哪些话能当着客户讲、哪些只能说"已宣布"。不使用未经证实的表述，最后一章为术语速查。</p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">为什么会有这一层</div>
+        <div class="chip" data-jump="5">左右对照总图</div>
+        <div class="chip" data-jump="15">五厂商能力矩阵</div>
+        <div class="chip" data-jump="20">术语速查</div>
+      </div>
+      <div class="an" style="--d:.5s;margin-top:18px">
+        <button class="btn on" id="vOpen" type="button">▶ 观看 9 分钟讲解视频</button>
+      </div>
+      <div class="an" style="--d:.56s;margin-top:18px">
+        <span class="hint">按 <kbd>&rarr;</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>&larr;</kbd> 返回 &nbsp;·&nbsp; 滚轮切幕 &nbsp;·&nbsp; 顶部导航跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 1 · 全篇导览 ════ -->
+  <section class="scene" data-sec="开场" data-nav="全篇导览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>导览 · 00</span></div>
+        <h1>全篇<span class="g">六个章节</span>，以及本文的证据标准</h1>
+        <p class="lead">每一条结论后面都带一个色标，说明它的证据强度。不同色标的内容，在客户决策中的分量完全不同。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="panel tint an" style="--d:.1s;margin-bottom:13px">
+        <h3>三态色标 · 全篇通用</h3>
+        <div class="g3">
+          <div><span class="tag ok">已公开验证</span>
+            <div class="li" style="margin-top:7px">有官方文档、官方网站、官方代码仓库或可复现的公开基准支撑。<b>可以直接对客户讲。</b></div></div>
+          <div><span class="tag warn">已宣布未公开细节</span>
+            <div class="li" style="margin-top:7px">厂商官方公开承诺过，但没有架构图、没有产品名、没有时间表。<b>只能讲"已宣布"，不能讲"已具备"。</b></div></div>
+          <div><span class="tag new">理论 / 推测</span>
+            <div class="li" style="margin-top:7px">技术上成立，或来自第三方分析师推断。<b>讲的时候必须明确标注来源与不确定性。</b></div></div>
+        </div>
+        <p class="note" style="margin-top:9px">正文里空间紧张的位置用缩写形式，含义与上面三格完全一致：<i class="tt ok">已验证</i> <i class="tt warn">已宣布</i> <i class="tt new">推测</i>。标在整块面板标题上的色标，适用于该面板内的全部条目。</p>
+      </div>
+
+      <div class="g3">
+        <div class="dc an" style="--d:.16s;--ac:#0067c5" data-jump="2">
+          <div class="hd"><div class="nm">背景</div><div class="ct">3 幕</div></div>
+          <ul><li>KV Cache 是什么，为什么会撑爆显存</li><li>NVIDIA 定义的 G1&ndash;G4 记忆层次</li><li>新增的 G3.5 层解决什么问题</li></ul>
+          <div class="go">进入 &rarr;</div>
+        </div>
+        <div class="dc an" style="--d:.2s;--ac:#6a5ad4" data-jump="5">
+          <div class="hd"><div class="nm">两条路线</div><div class="ct">5 幕</div></div>
+          <ul><li>八层左右对照总图</li><li>逐层拆解与"无直接对应"标注</li><li>核心差异：数据语义，不是 RDMA</li></ul>
+          <div class="go">进入 &rarr;</div>
+        </div>
+        <div class="dc an" style="--d:.24s;--ac:#0e9a62" data-jump="10">
+          <div class="hd"><div class="nm">证据与状态</div><div class="ct">5 幕</div></div>
+          <ul><li>NVIDIA 官方口径的四个焦点问题</li><li>NetApp 当前可复现的四条路径</li><li>直通更快，为什么推荐的不是 GDS</li><li><b>默认参数不能直接上生产</b></li><li>NetApp 与 STX：有什么、没有什么</li></ul>
+          <div class="go">进入 &rarr;</div>
+        </div>
+      </div>
+      <div class="g3" style="margin-top:13px">
+        <div class="dc an" style="--d:.28s;--ac:#d5820f" data-jump="15">
+          <div class="hd"><div class="nm">生态对比</div><div class="ct">3 幕</div></div>
+          <ul><li>NetApp / Everpure / DDN / WEKA / VAST 能力矩阵</li><li>公开证据项计数</li><li>时间线与实际可得性</li></ul>
+          <div class="go">进入 &rarr;</div>
+        </div>
+        <div class="dc an" style="--d:.32s;--ac:#0c8e86" data-jump="18">
+          <div class="hd"><div class="nm">选型说明</div><div class="ct">2 幕</div></div>
+          <ul><li>两条路线各自的适用前提</li><li>今天可落地 vs 明年可评估</li><li><b>常见质疑与可讲边界</b></li></ul>
+          <div class="go">进入 &rarr;</div>
+        </div>
+        <div class="dc an" style="--d:.36s;--ac:#d33a5c" data-jump="20">
+          <div class="hd"><div class="nm">术语速查</div><div class="ct">3 幕</div></div>
+          <ul><li>全部缩写的英文全称</li><li>核心概念的通俗类比</li><li>全部结论的资料来源链接</li></ul>
+          <div class="go">进入 &rarr;</div>
+        </div>
+      </div>
+      <p class="note">所有结论均来自 NVIDIA、NetApp、Everpure、DDN、WEKA、VAST 的官方渠道（含 NetApp INSIGHT 2026 场次材料），或明确标注为第三方分析。</p>
+    </div>
+  </section>
+
+  <!-- ════ 2 · 为什么需要上下文存储 ════ -->
+  <section class="scene" data-sec="背景" data-nav="为什么需要上下文存储">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>背景 · 01</span></div>
+        <h1>先讲清楚一件事：<span class="g">KV Cache</span> 为什么会撑爆显存</h1>
+        <p class="lead">这是整个话题的起点。不理解这一层，后面所有架构差异都无从判断。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <span class="hint">上下文长度</span>
+            <input type="range" id="ctxLen" min="8" max="512" step="8" value="128" style="flex:1;min-width:120px;accent-color:#0067c5">
+            <span class="mono" id="ctxLenV" style="font-size:12px;font-weight:700;color:#0067c5;width:64px;text-align:right">128K</span>
+          </div>
+          <div class="btnrow" style="margin-bottom:12px">
+            <span class="hint">并发会话</span>
+            <input type="range" id="ctxCon" min="1" max="200" step="1" value="40" style="flex:1;min-width:120px;accent-color:#6a5ad4">
+            <span class="mono" id="ctxConV" style="font-size:12px;font-weight:700;color:#6a5ad4;width:64px;text-align:right">40 路</span>
+          </div>
+          <svg viewBox="0 0 620 210">
+            <text x="10" y="24" font-size="11.5" fill="#5c6a8a">一台 8 卡节点可用于 KV 的 HBM 显存（示意 1.0 TB）　　刻度：整条 = 3.0 TB</text>
+            <rect x="10" y="34" width="600" height="30" rx="7" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <rect x="10" y="34" width="200" height="30" rx="7" fill="#dbeafe" stroke="#93b6e4"/>
+            <text x="220" y="54" font-size="12" font-weight="750" fill="#123a7a">GPU HBM &asymp; 1.0 TB</text>
+            <path d="M210 30 L210 140" stroke="#93b6e4" stroke-width="1.4" stroke-dasharray="4 4"/>
+
+            <text x="10" y="94" font-size="11.5" fill="#5c6a8a">当前设定下需要的 KV Cache 总量</text>
+            <rect x="10" y="104" width="600" height="30" rx="7" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <rect id="kvBar" x="10" y="104" width="200" height="30" rx="7" fill="#0067c5"/>
+            <text id="kvTxt" x="220" y="124" font-size="12" font-weight="750" fill="#123a7a">1.6 TB</text>
+
+            <path id="kvOver" d="M0 0" stroke="#d33a5c" stroke-width="2.4" fill="none" stroke-dasharray="5 4"/>
+            <text id="kvMsg" x="310" y="172" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d33a5c">超出显存 0.6 TB &mdash; 只能丢弃后重算，或落到外部存储</text>
+            <text x="310" y="196" text-anchor="middle" font-size="11" fill="#8d97b2">示意计算：按 70B 级模型 GQA 结构估算，约 0.31 MB / token</text>
+          </svg>
+          <p class="note">上图数值为示意估算，非性能承诺；实际取决于模型结构、精度与并发模式。<b>一个可复算的实测锚点</b>：NetApp 公开的 Qwen3-4B-Instruct-2507（36 层 / 8 KV 头 / 头维度 128 / bf16）为 <b>144 KB / token</b>，一个 10 万 token 的会话 KV 约 <b>14 GB</b><i class="tt ok">已验证</i>。模型越大，这个数字越高。</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>用一个类比说清楚</h3>
+            <div class="li"><b>模型读一遍上下文</b>，会算出一份中间结果，这份中间结果就是 KV Cache。</div>
+            <div class="li"><b>它像会议纪要</b>：只要留着，下一轮对话就不用把前面所有内容重新读一遍。</div>
+            <div class="li"><b>问题是它很大</b>：长文档、多轮对话、AI 智能体连续工作，纪要会一直变长。</div>
+            <div class="li warn"><b>显存放不下时</b>，系统只能把纪要丢掉。下次用户再问，模型必须<b>从头重读一遍</b>&mdash;&mdash;算力白烧，用户等更久。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对企业业务意味着什么</h3>
+            <div class="li ok"><b>客服知识库问答</b>：同一份产品手册被反复重读，每次都付一遍算力</div>
+            <div class="li ok"><b>合同 / 工单长文档处理</b>：几十页文档每轮追问都要重扫</div>
+            <div class="li ok"><b>研发助手多轮会话</b>：对话越长越慢，用户体验递减</div>
+            <div class="li ok"><b>AI 智能体连续作业</b>：跨步骤、跨会话的记忆无处存放</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.3s;margin-top:13px">
+        <div class="vc"><span class="k">现象一</span><div class="t">首字变慢</div><div class="d">用户按下回车到看到第一个字的时间（TTFT）随上下文线性增长</div></div>
+        <div class="vc"><span class="k">现象二</span><div class="t">并发上不去</div><div class="d">显存被 KV 占满，同一批 GPU 能服务的会话数下降</div></div>
+        <div class="vc"><span class="k">现象三</span><div class="t">算力重复消耗</div><div class="d">重算已经算过的上下文，是纯粹的重复付费</div></div>
+        <div class="vc"><span class="k">共同根因</span><div class="t">显存墙</div><div class="d">HBM 最快，但容量最小、最贵、扩不动</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 3 · 记忆层次 G1-G4 ════ -->
+  <section class="scene" data-sec="背景" data-nav="记忆层次 G1–G4">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>背景 · 02</span></div>
+        <h1>NVIDIA 把存储位置<span class="g">编了号</span>：G1 到 G4</h1>
+        <p class="lead">这套编号是后面所有讨论的共同坐标系。它和传统存储分层不是一回事&mdash;&mdash;它衡量的是"离 GPU 有多近"。<span class="tag ok">已公开验证</span></p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn on" data-tier="g1" data-toggle-group="tier">G1</button>
+            <button class="btn" data-tier="g2" data-toggle-group="tier">G2</button>
+            <button class="btn" data-tier="g3" data-toggle-group="tier">G3</button>
+            <button class="btn" data-tier="g4" data-toggle-group="tier">G4</button>
+            <span class="hint" style="margin-left:auto">点击查看每一层的定位</span>
+          </div>
+          <svg viewBox="0 0 620 250">
+            <g id="tierG1"><rect x="150" y="14" width="320" height="44" rx="10" fill="#dbeafe" stroke="#93b6e4" stroke-width="1.6"/>
+              <text x="310" y="34" text-anchor="middle" font-size="13" font-weight="800" fill="#123a7a">G1 &nbsp;GPU HBM 显存</text>
+              <text x="310" y="50" text-anchor="middle" font-size="11" fill="#5c6a8a">纳秒级 · 最快 · 容量最小</text></g>
+            <g id="tierG2"><rect x="110" y="66" width="400" height="44" rx="10" fill="#f5f8fd" stroke="#c9d4e6" stroke-width="1.6"/>
+              <text x="310" y="86" text-anchor="middle" font-size="13" font-weight="800" fill="#123a7a">G2 &nbsp;主机系统内存 DRAM</text>
+              <text x="310" y="102" text-anchor="middle" font-size="11" fill="#5c6a8a">显存放不下时的第一落点</text></g>
+            <g id="tierG3"><rect x="70" y="118" width="480" height="44" rx="10" fill="#f5f8fd" stroke="#c9d4e6" stroke-width="1.6"/>
+              <text x="310" y="138" text-anchor="middle" font-size="13" font-weight="800" fill="#123a7a">G3 &nbsp;服务器本地 SSD</text>
+              <text x="310" y="154" text-anchor="middle" font-size="11" fill="#5c6a8a">只属于这一台机器，别的节点用不了</text></g>
+            <g id="tierG4"><rect x="30" y="170" width="560" height="46" rx="10" fill="#f5f8fd" stroke="#c9d4e6" stroke-width="1.6"/>
+              <text x="310" y="191" text-anchor="middle" font-size="13" font-weight="800" fill="#123a7a">G4 &nbsp;共享的文件 / 对象存储</text>
+              <text x="310" y="207" text-anchor="middle" font-size="11" fill="#5c6a8a">毫秒级 · 容量最大 · 面向持久化设计</text></g>
+            <text x="310" y="238" text-anchor="middle" font-size="11.5" fill="#8d97b2">越往上越快越贵越小　　越往下越慢越便宜越大</text>
+          </svg>
+          <div class="lg"><span><i style="background:#0067c5"></i>当前选中层</span><span><i style="background:#c9d4e6"></i>其他层</span></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s" id="tierPanel">
+            <h3 id="tierTitle">G1 · GPU HBM 显存</h3>
+            <p style="font-size:13px;color:var(--dim)" id="tierDesc">正在生成 token 时用到的、延迟最敏感的那部分 KV。速度最优，但容量是整个体系里最紧张的资源。</p>
+            <div class="hr"></div>
+            <div class="li" id="tierL1"><b>存什么</b>：活跃生成中的 KV</div>
+            <div class="li" id="tierL2"><b>局限</b>：容量小、成本高、无法横向扩展</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>NVIDIA 对这套分层的官方判断</h3>
+            <div class="li warn"><b>G1&ndash;G3 加起来还是不够</b>：推理规模上去后，KV 容量随 GPU 数量增长，但仍覆盖不了全部需求</div>
+            <div class="li warn"><b>压到 G4 代价太大</b>：毫秒级延迟 + 功耗上升，把活跃 KV 放这里会直接拖慢推理</div>
+            <div class="li warn"><b>G3 还有个结构性问题</b>：本地 SSD 绑死在单台机器上，负载一漂移，缓存就白存了</div>
+          </div>
+        </div>
+      </div>
+      <p class="note">分层命名与判断均引自 NVIDIA CMX 官方技术博客。</p>
+    </div>
+  </section>
+
+  <!-- ════ 4 · 新增的 G3.5 ════ -->
+  <section class="scene" data-sec="背景" data-nav="新增的 G3.5">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>背景 · 03</span></div>
+        <h1>NVIDIA 的答案：在 G3 和 G4 之间<span class="g">插一层 G3.5</span></h1>
+        <p class="lead">这一层就是 CMX。它是本次所有架构讨论的物理载体。<span class="tag ok">已公开验证</span></p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn" data-g35="off" data-toggle-group="g35">没有 G3.5</button>
+            <button class="btn on" data-g35="on" data-toggle-group="g35">加入 G3.5（CMX）</button>
+            <span class="hint" style="margin-left:auto" id="g35State">当前：加入 G3.5</span>
+          </div>
+          <svg viewBox="0 0 620 235">
+            <rect x="180" y="10" width="260" height="34" rx="9" fill="#dbeafe" stroke="#93b6e4"/>
+            <text x="310" y="32" text-anchor="middle" font-size="12.5" font-weight="750" fill="#123a7a">G1 GPU HBM</text>
+            <rect x="180" y="52" width="260" height="30" rx="9" fill="#eef3fb" stroke="#c9d4e6"/>
+            <text x="310" y="72" text-anchor="middle" font-size="12" fill="#123a7a">G2 主机 DRAM</text>
+            <rect x="180" y="90" width="260" height="30" rx="9" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <text x="310" y="110" text-anchor="middle" font-size="12" fill="#5c6a8a">G3 本地 SSD（单机可见）</text>
+
+            <g id="g35Box"><rect x="120" y="128" width="380" height="42" rx="10" fill="#efeafd" stroke="#a99ce8" stroke-width="1.8"/>
+              <text x="310" y="147" text-anchor="middle" font-size="13" font-weight="800" fill="#4a3bb0">G3.5 &nbsp;CMX &mdash; 以太网直连的共享闪存层</text>
+              <text x="310" y="163" text-anchor="middle" font-size="11" fill="#6a5ad4">可扩展单元（SU）内共享 · PB 级 · 专为 KV Cache 设计</text></g>
+
+            <rect x="60" y="180" width="500" height="34" rx="9" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <text x="310" y="201" text-anchor="middle" font-size="12" fill="#5c6a8a">G4 共享文件 / 对象存储（持久化）</text>
+
+            <path id="g35Path" d="M150 27 C 90 27, 90 197, 300 197" stroke="#d33a5c" stroke-width="2.6" fill="none" stroke-dasharray="6 5"/>
+            <text id="g35Lbl" x="60" y="115" font-size="11" font-weight="700" fill="#d33a5c" transform="rotate(-90 60 115)">溢出直落 G4</text>
+          </svg>
+          <div class="lg">
+            <span><i style="background:#6a5ad4"></i>新增层 G3.5 / CMX</span>
+            <span><i style="background:#d33a5c"></i>KV 溢出路径</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>G3.5 想同时满足两个矛盾要求</h3>
+            <div class="li"><b>足够大</b>：能装下一个可扩展单元（SU）里许多智能体同时演进的上下文，PB 级</div>
+            <div class="li"><b>足够近</b>：能在解码阶段之前把上下文预先搬回 GPU / 主机内存，不造成停顿</div>
+            <div class="li"><b>足够省</b>：以闪存为介质，比把同样数据压在通用共享存储上更省电</div>
+            <div class="li ok"><b>连带好处</b>：G4 可以回归本职&mdash;&mdash;只放真正需要长期留存的历史与审计数据</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>NVIDIA 公布的指标 <span class="tag warn">厂商声明</span></h3>
+            <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+              <div class="kpi"><b>5&times;</b><span>每秒出字数（TPS）</span></div>
+              <div class="kpi g"><b>5&times;</b><span>能效（每瓦出字数）</span></div>
+              <div class="kpi o"><b>2&times;</b><span>数据摄取速度</span></div>
+            </div>
+            <p class="note" style="margin-top:10px">均为 NVIDIA 对比"传统 CPU 架构存储"给出的方向性目标，截至目前<b>没有独立第三方基准验证</b>，不应作为性能承诺引用。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="g3 an" style="--d:.3s;margin-top:13px">
+        <div class="vc"><span class="k">先把量纲落地</span><div class="t">144 KB / token<i class="tt ok">已验证</i></div><div class="d">NetApp 公开的算式：KV 头数 × 头维度 × 2（K＋V） × 精度字节 × 层数。以 Qwen3-4B-Instruct-2507 计得，可自行复算</div></div>
+        <div class="vc"><span class="k">单个会话</span><div class="t">10 万 token ≈ 14 GB<i class="tt ok">已验证</i></div><div class="d">一路长上下文会话的 KV 就是这个量级。模型越大越高&mdash;&mdash;这是 4B 级模型的值</div></div>
+        <div class="vc"><span class="k">所以需要 G3.5</span><div class="t">HBM 装不下，G4 又太慢</div><div class="d">按上面的量级往 SU 级并发外推，总量很快进入 TB&ndash;PB 区间<i class="tt new">本篇算术，非厂商结论</i>。中间必须有一层既装得下、又够近的介质</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 5 · 左右对照总图 ════ -->
+  <section class="scene" data-sec="两条路线" data-nav="左右对照总图">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>两条路线 · 01</span></div>
+        <h1>八层<span class="g">左右对照总图</span>　点击任意一层查看差异</h1>
+        <p class="lead">功能层横向严格对齐。不为了对齐而把不同层级的组件硬放在同一行&mdash;&mdash;没有对应物的地方，明确标注"无直接对应"。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g32">
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.16s" id="layPanel">
+            <h3 id="layTitle">第 5 层 · 存储访问协议层</h3>
+            <p style="font-size:13px;color:var(--dim)" id="layDesc">选一层查看说明。</p>
+            <div class="hr"></div>
+            <div class="li" id="layL"><b>NetApp 侧</b>：&mdash;</div>
+            <div class="li" id="layR"><b>NVIDIA 侧</b>：&mdash;</div>
+            <div class="li" id="layK"><b>差异要点</b>：&mdash;</div>
+          </div>
+          <div class="panel tint an" style="--d:.22s">
+            <h3>读图提示</h3>
+            <div class="li"><b>灰字层</b>表示该侧没有对应组件，不是"功能缺失"，而是<b>架构分工不同</b>。</div>
+            <div class="li"><b>两侧都用 RDMA</b>。真正的区别在第 3&ndash;5 层的数据语义与控制架构。</div>
+            <div class="li"><b>左侧八层全部已公开验证</b>；右侧第 7&ndash;8 层为已宣布、尚无厂商 GA 产品。</div>
+          </div>
+        </div>
+
+        <div class="viz an" style="--d:.12s;padding:0;overflow:hidden">
+          <div class="lhd"><div style="color:#0067c5">NetApp 当前公开方案<i class="tt ok">已验证</i></div><div style="font-family:var(--mono);font-size:10.5px;color:#5c6a8a">功能层</div><div style="color:#6a5ad4">NVIDIA STX / CMX 原生方案</div></div>
+          <div class="lrow on" data-lay="5"><div class="lcell"><b>vLLM</b>推理引擎，产生并消费 KV</div><div class="lmid">1<br>运行时<br>编排</div><div class="lcell"><b>Dynamo + Grove<i class="tt ok">已验证</i></b>推理服务框架 + 拓扑感知调度</div></div>
+          <div class="lrow" data-lay="6"><div class="lcell"><b>LMCache</b>开源 KV 引擎：索引 / 复用 / 分层</div><div class="lmid">2<br>KV Cache<br>管理</div><div class="lcell"><b>KVBM<i class="tt ok">已验证</i></b>Dynamo 原生 KV 块管理器</div></div>
+          <div class="lrow" data-lay="7"><div class="lcell na"><b style="color:#8d97b2">无直接对应</b>LMCache 直接调用自身 backend</div><div class="lmid">3<br>数据移动<br>抽象</div><div class="lcell"><b>NIXL<i class="tt ok">已验证</i></b>统一传输抽象 + 存储插件架构</div></div>
+          <div class="lrow" data-lay="8"><div class="lcell na"><b style="color:#8d97b2">无直接对应</b>ONTAP 不提供 KV 语义服务</div><div class="lmid">4<br>Context/KV<br>存储服务</div><div class="lcell"><b>DOCA Memos<i class="tt warn">已宣布</i></b>KV 通信与存储层，对外 key-value 接口</div></div>
+          <div class="lrow" data-lay="9"><div class="lcell"><b>pNFS over RDMA</b>标准文件语义（另有 S3 / GDS 可选）</div><div class="lmid">5<br>存储访问<br>协议</div><div class="lcell"><b>NVMe-oF + object/RDMA<i class="tt warn">已宣布</i></b>含 NVMe KV 扩展，保持键值语义</div></div>
+          <div class="lrow" data-lay="10"><div class="lcell"><b>NFS over RDMA (RoCE)</b>标准以太网，不绑定交换机</div><div class="lmid">6<br>网络<br>RDMA</div><div class="lcell"><b>Spectrum-X 以太网<i class="tt ok">已验证</i></b>无损 RoCE + 拥塞控制 + 自适应路由</div></div>
+          <div class="lrow" data-lay="11"><div class="lcell"><b>AFX 控制器节点</b>x86 + ONTAP；GPU 侧无对应处理器</div><div class="lmid">7<br>存储处理器<br>控制器</div><div class="lcell"><b>BlueField-4 STX<i class="tt warn">已宣布</i></b>计算侧与存储侧<b>双端部署</b></div></div>
+          <div class="lrow" data-lay="12"><div class="lcell"><b>AFX 存储柜 NVMe SSD</b>对应 NVIDIA 分层中的 G4</div><div class="lmid">8<br>存储<br>介质</div><div class="lcell"><b>CMX 机柜 NVMe SSD<i class="tt warn">已宣布</i></b>即新增的 G3.5 层</div></div>
+        </div>
+      </div>
+      <div class="g4 an" style="--d:.3s;margin-top:13px">
+        <div class="vc"><span class="k">对得上的</span><div class="t">第 1–2 层<i class="tt ok">已验证</i></div><div class="d">运行时与 KV 管理层两侧一一对应，LMCache 与 KVBM 可互换</div></div>
+        <div class="vc"><span class="k">分岔点</span><div class="t">第 3–4 层<i class="tt ok">已验证</i></div><div class="d">右侧多出传输抽象与 KV 服务两层，左侧无直接对应物</div></div>
+        <div class="vc"><span class="k">本质差异</span><div class="t">第 5 层<i class="tt warn">已宣布</i></div><div class="d">文件语义 vs 键值语义，决定了存储侧能不能理解自己存的是什么</div></div>
+        <div class="vc"><span class="k">形态差异</span><div class="t">第 7 层<i class="tt warn">已宣布</i></div><div class="d">BlueField-4 在计算与存储两端都参与，传统架构只有存储侧有控制器</div></div>
+      </div>
+      <p class="note">左侧结构来自 NetApp 官方技术博客与 AFX 产品文档；右侧结构来自 NVIDIA CMX 技术博客、nvidia.com 产品页与 ai-dynamo 官方代码仓库。</p>
+    </div>
+  </section>
+
+  <!-- ════ 6 · 上两层 ════ -->
+  <section class="scene" data-sec="两条路线" data-nav="上两层：运行时与 KV 管理">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>两条路线 · 02</span></div>
+        <h1>第 1&ndash;2 层：这两层<span class="g">两侧是对得上的</span></h1>
+        <p class="lead">LMCache、KVBM、Everpure KVA 属于同一功能层，互相可替换。这是全篇唯一一处两侧完全对等的地方。<span class="tag ok">已公开验证</span></p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn on" data-kvm="lm" data-toggle-group="kvm">LMCache 路径</button>
+            <button class="btn" data-kvm="kvbm" data-toggle-group="kvm">KVBM 路径</button>
+            <button class="btn" data-kvm="kva" data-toggle-group="kvm">Everpure KVA 路径</button>
+            <span class="hint" style="margin-left:auto" id="kvmState">当前：LMCache</span>
+          </div>
+          <svg viewBox="0 0 620 220">
+            <rect x="200" y="8" width="220" height="36" rx="9" fill="#dbeafe" stroke="#93b6e4"/>
+            <text x="310" y="31" text-anchor="middle" font-size="12.5" font-weight="750" fill="#123a7a" id="kvmTop">vLLM 推理引擎</text>
+            <path d="M310 44 L310 66" stroke="#93b6e4" stroke-width="2" marker-end="url(#ah)"/>
+            <rect id="kvmBox" x="170" y="66" width="280" height="44" rx="10" fill="#efeafd" stroke="#a99ce8" stroke-width="1.8"/>
+            <text x="310" y="85" text-anchor="middle" font-size="13" font-weight="800" fill="#4a3bb0" id="kvmName">LMCache</text>
+            <text x="310" y="101" text-anchor="middle" font-size="11" fill="#6a5ad4" id="kvmRole">厂商中立开源 KV 引擎</text>
+            <path d="M310 110 L310 132" stroke="#93b6e4" stroke-width="2" marker-end="url(#ah)"/>
+            <rect x="140" y="132" width="340" height="38" rx="9" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <text x="310" y="155" text-anchor="middle" font-size="12" fill="#5c6a8a" id="kvmDown">backend：fs / s3 / gds（LMCache 自带）</text>
+            <text x="310" y="196" text-anchor="middle" font-size="11.5" fill="#8d97b2" id="kvmNote">Dynamo 官方文档把 KVBM、LMCache、FlexKV 并列为三种可选实现</text>
+            <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#93b6e4"/></marker></defs>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>第 1 层 · 推理运行时与编排</h3>
+            <div class="li"><b>左：vLLM</b>&mdash;&mdash;主流开源推理引擎，NetApp 全部公开测试都基于它</div>
+            <div class="li"><b>右：Dynamo</b>&mdash;&mdash;NVIDIA 分布式推理服务框架，会把请求路由到"已经存有对应上下文"的节点</div>
+            <div class="li"><b>右：Grove</b>&mdash;&mdash;再往下一层的调度器，按上下文所在位置放置负载，负载迁移后仍能复用缓存</div>
+            <div class="li ok"><b>可组合</b>：vLLM 可以跑在 Dynamo 之下，两者不互斥</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>第 2 层 · KV Cache 管理（同层可换）</h3>
+            <div class="li"><b>共同职责</b>：KV 块的索引、生命周期、复用判定、逐出、卸载与分层</div>
+            <div class="li"><b>LMCache</b>：厂商中立，自带 CPU 内存 / 本地盘 / Redis / S3 / GDS / NIXL 等多种后端</div>
+            <div class="li"><b>KVBM</b>：内部分三层&mdash;&mdash;运行时连接器 &rarr; 块管理 &rarr; NIXL 传输</div>
+            <div class="li"><b>Everpure KVA</b>：与 LMCache 同层的第三种实现，但是<b>厂商自研、不开源</b>，后端只指向自家 FlashBlade<span class="tt ok">已验证</span></div>
+            <div class="li warn"><b>常见误解</b>：DOCA Memos 不属于这一层，它在更下面的第 4 层</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 7 · 中两层 ════ -->
+  <section class="scene" data-sec="两条路线" data-nav="中两层：传输抽象与 KV 服务">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>两条路线 · 03</span></div>
+        <h1>第 3&ndash;4 层：<span class="g">左侧无直接对应</span>的两层</h1>
+        <p class="lead">这是两条路线分岔的真正位置。NVIDIA 在 KV 管理层与存储协议之间，多插了两层专门的抽象。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g2">
+        <div class="panel an" style="--d:.12s">
+          <h3>第 3 层 · NIXL &mdash; 数据移动抽象 <span class="tag ok">已公开验证</span></h3>
+          <div class="li"><b>它不是存储协议</b>，是一个"搬运抽象层"：屏蔽 GPU 显存、主机内存、文件、对象、块设备之间注册与传输方式的差异。</div>
+          <div class="li"><b>插件架构</b>。官方仓库现有插件：<span class="mono" style="font-size:11.5px">ucx · libfabric · gpunetio · uccl · posix · cuda_gds · gds_mt · obj · azure_blob · hf3fs · mooncake · gusli · infinia</span></div>
+          <div class="li ok"><b>存储厂商的接入点就在这里</b>：写一个 NIXL 插件，就进入了 NVIDIA 的推理数据通路。</div>
+          <div class="hr"></div>
+          <div class="li warn"><b>名称注意</b>：NVIDIA 官方两种写法并存&mdash;&mdash;代码仓库标题为 <b>Inference Xfer Library</b>，技术博客写作 <b>Inference Transfer Library</b>。同一个东西。</div>
+        </div>
+
+        <div class="panel an" style="--d:.18s">
+          <h3>第 4 层 · DOCA Memos &mdash; Context/KV 存储服务 <span class="tag ok">已公开验证</span></h3>
+          <div class="li"><b>官方定义</b>：面向 BlueField-4 与 CMX 优化的 SDK，跨"AI 计算节点"与"CMX 数据节点"管理并共享 KV Cache。</div>
+          <div class="li"><b>对外接口是键值 API</b>，把以太网直连的闪存变成 SU 级共享缓存层；应用侧保持无状态，路由与复用由 CMX 负责。</div>
+          <div class="li"><b>硬件加速</b>：数据完整性校验与加密在 BlueField 芯片内完成，不占主机 CPU。</div>
+          <div class="hr"></div>
+          <div class="li"><b>为什么左侧没有对应物</b>：ONTAP 提供的是文件与对象语义，不提供 KV 语义服务。KV 块在写出前必须先被序列化成普通文件或对象。</div>
+        </div>
+      </div>
+
+      <div class="panel tint an" style="--d:.26s;margin-top:13px">
+        <h3>NIXL 与 DOCA Memos 到底谁调用谁？&mdash;&mdash; 这是全篇最容易讲错的一点</h3>
+        <div class="g3">
+          <div>
+            <span class="tag ok">已公开验证</span>
+            <div class="li" style="margin-top:7px"><b>代码层面：NIXL 在上，DOCA Memos 在下。</b>NVIDIA 官方 NIXL 仓库存在一个名为 <span class="mono">DOCA_MEMOS</span> 的后端插件，链接 <span class="mono">libdoca_kv</span>，操作对象是 NVMe KV 设备，支持 STORE / RETRIEVE / EXIST 三种操作。</div>
+          </div>
+          <div>
+            <span class="tag warn">状态提示</span>
+            <div class="li" style="margin-top:7px"><b>该插件的代码提交仍处于未合入状态</b>（提交于 2026-06，最后更新 2026-08，尚未并入主干）。因此不能说"NIXL 已发行版支持 DOCA Memos"。</div>
+          </div>
+          <div>
+            <span class="tag new">需要保留的不确定性</span>
+            <div class="li" style="margin-top:7px"><b>NVIDIA 至今没有发布一张官方分层图。</b>官方文字是协同口径："DOCA Memos 对接推理框架 &hellip; 并借助 NIXL 与 Dynamo 实现跨节点共享"，同时"支持开放接口"。VAST 的公开实现就绕开了 Memos 的 KV 接口，改用文件接口。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 8 · 下四层 ════ -->
+  <section class="scene" data-sec="两条路线" data-nav="下四层：协议到介质">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>两条路线 · 04</span></div>
+        <h1>第 5&ndash;8 层：<span class="g">BlueField-4 出现在数据路径的两端</span></h1>
+        <p class="lead">这是右侧路线在硬件形态上与传统存储最本质的不同。<span class="tag ok">已公开验证</span></p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn" data-bf="left" data-toggle-group="bf">NetApp 当前形态</button>
+            <button class="btn on" data-bf="right" data-toggle-group="bf">STX / CMX 形态</button>
+            <span class="hint" style="margin-left:auto" id="bfState">当前：STX / CMX</span>
+          </div>
+          <svg viewBox="0 0 620 230">
+            <rect x="20" y="20" width="150" height="70" rx="11" fill="#dbeafe" stroke="#93b6e4"/>
+            <text x="95" y="46" text-anchor="middle" font-size="12" font-weight="780" fill="#123a7a">GPU 服务器</text>
+            <text x="95" y="64" text-anchor="middle" font-size="11" fill="#5c6a8a">GPU + 主机 CPU</text>
+            <rect id="bfCompute" x="28" y="70" width="134" height="15" rx="5" fill="#6a5ad4" opacity="0"/>
+            <text id="bfComputeT" x="95" y="81.5" text-anchor="middle" font-size="9.5" font-weight="750" fill="#fff" opacity="0">BlueField-4 DPU</text>
+
+            <rect x="235" y="34" width="150" height="42" rx="10" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <text x="310" y="52" text-anchor="middle" font-size="11.5" font-weight="750" fill="#123a7a" id="netName">Spectrum-X 以太网</text>
+            <text x="310" y="67" text-anchor="middle" font-size="10.5" fill="#5c6a8a" id="netSub">无损 RoCE · 自适应路由</text>
+            <path d="M170 55 L232 55" stroke="#0e9a62" stroke-width="2.6" marker-end="url(#ah2)"/>
+            <path d="M388 55 L448 55" stroke="#0e9a62" stroke-width="2.6" marker-end="url(#ah2)"/>
+            <text id="protoT" x="310" y="98" text-anchor="middle" font-size="11" font-weight="700" fill="#0e9a62">NVMe-oF ＋ object/RDMA（保持 KV 语义）</text>
+
+            <rect x="450" y="20" width="150" height="70" rx="11" fill="#eef3fb" stroke="#93b6e4"/>
+            <text x="525" y="46" text-anchor="middle" font-size="12" font-weight="780" fill="#123a7a" id="stName">CMX 存储机柜</text>
+            <text x="525" y="64" text-anchor="middle" font-size="11" fill="#5c6a8a" id="stSub">NVMe SSD（G3.5）</text>
+            <rect id="bfStore" x="458" y="70" width="134" height="15" rx="5" fill="#6a5ad4" opacity="0"/>
+            <text id="bfStoreT" x="525" y="81.5" text-anchor="middle" font-size="9.5" font-weight="750" fill="#fff" opacity="0">BlueField-4 控制器</text>
+
+            <rect x="20" y="128" width="580" height="82" rx="11" fill="#fbfcff" stroke="#dce3ef"/>
+            <text x="34" y="149" font-size="11.5" font-weight="750" fill="#123a7a" id="dutyT">BlueField-4 在两端各承担什么</text>
+            <text x="34" y="170" font-size="11.5" fill="#5c6a8a" id="duty1">· 计算侧 DPU：运行 KV I/O 平面与控制面，终结 NVMe-oF / object-RDMA</text>
+            <text x="34" y="188" font-size="11.5" fill="#5c6a8a" id="duty2">· 存储侧控制器：直接管理 NVMe SSD、运行存储服务</text>
+            <text x="34" y="204" font-size="11.5" fill="#5c6a8a" id="duty3">· 两侧共同：卸载数据完整性校验、加密与压缩，主机 CPU 不参与数据路径</text>
+            <defs><marker id="ah2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#0e9a62"/></marker></defs>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>第 5 层 · 协议：CMX 数据面到底跑什么</h3>
+            <div class="li"><b>NVMe / NVMe-oF</b>，并且明确包含 <b>NVMe KV 扩展</b>&mdash;&mdash;可以直接按 key 存取，不必先转成文件或块</div>
+            <div class="li"><b>object / RDMA</b>&mdash;&mdash;NVIDIA 原文用词。<span class="tag new">推测</span>第三方推断这是 S3-over-RDMA，NVIDIA 未确认</div>
+            <div class="li ok"><b>官方原话</b>：BlueField-4 运行 KV I/O 平面，"高效终结 NVMe-oF 与 object/RDMA 协议"</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>一个容易混淆的细节</h3>
+            <div class="li warn"><b>NetApp AFX 内部也用 NVMe-oF over RoCE</b>&mdash;&mdash;但那是控制器与存储柜之间的<b>内部总线</b>，不向 GPU 暴露。</div>
+            <div class="li"><b>客户端看到的仍然是 NFS / SMB / S3。</b>因此这条 NVMe-oF 与 CMX 数据面的 NVMe-oF 不是一回事，不能混为一谈。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.3s;margin-top:13px">
+        <div class="vc"><span class="k">第 5 层</span><div class="t">协议</div><div class="d">NVMe / NVMe-oF（含 NVMe KV 扩展）＋ object/RDMA，由 BlueField-4 终结</div></div>
+        <div class="vc"><span class="k">第 6 层</span><div class="t">网络</div><div class="d">Spectrum-X 以太网提供无损 RoCE、拥塞控制与自适应路由</div></div>
+        <div class="vc"><span class="k">第 7 层</span><div class="t">处理器</div><div class="d">BlueField-4 STX = Vera CPU + ConnectX-9 SuperNIC，双端部署</div></div>
+        <div class="vc"><span class="k">第 8 层</span><div class="t">介质</div><div class="d">CMX 机柜内 NVMe SSD，即新增的 G3.5 层，SU 内共享</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 9 · 核心差异 ════ -->
+  <section class="scene" data-sec="两条路线" data-nav="核心差异：数据语义">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>两条路线 · 05</span></div>
+        <h1>如果只记住一句话：<span class="g">差别不在 RDMA，在数据语义</span></h1>
+        <p class="lead">两条路线都用 RDMA、都用以太网、都用 NVMe SSD。分水岭是 KV 块离开 GPU 之后，还保不保持它原本的键值形态。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="viz an" style="--d:.12s">
+        <div class="btnrow" style="margin-bottom:12px">
+          <button class="btn on" data-sem="file" data-toggle-group="sem">文件语义（NetApp 当前）</button>
+          <button class="btn" data-sem="kv" data-toggle-group="sem">KV 语义（STX / CMX）</button>
+          <span class="hint" style="margin-left:auto" id="semState">当前：文件语义</span>
+        </div>
+        <svg viewBox="0 0 1080 168">
+          <g id="semA"><rect x="12" y="34" width="150" height="56" rx="11" fill="#dbeafe" stroke="#93b6e4"/>
+            <text x="87" y="58" text-anchor="middle" font-size="12" font-weight="780" fill="#123a7a">KV Block</text>
+            <text x="87" y="76" text-anchor="middle" font-size="10.5" fill="#5c6a8a">GPU 内的键值块</text></g>
+          <path d="M164 62 L212 62" stroke="#8d97b2" stroke-width="2.2" marker-end="url(#ah3)"/>
+          <g><rect id="semB" x="214" y="34" width="180" height="56" rx="11" fill="#fdeef1" stroke="#e0a3b4"/>
+            <text id="semBT" x="304" y="58" text-anchor="middle" font-size="12" font-weight="780" fill="#a02744">序列化成文件 / 对象</text>
+            <text id="semBS" x="304" y="76" text-anchor="middle" font-size="10.5" fill="#a45a70">键值形态在这里丢失</text></g>
+          <path d="M396 62 L444 62" stroke="#8d97b2" stroke-width="2.2" marker-end="url(#ah3)"/>
+          <g><rect id="semC" x="446" y="34" width="180" height="56" rx="11" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <text id="semCT" x="536" y="58" text-anchor="middle" font-size="12" font-weight="780" fill="#123a7a">pNFS over RDMA</text>
+            <text id="semCS" x="536" y="76" text-anchor="middle" font-size="10.5" fill="#5c6a8a">标准文件协议</text></g>
+          <path d="M628 62 L676 62" stroke="#8d97b2" stroke-width="2.2" marker-end="url(#ah3)"/>
+          <g><rect id="semD" x="678" y="34" width="180" height="56" rx="11" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <text id="semDT" x="768" y="58" text-anchor="middle" font-size="12" font-weight="780" fill="#123a7a">AFX 控制器（x86）</text>
+            <text id="semDS" x="768" y="76" text-anchor="middle" font-size="10.5" fill="#5c6a8a">ONTAP 数据服务</text></g>
+          <path d="M860 62 L908 62" stroke="#8d97b2" stroke-width="2.2" marker-end="url(#ah3)"/>
+          <g><rect x="910" y="34" width="158" height="56" rx="11" fill="#eef3fb" stroke="#93b6e4"/>
+            <text id="semET" x="989" y="58" text-anchor="middle" font-size="12" font-weight="780" fill="#123a7a">NVMe SSD</text>
+            <text id="semES" x="989" y="76" text-anchor="middle" font-size="10.5" fill="#5c6a8a">AFX 存储柜</text></g>
+          <text id="semMsg" x="540" y="130" text-anchor="middle" font-size="13" font-weight="700" fill="#5c6a8a">KV 块被当成普通文件对待：成熟、标准、今天就能部署，任何 NFS 客户端都能用</text>
+          <text id="semMsg2" x="540" y="152" text-anchor="middle" font-size="11.5" fill="#8d97b2">代价：存储侧无法理解这是 KV，无法在存储层做复用判定与路由</text>
+          <defs><marker id="ah3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#8d97b2"/></marker></defs>
+        </svg>
+      </div>
+
+      <div class="g2 an" style="--d:.22s;margin-top:13px">
+        <div class="panel">
+          <h3>左路线的取舍</h3>
+          <div class="li ok"><b>今天可落地</b>：NetApp 已发布可复现的配置与基准，标准协议，无专有客户端<i class="tt ok">已验证</i></div>
+          <div class="li ok"><b>无绑定</b>：不依赖特定 GPU 代次、特定交换机、特定 DPU<i class="tt ok">已验证</i></div>
+          <div class="li warn"><b>上限受限于文件语义</b>：存储侧看到的是文件，做不了 KV 级的复用与路由<i class="tt ok">已验证</i></div>
+        </div>
+        <div class="panel">
+          <h3>右路线的取舍</h3>
+          <div class="li ok"><b>性能上限更高</b>：KV 语义一路保持到 NVMe KV 设备，主机 CPU 完全不在数据路径上<i class="tt new">推测</i></div>
+          <div class="li warn"><b>耦合更深</b>：绑定 Rubin GPU 机架、Spectrum-X 以太网、BlueField-4<i class="tt warn">已宣布</i></div>
+          <div class="li warn"><b>时间点</b>：合作伙伴平台 2026 下半年交付，目前全行业无 GA 产品<i class="tt warn">已宣布</i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 10 · 官方口径校准 ════ -->
+  <section class="scene" data-sec="证据与状态" data-nav="官方口径校准">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>证据与状态 · 01</span></div>
+        <h1>四个最容易讲错的问题，<span class="g">按官方原文校准</span></h1>
+        <p class="lead">这四条是与客户或同行讨论时最常出现分歧的地方。每条都注明证据强度。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="tw an" style="--d:.12s">
+        <table class="dt">
+          <thead><tr><th style="width:200px">问题</th><th>结论</th><th style="width:96px">状态</th></tr></thead>
+          <tbody>
+            <tr><td class="h">KVBM 与 DOCA Memos 是不是直接上下级？</td>
+              <td><b style="color:var(--ink)">不是。</b>NVIDIA 从未画出 KVBM 直接调用 DOCA Memos 的关系。官方只说"Dynamo 用它的 KV 块管理器<b>连同 NIXL</b>来编排上下文在各层之间移动，把 CMX 当作 KV Cache 的上下文内存层"。中间隔着 NIXL。</td>
+              <td><span class="tag ok">已验证</span></td></tr>
+            <tr><td class="h">NIXL 与 DOCA Memos 谁调用谁？</td>
+              <td><b style="color:var(--ink)">代码层面是 NIXL 调用 DOCA Memos。</b>NIXL 仓库中存在 <span class="mono">DOCA_MEMOS</span> 后端插件（链接 <span class="mono">libdoca_kv</span>，操作 NVMe KV 设备）。但该提交<b>尚未合入主干</b>；同时官方文字仍是协同口径，并声明 Memos "支持开放接口"。</td>
+              <td><span class="tag ok">已验证</span><br><span class="tag warn">未合入</span></td></tr>
+            <tr><td class="h">CMX 数据面用哪些协议？</td>
+              <td><b style="color:var(--ink)">NVMe / NVMe-oF（含 NVMe KV 扩展）＋ object/RDMA</b>，两者都承载在 Spectrum-X 的无损 RoCE 之上。"object/RDMA 就是 S3-over-RDMA"属于第三方推断，NVIDIA 未确认。</td>
+              <td><span class="tag ok">已验证</span><br><span class="tag new">部分推测</span></td></tr>
+            <tr><td class="h">BlueField-4 在两侧各干什么？</td>
+              <td><b style="color:var(--ink)">计算侧</b>：Rubin 节点内的 DPU 运行 KV I/O 平面与控制面，终结存储协议，减少主机 CPU 参与与内存拷贝。<b style="color:var(--ink)">存储侧</b>：CMX 机柜内的控制器直接管理 NVMe SSD、运行存储服务、卸载完整性校验与加密。</td>
+              <td><span class="tag ok">已验证</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="g2 an" style="--d:.2s;margin-top:13px">
+        <div class="panel tint">
+          <h3>必须保留的两处不确定性 <span class="tag new">推测</span></h3>
+          <div class="li"><b>NIXL 与 DOCA Memos 的确切分工</b>&mdash;&mdash;NVIDIA 至今未发布官方分层图。业内公开分析用的措辞是"probably / likely"，未合入的代码插件是目前唯一硬证据。</div>
+          <div class="li"><b>第三方厂商是否必须走 DOCA Memos</b>&mdash;&mdash;VAST 公开的 CMX 实现用文件接口（virtio-fs）作为控制面入口，与 NVIDIA "DOCA 暴露 KV API"的表述不一致，说明存在多条合法接入路径。</div>
+        </div>
+        <div class="panel">
+          <h3>沟通建议</h3>
+          <div class="li ok"><b>可以讲</b>："NVIDIA 定义了 G3.5 上下文层，数据面用 NVMe-oF 与 object/RDMA，BlueField-4 在计算与存储两端都参与。"</div>
+          <div class="li warn"><b>不要讲</b>："KVBM 直接调用 DOCA Memos"、"NIXL 已正式支持 DOCA Memos"、"CMX 用的是 S3-over-RDMA"。这三句都超出了公开证据。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 11 · NetApp 当前可验证方案 ════ -->
+  <section class="scene" data-sec="证据与状态" data-nav="NetApp 当前可验证方案">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>证据与状态 · 02</span></div>
+        <h1>NetApp 今天<span class="g">真正可复现</span>的四条路径</h1>
+        <p class="lead">前三条基于 LMCache；第四条是 <b>vLLM 原生卸载连接器</b>（上游 2026-01 发布，NetApp 2026-08 实测）&mdash;&mdash;连 LMCache 都不需要，共享存储在它眼里就是一个挂载点。四条全部使用标准协议，配置文件与基准命令均已公开，客户可自行复现。<span class="tag ok">已公开验证</span></p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn" data-na="gds" data-toggle-group="na">GDS 后端</button>
+            <button class="btn" data-na="s3" data-toggle-group="na">S3 后端</button>
+            <button class="btn on" data-na="pnfs" data-toggle-group="na">pNFS 后端（NetApp 推荐）</button>
+            <button class="btn" data-na="native" data-toggle-group="na">vLLM 原生连接器（2026-08 实测）</button>
+          </div>
+          <svg viewBox="0 0 620 150">
+            <rect x="14" y="18" width="108" height="48" rx="10" fill="#dbeafe" stroke="#93b6e4"/>
+            <text x="68" y="47" text-anchor="middle" font-size="12" font-weight="750" fill="#123a7a">vLLM</text>
+            <path d="M124 42 L152 42" stroke="#8d97b2" stroke-width="2" marker-end="url(#ah4)"/>
+            <rect x="154" y="18" width="130" height="48" rx="10" fill="#efeafd" stroke="#a99ce8"/>
+            <text id="naFw" x="219" y="40" text-anchor="middle" font-size="12" font-weight="750" fill="#4a3bb0">LMCache</text>
+            <text id="naBk" x="219" y="56" text-anchor="middle" font-size="10.5" fill="#6a5ad4">Remote FS 插件</text>
+            <path d="M286 42 L314 42" stroke="#8d97b2" stroke-width="2" marker-end="url(#ah4)"/>
+            <rect x="316" y="18" width="160" height="48" rx="10" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <text id="naProto" x="396" y="40" text-anchor="middle" font-size="12" font-weight="750" fill="#123a7a">pNFS over RDMA</text>
+            <text id="naProtoS" x="396" y="56" text-anchor="middle" font-size="10.5" fill="#5c6a8a">NFSv4.1 并行扩展</text>
+            <path d="M478 42 L506 42" stroke="#8d97b2" stroke-width="2" marker-end="url(#ah4)"/>
+            <rect x="508" y="18" width="98" height="48" rx="10" fill="#eef3fb" stroke="#93b6e4"/>
+            <text x="557" y="40" text-anchor="middle" font-size="12" font-weight="750" fill="#123a7a">ONTAP</text>
+            <text x="557" y="56" text-anchor="middle" font-size="10.5" fill="#5c6a8a">NVMe SSD</text>
+            <text id="naNote" x="310" y="98" text-anchor="middle" font-size="12" font-weight="700" fill="#0e9a62">NetApp 当前推荐路径：网络条件允许时优先用 pNFS over RDMA</text>
+            <text id="naNote2" x="310" y="122" text-anchor="middle" font-size="11" fill="#8d97b2">测试：Qwen3-8B，2 实例 × 单卡 A100 ＋ 负载均衡；CPU 层 100 GB，10 TB 卷；15 用户 × 20 轮，QPS 2</text>
+            <defs><marker id="ah4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#8d97b2"/></marker></defs>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="naTitle">pNFS over RDMA 的公开观测值</h3>
+            <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+              <div class="kpi g"><b id="naK1">+201%</b><span id="naK1s">聚合处理速度（最高）</span><span id="naK1c" class="kc"></span></div>
+              <div class="kpi"><b id="naK2">&minus;99%</b><span id="naK2s">平均首字延迟（最高）</span><span id="naK2c" class="kc"></span></div>
+              <div class="kpi v"><b id="naK3">+223%</b><span id="naK3s">单请求解码吞吐（最高）</span><span id="naK3c" class="kc"></span></div>
+            </div>
+            <p class="note" style="margin-top:9px" id="naBase">大字对比不做卸载，虚线下对比 GPU＋CPU 卸载；均为原文"最高"观测值，非承诺。</p>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>NetApp 官方立场原文</h3>
+            <p style="font-size:13px;color:var(--dim);line-height:1.7">"NetApp 用<b>行业标准协议与工具</b>支持 KV Cache 卸载。<b>不需要任何专有客户端。</b>你可以继续使用多年来一直在用的 NFS 与 S3 协议 &hellip; 在网络条件允许时，我们当前的建议是使用 pNFS over RDMA。网络不允许 RDMA 时，ONTAP S3 与 pNFS over TCP 都是很好的选择。"</p>
+            <div class="li ok" style="margin-top:9px"><b>这句话本身就是产品定位</b>：以兼容性与可运维性换取部署确定性。</div>
+            <div class="li warn"><b>NetApp 也写了否定结论</b>（2026-08 横比）：LMCache 的 <b>MP（多进程）模式</b>在长提示下更慢&mdash;&mdash;当时未支持被抢占提示的恢复，<b>NetApp 表示暂不推荐</b>。<b>进展</b>：抢占处理已随 LMCache v0.5.6 正式版（10-14）发布，NetApp 尚未重测。<span class="tag ok">已验证</span></div>
+            <div class="li warn"><b>另有一个部署前置条件</b>：LMCache 默认 <span class="mono">chunk_size=256</span> 在长上下文 ＋ 远端后端下会导致超时与集群不稳定，实测应调到 <b>2048</b>&mdash;&mdash;幕 14 展开。<span class="tag ok">已验证</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.32s;margin-top:13px">
+        <div class="vc"><span class="k">可复现</span><div class="t">配置已公开</div><div class="d">四条路径的启动参数与完整基准命令 NetApp 均已公布，客户可在自有环境验证</div></div>
+        <div class="vc"><span class="k">无绑定</span><div class="t">标准协议</div><div class="d">不需要专有客户端，沿用已有的 NFS 与 S3 协议栈</div></div>
+        <div class="vc"><span class="k">可叠加</span><div class="t">多层并用</div><div class="d">S3 / pNFS 层可与 CPU 内存层同时启用，NetApp 称"几乎没有副作用"。<b>两个边界</b>：进程内 GDS 后端不建议与 CPU 层并用；工作集放得进显存时卸载只增开销（普通 NFS/TCP 实测 8k 上下文慢 8.9%）</div></div>
+        <div class="vc"><span class="k">需注意</span><div class="t">测试规模与口径</div><div class="d">公开基准跨三轮：Qwen3-8B 单卡 × 2（pNFS / S3 / GDS）、<b>Qwen3-4B ＋ 张量并行 4 卡 ＋ 10 万 token</b>（调优轮）；2026-08 横比轮只发了对比图，<b>正文未给数值</b>，只能讲排序不能讲倍数</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 13 · 为什么推荐路径不是 GDS ════ -->
+  <section class="scene" data-sec="证据与状态" data-nav="为什么不是 GDS">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>证据与状态 · 03</span></div>
+        <h1>直通更快，为什么<span class="g">推荐的却不是 GDS</span></h1>
+        <p class="lead">LMCache 进程内模式下，GDS 后端<b>不建议与 CPU 内存层并用</b>&mdash;&mdash;用了直通，就得放弃 G2，只剩两层。pNFS 路径没有这个限制，三层可以同时开。<span class="tag ok">已公开验证</span></p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px"><div style="border:1px solid var(--line);border-top:4px solid var(--green);border-radius:12px;padding:12px 13px;background:var(--panel2);display:flex;flex-direction:column;gap:7px"><div style="font-size:13.5px;font-weight:800;color:var(--ink)">A · LMCache 进程内 ＋ pNFS</div><div style="background:#fff;border:1px solid var(--line2);color:var(--ink);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>G1 GPU 显存</span><span style="font-weight:500;font-size:11px;opacity:.85">vLLM 自管</span></div><div style="background:#fff;border:1px solid var(--line2);color:var(--ink);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>G2 CPU 内存</span><span style="font-weight:500;font-size:11px;opacity:.85">local_cpu</span></div><div style="background:#eef6ff;border:1px solid #93b6e4;color:var(--deep);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>外部存储</span><span style="font-weight:500;font-size:11px;opacity:.85">文件写入，经主机内存</span></div><div style="margin-top:4px"><span class="tag ok">三层 · NetApp 推荐</span></div><div style="font-size:11.5px;color:var(--dim);line-height:1.55">NetApp："几乎没有副作用"</div></div><div style="border:1px solid var(--line);border-top:4px solid var(--orange);border-radius:12px;padding:12px 13px;background:var(--panel2);display:flex;flex-direction:column;gap:7px"><div style="font-size:13.5px;font-weight:800;color:var(--ink)">B · LMCache 进程内 ＋ GDS</div><div style="background:#fff;border:1px solid var(--line2);color:var(--ink);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>G1 GPU 显存</span><span style="font-weight:500;font-size:11px;opacity:.85">vLLM 自管</span></div><div style="background:repeating-linear-gradient(135deg,#f5f7fb 0 6px,#eceff5 6px 12px);border:1px dashed #c3cbdb;color:var(--faint);text-decoration:line-through;border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>G2 CPU 内存</span><span style="font-weight:500;font-size:11px;opacity:.85">建议关闭</span></div><div style="background:#eef6ff;border:1px solid #93b6e4;color:var(--deep);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>外部存储</span><span style="font-weight:500;font-size:11px;opacity:.85">GDS 直通显存</span></div><div style="margin-top:4px"><span class="tag warn">只剩两层</span></div><div style="font-size:11.5px;color:var(--dim);line-height:1.55">为了直通，放弃了中间那层</div></div><div style="border:1px solid var(--line);border-top:4px solid var(--violet);border-radius:12px;padding:12px 13px;background:var(--panel2);display:flex;flex-direction:column;gap:7px"><div style="font-size:13.5px;font-weight:800;color:var(--ink)">C · LMCache MP 模式 ＋ GDS</div><div style="background:#fff;border:1px solid var(--line2);color:var(--ink);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>G1 GPU 显存</span><span style="font-weight:500;font-size:11px;opacity:.85">vLLM 自管</span></div><div style="background:#fff;border:1px solid var(--line2);color:var(--ink);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>G2 CPU 内存</span><span style="font-weight:500;font-size:11px;opacity:.85">缓存进程统一管</span></div><div style="background:#eef6ff;border:1px solid #93b6e4;color:var(--deep);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span>外部存储</span><span style="font-weight:500;font-size:11px;opacity:.85">经 NIXL 通用 GDS 插件</span></div><div style="margin-top:4px"><span class="tag no">三层 · 当时未获推荐</span></div><div style="font-size:11.5px;color:var(--dim);line-height:1.55">卡在抢占恢复，不在分层</div></div></div>
+          <p class="note" style="margin-top:10px">"进程内"＝LMCache 作为库跑在 vLLM 推理进程里；"MP 模式"＝单独起一个缓存服务进程，vLLM 去连它。G1 由 vLLM 自己管理，LMCache 负责 G2 和外部存储。</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>为什么不能并用 <span class="tag new">本篇推测</span></h3>
+            <div class="li"><b>LMCache 文档只写了</b>"有时建议关闭 CPU 内存卸载"，没有给原因<i class="tt ok">已验证</i></div>
+            <div class="li"><b>我们的理解</b>：GDS 的价值是绕过主机内存。进程内开着 CPU 层时，KV 会先从显存拷进主机内存（为了留在 G2），再从那里写往存储&mdash;&mdash;直通被绕回了主机内存，还多一次拷贝，并争用锁页内存与 PCIe 带宽<i class="tt new">推测</i></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>换成存储语言</h3>
+            <div class="li ok"><b>这就是 O_DIRECT 与页缓存不能兼得</b>：要直通，就别指望中间那层缓存；要缓存，数据就得经主机内存中转。</div>
+            <div class="li">所以<b>"用 GDS 就更快"不成立</b>&mdash;&mdash;要看它让你丢掉了什么。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.32s;margin-top:13px">
+        <div class="vc"><span class="k">丢掉的代价</span><div class="t">中等长度靠 CPU 层<i class="tt ok">已验证</i></div><div class="d">NetApp 单实例实测：提示在 6k&ndash;21k token 时只开 CPU 内存层更好，26k 以上外部存储才占优。GDS 方案丢掉的正是收益最大的那一段</div></div>
+        <div class="vc"><span class="k">MP 为什么能三层</span><div class="t">分层由独立进程统一管</div><div class="d">缓存服务进程负责全部层级，GPU、CPU、GDS 可同时启用。它卡住的是另一件事：2026-08 测试时不支持被抢占请求的恢复，长提示下更慢</div></div>
+        <div class="vc"><span class="k">上游进展</span><div class="t">抢占已修复，未重测<i class="tt ok">已验证</i></div><div class="d">抢占处理已随 LMCache v0.5.6 正式版（2026-10-14）发布；NetApp 尚未发布重测结果，推荐结论不变</div></div>
+        <div class="vc"><span class="k">结论</span><div class="t">要三层又要稳，走 pNFS</div><div class="d">GDS 不是不好，而是在当前 LMCache 实现里，进程内用它就得牺牲 CPU 层。这是 NetApp 推荐文件接口路径的原因</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 13 · 默认参数不能直接上生产 ════ -->
+  <section class="scene" data-sec="证据与状态" data-nav="默认参数不能直接上">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>证据与状态 · 04</span></div>
+        <h1>把 KV Cache 翻译成<span class="g">存储语言</span>：对象多大、要几次 I/O</h1>
+        <p class="lead">NetApp 2026-06 公开的长上下文调优结果。结论反直觉：<b>LMCache 的默认参数在远端存储 ＋ 长上下文下会把 vLLM 集群跑到不稳定</b>&mdash;&mdash;这是厂商自己写下的负面结论，算式全部公开、可自行复算。<span class="tag ok">已公开验证</span></p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn on" data-cs="256" data-toggle-group="cs">chunk_size = 256（LMCache 默认）</button>
+            <button class="btn" data-cs="2048" data-toggle-group="cs">2048（NetApp 实测最优）</button>
+          </div>
+          <svg viewBox="0 0 620 206">
+            <text x="10" y="14" font-size="10.5" fill="#8d97b2">场景固定：10 万 token 的提示 · Qwen3-4B-Instruct-2507 · 张量并行 4 卡</text>
+            <text x="10" y="40" font-size="11.5" fill="#5c6a8a">这段上下文被切成的逻辑 chunk（整条 = 10 万 token）</text>
+            <rect x="10" y="50" width="600" height="32" rx="7" fill="#f5f8fd" stroke="#c9d4e6"/>
+            <g id="csBar"></g>
+            <text id="csL1" x="10" y="108" font-size="12.5" font-weight="780" fill="#123a7a">390 个完整 chunk，尾部 160 token 不保存</text>
+            <text id="csL2" x="10" y="128" font-size="11" fill="#8d97b2">张量并行 4 卡：每个逻辑 chunk 由 4 张卡各写自己那份 → 390 × 4</text>
+            <rect id="csBox" x="10" y="142" width="600" height="52" rx="10" fill="#fdeef1" stroke="#e0a3b4"/>
+            <text id="csL3" x="310" y="164" text-anchor="middle" font-size="13" font-weight="800" fill="#a02744">重建这段 KV 要 1,560 次 I/O · 单对象 9 MB · 共约 14 GB</text>
+            <text id="csL4" x="310" y="182" text-anchor="middle" font-size="11" fill="#a45a70">NetApp 实测：多次超时，部分请求从未返回，vLLM 集群不稳定</text>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>一个 token 占多少字节 &mdash;&mdash; 可自行复算</h3>
+            <div class="li"><b>每 token 每层</b> ＝ KV 头数 × 头维度 × 2（K＋V） × 精度字节<br><span class="mono" style="font-size:11.5px;color:var(--blue)">8 × 128 × 2 × 2 = 4,096 B</span></div>
+            <div class="li"><b>每 token</b> ＝ 上式 × 层数<br><span class="mono" style="font-size:11.5px;color:var(--blue)">4,096 × 36 = 147,456 B ≈ 144 KB / token</span></div>
+            <div class="li ok"><b>换算成存储对象</b>：chunk 256 → 36 MB；张量并行 4 卡时每卡各写一份 → <b>4 个 9 MB 对象</b></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>NetApp 的结论与它的边界</h3>
+            <div class="li ok"><b>测了 256 → 4096，2048 是甜点位</b>：I/O 次数降到 1/8，<b>传输总量一个字节没变</b></div>
+            <div class="li warn"><b>超过 2048 收益递减</b>：chunk 太大后，命中粒度本身开始反噬</div>
+            <div class="li"><b>边界要讲清楚</b>：这是 Qwen3-4B ＋ 4 卡 ＋ 10 万 token 的结论。换模型、换并行度必须重算&mdash;&mdash;好在算式已公开，客户可以自己算。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.32s;margin-top:13px">
+        <div class="vc"><span class="k">现场最能用</span><div class="t">默认值不能直接上<i class="tt ok">已验证</i></div><div class="d">厂商自己公开写明默认参数会把集群跑崩，并给出推荐值。这种自曝比任何性能数字都建立信任</div></div>
+        <div class="vc"><span class="k">换成你熟的话</span><div class="t">这是一道 I/O 题</div><div class="d">同样 14 GB 数据：1,560 次 9 MB 的小操作，还是 192 次 72 MB 的大操作&mdash;&mdash;后者才是共享存储擅长的形态</div></div>
+        <div class="vc"><span class="k">为什么会崩</span><div class="t">每次操作的固定开销</div><div class="d">远端后端每个 chunk 都是一次独立网络往返，chunk 太小时单次开销压过了带宽本身</div></div>
+        <div class="vc"><span class="k">必须补的限定</span><div class="t">数字随模型变</div><div class="d">144 KB / token 是 4B 级模型的值，模型越大越高。引用时一定要连模型一起讲</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 14 · NetApp 与 STX ════ -->
+  <section class="scene" data-sec="证据与状态" data-nav="NetApp 与 STX 的关系">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>证据与状态 · 05</span></div>
+        <h1>NetApp 与 STX：<span class="g">有什么，没有什么</span></h1>
+        <p class="lead">"NetApp 是 STX 合作伙伴"与"NetApp 产品已经是 STX 架构"，是两件完全不同的事。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g2">
+        <div class="panel an" style="--d:.12s">
+          <h3>已经确认存在的</h3>
+          <div class="li ok"><b>NVIDIA 官网 STX 合作伙伴墙有 NetApp</b>，GTC 2026 新闻稿也列入存储厂商名单</div>
+          <div class="li ok"><b>NVIDIA 官网 CMX 合作伙伴墙同样有 NetApp</b></div>
+          <div class="li ok"><b>NetApp 官方新闻稿明确表态</b>：将支持 NVIDIA STX，交付"带 KV-Cache 专用内存层的高性能数据引擎"</div>
+          <div class="li ok"><b>AFX 前端协议</b>：NFS / SMB / S3；控制器与存储柜之间为 NVMe-oF over RoCE</div>
+          <div class="li ok"><b>GDS 支持</b>：ONTAP 自 9.10.1 起支持 NFS over RDMA 配合 GPUDirect Storage</div>
+          <div class="li"><b>与 NVIDIA 联合研发上下文内存存储</b>：INSIGHT 2026 场次 BKO1025（9-29，NVIDIA 讲者同台）&mdash;&mdash;与 NVIDIA 软硬件团队及 ODM 共同设计，目标是换盘重建时首字延迟守住 SLA、均衡磨损用满盘寿命。状态标为 "where we are today"<span class="tag warn">已宣布</span></div>
+        </div>
+        <div class="panel an" style="--d:.18s">
+          <h3>公开渠道<b style="color:var(--red)">检索不到</b>的</h3>
+          <div class="li warn"><b>NetApp 官方 STX 架构图</b>&mdash;&mdash;无架构图、无技术报告、无参考架构文档</div>
+          <div class="li warn"><b>NetApp + BlueField-4 的正式产品或参考架构</b>&mdash;&mdash;无产品名、无时间表、无实现细节。现有两份表态：2026-01 社区博文的<b>文字设想</b>（KV 位置索引放在 BlueField-4 内存），和 BKO1025 的<b>联合研发声明</b>（见左栏，未说明 BF-4 在 NetApp 侧的角色）<span class="tag warn">已宣布</span></div>
+          <div class="li warn"><b>NetApp 的 NIXL 插件</b>&mdash;&mdash;NIXL 官方仓库无对应插件目录，议题与提交检索均为零命中（经 NIXL 通用 GDS 插件接入的路径另有两条，见幕 16）</div>
+          <div class="li warn"><b>NetApp 的 DOCA Memos 插件 / KVBM 后端</b>&mdash;&mdash;无任何公开痕迹</div>
+          <div class="li warn"><b>NetApp 对 object/RDMA 的官方验证</b>&mdash;&mdash;有 ONTAP S3（TCP），未见 S3-over-RDMA</div>
+        </div>
+      </div>
+
+      <div class="panel tint an" style="--d:.26s;margin-top:13px">
+        <h3>怎么判断一套 NetApp 方案是不是 STX-based &mdash;&mdash; 三条判据</h3>
+        <div class="g3">
+          <div><div class="flag o" style="margin-bottom:8px">判据一</div><div class="li"><b>BlueField-4 是否进入存储数据路径</b><br>当前：否</div></div>
+          <div><div class="flag o" style="margin-bottom:8px">判据二</div><div class="li"><b>是否采用 STX 软件与卸载架构</b><br>当前：否</div></div>
+          <div><div class="flag o" style="margin-bottom:8px">判据三</div><div class="li"><b>NetApp 或 NVIDIA 是否把该产品标为 STX-based</b><br>当前：否</div></div>
+        </div>
+        <div class="hr"></div>
+        <div class="li"><b>结论</b>：现有 AFX + NFS 的 KV Cache 方案<b>不应称为 STX-based</b>。这不是产品缺陷，而是两个不同时间点的东西&mdash;&mdash;一个是今天可交付的方案，一个是 2026 下半年才落地的架构。</div>
+        <div class="li"><b>关于承载产品</b>：NetApp 未指明。第三方分析推测 AFX 因架构解耦最易承载，<span class="tag new">属推测</span>NetApp 官方无表态。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 13 · 五厂商能力矩阵 ════ -->
+  <section class="scene" data-sec="生态对比" data-nav="五厂商能力矩阵">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>生态对比 · 01</span></div>
+        <h1>五家存储厂商的<span class="g">集成深度对照</span></h1>
+        <p class="lead">NetApp / Everpure / DDN / WEKA / VAST 同为 STX 与 CMX 合作伙伴，公开证据上的差距很大。点击按钮可高亮单个厂商。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="btnrow an" style="--d:.1s;margin-bottom:11px">
+        <button class="btn on" data-ven="all" data-toggle-group="ven">全部</button>
+        <button class="btn" data-ven="1" data-toggle-group="ven">NetApp</button>
+        <button class="btn" data-ven="5" data-toggle-group="ven">Everpure</button>
+        <button class="btn" data-ven="2" data-toggle-group="ven">DDN</button>
+        <button class="btn" data-ven="3" data-toggle-group="ven">WEKA</button>
+        <button class="btn" data-ven="4" data-toggle-group="ven">VAST</button>
+      </div>
+
+      <div class="tw an" style="--d:.14s">
+        <table class="dt" id="venTable">
+          <thead><tr><th style="width:104px">维度</th><th data-c="1">NetApp</th><th data-c="5">Everpure<br><span style="font-weight:400;font-size:9.5px">（原 Pure Storage）</span></th><th data-c="2">DDN</th><th data-c="3">WEKA</th><th data-c="4">VAST Data</th></tr></thead>
+          <tbody>
+            <tr><td class="h">产品</td><td data-c="1">AFX / ONTAP（+ AIDE）；KV 验证另含 Novus、EF ＋ Lustre、StorageGRID</td><td data-c="5">FlashBlade//S、//EXA ＋ <b>KVA</b> 键值加速器</td><td data-c="2">Infinia（对象）、EXAScaler</td><td data-c="3">NeuralMesh + Augmented Memory Grid</td><td data-c="4">VAST AI OS / DASE</td></tr>
+            <tr><td class="h">STX 合作伙伴</td><td data-c="1"><span class="tag ok">是</span></td><td data-c="5"><span class="tag ok">是</span></td><td data-c="2"><span class="tag ok">是</span></td><td data-c="3"><span class="tag ok">是</span></td><td data-c="4"><span class="tag ok">是</span></td></tr>
+            <tr><td class="h">CMX 合作伙伴</td><td data-c="1"><span class="tag ok">是</span> GTC 才进，CES 首发名单无；INSIGHT 2026 宣布联合研发</td><td data-c="5"><span class="tag ok">是</span> CES 首发即在列（当时名 Pure Storage）</td><td data-c="2"><span class="tag ok">是</span> CES 首发即在列</td><td data-c="3"><span class="tag ok">是</span> CES 首发即在列</td><td data-c="4"><span class="tag ok">是</span> CES 首发即在列</td></tr>
+            <tr style="background:rgba(0,103,197,.045)"><td class="h" style="color:var(--blue)">NIXL 原生插件</td>
+              <td data-c="1"><span class="tag warn">部分</span> 无专有插件；经 <b>NIXL 通用 GDS 插件</b>写 ONTAP pNFS 的已验证路径有两条：LMCache MP 模式（NetApp 目前<b>不推荐</b>）、SGLang HiCache</td>
+              <td data-c="5"><span class="tag no">无</span> 经 vLLM 连接器接入 Dynamo，未向 NIXL 提交插件</td>
+              <td data-c="2"><span class="tag ok">有</span> <b>已在 NIXL 官方主干</b>；自 NIXL 1.3 起随标准发行版打包，并含在 Dynamo 推理容器内</td>
+              <td data-c="3"><span class="tag warn">部分</span> 无专有插件；上游多线程 GDS 后端由当时任职 WEKA 的工程师贡献</td>
+              <td data-c="4"><span class="tag warn">部分</span> 无专有插件；验证的是 NVIDIA 自带的 NIXL GDS 插件</td></tr>
+            <tr><td class="h">NIXL 后端类型</td><td data-c="1">GDS（经 LMCache MP）／ GDS_MT（经 SGLang HiCache）</td><td data-c="5">&mdash;</td><td data-c="2">对象（jRPC/RDMA）＋文件</td><td data-c="3">GDS / GDS_MT</td><td data-c="4">GDS</td></tr>
+            <tr><td class="h">使用 GDS</td><td data-c="1"><span class="tag ok">是</span></td><td data-c="5"><span class="tag ok">是</span> KVA 经 NFS / GDS 接入；1.0 架构图中 S3 为路线图</td><td data-c="2"><span class="tag ok">是</span></td><td data-c="3"><span class="tag ok">是</span></td><td data-c="4"><span class="tag ok">是</span> 单卡 35 GB/s</td></tr>
+            <tr><td class="h">NFS / POSIX</td><td data-c="1"><span class="tag ok">是</span> pNFS over RDMA</td><td data-c="5"><span class="tag ok">是</span> NFSv4.1 over RDMA</td><td data-c="2"><span class="tag ok">是</span> EXAScaler POSIX</td><td data-c="3"><span class="tag ok">是</span> WekaFS 客户端</td><td data-c="4"><span class="tag ok">是</span> CMX 路径用 virtio-fs</td></tr>
+            <tr><td class="h">object / RDMA</td><td data-c="1"><span class="tag no">否</span> 仅 S3 over TCP</td><td data-c="5"><span class="tag no">否</span> 有 S3，未见 object over RDMA</td><td data-c="2"><span class="tag ok">是</span></td><td data-c="3"><span class="tag no">否</span></td><td data-c="4"><span class="tag warn">部分</span> 有 S3，CMX 路径走文件接口</td></tr>
+            <tr style="background:rgba(106,90,212,.05)"><td class="h" style="color:var(--violet)">BlueField-4 进入数据路径</td>
+              <td data-c="1"><span class="tag no">未公开</span> 联合研发声明未说明 BF-4 角色</td>
+              <td data-c="5"><span class="tag warn">已宣布</span> //EXA 采用 BF-4 存储控制器，无实现细节</td>
+              <td data-c="2"><span class="tag warn">已宣布</span> 数据服务直接跑在 BF-4 上，无实现细节</td>
+              <td data-c="3"><span class="tag warn">已宣布</span> 三阶段路线，CMX 原生是第三阶段</td>
+              <td data-c="4"><span class="tag warn">已宣布</span> CNode 移植进 GPU 服务器的 BF-4，细节最完整</td></tr>
+            <tr><td class="h">已有 GA 产品</td>
+              <td data-c="1">AFX/ONTAP 已 GA，但 KV 方案属博客级验证，<b>非 STX 产品</b></td><td data-c="5"><b>KVA 1.0 已 GA</b>（2026-06-26），已集成 Dynamo、已在 //EXA 验证；STX 版未 GA</td>
+              <td data-c="2">Dynamo 集成的 KV Cache 加速<b>已宣布 GA</b>；STX 版未 GA</td>
+              <td data-c="3">Augmented Memory Grid 已 GA（在 BlueField-<b>3</b> 上验证）；STX 版未 GA</td>
+              <td data-c="4">CMX 实现<b>未 GA</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Pure Storage 已于 2026-02-23 正式更名 Everpure, Inc.，产品线与合同不变；NVIDIA CES 名单中的 "Pure Storage" 即今天的 Everpure。全行业共同前提：NVIDIA 官方口径为"STX-based 平台将由合作伙伴在 2026 下半年提供"，截至 2026-10-17 <b>无任何厂商拥有 GA 的 STX / CMX 产品</b>。</p>
+    </div>
+  </section>
+
+  <!-- ════ 14 · 公开证据项计数 ════ -->
+  <section class="scene" data-sec="生态对比" data-nav="公开证据项计数">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>生态对比 · 02</span></div>
+        <h1>换一个角度：各家<span class="g">拿得出的硬证据</span>有几项</h1>
+        <p class="lead">不做能力评分，只统计四项可独立核实的公开证据。评分会带主观，证据项不会。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <svg viewBox="0 0 620 248">
+            <text x="10" y="14" font-size="10.5" fill="#8d97b2">每个方块 = 一项可独立核实的公开证据</text>
+            <text x="163" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#0067c5">NIXL 上游插件</text>
+            <text x="281" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#6a5ad4">CMX 架构已公开</text>
+            <text x="399" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#0e9a62">BF-4 在数据路径</text>
+            <text x="517" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#d5820f">相关能力已 GA</text>
+            <g id="evRows"></g>
+          </svg>
+          <div class="lg">
+            <span><i style="background:#0067c5"></i>NIXL 上游插件</span>
+            <span><i style="background:#6a5ad4"></i>CMX 架构已公开</span>
+            <span><i style="background:#0e9a62"></i>BF-4 在数据路径</span>
+            <span><i style="background:#d5820f"></i>相关能力已 GA</span>
+            <span><i style="background:#e3e9f3"></i>暂无</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>四项证据的定义</h3>
+            <div class="li"><b>NIXL 上游插件</b>：NVIDIA 官方 NIXL 仓库主干中存在该厂商的插件目录</div>
+            <div class="li"><b>CMX 架构已公开</b>：厂商公开描述过自己在 CMX 里的具体实现方式，而非仅表态支持</div>
+            <div class="li"><b>BF-4 在数据路径</b>：厂商明确宣布自身软件运行在 BlueField-4 上</div>
+            <div class="li"><b>相关能力已 GA</b>：与 KV Cache 加速直接相关的能力已宣布正式发布</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>怎么解读这张图</h3>
+            <div class="li"><b>DDN</b> 是唯一进入 NVIDIA NIXL 官方发行体系的存储厂商&mdash;&mdash;这是四项里门槛最高的一项。</div>
+            <div class="li"><b>VAST</b> 是唯一公开了 CMX 落地架构细节的厂商，但尚未 GA。</div>
+            <div class="li"><b>Everpure</b>（原 Pure Storage）唯一有<b>已在售的专用 KV Cache 产品</b>（KVA），但走的是标准协议路线，同样没有 NIXL 插件。</div>
+            <div class="li"><b>NetApp</b> 目前处在生态站位阶段：合作伙伴身份明确，INSIGHT 2026 宣布了与 NVIDIA 联合研发，但实现方式未公开，四项仍记为零。<b>注意这四项只统计 STX / CMX 侧</b>&mdash;&mdash;标准协议侧 NetApp 已连续公开多篇含配置与基准命令的 KV 卸载验证，那部分证据不在此图内。</div>
+            <div class="li warn"><b>这不代表能力差距。</b>它只反映"截至今天对外公开了多少"，与产品实际研发进度无关。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g4 an" style="--d:.3s;margin-top:13px">
+        <div class="vc"><span class="k">门槛最高的一项</span><div class="t">NIXL 上游插件</div><div class="d">需要代码进入 NVIDIA 官方仓库主干并随发行版分发，无法靠新闻稿达成</div></div>
+        <div class="vc"><span class="k">最能说明进度</span><div class="t">CMX 架构已公开</div><div class="d">公开具体实现方式意味着设计已定型，而非仍在选型阶段</div></div>
+        <div class="vc"><span class="k">最容易被误读</span><div class="t">BF-4 在数据路径</div><div class="d">五家中四家已宣布，但均未公布实现细节，属"已宣布"而非"已验证"</div></div>
+        <div class="vc"><span class="k">最需要追问</span><div class="t">相关能力已 GA</div><div class="d">要区分"KV 加速能力 GA"与"STX 平台 GA"——后者全行业均为零</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 15 · 时间线 ════ -->
+  <section class="scene" data-sec="生态对比" data-nav="时间线与可得性">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>生态对比 · 03</span></div>
+        <h1>时间线：<span class="g">这件事到哪一步了</span></h1>
+        <p class="lead">点击任一节点查看当时发生了什么。这条时间线决定了哪些内容今天能进方案，哪些只能进路线图。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="steps an" style="--d:.1s">
+        <div class="st on" data-tl="0"><div class="n">2026 · 01</div><div class="l">CES：概念首发</div></div>
+        <div class="st" data-tl="1"><div class="n">2026 · 03</div><div class="l">GTC：STX 发布</div></div>
+        <div class="st" data-tl="2"><div class="n">2026 · 01&ndash;09</div><div class="l">Everpure 更名 + KVA</div></div>
+        <div class="st" data-tl="3"><div class="n">2026 · 06&ndash;07</div><div class="l">代码进入发行版</div></div>
+        <div class="st" data-tl="4"><div class="n">2026 · 下半年</div><div class="l">合作伙伴平台交付</div></div>
+        <div class="st" data-tl="5"><div class="n">今天</div><div class="l">2026 · 10 现状</div></div>
+      </div>
+      <div class="stbody an" style="--d:.16s" id="tlBody">
+        <h4 id="tlH">2026 年 1 月 · CES：以 ICMS 名义首次发布<i class="tt ok">已验证</i></h4>
+        <p id="tlP">NVIDIA 以 "Inference Context Memory Storage Platform（ICMS）"名义发布这一概念，随后更名为 CMX。首批 BlueField-4 存储伙伴名单为：AIC、Cloudian、DDN、Dell、HPE、Hitachi Vantara、IBM、Nutanix、Pure Storage、Supermicro、VAST Data、WEKA &mdash;&mdash; <b>此时名单中没有 NetApp</b>；名单里的 Pure Storage 即今天的 <b>Everpure</b>。</p>
+      </div>
+
+      <div class="g3 an" style="--d:.24s;margin-top:13px">
+        <div class="vc"><span class="k">今天可以做</span><div class="t">标准协议方案<i class="tt ok">已验证</i></div><div class="d">LMCache 或 vLLM 原生连接器 + pNFS over RDMA / S3 / GDS，配置与基准均已公开，客户可自行复现</div></div>
+        <div class="vc"><span class="k">今天可以谈</span><div class="t">架构方向<i class="tt warn">已宣布</i></div><div class="d">G3.5 上下文层、NVMe KV 语义、BlueField-4 双侧卸载，均有官方文档支撑</div></div>
+        <div class="vc"><span class="k">今天不能承诺</span><div class="t">STX 产品能力<i class="tt warn">已宣布</i></div><div class="d">全行业无 GA 产品；NetApp 侧有合作声明与联合研发表态，无产品名与时间表</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 16 · 选型说明 ════ -->
+  <section class="scene" data-sec="选型说明" data-nav="选型说明">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>选型说明</span></div>
+        <h1>两条路线的<span class="g">适用前提</span></h1>
+        <p class="lead">不做优劣判定。两条路线服务的是不同的时间点与不同的约束条件。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="split an" style="--d:.12s">
+        <div class="panel">
+          <div class="flag" style="margin-bottom:10px">标准协议路线 · 今天可落地</div>
+          <span class="tag ok">本栏依据：已公开验证</span>
+          <h3>什么情况下选它</h3>
+          <div class="li ok"><b>推理集群不是 Rubin 机架</b>：现有 GPU 存量设备，或混合代次</div>
+          <div class="li ok"><b>网络不是 Spectrum-X</b>：通用以太网 / 已有 RoCE 环境</div>
+          <div class="li ok"><b>需要与现有数据资产共用一套存储</b>：训练数据、文档库、归档与 KV 缓存同平台管理</div>
+          <div class="li ok"><b>要求可复现验证</b>：可在 POC 阶段自行跑通并测量收益</div>
+          <div class="li ok"><b>规避供应链绑定</b>：不引入对特定 DPU 与交换机的依赖</div>
+          <div class="hr"></div>
+          <div class="li"><b>需要接受的</b>：存储侧不理解 KV 语义，性能上限低于原生路线<i class="tt new">推测</i></div>
+        </div>
+        <div class="arrowx" style="text-align:center">vs</div>
+        <div class="panel">
+          <div class="flag o" style="margin-bottom:10px">STX / CMX 原生路线 · 2026 下半年评估</div>
+          <span class="tag warn">本栏依据：已宣布未公开细节</span>
+          <h3>什么情况下考虑它</h3>
+          <div class="li"><b>新建 Rubin 级 AI 工厂</b>：整机架采购，能接受端到端 NVIDIA 技术栈</div>
+          <div class="li"><b>推理是主要负载</b>：长上下文、多轮、智能体连续作业占比高</div>
+          <div class="li"><b>每 token 成本是核心 KPI</b>：愿意为吞吐与能效做架构级投入</div>
+          <div class="li"><b>有能力承担早期风险</b>：接受首批交付、缺乏第三方基准的现实</div>
+          <div class="hr"></div>
+          <div class="li warn"><b>需要接受的</b>：绑定 Rubin GPU 机架 + Spectrum-X + BlueField-4；2026 下半年才有平台可评估<i class="tt warn">已宣布</i></div>
+        </div>
+      </div>
+
+      <div class="panel tint an" style="--d:.22s;margin-top:13px">
+        <h3>一个务实的组合观点 <span class="tag n">本段为建议，非证据陈述</span></h3>
+        <div class="g3">
+          <div class="li"><b>两条路线并不互斥。</b>G3.5 是新增层，不取代 G4。上下文缓存与持久化数据本来就该分开治理。<i class="tt ok">已验证</i></div>
+          <div class="li"><b>近期可执行</b>：先用标准协议路线把 KV 卸载跑通、量化收益，建立基线数据。</div>
+          <div class="li"><b>中期可评估</b>：待 STX 平台实际交付、出现第三方基准后，再决定是否引入专用上下文层。</div>
+        </div>
+      </div>
+      <p class="note">本页为技术定位说明，不构成采购建议；具体选型需结合实际负载特征、现有基础设施与预算周期评估。</p>
+    </div>
+  </section>
+
+  <!-- ════ 17 · 常见质疑与可讲边界 ════ -->
+  <section class="scene" data-sec="选型说明" data-nav="常见质疑与可讲边界" id="qaScene">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>选型说明 · 02</span></div>
+        <h1>客户拿竞品压过来时，<span class="g">能讲的到哪儿为止</span></h1>
+        <p class="lead">左栏是现场最常听到的问法。中栏每条都有公开来源支撑，可以直接说出口；右栏是必须停下来的地方&mdash;&mdash;越线就变成没有证据的承诺。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="tw an" style="--d:.12s">
+        <table class="dt" id="qaTable">
+          <thead><tr><th style="width:210px">客户这样问</th><th>可以讲的（有公开来源）</th><th style="width:310px">到此为止 / 不能讲</th></tr></thead>
+          <tbody>
+            <tr><td class="h">"你们支持 NVIDIA STX 吗？"</td>
+              <td>NetApp 在 nvidia.com 的 <b>STX 与 CMX 两个合作伙伴墙上都在列</b><i class="tt ok">已验证</i>；官方表态原文是 "will support NVIDIA STX"<i class="tt ok">已验证</i>；INSIGHT 2026 场次 BKO1025 上与 NVIDIA 同台，说明正与 NVIDIA 软硬件团队及 ODM <b>联合研发上下文内存存储</b><i class="tt warn">已宣布</i></td>
+              <td>无架构图、产品名、时间表，问型号和时间如实说<b>无公开信息</b>。联合研发是方向声明，不是产品。</td></tr>
+
+            <tr><td class="h">"DDN 的插件都进 NVIDIA 官方发行版了，你们呢？"</td>
+              <td>属实。DDN 的 Infinia 插件自 <b>NIXL 1.3</b> 起随标准发行版打包，并含在 Dynamo 容器内<i class="tt ok">已验证</i>。NetApp 目前<b>没有</b> NIXL 上游插件<i class="tt ok">已验证</i>&mdash;&mdash;查 <span class="mono">ai-dynamo/nixl</span> 主干 <span class="mono">src/plugins</span> 目录零命中。<b>但"没插件"不等于"接不上 NIXL"</b>：NetApp 已验证过经 <b>NIXL 自带的通用 GDS 插件</b>写 ONTAP pNFS 的两条路径（LMCache MP 模式的 nixl_store_dynamic 后端、SGLang HiCache 的 GDS_MT），路径是通的<i class="tt ok">已验证</i></td>
+              <td>不要暗示"我们也在做"专有插件。两条都<b>不是推荐方案</b>，LMCache MP 那条 NetApp 明确不推荐；"上游已修好抢占"属实（v0.5.6），但 NetApp 未重测。</td></tr>
+
+            <tr><td class="h">"Everpure 的 KVA 已经在卖了。"</td>
+              <td>属实，但要把层次讲清楚：KVA 与 <b>LMCache 是同一功能层</b>，底下是<b>未经改造的标准 FlashBlade</b>，走 NFS / GDS<i class="tt ok">已验证</i>。也就是说 <b>Everpure 和 NetApp 走的是同一条标准协议路线</b>，差别是自研闭源 vs 开源中立。NetApp 侧的 LMCache + pNFS over RDMA 配置与基准已公开、可复现<i class="tt ok">已验证</i></td>
+              <td>KVA 有厂商数字（20× / 6×；9-30 那次无测试配置），NetApp 侧<b>没有同口径数据</b>，不要口头比性能。</td></tr>
+
+            <tr><td class="h">"VAST 已经把 CMX 落地架构讲清楚了。"</td>
+              <td>属实，VAST 是唯一公开 CMX 实现细节的厂商（CNode 移植进 GPU 服务器的 BlueField-4）<i class="tt ok">已验证</i>。但它<b>同样没有 GA 产品</b><i class="tt ok">已验证</i></td>
+              <td>"公开了架构"不等于"能买到"。别把这条讲成 VAST 已经落后于交付。</td></tr>
+
+            <tr><td class="h">"你们 +201% 是跟什么比的？"</td>
+              <td>跟<b>不做卸载</b>比。同篇博文另有对比<b>已开 CPU 卸载</b>的一组：最高 <b>+157% / −86% / +174%</b><i class="tt ok">已验证</i></td>
+              <td>客户多半已开 CPU 卸载，<b>引第二组更稳</b>。</td></tr>
+
+            <tr><td class="h">"CMX 说能快 5 倍、省 5 倍电。"</td>
+              <td>这是 <b>NVIDIA 声明的方向性目标</b>，不是可复现的观测值<i class="tt warn">已宣布</i>。目前无任何第三方基准<i class="tt ok">已验证</i></td>
+              <td>不要拿它跟 NetApp 的任何数字对比&mdash;&mdash;基准口径与量纲都不同，对比本身就不成立。</td></tr>
+
+            <tr><td class="h">"你们这套是不是绑死在 LMCache 这个开源项目上？"</td>
+              <td>不是。<b>vLLM 自 2026-01 内建了原生卸载连接器</b>（OffloadingConnector），支持 CPU 内存 + 任意本地挂载文件系统<i class="tt ok">已验证</i>。NetApp 已按这条路径公开测过 ONTAP pNFS over RDMA，并把它列为<b>两条推荐路径之一</b><i class="tt ok">已验证</i>&mdash;&mdash;此时存储侧连"KV Cache 软件"都不存在，就是一个挂载点</td>
+              <td>不要引申成"所以 NetApp 比别家先进"。这个连接器是 <b>vLLM 上游</b>（IBM Research 团队）做的，任何文件存储都能用，不是 NetApp 的差异化能力。</td></tr>
+
+            <tr><td class="h">"这套东西能不能直接上生产？"</td>
+              <td>能，<b>但默认参数不能直接上</b>。NetApp 已公开写明：LMCache 默认 <span class="mono">chunk_size=256</span> 在长上下文 ＋ 远端后端下会造成超时、部分请求无响应、<b>vLLM 集群不稳定</b>；实测应调到 <b>2048</b>，I/O 次数降到 1/8<i class="tt ok">已验证</i>。换模型换并行度要重算，<b>算式 NetApp 也公开了</b></td>
+              <td>不要把"要调参"讲成小事就带过。<b>它是部署前置条件</b>，客户按默认值上线是会出故障的。也不要把 2048 讲成通用值&mdash;&mdash;那是 Qwen3-4B ＋ 4 卡的结论。</td></tr>
+
+            <tr style="background:rgba(12,142,134,.05)"><td class="h" style="color:var(--teal)">"那 NetApp 什么时候能有？"</td>
+              <td><b>没有公开时间表，如实说不知道。</b>能讲的公开状态只有"与 NVIDIA 联合研发中"（BKO1025）。然后把话接到今天能做的事上：vLLM 原生连接器或 LMCache + pNFS over RDMA / S3 / GDS，NetApp 已公开四条路径的配置与完整基准命令，客户可在自有环境复现<i class="tt ok">已验证</i></td>
+              <td><b>一个时间暗示都不要给。</b>"应该快了""研发快做完了"都是承诺。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="g4 an" style="--d:.24s;margin-top:13px">
+        <div class="vc"><span class="k">永远可以讲</span><div class="t">可复现的东西<i class="tt ok">已验证</i></div><div class="d">NetApp 公开了四条路径的启动参数与完整基准命令，还公开写明自家生态里哪一条<b>目前不推荐</b>。"你可以自己跑一遍"是唯一不需要任何前提的说法。</div></div>
+        <div class="vc"><span class="k">讲之前先加限定</span><div class="t">已宣布的东西<i class="tt warn">已宣布</i></div><div class="d">合作伙伴身份、"will support STX"&mdash;&mdash;讲的同时必须补一句"目前只有表态，无产品名与时间表"。</div></div>
+        <div class="vc"><span class="k">永远不要讲</span><div class="t">时间与性能承诺</div><div class="d">交付时间、跨厂商性能对比、"我们也在做"。这三类现场都没有公开证据可依，说了要自己担。</div></div>
+        <div class="vc"><span class="k">可以反过来用</span><div class="t">标准协议不是退路<i class="tt ok">已验证</i></div><div class="d">Everpure 的 KVA、WEKA、VAST 今天在卖的方案都仍走标准文件 / 对象协议。这条路线是行业现状，不是 NetApp 独有的妥协。</div></div>
+      </div>
+      <p class="note">本页只整理"有公开来源支撑的说法"。凡是本篇标为<b>已宣布</b>或<b>推测</b>的内容，现场都要连同不确定性一起讲；负面事实（如"NetApp 没有 NIXL 插件"）已注明检索渠道，被追问时可直接复述检索方式。</p>
+    </div>
+  </section>
+
+  <!-- ════ 18 · 缩写全称 ════ -->
+  <section class="scene" data-sec="术语速查" data-nav="缩写全称" id="abbrScene">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>术语速查 · 01</span></div>
+        <h1>全部缩写的<span class="g">英文全称</span></h1>
+        <p class="lead">本篇出现的所有缩写。<b>注意</b>：NVIDIA 至今<b>未公开 STX 与 CMX 逐字母的正式展开</b>，遇到有人给出展开时应核实来源。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g2">
+        <div class="tw an" style="--d:.12s">
+          <table class="dt">
+            <thead><tr><th style="width:90px">缩写</th><th style="width:210px">英文全称</th><th>一句话说明</th></tr></thead>
+            <tbody>
+              <tr><td class="h">GPU</td><td>Graphics Processing Unit</td><td>图形处理器，AI 计算的主力芯片</td></tr>
+              <tr><td class="h">HBM</td><td>High Bandwidth Memory</td><td>高带宽显存，紧贴 GPU；最快，也最贵最小</td></tr>
+              <tr><td class="h">DPU</td><td>Data Processing Unit</td><td>数据处理器；装在网卡位置的小型服务器，替主 CPU 干网络 / 存储 / 安全的活</td></tr>
+              <tr><td class="h">BlueField</td><td><i>产品名</i></td><td>NVIDIA 的 DPU 产品线，当前为第 3、4 代（BF-3 / BF-4）</td></tr>
+              <tr><td class="h">DOCA</td><td>Data Center Infrastructure-on-a-Chip Architecture</td><td>BlueField 的软件框架，相当于 DPU 的开发平台</td></tr>
+              <tr><td class="h">DOCA Memos</td><td><i>产品名，未公开展开</i></td><td>跑在 BlueField 上的 KV 存取服务，对外提供键值接口</td></tr>
+              <tr style="background:rgba(211,58,92,.045)"><td class="h" style="color:var(--red)">STX</td><td><b>NVIDIA 未公开字母展开</b></td><td>AI 原生存储的模块化参考架构。是一张图纸，不是一台设备</td></tr>
+              <tr style="background:rgba(211,58,92,.045)"><td class="h" style="color:var(--red)">CMX</td><td>Context Memory Storage<br><b>（逐字母展开未公开）</b></td><td>STX 的第一个机架级实现：专门存放 KV Cache 的以太网闪存层</td></tr>
+              <tr><td class="h">ICMS</td><td>Inference Context Memory Storage</td><td>CMX 在 2026 年 1 月 CES 首发时的旧名，已更名</td></tr>
+              <tr><td class="h">KV Cache</td><td>Key-Value Cache</td><td>模型读过上下文后算出的中间结果，留着可避免重算</td></tr>
+              <tr><td class="h">KVBM</td><td>KV Block Manager</td><td>Dynamo 自带的 KV 块管理器</td></tr>
+              <tr><td class="h">NIXL</td><td>Inference <b>Xfer</b> Library<br><i>官方另有 Transfer 写法</i></td><td>推理数据搬运的统一抽象层，插件式对接各种存储</td></tr>
+              <tr><td class="h">Dynamo</td><td><i>产品名</i></td><td>NVIDIA 的分布式推理服务框架</td></tr>
+              <tr><td class="h">Grove</td><td><i>产品名</i></td><td>拓扑感知的负载放置层，按上下文所在位置调度</td></tr>
+              <tr><td class="h">LMCache</td><td><i>开源项目名</i></td><td>厂商中立的开源 KV Cache 引擎</td></tr>
+              <tr><td class="h">KVA</td><td>Key-Value Accelerator</td><td>Everpure 自研的 KV Cache 引擎，与 LMCache 同层</td></tr>
+              <tr><td class="h">vLLM</td><td><i>开源项目名</i></td><td>当前最主流的开源推理引擎之一</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tw an" style="--d:.16s">
+          <table class="dt">
+            <thead><tr><th style="width:90px">缩写</th><th style="width:210px">英文全称</th><th>一句话说明</th></tr></thead>
+            <tbody>
+              <tr><td class="h">TTFT</td><td>Time To First Token</td><td>首字延迟：按下回车到看见第一个字的时间</td></tr>
+              <tr><td class="h">ITL</td><td>Inter-Token Latency</td><td>出字间隔：后续每个字之间的时间</td></tr>
+              <tr><td class="h">TPS</td><td>Tokens Per Second</td><td>每秒出字数，衡量吞吐</td></tr>
+              <tr><td class="h">RDMA</td><td>Remote Direct Memory Access</td><td>远程直接内存访问：网卡直接读写对端内存，不打扰 CPU</td></tr>
+              <tr><td class="h">RoCE</td><td>RDMA over Converged Ethernet</td><td>在标准以太网上跑 RDMA</td></tr>
+              <tr><td class="h">Spectrum-X</td><td><i>产品名</i></td><td>NVIDIA 面向 AI 的以太网交换平台</td></tr>
+              <tr><td class="h">NVMe</td><td>Non-Volatile Memory Express</td><td>固态盘的标准接口协议</td></tr>
+              <tr><td class="h">NVMe-oF</td><td>NVMe over Fabrics</td><td>把 NVMe 协议跨网络延伸到远端 SSD</td></tr>
+              <tr style="background:rgba(0,103,197,.045)"><td class="h" style="color:var(--blue)">NVMe KV</td><td>NVMe Key-Value Command Set</td><td>NVMe 的键值扩展：直接按 key 存取，不必先转成文件或块。<b>这是右侧路线的关键</b></td></tr>
+              <tr><td class="h">GDS</td><td>GPUDirect Storage</td><td>存储数据直接进 GPU 显存，不经主机内存中转</td></tr>
+              <tr><td class="h">NFS / pNFS</td><td>Network File System / Parallel NFS</td><td>标准网络文件协议 / 其并行扩展</td></tr>
+              <tr><td class="h">S3</td><td>Simple Storage Service (API)</td><td>对象存储的事实标准接口</td></tr>
+              <tr><td class="h">ONTAP</td><td><i>产品名</i></td><td>NetApp 的存储操作系统</td></tr>
+              <tr><td class="h">AFX</td><td><i>产品名</i></td><td>NetApp 面向 AI 的解耦式全闪存平台</td></tr>
+              <tr><td class="h">AIDE</td><td>AI Data Engine</td><td>NetApp 的 AI 数据管线服务</td></tr>
+              <tr><td class="h">FlashBlade</td><td><i>产品名</i></td><td>Everpure（原 Pure Storage）的文件 / 对象一体化全闪存平台</td></tr>
+              <tr><td class="h">GA</td><td>General Availability</td><td>正式发布：可购买、可部署、有支持</td></tr>
+              <tr><td class="h">SU</td><td>Scalable Unit</td><td>可扩展单元：成组交付的一批 GPU 机架，CMX 在 SU 内共享</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 19 · 术语说明 ════ -->
+  <section class="scene" data-sec="术语速查" data-nav="核心概念通俗解释">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>术语速查 · 02</span></div>
+        <h1>六个核心概念的<span class="g">通俗解释</span></h1>
+        <p class="lead">面向非 AI 背景的同事与客户。理解这六个，全篇内容就都能跟上。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g3">
+        <div class="vc an" style="--d:.1s"><span class="k">概念 01</span><div class="t">Token（词元）</div>
+          <div class="d">模型处理文字的最小单位，约等于半个到一个汉字。"每秒出多少 token"就是 AI 的打字速度。计费也按它算。</div></div>
+        <div class="vc an" style="--d:.14s"><span class="k">概念 02</span><div class="t">上下文（Context）</div>
+          <div class="d">模型这一次能"看见"的全部内容：系统提示 + 历史对话 + 你贴进去的文档。上下文越长，模型知道得越多，但代价也越大。</div></div>
+        <div class="vc an" style="--d:.18s"><span class="k">概念 03</span><div class="t">KV Cache</div>
+          <div class="d">模型读完上下文后算出的中间结果。<b>像会议纪要</b>：留着，下轮就不用重读全部材料；丢了，下轮必须从头再读一遍。</div></div>
+        <div class="vc an" style="--d:.22s"><span class="k">概念 04</span><div class="t">显存墙</div>
+          <div class="d">HBM 显存速度最快但容量最小、最贵、扩不动。会议纪要越攒越多，显存先满&mdash;&mdash;这就是整件事的起因。</div></div>
+        <div class="vc an" style="--d:.26s"><span class="k">概念 05</span><div class="t">DPU / BlueField</div>
+          <div class="d">插在服务器上的一块"小服务器"。<b>像专职快递员</b>：主 CPU 不用亲自跑网络和存储的活，专心算业务。</div></div>
+        <div class="vc an" style="--d:.3s"><span class="k">概念 06</span><div class="t">KV 语义 vs 文件语义</div>
+          <div class="d"><b>文件语义</b>：把纪要装进档案袋，按袋子编号存取。<b>KV 语义</b>：纪要直接按主题标签存取，存储系统认得它是什么。后者上限更高，但要求整条链路都支持。</div></div>
+      </div>
+
+      <div class="g2 an" style="--d:.36s;margin-top:13px">
+        <div class="panel tint">
+          <h3>用一个仓库类比串起全篇</h3>
+          <div class="li"><b>GPU 显存（G1）</b> = 工位桌面，伸手就够到，但只能放几份文件</div>
+          <div class="li"><b>主机内存（G2）</b> = 工位旁的抽屉</div>
+          <div class="li"><b>本地 SSD（G3）</b> = 本部门的文件柜，别的部门用不了</div>
+          <div class="li ok"><b>CMX（G3.5）</b> = <b>新建的公共资料室</b>，全楼共用，取件很快&mdash;&mdash;这是 NVIDIA 新增的那一层</div>
+          <div class="li"><b>共享存储（G4）</b> = 地下档案库，容量无限但取件慢</div>
+        </div>
+        <div class="panel">
+          <h3>那么两条路线的差别是什么</h3>
+          <div class="li"><b>NetApp 当前方案</b>：公共资料室用的是<b>标准档案袋</b>&mdash;&mdash;任何部门、任何流程都能直接用，今天就能建。资料室本身不知道袋子里装的是什么。</div>
+          <div class="li"><b>NVIDIA STX / CMX</b>：公共资料室<b>按主题标签直接管理每一份纪要</b>，还配了专职管理员（BlueField-4）在两端收发。效率更高，但整栋楼的门禁、通道、管理员都得换成配套的那一套。</div>
+          <div class="li warn"><b>两者都用同一条高速通道（RDMA）。</b>区别在于资料是以什么形态在通道里流动，以及谁在两端管理它。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 20 · 资料来源 ════ -->
+  <section class="scene" data-sec="术语速查" data-nav="资料来源">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>术语速查 · 03</span></div>
+        <h1>全部<span class="g">资料来源</span></h1>
+        <p class="lead">本篇每一条结论都可追溯到下列渠道。第三方分析已单独标注。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g3">
+        <div class="panel an" style="--d:.1s">
+          <h3>NVIDIA 官方</h3>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">CMX 技术博客 &mdash; G1&ndash;G4/G3.5、NVMe-oF ＋ object/RDMA、DOCA Memos、BF-4 双侧<br><a class="mono src" href="https://developer.nvidia.com/blog/introducing-nvidia-bluefield-4-powered-inference-context-memory-storage-platform-for-the-next-frontier-of-ai/" target="_blank" rel="noopener">developer.nvidia.com/blog/introducing-nvidia-bluefield-4-powered-inference-context-memory-storage-platform-for-the-next-frontier-of-ai/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">CMX 产品页 &mdash; DOCA Memos 键值 API、CMX 合作伙伴墙<br><a class="mono src" href="https://nvidia.com/en-us/data-center/ai-storage/cmx/" target="_blank" rel="noopener">nvidia.com/en-us/data-center/ai-storage/cmx/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">STX 产品页 &mdash; 架构组件、合作伙伴墙<br><a class="mono src" href="https://nvidia.com/en-us/data-center/ai-storage/stx/" target="_blank" rel="noopener">nvidia.com/en-us/data-center/ai-storage/stx/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">GTC 2026 新闻稿 &mdash; 伙伴名单、2026 下半年可得性<br><a class="mono src" href="https://nvidianews.nvidia.com/news/nvidia-launches-bluefield-4-stx-storage-architecture-with-broad-industry-adoption" target="_blank" rel="noopener">nvidianews.nvidia.com/news/nvidia-launches-bluefield-4-stx-storage-architecture-with-broad-industry-adoption</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">CES 2026 新闻稿 &mdash; ICMS 首发名单（无 NetApp）<br><a class="mono src" href="https://nvidianews.nvidia.com/news/nvidia-bluefield-4-powers-new-class-of-ai-native-storage-infrastructure-for-the-next-frontier-of-ai" target="_blank" rel="noopener">nvidianews.nvidia.com/news/nvidia-bluefield-4-powers-new-class-of-ai-native-storage-infrastructure-for-the-next-frontier-of-ai</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">NIXL 官方仓库 / DOCA_MEMOS 插件提交 / KVBM 架构文档<br><span class="mono" style="font-size:10.5px;color:var(--blue)">github.com/ai-dynamo/nixl &nbsp;·&nbsp; PR #1717 &nbsp;·&nbsp; docs.dynamo.nvidia.com</span></div>
+        </div>
+
+        <div class="panel an" style="--d:.16s">
+          <h3>NetApp 官方</h3>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">Comparing KV cache offloading frameworks for vLLM（08-13）&mdash; 三方横比、"不推荐 MP 模式"<br><a class="mono src" href="https://community.netapp.com/community/discussion/468325/comparing-kv-cache-offloading-frameworks-for-vllm" target="_blank" rel="noopener">community.netapp.com/community/discussion/468325/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">KV cache offloading tuning for long context（06-11）&mdash; chunk 算式、默认值致集群不稳定、2048 最优<br><a class="mono src" href="https://community.netapp.com/community/discussion/467594/kv-cache-offloading-tuning-for-long-context" target="_blank" rel="noopener">community.netapp.com/community/discussion/467594/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">KV cache offloading with vLLM, LMCache, and ONTAP pNFS（05-28）&mdash; 配置、两组基线观测值<br><a class="mono src" href="https://community.netapp.com/community/discussion/467414/kv-cache-offloading-with-vllm-lmcache-and-ontap-pnfs" target="_blank" rel="noopener">community.netapp.com/community/discussion/467414/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">同系列早期四篇 &mdash; GDS、CPU 内存 vs 存储、共享存储、StorageGRID S3<br><a class="mono src" href="https://community.netapp.com/community/discussion/461914" target="_blank" rel="noopener">&hellip;/461914</a> &nbsp;·&nbsp; <a class="mono src" href="https://community.netapp.com/community/discussion/464463" target="_blank" rel="noopener">&hellip;/464463</a> &nbsp;·&nbsp; <a class="mono src" href="https://community.netapp.com/community/discussion/465230" target="_blank" rel="noopener">&hellip;/465230</a> &nbsp;·&nbsp; <a class="mono src" href="https://community.netapp.com/community/discussion/467946" target="_blank" rel="noopener">&hellip;/467946</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">What KV cache offload to ordinary NFS is actually worth &mdash; 普通 NFSv4.1/TCP 实测：24k 快 59%、8k 慢 8.9%（社区博文）<br><a class="mono src" href="https://community.netapp.com/community/discussion/468427/what-kv-cache-offload-to-ordinary-nfs-is-actually-worth" target="_blank" rel="noopener">community.netapp.com/community/discussion/468427/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">Introducing a New Memory Tier for AI: ICMS（2026-01）&mdash; BF-4 / AIDE 文字设想<br><a class="mono src" href="https://community.netapp.com/community/discussion/465258/introducing-a-new-memory-tier-for-ai-inference-context-memory-storage" target="_blank" rel="noopener">community.netapp.com/community/discussion/465258/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">INSIGHT 2026 · BKO1025（09-29，NVIDIA ＋ NetApp 同台）&mdash; 联合研发、已验证组合矩阵<br><a class="mono src" href="https://www.netapp.com/video/Gt7DSeaBO0s" target="_blank" rel="noopener">netapp.com/video/Gt7DSeaBO0s</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">NetApp Accelerates Momentum in AI Leadership with NVIDIA &mdash; "will support NVIDIA STX" 原文<br><a class="mono src" href="https://investors.netapp.com/news/news-details/2026/" target="_blank" rel="noopener">investors.netapp.com/news/news-details/2026/</a></div>
+          <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">AFX 架构文档（前端 NFS/SMB/S3，后端 NVMe-oF over RoCE）· ONTAP NFS over RDMA 文档（GDS 自 9.10.1）<br><a class="mono src" href="https://docs.netapp.com/us-en/ontap-afx/get-started/software-architecture.html" target="_blank" rel="noopener">&hellip;/ontap-afx/&hellip;/software-architecture.html</a> &nbsp;·&nbsp; <a class="mono src" href="https://docs.netapp.com/us-en/ontap/nfs-rdma/" target="_blank" rel="noopener">&hellip;/ontap/nfs-rdma/</a></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.22s">
+            <h3>其他厂商官方</h3>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px"><b>Everpure</b>（原 Pure Storage）&mdash; KVA 基准、Dynamo、//EXA、CMX 表态、1.0 GA<br><a class="mono src" href="https://blog.everpuredata.com/purely-technical/everpure-kva-meets-flashblade-exa-enterprise-kv-caching-at-neocloud-scale/" target="_blank" rel="noopener">blog.everpuredata.com/purely-technical/everpure-kva-meets-flashblade-exa-&hellip;</a><br><span class="mono" style="font-size:10.5px;color:var(--blue)">&hellip;/products/designing-ai-factories-&hellip; &nbsp;·&nbsp; &hellip;/perspectives/pure-kva-1-solution/</span></div>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px"><b>DDN</b> &mdash; NIXL 1.3 起随发行版打包、含在 Dynamo 容器；BlueField-4 对齐<br><span class="mono" style="font-size:10.5px;color:var(--blue)">ddn.com/blog/ &hellip; &nbsp;·&nbsp; ddn.com/press-releases/ &hellip;</span></div>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px"><b>WEKA</b> &mdash; NIXL 与 GDS 集成；NeuralMesh 与 STX 集成<br><span class="mono" style="font-size:10.5px;color:var(--blue)">weka.io/blog/ai-ml/ &hellip; &nbsp;·&nbsp; weka.io/company/weka-newsroom/</span></div>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px"><b>vLLM 上游</b>（非存储厂商）&mdash; 原生 OffloadingConnector（2026-01-08，IBM Research 团队）；分层说明（2026-09-10）<br><a class="mono src" href="https://vllm.ai/blog/2026-01-08-kv-offloading-connector" target="_blank" rel="noopener">vllm.ai/blog/2026-01-08-&hellip;</a> &nbsp;·&nbsp; <a class="mono src" href="https://vllm.ai/blog/2026-09-10-tiered-kv-offloading" target="_blank" rel="noopener">&hellip;/2026-09-10-&hellip;</a></div>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px"><b>LMCache 上游</b>（非存储厂商）&mdash; MP 模式抢占处理（PR #5248，已进 v0.5.6）；GDS 后端文档<br><a class="mono src" href="https://github.com/LMCache/LMCache/releases/tag/v0.5.6" target="_blank" rel="noopener">&hellip;/LMCache/releases/tag/v0.5.6</a> &nbsp;·&nbsp; <a class="mono src" href="https://docs.lmcache.ai/kv_cache/storage_backends/gds.html" target="_blank" rel="noopener">docs.lmcache.ai/&hellip;/gds.html</a></div>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px"><b>VAST Data</b> &mdash; NIXL GDS 插件验证、nixlbench 结果<br><a class="mono src" href="https://vastdata.com/blog/accelerating-inference" target="_blank" rel="noopener">vastdata.com/blog/accelerating-inference</a></div>
+          </div>
+          <div class="panel tint an" style="--d:.28s">
+            <h3>第三方分析 <span class="tag new">非官方</span></h3>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">Blocks &amp; Files &mdash; 逐厂商 KV Cache 方案综述（2026-03-30）</div>
+            <div class="li" style="font-size:11.6px;line-height:1.48;padding-top:4px;padding-bottom:4px">Glenn Lockwood 技术笔记 &mdash; NIXL / DOCA 层级推断。作者明确声明无内部信息，措辞为 "probably / likely"</div>
+            <div class="note" style="margin-top:8px">引用第三方内容时须同时说明其推测性质，不得与官方结论混用。</div>
+          </div>
+        </div>
+      </div>
+      <p class="note">资料检索截止 2026-09-04；10-13 复核、10-17 补核（LMCache、Everpure KVA），10-20 补入 INSIGHT 2026 BKO1025。生态更新频繁，对客户提案前须重新核实。</p>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+/* ═══════════ 幕 2 · KV Cache 容量估算 ═══════════ */
+(function(){
+  const len=$('#ctxLen'), con=$('#ctxCon');
+  if(!len) return;
+  const HBM = 1.0; // TB 示意
+  function calc(){
+    const L=+len.value, C=+con.value;
+    $('#ctxLenV').textContent = L+'K';
+    $('#ctxConV').textContent = C+' 路';
+    const need = L*1024*C*0.31/1048576; // MB → TB
+    const w = Math.max(6, Math.min(600, need*200)); // 200px = 1 TB
+    $('#kvBar').setAttribute('width', w.toFixed(0));
+    $('#kvBar').setAttribute('fill', need>HBM ? '#d33a5c' : '#0067c5');
+    const tx = $('#kvTxt');
+    const inside = w > 470;
+    tx.setAttribute('x', (inside ? w : w+20).toFixed(0));
+    tx.setAttribute('text-anchor', inside ? 'end' : 'start');
+    tx.setAttribute('fill', inside ? '#ffffff' : '#123a7a');
+    tx.textContent = need.toFixed(2)+' TB' + (need>3 ? '（已超出刻度）' : '');
+    const m=$('#kvMsg');
+    if(need>HBM){ m.setAttribute('fill','#d33a5c');
+      m.textContent='超出显存 '+(need-HBM).toFixed(2)+' TB — 只能丢弃后重算，或落到外部存储'; }
+    else { m.setAttribute('fill','#0e9a62');
+      m.textContent='显存尚可容纳（余量 '+(HBM-need).toFixed(2)+' TB）— 试试拉长上下文或增加并发'; }
+  }
+  len.addEventListener('input',calc); con.addEventListener('input',calc); calc();
+})();
+
+/* ═══════════ 幕 3 · G1–G4 分层 ═══════════ */
+(function(){
+  const D={
+    g1:{t:'G1 · GPU HBM 显存',d:'正在生成 token 时用到的、延迟最敏感的那部分 KV。速度最优，但容量是整个体系里最紧张的资源。',
+        a:'<b>存什么</b>：活跃生成中的 KV',b:'<b>局限</b>：容量小、成本高、无法横向扩展'},
+    g2:{t:'G2 · 主机系统内存 DRAM',d:'KV 从显存溢出后的第一落点，用于暂存与缓冲。比显存慢，但容量大得多，且同一台服务器内可快速取回。',
+        a:'<b>存什么</b>：刚从显存换出的 KV',b:'<b>局限</b>：仍限于单台服务器，容量按机型固定'},
+    g3:{t:'G3 · 服务器本地 SSD',d:'较短时间内会被重复使用的"温"数据。容量比内存大，但绑定在单台机器上。',
+        a:'<b>存什么</b>：短周期内会复用的 KV',b:'<b>局限</b>：只属于本机，负载一漂移缓存就作废；且本地盘不便热插拔维护'},
+    g4:{t:'G4 · 共享的文件 / 对象存储',d:'需要长期留存的冷数据、历史记录与结果产物。容量可到 EB 级，但延迟是毫秒量级。',
+        a:'<b>存什么</b>：冷归档、会话历史、审计日志',b:'<b>局限</b>：把活跃 KV 压在这里会显著拖慢推理并抬高功耗'}
+  };
+  const ids={g1:'#tierG1',g2:'#tierG2',g3:'#tierG3',g4:'#tierG4'};
+  $$('[data-tier]').forEach(b=> b.addEventListener('click',()=>{
+    $$('[data-tier]').forEach(x=>x.classList.toggle('on',x===b));
+    const k=b.dataset.tier;
+    Object.keys(ids).forEach(g=>{
+      const r=$(ids[g]+' rect'); if(!r) return;
+      r.setAttribute('fill', g===k?'#dbeafe':'#f5f8fd');
+      r.setAttribute('stroke', g===k?'#0067c5':'#c9d4e6');
+      r.setAttribute('stroke-width', g===k?'2.2':'1.6');
+    });
+    const o=D[k];
+    $('#tierTitle').textContent=o.t; $('#tierDesc').textContent=o.d;
+    $('#tierL1').innerHTML=o.a; $('#tierL2').innerHTML=o.b;
+  }));
+})();
+
+/* ═══════════ 幕 4 · G3.5 开关 ═══════════ */
+$$('[data-g35]').forEach(b=> b.addEventListener('click',()=>{
+  $$('[data-g35]').forEach(x=>x.classList.toggle('on',x===b));
+  const on = b.dataset.g35==='on';
+  $('#g35Box').style.opacity = on?1:.18;
+  $('#g35State').textContent = '当前：'+(on?'加入 G3.5':'没有 G3.5');
+  const p=$('#g35Path'), l=$('#g35Lbl');
+  if(on){ p.setAttribute('d','M150 27 C 100 27, 100 149, 130 149'); p.setAttribute('stroke','#6a5ad4');
+          l.textContent='溢出落到 G3.5'; l.setAttribute('fill','#6a5ad4'); }
+  else  { p.setAttribute('d','M150 27 C 90 27, 90 197, 300 197'); p.setAttribute('stroke','#d33a5c');
+          l.textContent='溢出直落 G4'; l.setAttribute('fill','#d33a5c'); }
+}));
+
+/* ═══════════ 幕 5 · 八层对照 ═══════════ */
+(function(){
+  const L={
+    5:{t:'第 1 层 · 推理运行时 / 编排层',d:'决定请求发到哪个节点、按什么顺序执行。',
+       l:'<b>NetApp 侧</b>：vLLM — 主流开源推理引擎，NetApp 全部公开测试基于它',
+       r:'<b>NVIDIA 侧</b>：Dynamo（KV 感知路由、预填充与解码分离）＋ Grove（按 KV 位置放置负载）',
+       k:'<b>差异要点</b>：两侧可组合，vLLM 能跑在 Dynamo 之下，不互斥'},
+    6:{t:'第 2 层 · KV Cache 管理层',d:'负责 KV 块的索引、生命周期、复用判定、逐出与分层卸载。',
+       l:'<b>NetApp 侧</b>：LMCache — 厂商中立开源引擎，自带 CPU 内存 / 本地盘 / S3 / GDS 等后端',
+       r:'<b>NVIDIA 侧</b>：KVBM — Dynamo 原生，内部三层：运行时连接器 → 块管理 → NIXL 传输',
+       k:'<b>差异要点</b>：这是全篇唯一两侧完全对等、可互换的一层。Dynamo 官方文档把 KVBM、LMCache、FlexKV 并列'},
+    7:{t:'第 3 层 · 数据移动抽象层',d:'屏蔽显存、内存、文件、对象、块设备之间的注册与传输差异。',
+       l:'<b>NetApp 侧</b>：无直接对应 — LMCache 直接调用自身 backend，不经独立抽象层',
+       r:'<b>NVIDIA 侧</b>：NIXL — 插件式统一传输抽象，存储厂商的接入点',
+       k:'<b>差异要点</b>：技术上 LMCache 可挂 NIXL 后端，但 NetApp 官方方案未使用（属理论可行）'},
+    8:{t:'第 4 层 · Context / KV 存储服务层',d:'把上下文缓存当作一等资源来管理、共享与放置。',
+       l:'<b>NetApp 侧</b>：无直接对应 — ONTAP 提供文件与对象语义，不提供 KV 语义服务',
+       r:'<b>NVIDIA 侧</b>：DOCA Memos — 对外键值 API，把以太网闪存变成 SU 级共享缓存层',
+       k:'<b>差异要点</b>：这一层的有无，决定了 KV 块写出时是否必须先序列化成文件'},
+    9:{t:'第 5 层 · 存储访问协议层',d:'数据实际在网络上以什么协议传输。',
+       l:'<b>NetApp 侧</b>：pNFS over RDMA（推荐）／ ONTAP S3 ／ GPUDirect Storage',
+       r:'<b>NVIDIA 侧</b>：NVMe / NVMe-oF（含 NVMe KV 扩展）＋ object/RDMA，由 BlueField-4 终结',
+       k:'<b>差异要点</b>：文件语义 vs 键值语义 — 这是两条路线最本质的分岔点'},
+    10:{t:'第 6 层 · 网络 / RDMA 层',d:'承载上述协议的物理与链路层。',
+       l:'<b>NetApp 侧</b>：NFS over RDMA (RoCE)，标准以太网，不绑定特定交换机',
+       r:'<b>NVIDIA 侧</b>：Spectrum-X 以太网，无损 RoCE ＋ 拥塞控制 ＋ 自适应路由',
+       k:'<b>差异要点</b>：两侧都用 RDMA。差别在于右侧对交换机平台有明确要求'},
+    11:{t:'第 7 层 · 存储处理器 / 控制器层',d:'谁在执行存储逻辑、数据校验与加密。',
+       l:'<b>NetApp 侧</b>：AFX 控制器节点（x86 + ONTAP）；GPU 服务器侧没有对应处理器参与数据路径',
+       r:'<b>NVIDIA 侧</b>：BlueField-4 STX（Vera CPU + ConnectX-9），计算侧与存储侧双端部署',
+       k:'<b>差异要点</b>：双端部署是右侧路线在硬件形态上最本质的不同'},
+    12:{t:'第 8 层 · 存储介质层',d:'数据最终落在什么介质上。',
+       l:'<b>NetApp 侧</b>：AFX 存储柜 NVMe SSD — 对应 NVIDIA 分层中的 G4',
+       r:'<b>NVIDIA 侧</b>：CMX 机柜 NVMe SSD — 即新增的 G3.5 层',
+       k:'<b>差异要点</b>：两者不是替代关系。G3.5 是新增层，G4 依然需要'}
+  };
+  $$('[data-lay]').forEach(r=> r.addEventListener('click',()=>{
+    $$('[data-lay]').forEach(x=>x.classList.toggle('on',x===r));
+    const o=L[r.dataset.lay]; if(!o) return;
+    $('#layTitle').textContent=o.t; $('#layDesc').textContent=o.d;
+    $('#layL').innerHTML=o.l; $('#layR').innerHTML=o.r; $('#layK').innerHTML=o.k;
+  }));
+  const first=$('[data-lay]'); if(first) first.click();
+})();
+
+/* ═══════════ 幕 6 · KV 管理层切换 ═══════════ */
+$$('[data-kvm]').forEach(b=> b.addEventListener('click',()=>{
+  $$('[data-kvm]').forEach(x=>x.classList.toggle('on',x===b));
+  const M = {
+    lm : {st:'LMCache', top:'vLLM 推理引擎', nm:'LMCache', ro:'厂商中立开源 KV 引擎',
+          bg:'#efeafd', bd:'#a99ce8', c1:'#4a3bb0', c2:'#6a5ad4',
+          dn:'backend：fs / s3 / gds（LMCache 自带）', nt:'NetApp 全部公开方案走这一条'},
+    kvbm:{st:'KVBM', top:'Dynamo（内含 vLLM / TensorRT-LLM）', nm:'KVBM · KV Block Manager', ro:'Dynamo 原生 KV 块管理器',
+          bg:'#dbeafe', bd:'#93b6e4', c1:'#123a7a', c2:'#0067c5',
+          dn:'NIXL 传输层 → 各类存储插件', nt:'NVIDIA 原生路线走这一条'},
+    kva :{st:'Everpure KVA', top:'vLLM 推理引擎', nm:'KVA · Key-Value Accelerator', ro:'Everpure 自研 KV 引擎，非开源',
+          bg:'#fdf1e2', bd:'#e0b276', c1:'#8a5510', c2:'#d5820f',
+          dn:'backend：NFS / GDS（S3 在 1.0 为路线图），直连标准 FlashBlade',
+          nt:'与 LMCache 同层同位；下面的 FlashBlade 是未经改造的标准存储'}
+  };
+  const m = M[b.dataset.kvm] || M.lm;
+  $('#kvmState').textContent = '当前：'+m.st;
+  $('#kvmTop').textContent = m.top;
+  $('#kvmName').textContent = m.nm;
+  $('#kvmRole').textContent = m.ro;
+  $('#kvmBox').setAttribute('fill', m.bg);
+  $('#kvmBox').setAttribute('stroke', m.bd);
+  $('#kvmName').setAttribute('fill', m.c1);
+  $('#kvmRole').setAttribute('fill', m.c2);
+  $('#kvmDown').textContent = m.dn;
+  $('#kvmNote').textContent = m.nt;
+}));
+
+/* ═══════════ 幕 8 · BlueField-4 形态切换 ═══════════ */
+$$('[data-bf]').forEach(b=> b.addEventListener('click',()=>{
+  $$('[data-bf]').forEach(x=>x.classList.toggle('on',x===b));
+  const right = b.dataset.bf==='right';
+  $('#bfState').textContent='当前：'+(right?'STX / CMX':'NetApp 当前形态');
+  ['#bfCompute','#bfComputeT','#bfStore','#bfStoreT'].forEach(s=> $(s).setAttribute('opacity', right?1:0));
+  $('#netName').textContent = right?'Spectrum-X 以太网':'通用以太网 / RoCE';
+  $('#netSub').textContent  = right?'无损 RoCE · 自适应路由':'标准交换机，无平台绑定';
+  $('#protoT').textContent  = right?'NVMe-oF ＋ object/RDMA（保持 KV 语义）':'pNFS over RDMA（文件语义）';
+  $('#stName').textContent  = right?'CMX 存储机柜':'AFX 存储系统';
+  $('#stSub').textContent   = right?'NVMe SSD（G3.5）':'控制器 + 存储柜（G4）';
+  if(right){
+    $('#dutyT').textContent='BlueField-4 在两端各承担什么';
+    $('#duty1').textContent='· 计算侧 DPU：运行 KV I/O 平面与控制面，终结 NVMe-oF / object-RDMA';
+    $('#duty2').textContent='· 存储侧控制器：直接管理 NVMe SSD、运行存储服务';
+    $('#duty3').textContent='· 两侧共同：卸载数据完整性校验、加密与压缩，主机 CPU 不参与数据路径';
+  }else{
+    $('#dutyT').textContent='当前形态下由谁承担这些工作';
+    $('#duty1').textContent='· GPU 服务器：主机 CPU 与网卡处理 NFS 客户端逻辑（GDS 可绕过内存中转）';
+    $('#duty2').textContent='· AFX 控制器节点：x86 + ONTAP 提供全部数据服务与校验';
+    $('#duty3').textContent='· 控制器与存储柜之间使用 NVMe-oF over RoCE，属内部总线，不向 GPU 暴露';
+  }
+}));
+
+/* ═══════════ 幕 9 · 数据语义切换 ═══════════ */
+$$('[data-sem]').forEach(b=> b.addEventListener('click',()=>{
+  $$('[data-sem]').forEach(x=>x.classList.toggle('on',x===b));
+  const f = b.dataset.sem==='file';
+  $('#semState').textContent='当前：'+(f?'文件语义':'KV 语义');
+  const set=(id,t)=>{ const e=$(id); if(e) e.textContent=t; };
+  if(f){
+    $('#semB').setAttribute('fill','#fdeef1'); $('#semB').setAttribute('stroke','#e0a3b4');
+    $('#semBT').setAttribute('fill','#a02744'); $('#semBS').setAttribute('fill','#a45a70');
+    set('#semBT','序列化成文件 / 对象'); set('#semBS','键值形态在这里丢失');
+    set('#semCT','pNFS over RDMA'); set('#semCS','标准文件协议');
+    set('#semDT','AFX 控制器（x86）'); set('#semDS','ONTAP 数据服务');
+    set('#semET','NVMe SSD'); set('#semES','AFX 存储柜（G4）');
+    set('#semMsg','KV 块被当成普通文件对待：成熟、标准、今天就能部署，任何 NFS 客户端都能用');
+    set('#semMsg2','代价：存储侧无法理解这是 KV，无法在存储层做复用判定与路由');
+    $('#semMsg').setAttribute('fill','#5c6a8a');
+  }else{
+    $('#semB').setAttribute('fill','#e7f6ee'); $('#semB').setAttribute('stroke','#8ccdae');
+    $('#semBT').setAttribute('fill','#0a6b45'); $('#semBS').setAttribute('fill','#0e9a62');
+    set('#semBT','保持键值形态'); set('#semBS','key → value，不做序列化');
+    set('#semCT','NVMe-oF ＋ object/RDMA'); set('#semCS','含 NVMe KV 扩展');
+    set('#semDT','BlueField-4 STX'); set('#semDS','双端卸载，主机 CPU 不参与');
+    set('#semET','NVMe KV 设备'); set('#semES','CMX 机柜（G3.5）');
+    set('#semMsg','KV 块一路保持键值形态直到落盘：存储侧认得它是什么，可在存储层做复用与路由');
+    set('#semMsg2','代价：绑定 Rubin 机架 + Spectrum-X + BlueField-4；2026 下半年才有平台');
+    $('#semMsg').setAttribute('fill','#0a6b45');
+  }
+}));
+
+/* ═══════════ 幕 11 · NetApp 四条路径 ═══════════ */
+(function(){
+  const D={
+    pnfs:{bk:'Remote FS 插件',p:'pNFS over RDMA',ps:'NFSv4.1 并行扩展',
+      n:'NetApp 当前推荐路径：网络条件允许时优先用 pNFS over RDMA',nc:'#0e9a62',
+      t:'pNFS over RDMA 的公开观测值',
+      k:['+201%','−99%','+223%'],ks:['聚合处理速度（最高）','平均首字延迟（最高）','单请求解码吞吐（最高）'],
+      kc:['对 GPU＋CPU：+157%','对 GPU＋CPU：−86%','对 GPU＋CPU：+174%'],
+      b:'大字对比不做卸载，虚线下对比 GPU＋CPU 卸载；均为原文"最高"观测值，非承诺。'},
+    s3:{bk:'S3 后端',p:'ONTAP S3（TCP）',ps:'对象接口，无需 RDMA',
+      n:'网络不支持 RDMA 时的稳妥选择，NetApp 称其为"极佳选项"',nc:'#0067c5',
+      t:'ONTAP S3 共享层的公开结论',
+      k:['无副作用','↑','可共享'],ks:['开启 S3 层的代价','相对纯 GPU 的吞吐','多实例共用同一桶'],
+      b:'NetApp 结论：S3 层与 CPU 层可同时启用，不存在"关掉更好"的场景。'},
+    gds:{bk:'GDS 后端',p:'NFS over RDMA + GDS',ps:'数据直入 GPU 显存',
+      n:'绕过主机内存中转，ONTAP 自 9.10.1 起支持；进程内模式下不建议与 CPU 内存层并用',nc:'#6a5ad4',
+      t:'GPUDirect Storage 路径的公开观测值',
+      k:['+61%','−34%','−43%'],ks:['总 token 吞吐','平均首字延迟','出字间隔'],
+      b:'测试环境：10 TB ONTAP NFS 卷。观测值，非性能承诺。进程内模式下用 GDS 就得关掉 CPU 内存层——为什么这是代价，见下一幕。'},
+    native:{fw:'vLLM 原生连接器',bk:'OffloadingConnector',p:'pNFS over RDMA',ps:'挂载点即后端',
+      n:'卸载能力内建在 vLLM 里，不需要安装任何第三方框架',nc:'#0e9a62',
+      t:'vLLM 原生卸载连接器的公开结论（2026-08）',
+      k:['整体最优','0 个','1 个'],ks:['五种配置横比中的吞吐排序','需额外安装的第三方框架','存储侧要求：一个挂载点'],
+      b:'注意口径：NetApp 只发布了对比图与排序结论，正文未给出数值——可以讲"谁更好"，不能讲"好多少"。另：vLLM 上游 2026-09 说明原生分层还支持经 NIXL 的 S3 对象存储与实例间共享，NetApp 未测。'}
+  };
+  $$('[data-na]').forEach(b=> b.addEventListener('click',()=>{
+    $$('[data-na]').forEach(x=>x.classList.toggle('on',x===b));
+    const o=D[b.dataset.na]; if(!o) return;
+    $('#naFw').textContent=o.fw||'LMCache';
+    $('#naBk').textContent=o.bk; $('#naProto').textContent=o.p; $('#naProtoS').textContent=o.ps;
+    $('#naNote').textContent=o.n; $('#naNote').setAttribute('fill',o.nc);
+    $('#naTitle').textContent=o.t; $('#naBase').textContent=o.b;
+    for(let i=0;i<3;i++){
+      $('#naK'+(i+1)).textContent=o.k[i]; $('#naK'+(i+1)+'s').textContent=o.ks[i];
+      const c=$('#naK'+(i+1)+'c'); c.textContent=o.kc?o.kc[i]:''; c.style.display=o.kc?'':'none';
+    }
+  }));
+})();
+
+/* ═══════════ 幕 13 · 厂商筛选 ═══════════ */
+$$('[data-ven]').forEach(b=> b.addEventListener('click',()=>{
+  $$('[data-ven]').forEach(x=>x.classList.toggle('on',x===b));
+  const v=b.dataset.ven;
+  $$('#venTable [data-c]').forEach(c=>{
+    const on = v==='all' || c.dataset.c===v;
+    c.style.opacity = on?1:.24;
+    c.style.background = (v!=='all' && c.dataset.c===v) ? 'rgba(0,103,197,.07)' : '';
+  });
+}));
+
+/* ═══════════ 幕 14 · 公开证据项计数 ═══════════ */
+(function(){
+  const g=$('#evRows'); if(!g) return;
+  const C=['#0067c5','#6a5ad4','#0e9a62','#d5820f'];
+  const V=[
+    {n:'DDN',      v:[1,0,1,1]},
+    {n:'Everpure', v:[0,0,1,1]},
+    {n:'VAST Data',v:[0,1,1,0]},
+    {n:'WEKA',     v:[0,0,1,1]},
+    {n:'NetApp',   v:[0,0,0,0]}
+  ];
+  let h='';
+  V.forEach((r,i)=>{
+    const y=40+i*42;
+    h+='<text x="10" y="'+(y+20)+'" font-size="12" font-weight="750" fill="#123a7a">'+r.n+'</text>';
+    r.v.forEach((on,j)=>{
+      const x=110+j*118;
+      h+='<rect class="evb" data-i="'+(i*4+j)+'" x="'+x+'" y="'+y+'" width="106" height="28" rx="7" '
+        +'fill="'+(on?C[j]:'#e3e9f3')+'" opacity="0"/>';
+    });
+    h+='<text x="586" y="'+(y+20)+'" text-anchor="end" font-size="12.5" font-weight="800" fill="'
+      +(r.v.reduce((a,b)=>a+b,0)?'#0067c5':'#8d97b2')+'">'+r.v.reduce((a,b)=>a+b,0)+' / 4</text>';
+  });
+  g.innerHTML=h;
+  window.__playEv=function(){
+    $$('.evb',g).forEach(el=>{ el.setAttribute('opacity','0');
+      setTimeout(()=>{ el.style.transition='opacity .4s'; el.setAttribute('opacity','1'); }, 60+ (+el.dataset.i)*34);
+    });
+  };
+})();
+
+/* ═══════════ 幕 13 · chunk_size 调优 ═══════════ */
+(function(){
+  const CS={
+    '256':{n:390,
+      l1:'390 个完整 chunk，尾部 160 token 不保存',
+      l2:'张量并行 4 卡：每个逻辑 chunk 由 4 张卡各写自己那份 → 390 × 4',
+      l3:'重建这段 KV 要 1,560 次 I/O · 单对象 9 MB · 共约 14 GB',
+      l4:'NetApp 实测：多次超时，部分请求从未返回，vLLM 集群不稳定',
+      bar:'#d33a5c',fill:'#fdeef1',stroke:'#e0a3b4',tc:'#a02744',sc:'#a45a70'},
+    '2048':{n:48,
+      l1:'48 个完整 chunk，尾部 1,696 token 不保存',
+      l2:'张量并行 4 卡：每个逻辑 chunk 由 4 张卡各写自己那份 → 48 × 4',
+      l3:'重建这段 KV 要 192 次 I/O · 单对象 72 MB · 共约 14 GB',
+      l4:'I/O 次数降到 1/8，传输的数据总量一个字节没变',
+      bar:'#0e9a62',fill:'#e3f6ed',stroke:'#8fcfb2',tc:'#0e7a4e',sc:'#3d9c72'}
+  };
+  $$('[data-cs]').forEach(b=> b.addEventListener('click',()=>{
+    $$('[data-cs]').forEach(x=>x.classList.toggle('on',x===b));
+    const o=CS[b.dataset.cs]; if(!o) return;
+    const g=$('#csBar'); if(!g) return;
+    const W=600, gap = o.n>200 ? .45 : 1.6, w=(W/o.n)-gap;
+    g.innerHTML='';
+    for(let i=0;i<o.n;i++){
+      const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      r.setAttribute('x',(10+i*(W/o.n)).toFixed(2)); r.setAttribute('y','50');
+      r.setAttribute('width',Math.max(w,.6).toFixed(2)); r.setAttribute('height','32');
+      r.setAttribute('rx', w>4?'2':'0'); r.setAttribute('fill',o.bar); r.setAttribute('opacity','.85');
+      g.appendChild(r);
+    }
+    $('#csL1').textContent=o.l1; $('#csL2').textContent=o.l2;
+    $('#csL3').textContent=o.l3; $('#csL4').textContent=o.l4;
+    $('#csL3').setAttribute('fill',o.tc); $('#csL4').setAttribute('fill',o.sc);
+    $('#csBox').setAttribute('fill',o.fill); $('#csBox').setAttribute('stroke',o.stroke);
+  }));
+})();
+
+/* ═══════════ 幕 15 · 时间线 ═══════════ */
+(function(){
+  const T=[
+    {h:'2026 年 1 月 · CES：以 ICMS 名义首次发布<i class="tt ok">已验证</i>',
+     p:'NVIDIA 以 "Inference Context Memory Storage Platform（ICMS）"名义发布这一概念，随后更名为 CMX。首批 BlueField-4 存储伙伴名单为：AIC、Cloudian、DDN、Dell、HPE、Hitachi Vantara、IBM、Nutanix、Pure Storage、Supermicro、VAST Data、WEKA —— <b>此时名单中没有 NetApp</b>；名单里的 Pure Storage 即今天的 <b>Everpure</b>。'},
+    {h:'2026 年 3 月 · GTC：STX 参考架构正式发布<i class="tt ok">已验证</i>',
+     p:'NVIDIA 发布 BlueField-4 STX 模块化参考架构，CMX 作为其第一个机架级实现。存储伙伴名单扩大到 15 家，<b>NetApp 于此时进入</b>，官方表态为"将支持 NVIDIA STX"。同期 DDN、WEKA、VAST 各自发布了自己的对接方案。明确可得性：<b>2026 下半年</b>。Everpure 同日表态将在 FlashBlade//EXA 内支持 CMX，采用 BF-4 存储控制器。'},
+    {h:'2026 年 1–9 月 · Everpure 更名并推进 KVA<i class="tt ok">已验证</i>',
+     p:'Pure Storage 于 <b>2026-02-23</b> 更名 Everpure, Inc.（3 月 5 日起以新名交易），产品线不变。1 月宣布 <b>KVA 与 NVIDIA Dynamo 集成</b>（经 vLLM 连接器，非 NIXL 插件），后端为 NFS / GDS / S3；2 月发布<b>细粒度前缀缓存</b>；4 月宣布在 <b>FlashBlade//EXA</b> 上验证完成。<b>6-26 宣布 KVA 1.0 GA</b>：拆成引擎内插件 ＋ 独立守护进程，以 .deb / .rpm 交付，架构图把 S3 标为路线图。<b>9-30 宣布</b>把上下文直接预取进 GPU 显存、首字延迟"最高 20×"（未给测试配置），称 10 月可用<i class="tt warn">已宣布</i>。'},
+    {h:'2026 年 6–7 月 · 代码进入官方发行体系<i class="tt ok">已验证</i>',
+     p:'DDN 的 Infinia 插件自 <b>NIXL 1.3</b>（6 月中）起随标准发行版打包，并包含在 NVIDIA Dynamo 推理容器中——这是目前唯一一家做到这一步的存储厂商。同期 NVIDIA 内部提交了 <span class="mono">DOCA_MEMOS</span> 的 NIXL 后端插件，但<b>至今未合入主干</b>。'},
+    {h:'2026 下半年 · 合作伙伴平台交付<i class="tt warn">已宣布</i>',
+     p:'NVIDIA 官方口径：STX-based 平台将由合作伙伴在 2026 下半年提供。Supermicro、QCT、AIC 已展示 STX / CMX 形态的存储服务器硬件，但均未公布详细配置。软件侧各家仍在开发中。'},
+    {h:'今天（截至 2026-10-17）· 现状<i class="tt ok">已验证</i>',
+     p:'<b>没有任何厂商拥有 GA 的 STX / CMX 产品。</b>能今天落地的只有标准协议路线：LMCache + NFS/S3/GDS，或 <b>vLLM 自 2026-01 内建的原生卸载连接器</b>（连 LMCache 都不用装）。NetApp 侧：GTC 合作声明之后，<b>9-29 INSIGHT 2026 场次 BKO1025</b> 与 NVIDIA 讲者同台，宣布双方正联合研发上下文内存存储<i class="tt warn">已宣布</i>；但仍无架构图、无产品名、无时间表、无 NIXL 插件、无 BlueField-4 集成的公开证据。可对比的是 <b>Everpure KVA</b>：产品在售、已集成 Dynamo、有公开基准，但同样没有 NIXL 上游插件、没有 CMX 落地架构。'}
+  ];
+  $$('[data-tl]').forEach(s=> s.addEventListener('click',()=>{
+    $$('[data-tl]').forEach(x=>x.classList.toggle('on',x===s));
+    const o=T[+s.dataset.tl]; if(!o) return;
+    $('#tlH').innerHTML=o.h; $('#tlP').innerHTML=o.p;
+  }));
+})();
+
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav === '公开证据项计数' && window.__playEv) setTimeout(window.__playEv, 300);
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+
+<dialog class="vdlg" id="vDlg" aria-label="讲解视频">
+  <div class="vbar"><span>AI 推理上下文存储 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./stx-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+<script>
+const vDlg=document.getElementById('vDlg'), vPlayer=document.getElementById('vPlayer');
+document.getElementById('vOpen').addEventListener('click',()=>{vDlg.showModal(); vPlayer.play().catch(()=>{});});
+document.getElementById('vClose').addEventListener('click',()=>vDlg.close());
+vDlg.addEventListener('click',e=>{if(e.target===vDlg)vDlg.close();});
+vDlg.addEventListener('close',()=>vPlayer.pause());
+</script>
+</body>
+</html>

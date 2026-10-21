@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp Console 本地部署与自治运维 · 交互演示</title>
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+
+/* ══════════ 本页专用 ══════════ */
+.rng{width:100%;accent-color:var(--blue)}
+.rowlab{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin:4px 0 2px}
+.rowlab b{font-family:var(--mono);color:var(--ink)}
+.bar{height:12px;border-radius:99px;background:var(--panel3);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--violet));transition:width .45s cubic-bezier(.2,.7,.3,1)}
+.log{font-family:var(--mono);font-size:11.5px;background:#101c33;color:#c6d6f0;border-radius:11px;padding:10px 13px;
+  line-height:1.7;min-height:118px;border:1px solid #1e3255;white-space:pre-wrap}
+.log .ok{color:#8fd694} .log .er{color:#ff8fa6} .log .c{color:#7f95bd}
+.spec td.n{font-family:var(--mono);color:var(--ink);font-weight:700}
+svg .pulse{animation:pl 1.1s ease-in-out infinite}
+@keyframes pl{50%{opacity:.35}}
+.clu{display:grid;grid-template-columns:1.3fr .8fr .8fr .8fr .9fr;gap:0;font-size:12.2px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.clu>div{padding:6px 10px;border-bottom:1px solid var(--line);color:var(--dim);transition:.25s}
+.clu>.hd{background:var(--panel3);font-family:var(--mono);font-size:10.5px;color:var(--dim);font-weight:700}
+.clu>.x{opacity:.32;text-decoration:line-through}
+.clu>.y{background:rgba(14,154,98,.07);color:var(--ink)}
+.chk{display:flex;align-items:center;gap:8px;font-size:12.8px;color:var(--dim);margin-bottom:6px;cursor:pointer}
+.chk input{accent-color:var(--blue);width:15px;height:15px}
+.verdict{font-family:var(--mono);font-weight:800;font-size:22px;letter-spacing:1px}
+.rung{flex:1;border:1px solid var(--line);border-radius:11px;padding:9px 10px;background:var(--panel);transition:.25s;cursor:pointer}
+.rung .n{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--faint)}
+.rung .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.rung.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.08),rgba(0,103,197,.02));box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.rung.on .n{color:var(--blue)}
+.who{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>NetApp Console</b><span>LOCAL DEPLOYMENT · AUTONOMOUS OPERATIONS · INSIGHT 2026</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp INSIGHT 2026 · BKO2000 / BKO2001 / BKO2003</span></div>
+      <div class="big an" style="--d:.14s">NetApp Console</div>
+      <div class="sub an" style="--d:.26s">本地部署的舰队管理，与"声明结果"的自治运维</div>
+      <p class="desc an" style="--d:.34s">
+        从发命令、看仪表盘，走向声明结果。观测、告警、修复与 AI 助手都可以运行在自己的数据中心里，
+        完全离线、自带大模型；在此之上，一组有明确分工的智能体在你设定的边界内把结果维持住。
+      </p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">运维的四个阶段</div>
+        <div class="chip" data-jump="4">本地部署</div>
+        <div class="chip" data-jump="8">按意图配置</div>
+        <div class="chip" data-jump="11">迁移与开源版</div>
+        <div class="chip" data-jump="13">自治资产（概念）</div>
+      </div>
+      <div class="an" style="--d:.5s;margin-top:18px;display:flex;gap:8px;justify-content:center">
+        <span class="tag ok">已发布</span><span class="tag warn">INSIGHT 后推出 / 预览</span><span class="tag new">概念与方向</span>
+      </div>
+      <div class="an" style="--d:.5s;margin-top:22px">
+        <button class="btn on" id="vOpen" type="button">▶ 观看 5 分钟讲解视频</button>
+      </div>
+      <div class="an" style="--d:.56s;margin-top:18px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>总览</span></div>
+        <h1>两层内容：<span class="g">现在就能部署的</span>，与<span class="g">正在走向的</span></h1>
+        <p class="lead">每项能力都标明状态。本页依据 INSIGHT 2026 三个场次整理：BKO2000 舰队管理与本地部署、BKO2003 观测、BKO2001 自治资产。点击卡片跳转。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="dc" style="--ac:#0067c5" data-jump="2"><div class="hd"><span class="nm">为什么</span><span class="ct">2 幕</span></div>
+          <ul><li>从被动响应到自治资产</li><li>按集群逐台操作的流程撑不住了</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#0e9a62" data-jump="4"><div class="hd"><span class="nm">Console 本地部署</span><span class="ct">4 幕</span></div>
+          <ul><li>离线运行的四项掌控</li><li>单 OVA 架构与规格</li><li>告警到修复的闭环</li><li>舰队健康与升级</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#6a5ad4" data-jump="8"><div class="hd"><span class="nm">意图、AI 与迁移</span><span class="ct">5 幕</span></div>
+          <ul><li>存储类与按意图配置</li><li>漂移检测与闭环</li><li>自带大模型</li><li>从 Unified Manager 迁移、开源版</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:#d5820f" data-jump="13"><div class="hd"><span class="nm">自治资产</span><span class="ct">5 幕</span></div>
+          <ul><li>存储类即契约</li><li>五个智能体角色</li><li>确定性闸门与信任阶梯</li><li>结果账本与概念演示</li></ul><div class="go">进入 →</div></div>
+      </div>
+      <div class="panel tint an" style="--d:.2s;margin-top:13px">
+        <h3>为什么这一页对国内客户更有意义</h3>
+        <div class="g3">
+          <div class="li ok"><b>关键路径上没有云</b>：本地部署版可完全离线运行，唯一可选外联是 ASUP 与支持通道，关掉后所有功能照常</div>
+          <div class="li ok"><b>AI 在自己的边界内</b>：大模型由客户自选、自己部署，推理不出网</div>
+          <div class="li warn">在中国大陆的供货、许可与支持方式需单独确认</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 四个阶段 ══════════════════ -->
+  <section class="scene" data-sec="为什么" data-nav="运维的四个阶段">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>为什么 · 01</span></div>
+        <h1>每个阶段都拿走一类人工，<span class="g">最后一个阶段拿走运行手册本身</span></h1>
+        <p class="lead">存储管理正在走完下一段弧线：从发命令，到看仪表盘，到声明结果。点击各阶段，看人还要做什么。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="an" style="--d:.12s">
+        <div class="steps" id="phSteps">
+          <div class="st" data-ph="0"><div class="n">01 · REACTIVE</div><div class="l">被动响应</div></div>
+          <div class="st" data-ph="1"><div class="n">02 · PROACTIVE</div><div class="l">主动预警</div></div>
+          <div class="st" data-ph="2"><div class="n">03 · AUTONOMOUS</div><div class="l">自治</div></div>
+          <div class="st on" data-ph="3"><div class="n">04 · AUTONOMOUS ESTATE</div><div class="l">自治资产</div></div>
+        </div>
+      </div>
+      <div class="g23">
+        <div class="viz an" style="--d:.16s">
+          <svg viewBox="0 0 640 210" id="phSvg" style="max-height:230px"></svg>
+          <div class="stbody" style="margin-top:8px;min-height:0"><h4 id="phT"></h4><p id="phD"></p></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.2s">
+            <h3>三十年换来了什么</h3>
+            <div class="li">命令行变成了仪表盘，仪表盘长出了 API，API 长出了自动化框架</div>
+            <div class="li warn">运行手册仍然是一张动作清单，<b>只是更好看了</b></div>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>为什么现在撑不住</h3>
+            <div class="li">块、文件、对象，本地加三家公有云，资产越来越异构</div>
+            <div class="li">需要保持成立的事项，比盯着它们的人增长得快</div>
+            <div class="li">受监管和主权站点<b>无法采用云端托管的智能</b></div>
+            <div class="li ok">每写一个脚本动作，就多一个要手工兑现的承诺。<b>动作不能扩展，结果可以</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 现状 ══════════════════ -->
+  <section class="scene" data-sec="为什么" data-nav="逐集群流程的瓶颈">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>为什么 · 02</span></div>
+        <h1>工具没有错，<span class="g">是规模变了</span></h1>
+        <p class="lead">为单个集群设计的流程，要扩展到整个舰队。多数企业今天的 ONTAP 运维是这样拼起来的。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="vc"><span class="k">SYSTEM MANAGER</span><div class="t">一个集群一个会话</div><div class="d">每个集群都要单独登录操作。</div></div>
+        <div class="vc"><span class="k">UNIFIED MANAGER</span><div class="t">全局健康与容量</div><div class="d">告警、健康监控与排障、性能监控、REST API，采用度最高的几项能力。</div></div>
+        <div class="vc"><span class="k">HARVEST + GRAFANA</span><div class="t">需要的仪表盘</div><div class="d">自己搭建、自己维护的指标与可视化。</div></div>
+        <div class="vc"><span class="k">脚本 + WIKI</span><div class="t">工具没覆盖的部分</div><div class="d">靠脚本和知识库页面补齐，依赖少数人的经验。</div></div>
+      </div>
+      <div class="g2 an" style="--d:.2s;margin-top:13px">
+        <div class="panel">
+          <h3>行业调查的共性（BKO1011 引用）</h3>
+          <div class="kpis">
+            <div class="kpi o"><b>56%</b><span>使用 10 个以上观测工具</span></div>
+            <div class="kpi"><b>63%</b><span>仍然存在盲区</span></div>
+            <div class="kpi v"><b>82%</b><span>团队平均修复时间超过 1 小时</span></div>
+            <div class="kpi t"><b>48%</b><span>把缺乏内部专家列为第一障碍</span></div>
+          </div>
+          <p class="note">数据来源：Grafana Labs Observability Survey 2025、Logz.io Observability Pulse 2024 等，经 BKO1011 汇总引用。</p>
+        </div>
+        <div class="panel tint">
+          <h3>Console 给出的答案：一个控制台，一个舰队视图</h3>
+          <div class="li ok">所有集群的容量、性能与健康在同一视图</div>
+          <div class="li ok">告警自带修复动作</div>
+          <div class="li ok">按策略配置，而不是逐个集群操作</div>
+          <div class="li">NetApp 的表述：这不是淘汰 Unified Manager，而是把这段关系延续到下一代管理能力</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · 四项掌控 ══════════════════ -->
+  <section class="scene" data-sec="本地部署" data-nav="由你掌控的四件事">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>Console 本地部署 · 01 <span class="tag ok" style="margin-left:6px">已发布</span></span></div>
+        <h1>本地运行舰队，<span class="g">不必放弃智能</span></h1>
+        <p class="lead">企业级观测、AI 辅助洞察与统一舰队管理，部署在自己的数据中心、VPC 或主权云里。"由你掌控"具体指四件事。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="panel"><h3>网络边界</h3>
+          <div class="li ok">可完全离线运行</div><div class="li ok">不需要回传遥测</div><div class="li ok">不需要云端许可校验</div><div class="li ok">任何核心功能都没有外联依赖</div></div>
+        <div class="panel"><h3>数据</h3>
+          <div class="li ok">指标在自己的基础设施上采集与存储</div><div class="li ok">审计保留期可配置，留在本地</div><div class="li ok">可导出到 SIEM：Splunk、QRadar、ArcSight</div></div>
+        <div class="panel"><h3>身份</h3>
+          <div class="li ok">Active Directory 与 LDAP 登录</div><div class="li ok">基于角色的访问控制</div><div class="li ok">多因素认证</div><div class="li ok">凭据保存在 HashiCorp Vault</div></div>
+        <div class="panel"><h3>AI 模型</h3>
+          <div class="li ok">自带大模型：Azure OpenAI、Bedrock、Vertex，或完全本地部署</div><div class="li ok">推理在自己的边界内完成</div><div class="li ok">离线站点里唯一可行的方式</div></div>
+      </div>
+      <div class="panel tint an" style="--d:.2s;margin-top:13px">
+        <h3>对制造业的意义</h3>
+        <div class="g3">
+          <div class="li ok"><b>工厂网络隔离</b>：生产网与办公网分离、外联受限的分厂，也能用上统一的舰队视图与 AI 助手</div>
+          <div class="li ok"><b>审计在本地</b>：所有修复动作写入防篡改审计记录，可导出给安全团队</div>
+          <div class="li ok"><b>账号体系不变</b>：沿用工厂现有的 AD 域与权限分级</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 架构与规格 ══════════════════ -->
+  <section class="scene" data-sec="本地部署" data-nav="架构与规格">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>Console 本地部署 · 02</span></div>
+        <h1>一个 OVA，<span class="g">关键路径上没有云</span></h1>
+        <p class="lead">唯一可能出网的流量是可选的 ASUP 与支持通道，关掉后所有功能照常运行。点击各层查看组成。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <svg viewBox="0 0 640 270" style="max-height:290px" id="arSvg"></svg>
+          <div class="stbody" style="margin-top:8px;min-height:0"><h4 id="arT"></h4><p id="arD"></p></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="tw an" style="--d:.18s">
+            <table class="dt">
+              <thead><tr><th>部署要求</th><th>规格</th></tr></thead>
+              <tbody>
+                <tr><td class="h">形态</td><td>单个 OVA，VMware vSphere ESXi 7.0u3 及以上</td></tr>
+                <tr><td class="h">每节点资源</td><td>16 vCPU · 64 GB 内存 · 500 GB 存储</td></tr>
+                <tr><td class="h">规模</td><td>当前每实例 50+ 个 ONTAP 集群</td></tr>
+                <tr><td class="h">高可用</td><td>三节点 HA <span class="tag warn">11 月 15 日推出</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>从导入 OVA 到舰队视图，四步</h3>
+            <div class="li"><b>部署</b>：在 vSphere 上导入并开机，内置 K3s 首次启动时拉起平台服务</div>
+            <div class="li"><b>登录</b>：对接 Active Directory，首次登录即有 RBAC 与 MFA</div>
+            <div class="li"><b>发现</b>：发现 ONTAP 集群，凭据从 Vault 读取，不在表单里粘贴</div>
+            <div class="li"><b>批量纳管</b>：一次添加整批集群，带连通性检查</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · 告警到修复 ══════════════════ -->
+  <section class="scene" data-sec="本地部署" data-nav="告警到修复">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>Console 本地部署 · 03</span></div>
+        <h1>从事件到修复，<span class="g">不离开控制台</span>，也不绕过你</h1>
+        <p class="lead">场景：一个 SQL 卷用量涨过 98%，此时没人盯着仪表盘。点击"开始"，看它如何在应用报写入失败之前被发现并修好。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" id="alGo">▶ 开始</button>
+            <button class="btn" id="alFix" disabled>批准扩容</button>
+            <button class="btn sm" id="alReset" style="margin-left:auto">重置</button>
+          </div>
+          <div class="steps" id="alSteps" style="margin-bottom:10px">
+            <div class="st" style="cursor:default"><div class="n">EVENT</div><div class="l">事件</div></div>
+            <div class="st" style="cursor:default"><div class="n">ALERT</div><div class="l">告警</div></div>
+            <div class="st" style="cursor:default"><div class="n">NOTIFICATION</div><div class="l">通知</div></div>
+            <div class="st" style="cursor:default"><div class="n">ACTION</div><div class="l">动作</div></div>
+          </div>
+          <div class="rowlab"><span>卷 nh_sql_f 已用容量（告警阈值 90%）</span><b id="alPct">85%</b></div>
+          <div class="bar" style="position:relative"><i id="alBar" style="width:85%"></i><span style="position:absolute;left:90%;top:-3px;bottom:-3px;width:2px;background:var(--red)"></span></div>
+          <div class="log" id="alLog" style="margin-top:10px;min-height:120px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>四个阶段</h3>
+            <div class="li"><b>事件</b>：系统上发生的事实，量大、原始</div>
+            <div class="li"><b>告警</b>：规则判定值得让人知道；有状态，维护窗口内可抑制</div>
+            <div class="li"><b>通知</b>：邮件、webhook、Slack 或 Teams，可设免打扰时段；同一告警可同时进 ServiceNow</div>
+            <div class="li"><b>动作</b>：告警自带修复，扩容、迁移 LIF、重新同步 SnapMirror，一键执行</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>没有你的同意，什么都不执行</h3>
+            <div class="li ok">每个修复动作执行前都<b>预览具体的 ONTAP 操作</b>，也可以复制等效命令到 CLI 自己执行</div>
+            <div class="li ok">每个动作写入<b>防篡改审计记录</b>，可保留、可导出到 SIEM</div>
+            <div class="li">参考场景中，容量告警从发现到解决约 <b>2 分钟</b>，全程有审计</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · 舰队健康 ══════════════════ -->
+  <section class="scene" data-sec="本地部署" data-nav="舰队健康与升级">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>Console 本地部署 · 04</span></div>
+        <h1>六个舰队、几十个集群：<span class="g">先看哪里，修得多快</span></h1>
+        <p class="lead">舰队健康首页把容量、安全合规与严重告警放在一屏；推荐修复一键处理，安全项可以一路下钻到单个集群。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="panel"><h3>容量 <span class="tag ok">已发布</span></h3>
+          <div class="li">所有集群的已用、可用与已承诺容量</div><div class="li">按趋势预测距离写满还有几天，支持基于趋势的规则</div><div class="li">一眼看出哪些集群最先用完</div></div>
+        <div class="panel"><h3>性能 <span class="tag ok">已发布</span></h3>
+          <div class="li">全舰队 IOPS、吞吐与延迟</div><div class="li">下钻到热点集群不丢上下文</div><div class="li">需要更深时交给 System Manager</div></div>
+        <div class="panel"><h3>保护与安全态势 <span class="tag ok">已发布</span></h3>
+          <div class="li">全舰队勒索软件防护（ARP）覆盖情况</div><div class="li">合规百分比、FIPS 状态、证书到期</div><div class="li">集群级的推荐修复同样可一键处理</div></div>
+      </div>
+      <div class="g2 an" style="--d:.2s;margin-top:13px">
+        <div class="tw">
+          <table class="dt">
+            <thead><tr><th>引导式 ONTAP 升级</th><th>带来的变化</th></tr></thead>
+            <tbody>
+              <tr><td class="h">在一处规划与执行升级</td><td>不再拼接多个工具</td></tr>
+              <tr><td class="h">自动的前置条件与兼容性检查</td><td>阻断项在还来得及处理时暴露，而不是在变更窗口里</td></tr>
+              <tr><td class="h">引导修复并重新校验</td><td>提交升级前确认就绪</td></tr>
+              <tr><td class="h">监控下的自动执行</td><td>可重复的升级过程，全程可见</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel tint">
+          <h3>适用范围</h3>
+          <div class="li ok">联网与不联网（离线站点）都适用</div>
+          <div class="li warn">全舰队 ONTAP 升级编排 <span class="tag warn">INSIGHT 后推出</span></div>
+          <div class="li warn">StorageGRID 与 E-Series 进入同一舰队视图 <span class="tag warn">INSIGHT 后推出</span></div>
+          <div class="li ok"><b>对工厂的意义</b>：升级前的阻断项提前暴露，不必在换班窗口或停线检修窗口里临时处理</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · 存储类 ══════════════════ -->
+  <section class="scene" data-sec="意图与 AI" data-nav="存储类与按意图配置">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>意图与 AI · 01 <span class="tag ok" style="margin-left:6px">已发布</span></span></div>
+        <h1>把意图定义一次，<span class="g">不再挑集群</span></h1>
+        <p class="lead">存储类是一组命名的要求，不是一个目的地。申请人只说"受监管数据，500 GB"，引擎按类的要求和当前余量检查整个舰队。勾选要求，看候选集群怎么变。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g32">
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.12s">
+            <h3>存储类 Regulated-Data</h3>
+            <label class="chk"><input type="checkbox" data-req="arp" checked>只用已启用勒索软件防护的集群</label>
+            <label class="chk"><input type="checkbox" data-req="snap" checked>快照策略保留 90 天</label>
+            <label class="chk"><input type="checkbox" data-req="dr" checked>SnapMirror 复制到灾备站点</label>
+            <label class="chk"><input type="checkbox" data-req="perf" checked>性能层</label>
+            <label class="chk"><input type="checkbox" data-req="head" checked>余量足够容纳 500 GB</label>
+          </div>
+          <div class="panel tint an" style="--d:.18s">
+            <h3>接下来</h3>
+            <div class="li"><b>一键配置</b>：卷继承类里的全部策略</div>
+            <div class="li"><b>合规校验</b>：持续把舰队与它承诺的类对比</div>
+            <div class="li ok">意图声明一次，在工作负载的整个生命周期内有效</div>
+          </div>
+        </div>
+        <div class="viz an" style="--d:.14s">
+          <div class="clu" id="cluGrid"></div>
+          <div class="stbody" style="margin-top:10px;min-height:0"><p id="cluMsg"></p></div>
+          <p class="note">集群名称与属性为示意。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · 漂移闭环 ══════════════════ -->
+  <section class="scene" data-sec="意图与 AI" data-nav="漂移与闭环">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>意图与 AI · 02</span></div>
+        <h1>意图会衰减：<span class="g">闭环能闭到哪一步</span></h1>
+        <p class="lead">今天能检测到偏离并告诉你；下一步在你批准后修复偏离；方向是平台自己把结果维持住。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="panel"><h3>今天 <span class="tag ok">已发布</span></h3>
+          <div class="li">存储类与全舰队配置</div><div class="li">感知余量的放置</div><div class="li">漂移检测：持续与你定义的类对比</div><div class="li">漂移告警走现有通知渠道</div>
+          <div class="flag" style="margin-top:8px">检测到偏离，告诉你</div></div>
+        <div class="panel"><h3>INSIGHT 2026 <span class="tag warn">推出中</span></h3>
+          <div class="li">常见治理模式的策略模板</div><div class="li">全舰队漂移修复：修掉偏离，而不只是报告</div><div class="li">全舰队合规评分</div>
+          <div class="flag o" style="margin-top:8px">在你批准后闭环</div></div>
+        <div class="panel"><h3>方向 <span class="tag new">概念</span></h3>
+          <div class="li">存储类绑定服务级目标</div><div class="li">平台维持结果成立，而不是报告偏离</div><div class="li">渐进式自治，始终有总开关与一键回滚</div>
+          <div class="flag" style="margin-top:8px;color:var(--violet);background:rgba(106,90,212,.08);border-color:rgba(106,90,212,.25)">你声明结果，平台维持它</div></div>
+      </div>
+      <div class="viz an" style="--d:.2s;margin-top:13px">
+        <svg viewBox="0 0 1200 120" style="max-height:120px">
+          <g font-size="13" text-anchor="middle">
+            <rect x="20" y="30" width="250" height="56" rx="12" fill="#eaf2fd" stroke="#93b6e4"/><text x="145" y="63" fill="#123a7a" font-weight="700">声明：存储类</text>
+            <rect x="330" y="30" width="250" height="56" rx="12" fill="#fdf3e4" stroke="#e8c48a"/><text x="455" y="63" fill="#9a5c06" font-weight="700">漂移：配置偏离了类</text>
+            <rect x="640" y="30" width="250" height="56" rx="12" fill="#efecfb" stroke="#b3a8ea"/><text x="765" y="63" fill="#3d2f9a" font-weight="700">修复：经你批准</text>
+            <rect x="950" y="30" width="230" height="56" rx="12" fill="#e6f6ef" stroke="#8fd0b2"/><text x="1065" y="63" fill="#0b6b45" font-weight="700">合规评分回升</text>
+            <g stroke="#8d97b2" stroke-width="2" fill="none"><path d="M272 58 L328 58"/><path d="M582 58 L638 58"/><path d="M892 58 L948 58"/></g>
+            <path d="M1065 88 C 1065 112, 145 112, 145 88" stroke="#c9d4e6" stroke-width="1.6" fill="none" stroke-dasharray="5 4"/>
+            <text x="605" y="114" fill="#8d97b2" font-size="11">持续对比</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · 自带大模型 ══════════════════ -->
+  <section class="scene" data-sec="意图与 AI" data-nav="自带大模型">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>意图与 AI · 03</span></div>
+        <h1>人人都发布了助手，<span class="g">能在你的边界里运行的才算数</span></h1>
+        <p class="lead">离线站点不能用厂商托管的助手。用自然语言问"哪些集群容量超过 85%"，拿到的是一张图表，背后是你自己选择、自己运行的模型。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-q="cap" data-toggle-group="q">哪些集群容量超过 85%？</button>
+            <button class="btn" data-q="tri" data-toggle-group="q">这批告警先处理哪个？</button>
+            <button class="btn" data-q="part" data-toggle-group="q">卷 nh_sql_f 的性能如何？</button>
+          </div>
+          <svg viewBox="0 0 640 190" id="qSvg" style="max-height:200px"></svg>
+          <div class="stbody" style="margin-top:8px;min-height:0"><p id="qMsg"></p></div>
+          <p class="note">问答内容为示意，用于说明交互方式。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>现在可用 <span class="tag ok">已发布</span></h3>
+            <div class="li">全舰队的智能体对话，带护栏与审计</div>
+            <div class="li">用一句话描述生成仪表盘</div>
+            <div class="li">根据告警上下文主动推荐仪表盘</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>INSIGHT 后推出 <span class="tag warn">预览</span></h3>
+            <div class="li">带来源标注的对话式分析</div>
+            <div class="li">异常检测与根因分析</div>
+            <div class="li">AI 辅助的升级管理</div>
+            <div class="li">告警分诊：根因 + 排好序的"先处理什么"清单；结果基于不完整数据时会主动说明</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · 迁移 ══════════════════ -->
+  <section class="scene" data-sec="迁移与开源版" data-nav="从 Unified Manager 迁移">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>迁移与开源版 · 01</span></div>
+        <h1>从 Unified Manager 迁移：<span class="g">按你的日程，不按我们的</span></h1>
+        <p class="lead">现在就可以用 Console 做日常舰队运维，Unified Manager 并行保留，用于历史数据与审计。不会在某个由 NetApp 选定的日期关停任何东西。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-mg="0" data-toggle-group="mg">原样迁移</button>
+            <button class="btn" data-mg="1" data-toggle-group="mg">调整后迁移</button>
+            <button class="btn" data-mg="2" data-toggle-group="mg">需要你审核</button>
+            <button class="btn" data-mg="3" data-toggle-group="mg">暂不支持</button>
+          </div>
+          <svg viewBox="0 0 640 170" id="mgSvg" style="max-height:190px"></svg>
+          <div class="stbody" style="margin-top:8px;min-height:0"><h4 id="mgT"></h4><p id="mgD"></p></div>
+          <p class="note">引导式迁移 <span class="tag warn">INSIGHT 后推出</span>：在动任何集群之前告诉你什么会迁过去。图中规则数量为示意。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>两件不会做的事</h3>
+            <div class="li warn"><b>不会悄悄复制</b>你的 Unified Manager 配置到 Console</div>
+            <div class="li warn"><b>不会自动执行</b>你挂在告警上的脚本，它们会被归类并提交给你审批</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>并行运行期间</h3>
+            <div class="li">13 个月以上的历史留在 Unified Manager，审计随时可查</div>
+            <div class="li">Unified Manager 六项采用度最高的能力（告警规则与路由、健康监控、健康排障、性能监控、REST API 等）在 Console 中都有对应位置</div>
+            <div class="li ok">准备好了再迁，NetApp 协助</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · 开源版 ══════════════════ -->
+  <section class="scene" data-sec="迁移与开源版" data-nav="开源版还是本地部署版">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>迁移与开源版 · 02</span></div>
+        <h1>同一个平台，两种形态：<span class="g">工具随工作变化</span></h1>
+        <p class="lead">Harvest 与 NAbox 更名为 NetApp Console open source，与本地部署版构成从"客户自管"到"NetApp 托管"的观测连续体。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="tw an" style="--d:.12s">
+        <table class="dt">
+          <thead><tr><th style="width:150px">维度</th><th>Console open source（原 Harvest / NAbox）</th><th>Console 本地部署版</th></tr></thead>
+          <tbody>
+            <tr><td class="h">定位</td><td>客户自管、基于标准；按需组合，只用需要的部分</td><td>NetApp 管理的本地平台（OVA）</td></tr>
+            <tr><td class="h">适合谁</td><td>已经在用 Prometheus / Grafana 的 SRE 与 DevOps 团队</td><td>需要整个舰队的告警、根因、AI 与管理层视图的团队</td></tr>
+            <tr><td class="h">采集范围</td><td>ONTAP、E-Series、StorageGRID 与交换机；2,000+ 个 ONTAP 计数器</td><td>ONTAP 舰队；StorageGRID 与 E-Series <span class="tag warn">推出中</span></td></tr>
+            <tr><td class="h">存储与可视化</td><td>现有或捆绑的 Prometheus、VictoriaMetrics、Grafana</td><td>内置 VictoriaMetrics，统一控制台</td></tr>
+            <tr><td class="h">部署形态</td><td>tar / RPM / DEB、Docker / Compose、Kubernetes Helm、OVA</td><td>单个 OVA</td></tr>
+            <tr><td class="h">AI</td><td>NAbox 助手，自带大模型，可按要求创建监控与告警规则</td><td>智能体对话、生成仪表盘；助手增强 <span class="tag warn">预览</span></td></tr>
+            <tr><td class="h">费用与支持</td><td>无许可费用，社区支持</td><td>企业级，NetApp 支持</td></tr>
+            <tr><td class="h">离线站点</td><td colspan="2">两者都支持</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="g2 an" style="--d:.2s;margin-top:13px">
+        <div class="vc"><span class="k">选开源版</span><div class="t">团队已经住在 Prometheus / Grafana 里</div><div class="d">想把 NetApp 的深度指标放进现有技术栈，自己掌控仪表盘与告警。</div></div>
+        <div class="vc"><span class="k">选本地部署版</span><div class="t">要的是整个舰队在一处</div><div class="d">告警、根因、修复、AI 与给管理层看的视图，开箱即用。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · 存储类即契约 ══════════════════ -->
+  <section class="scene" data-sec="自治资产" data-nav="存储类即契约">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>自治资产 · 01 <span class="tag new" style="margin-left:6px">概念 · BKO2001</span></span></div>
+        <h1>存储类是一份契约：<span class="g">写清楚什么必须成立</span>，不写怎么做</h1>
+        <p class="lead">它带着自己的自治策略和影响范围上限，是智能体要负责的对象，也是你审计的单位。同一个修复在两个类里行为不同，切换看看。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-sc="gold" data-toggle-group="sc">gold-db</button>
+            <button class="btn" data-sc="dev" data-toggle-group="sc">dev-scratch</button>
+            <button class="btn" data-sc="none" data-toggle-group="sc">未分类资源</button>
+          </div>
+          <div class="code" id="scCode" style="white-space:pre-wrap;min-height:150px"></div>
+          <div class="stbody" style="margin-top:10px;min-height:0"><h4 id="scT"></h4><p id="scD"></p></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>它为什么是契约</h3>
+            <div class="li">说明什么必须保持成立，而不是达成它的步骤</div>
+            <div class="li">逐个目标携带自己的自治策略</div>
+            <div class="li">携带你编写的影响范围上限</div>
+            <div class="li">智能体对它负责，你按它审计</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>自治继承自类，不来自智能体</h3>
+            <div class="li">智能体对"何时行动"没有自己的主张，<b>类就是契约</b></div>
+            <div class="li warn"><b>没有类就没有自治</b>：未分类资源标记为覆盖缺口，永远不会被悄悄处理</div>
+            <div class="li ok">限制写在你的策略里，而不是藏在模型里，所以自治行为可以推理</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · 五个角色 ══════════════════ -->
+  <section class="scene" data-sec="自治资产" data-nav="五个智能体角色">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>自治资产 · 02 <span class="tag new" style="margin-left:6px">概念</span></span></div>
+        <h1>一张组织架构图，<span class="g">而不是一群智能体</span></h1>
+        <p class="lead">一个协调者、四个专职角色，路径可检查。点击角色查看它从你桌上拿走的工作。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <svg viewBox="0 0 640 280" id="orgSvg" style="max-height:300px"></svg>
+          <div class="stbody" style="margin-top:8px;min-height:0"><h4 id="orgT"></h4><p id="orgD"></p></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>结构上的约束</h3>
+            <div class="li"><b>监督者是唯一的协调者</b>，专职角色之间不互相协商</div>
+            <div class="li"><b>独立验证者</b>：行动前按目标给计划打分，行动后再给结果打分</div>
+            <div class="li"><b>共享运维记忆</b>：一张实时的资产全景，带锁，两个智能体不会同时动同一范围</div>
+            <div class="li">刻意保持很小的协作面，参照 NetApp 自己工程组织的运作方式</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>为什么不是蜂群</h3>
+            <div class="li warn">一群智能体在演示里很惊艳，在变更评审会上却无法辩护</div>
+            <div class="li ok">组织架构图可以检查、可以配人、可以审计、可以解释</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 15 · 确定性闸门 ══════════════════ -->
+  <section class="scene" data-sec="自治资产" data-nav="确定性闸门">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>自治资产 · 03 <span class="tag new" style="margin-left:6px">概念</span></span></div>
+        <h1>权限在模型之外：<span class="g">每个动作先过一道确定性闸门</span></h1>
+        <p class="lead">任何拟执行的动作在触达系统之前都会被拦截，由一道智能体无法"说服"的规则闸门裁决，出错时默认关闭。选一个拟执行动作，看闸门怎么判。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px" id="gtBtns"></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px" id="gtVerdicts"></div>
+          <div class="stbody" style="min-height:0"><h4 id="gtT"></h4><p id="gtD"></p></div>
+          <p class="note">动作与裁决的对应为示意，用于说明机制；具体规则由客户在存储类与策略中编写。</p>
+        </div>
+        <div class="panel an" style="--d:.18s">
+          <h3>六条护栏</h3>
+          <div class="li"><b>二元法则</b>：不可信输入、敏感访问、状态变更，三者同时出现时必须有人参与</div>
+          <div class="li"><b>你的影响范围</b>：上限来自你编写的类，而不是智能体</div>
+          <div class="li"><b>即时凭据</b>：按任务签发，为该动作生成，用完即失效</div>
+          <div class="li"><b>幂等键</b>：重试永远不会把同一变更执行两次</div>
+          <div class="li"><b>一键回滚</b>：每个动作都自带反向操作</div>
+          <div class="li"><b>全局总开关</b>：一个控制立即停止整个资产上的所有自治</div>
+          <div class="li ok" style="margin-top:6px">即使模型困惑或被攻破，也无法超出你的策略允许的范围</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 16 · 信任阶梯 ══════════════════ -->
+  <section class="scene" data-sec="自治资产" data-nav="信任阶梯与结果账本">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>自治资产 · 04 <span class="tag new" style="margin-left:6px">概念</span></span></div>
+        <h1>你选台阶：<span class="g">按目标、按存储类</span>逐级放开</h1>
+        <p class="lead">点击各级台阶，看谁做什么。凡是需要依据不可信文本来决定变更的事情，永远到不了最高一级。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="an" style="--d:.12s;display:flex;gap:9px;margin-bottom:13px" id="rungs">
+        <div class="rung" data-rg="0"><div class="n">L0</div><div class="l">手动</div></div>
+        <div class="rung" data-rg="1"><div class="n">L1</div><div class="l">辅助</div></div>
+        <div class="rung on" data-rg="2"><div class="n">L2</div><div class="l">建议</div></div>
+        <div class="rung" data-rg="3"><div class="n">L3</div><div class="l">受监督</div></div>
+        <div class="rung" data-rg="4"><div class="n">L4</div><div class="l">闭环</div></div>
+      </div>
+      <div class="g2">
+        <div class="viz an" style="--d:.16s">
+          <div class="rowlab"><span>由系统承担的部分</span><b id="rgPct"></b></div>
+          <div class="bar"><i id="rgBar"></i></div>
+          <div class="g2" style="margin-top:12px">
+            <div class="stbody" style="min-height:0"><h4>系统做什么</h4><p id="rgSys"></p></div>
+            <div class="stbody" style="min-height:0"><h4>你做什么</h4><p id="rgYou"></p></div>
+          </div>
+          <p class="note">"由系统承担的部分"为示意刻度。</p>
+        </div>
+        <div class="panel an" style="--d:.2s">
+          <h3>结果账本：证明它在起作用</h3>
+          <p style="font-size:12.8px;color:var(--dim)">一条连续、可审计的链：遥测 → 受影响的目标 → 采取的动作 → 随后的结果。同一份记录，按受众渲染，不重新录入。</p>
+          <div class="g2" style="margin-top:10px">
+            <div class="vc"><span class="k">存储负责人</span><div class="d">资产上变了什么，为什么</div></div>
+            <div class="vc"><span class="k">财务</span><div class="d">花了多少、省了多少、下一步买什么</div></div>
+            <div class="vc"><span class="k">变更委员会</span><div class="d">授权了什么，依据哪条策略</div></div>
+            <div class="vc"><span class="k">审计</span><div class="d">每个动作都能追溯到来源与审批</div></div>
+          </div>
+          <div class="li ok" style="margin-top:10px">可以直接查询自动化是否有效，而不是争论它</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 17 · 概念演示 ══════════════════ -->
+  <section class="scene" data-sec="自治资产" data-nav="概念演示与边界">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>自治资产 · 05 <span class="tag new" style="margin-left:6px">概念演示</span></span></div>
+        <h1>声明、打破、修复、证明：<span class="g">12 分钟概念演示</span></h1>
+        <p class="lead">以 ERP 生产库为对象的概念演示。点击各段查看发生了什么。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="an" style="--d:.12s">
+        <div class="steps" id="cdSteps">
+          <div class="st on" data-cd="0"><div class="n">0:00–2:00</div><div class="l">01 声明</div></div>
+          <div class="st" data-cd="1"><div class="n">2:00–4:00</div><div class="l">02 漂移</div></div>
+          <div class="st" data-cd="2"><div class="n">4:00–7:00</div><div class="l">03 行动</div></div>
+          <div class="st" data-cd="3"><div class="n">7:00–9:30</div><div class="l">04 上报</div></div>
+          <div class="st" data-cd="4"><div class="n">9:30–12:00</div><div class="l">05 证明</div></div>
+        </div>
+        <div class="stbody"><h4 id="cdT"></h4><p id="cdD"></p></div>
+      </div>
+      <div class="g3 an" style="--d:.2s;margin-top:13px">
+        <div class="panel"><h3>你的 AI，你的围墙</h3>
+          <div class="li">自带模型：OpenAI、Anthropic 或你选择的 LLM 代理</div>
+          <div class="li">模型在本地运行时不需要出网</div>
+          <div class="li">凭据在加密保险库中，敏感字段提交前脱敏</div>
+          <div class="li">智能体共享记忆可迁移，不依赖 NetApp 托管服务</div></div>
+        <div class="panel"><h3>一套资产，不是三个产品</h3>
+          <div class="li">ONTAP 块与文件、StorageGRID 对象、E-Series 高性能块</div>
+          <div class="li">一个策略引擎、一个 RBAC 模型、一条遥测管道、一条审计链</div></div>
+        <div class="panel tint"><h3>边界</h3>
+          <div class="li warn">本节为 BKO2001 发布的<b>概念与方向</b>，以设计伙伴计划推进，不代表已发布功能</div>
+          <div class="li">已发布的部分见前面"本地部署"与"意图与 AI"章节</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 18 · 总结 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="总结与参考">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>总结</span></div>
+        <h1>声明结果，<span class="g">保留控制</span>，让资产维持它</h1>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="vc"><span class="k">01 · 现在</span><div class="t">部署 Console 本地版</div><div class="d">离线 OVA，一屏看全舰队，告警自带修复，审计在本地。</div></div>
+        <div class="vc"><span class="k">02 · 从一个类开始</span><div class="t">声明一个结果</div><div class="d">挑一类最重要的数据，写下它必须保持什么。</div></div>
+        <div class="vc"><span class="k">03 · 保留审批</span><div class="t">让资产先提议</div><div class="d">你来批准；有了足够的记录再往上调一级台阶。</div></div>
+        <div class="vc"><span class="k">04 · 指向自己的模型</span><div class="t">证明什么都没出去</div><div class="d">你的大模型、你的网络，给安全团队看得见的证据。</div></div>
+      </div>
+      <div class="g2 an" style="--d:.2s;margin-top:13px">
+        <div class="panel">
+          <h3>参考资料</h3>
+          <div class="li">BKO2000《Enterprise Fleet Management and Observability On Your Terms》，NetApp INSIGHT 2026</div>
+          <div class="li">BKO2001《The Autonomous Estate: Declaring Outcomes Over Actions》，NetApp INSIGHT 2026</div>
+          <div class="li">BKO2003《Observability That Meets You Where You Are》，NetApp INSIGHT 2026</div>
+          <div class="li">BKO1011《From Telemetry to Action: AI for Smarter IT Operations》，NetApp INSIGHT 2026</div>
+          <div class="li">console.netapp.com · github.com/NetApp/harvest · github.com/NetApp/mcp</div>
+        </div>
+        <div class="panel tint">
+          <h3>相关演示</h3>
+          <div class="li"><a href="../ontap-mcp/index.html" style="color:var(--blue);font-weight:700">Bay 05 ONTAP MCP</a>：用自然语言运维单个集群</div>
+          <div class="li"><a href="../netapp-mcp/index.html" style="color:var(--blue);font-weight:700">Bay 06 NetApp MCP</a>：NetApp 官方 MCP 全景</div>
+          <div class="li"><a href="../arp-ai-manufacturing/index.html" style="color:var(--blue);font-weight:700">Bay 08 勒索软件检测与恢复</a>：舰队安全态势背后的 ARP/AI</div>
+          <div class="li"><a href="../" style="color:var(--blue);font-weight:700">返回 Demo Bay 首页</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+/* ═══════════ 幕内交互：每个交互图示一段，命名对应幕名 ═══════════ */
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, text){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text != null) e.textContent = text;
+  return e;
+}
+function toggleGroup(attr, b){ $$('['+attr+']').forEach(x=> x.classList.toggle('on', x===b)); }
+
+/* ── 运维四阶段 ── */
+const PH = [
+  ['被动响应：人做所有事','工单驱动。每个平台一套工具，手工排障，经验散落在知识库里。',[1,1,1,1]],
+  ['主动预警：人负责解读','有了遥测、预测性告警与容量预测。系统告诉你，你来决定。',[0,1,1,1]],
+  ['自治：人负责批准','在护栏内闭环修复：容量、QoS、勒索软件响应。系统提议并执行，人批准。',[0,0,1,1]],
+  ['自治资产：人负责声明','你说明要什么结果。有名字的智能体维持它成立，并记录自己做了什么。运行手册被取代。',[0,0,0,1]]
+];
+const PH_JOBS = ['发现问题','解读信号','批准动作','声明结果'];
+function phShow(i){
+  $$('#phSteps .st').forEach((s,k)=> s.classList.toggle('on', k===i));
+  const svg = $('#phSvg'); svg.innerHTML = '';
+  svg.appendChild(el('text',{x:20,y:22,'font-size':12,fill:'#5c6a8a'},'人还要做的事'));
+  PH_JOBS.forEach((j,k)=>{
+    const human = PH[i][2][k] === 1, x = 20 + k*155;
+    svg.appendChild(el('rect',{x,y:40,width:140,height:70,rx:12,fill:human?'#fdf3e4':'#e6f6ef',stroke:human?'#e8c48a':'#8fd0b2'}));
+    svg.appendChild(el('text',{x:x+70,y:70,'font-size':14,'text-anchor':'middle','font-weight':800,fill:human?'#9a5c06':'#0b6b45'},j));
+    svg.appendChild(el('text',{x:x+70,y:94,'font-size':11.5,'text-anchor':'middle',fill:'#5c6a8a'},human?'人':'系统'));
+  });
+  const n = PH[i][2].reduce((a,b)=>a+b,0);
+  svg.appendChild(el('text',{x:20,y:150,'font-size':12,fill:'#5c6a8a'},'人工参与的环节'));
+  svg.appendChild(el('rect',{x:20,y:160,width:600,height:14,rx:7,fill:'#eef3fb'}));
+  svg.appendChild(el('rect',{x:20,y:160,width:600*n/4,height:14,rx:7,fill:'#d5820f',opacity:.75}));
+  svg.appendChild(el('text',{x:620,y:196,'font-size':11.5,'text-anchor':'end',fill:'#8d97b2'},n+' / 4 个环节'));
+  $('#phT').textContent = PH[i][0]; $('#phD').textContent = PH[i][1];
+}
+$$('#phSteps .st').forEach((s,k)=> s.addEventListener('click', ()=> phShow(k)));
+phShow(3);
+
+/* ── 架构分层 ── */
+const AR = [
+  ['用户界面','舰队视图 · 自定义仪表盘 · 智能体对话 · 配置','面向运维人员的统一控制台：舰队健康、仪表盘、自然语言对话与按存储类配置都在这一层。','#0067c5','#eaf2fd'],
+  ['平台服务','告警引擎 · Keycloak IAM · HashiCorp Vault · 审计 · MCP 工具','告警引擎负责事件到动作；Keycloak 对接 AD / LDAP 与 MFA；Vault 保存集群凭据；审计记录可导出到 SIEM；MCP 工具供智能体调用。','#6a5ad4','#efecfb'],
+  ['数据层','Harvest 采集 · VictoriaMetrics 时序库','沿用 Harvest 的采集能力，指标存入本地 VictoriaMetrics，数据不离开你的基础设施。','#0e9a62','#e6f6ef'],
+  ['你的舰队','ONTAP 集群（每实例 50+）· StorageGRID 与 E-Series 推出中','被管理的存储系统。StorageGRID 与 E-Series 进入同一舰队视图的能力在 INSIGHT 后推出。','#d5820f','#fdf3e4']
+];
+function arShow(i){
+  const svg = $('#arSvg'); svg.innerHTML = '';
+  svg.appendChild(el('rect',{x:4,y:4,width:632,height:200,rx:14,fill:'none',stroke:'#c9d4e6','stroke-dasharray':'6 5'}));
+  svg.appendChild(el('text',{x:16,y:22,'font-size':10.5,fill:'#8d97b2'},'你的网络 · 单个 OVA（内置 K3s）'));
+  AR.forEach((a,k)=>{
+    const y = k < 3 ? 32 + k*56 : 216, on = k === i;
+    const r = el('rect',{x:20,y,width:600,height:46,rx:10,fill:on?a[4]:'#fff',stroke:a[3],'stroke-width':on?2.2:1});
+    r.style.cursor = 'pointer'; r.addEventListener('click', ()=> arShow(k)); svg.appendChild(r);
+    const t = el('text',{x:36,y:y+20,'font-size':13,'font-weight':800,fill:a[3]},a[0]); t.style.pointerEvents='none'; svg.appendChild(t);
+    const t2 = el('text',{x:36,y:y+37,'font-size':11,fill:'#5c6a8a'},a[1]); t2.style.pointerEvents='none'; svg.appendChild(t2);
+  });
+  svg.appendChild(el('text',{x:620,y:22,'font-size':10.5,'text-anchor':'end',fill:'#0e9a62'},'出网：仅可选的 ASUP / 支持'));
+  $('#arT').textContent = AR[i][0]; $('#arD').textContent = AR[i][2];
+}
+arShow(1);
+
+/* ── 告警到修复 ── */
+let alTimer = null, alPct = 85, alStage = -1;
+function alStageSet(s){ alStage = s; $$('#alSteps .st').forEach((x,k)=> x.classList.toggle('on', k<=s)); }
+function alLog(h){ $('#alLog').innerHTML += h + '\n'; }
+function alSet(p){ alPct = p; $('#alPct').textContent = p + '%'; $('#alBar').style.width = p + '%';
+  $('#alBar').style.background = p >= 90 ? 'linear-gradient(90deg,#d5820f,#d33a5c)' : ''; }
+function alReset(){
+  clearInterval(alTimer); alTimer = null; alSet(85); alStageSet(-1);
+  $('#alFix').disabled = true; $('#alGo').disabled = false;
+  $('#alLog').innerHTML = '<span class="c"># 点击"开始"</span>\n';
+}
+$('#alGo').addEventListener('click', ()=>{
+  $('#alGo').disabled = true;
+  alLog('<span class="c">[event] 卷 nh_sql_f 写入持续增长…</span>'); alStageSet(0);
+  alTimer = setInterval(()=>{
+    if(alPct < 98){ alSet(alPct+1); if(alPct === 90) alLog('<span class="c">[event] 越过 90% 阈值</span>'); return; }
+    clearInterval(alTimer); alTimer = null;
+    alStageSet(1); alLog('<span class="er">[alert] CRITICAL · Volume Used Percentage Breach · nh_sql_f 98%</span>');
+    setTimeout(()=>{ alStageSet(2); alLog('[notify] 邮件已发送 · ServiceNow 工单已创建 · Console 告警页已更新');
+      setTimeout(()=>{ alStageSet(3); alLog('[action] 建议：扩容卷。预览将执行的 ONTAP 操作：\n  <span class="ok">volume size -vserver svm_sql -volume nh_sql_f -new-size +200g</span>\n<span class="c">  等待批准…</span>'); $('#alFix').disabled = false; }, 700);
+    }, 700);
+  }, 160);
+});
+$('#alFix').addEventListener('click', ()=>{
+  $('#alFix').disabled = true;
+  alLog('[action] 已批准 · 执行中…');
+  let p = 98; const t = setInterval(()=>{ p -= 2; alSet(p); if(p <= 78){ clearInterval(t);
+    alLog('<span class="ok">[resolved] nh_sql_f 已用 78% · 告警关闭 · 已写入审计记录</span>'); } }, 90);
+});
+$('#alReset').addEventListener('click', alReset);
+alReset();
+
+/* ── 存储类筛选 ── */
+const CL = [
+  ['SH-PROD-01',{arp:1,snap:1,dr:1,perf:1,head:1},'38 TB'],
+  ['SH-PROD-02',{arp:1,snap:1,dr:1,perf:1,head:0},'0.3 TB'],
+  ['SZ-PLANT-01',{arp:1,snap:1,dr:0,perf:1,head:1},'21 TB'],
+  ['SZ-PLANT-02',{arp:0,snap:1,dr:1,perf:1,head:1},'17 TB'],
+  ['WH-DR-01',{arp:1,snap:1,dr:1,perf:0,head:1},'64 TB'],
+  ['CQ-PROD-01',{arp:1,snap:1,dr:1,perf:1,head:1},'12 TB'],
+  ['DEV-LAB-01',{arp:0,snap:0,dr:0,perf:0,head:1},'90 TB']
+];
+const CL_COLS = [['arp','ARP'],['snap','90 天快照'],['dr','DR 复制'],['perf','性能层']];
+function cluDraw(){
+  const req = {}; $$('[data-req]').forEach(c=> req[c.dataset.req] = c.checked);
+  const g = $('#cluGrid');
+  let h = '<div class="hd">集群</div>' + CL_COLS.map(c=>'<div class="hd">'+c[1]+'</div>').join('');
+  let ok = 0;
+  const yn = v => v ? '<span style="color:var(--green)">✓</span>' : '<span style="color:var(--red)">✗</span>';
+  CL.forEach(c=>{
+    const pass = Object.keys(req).every(k=> !req[k] || c[1][k]);
+    if(pass) ok++;
+    const cls = pass ? 'y' : 'x';
+    h += '<div class="'+cls+'"><b>'+c[0]+'</b> <span style="font-size:11px;color:var(--faint)">余量 '+c[2]+'</span></div>';
+    h += CL_COLS.map(k=>'<div class="'+cls+'">'+yn(c[1][k[0]])+'</div>').join('');
+  });
+  g.innerHTML = h;
+  const on = Object.values(req).filter(Boolean).length;
+  $('#cluMsg').textContent = '当前启用 ' + on + ' 项要求：7 个集群中有 ' + ok + ' 个符合。不是一份 50 个集群的清单，只是少数几个合格候选，按余量排序后一键配置。';
+}
+$$('[data-req]').forEach(c=> c.addEventListener('change', cluDraw));
+cluDraw();
+
+/* ── 自带大模型问答 ── */
+const Q = {
+  cap:['回答以图表返回：3 个集群超过 85%，SH-PROD-02 预计 9 天写满。', [['SH-PROD-02',97],['SZ-PLANT-02',91],['CQ-PROD-01',87],['SH-PROD-01',72],['WH-DR-01',64]]],
+  tri:['告警分诊（预览）：给出根因，并按影响排序"先处理什么"。', [['卷将满 · ERP',95],['SnapMirror 滞后',80],['证书 21 天到期',55],['LIF 非首选端口',35]]],
+  part:['下钻到单个卷：延迟、IOPS 与容量趋势；部分时段缺少数据时，助手会说明结论基于不完整数据。', [['延迟 p95',62],['IOPS',78],['吞吐',54],['数据完整度',70]]]
+};
+$$('[data-q]').forEach(b=> b.addEventListener('click', ()=>{
+  toggleGroup('data-q', b);
+  const q = Q[b.dataset.q], svg = $('#qSvg'); svg.innerHTML = '';
+  q[1].forEach((r,k)=>{
+    const y = 10 + k*35, w = r[1]*4.2, hot = b.dataset.q==='cap' && r[1] > 85;
+    svg.appendChild(el('text',{x:150,y:y+20,'font-size':12,'text-anchor':'end',fill:'#152341'},r[0]));
+    svg.appendChild(el('rect',{x:160,y:y+6,width:420,height:20,rx:6,fill:'#eef3fb'}));
+    svg.appendChild(el('rect',{x:160,y:y+6,width:w,height:20,rx:6,fill:hot?'#d33a5c':'#2f6fe0',opacity:.82}));
+    svg.appendChild(el('text',{x:166+w,y:y+21,'font-size':11,fill:'#5c6a8a'},b.dataset.q==='cap'?r[1]+'%':''));
+  });
+  if(b.dataset.q==='cap') svg.appendChild(el('line',{x1:160+85*4.2,y1:6,x2:160+85*4.2,y2:180,stroke:'#d33a5c','stroke-dasharray':'4 4'}));
+  $('#qMsg').textContent = q[0];
+}));
+
+/* ── 迁移归类 ── */
+const MG = [
+  ['原样迁移','能干净映射到 Console 对应规则的告警规则，直接迁过去。',18,'#0e9a62'],
+  ['调整后迁移','意图相同，但阈值或形式不同；迁移时说明差异。',9,'#0067c5'],
+  ['需要你审核','只有你能判断的自定义逻辑，例如挂在告警上的脚本；会被归类并提交审批，不会自动执行。',5,'#d5820f'],
+  ['暂不支持','明确列出来，不会变成意外。',2,'#d33a5c']
+];
+$$('[data-mg]').forEach(b=> b.addEventListener('click', ()=>{
+  toggleGroup('data-mg', b);
+  const i = +b.dataset.mg, svg = $('#mgSvg'); svg.innerHTML = '';
+  svg.appendChild(el('rect',{x:10,y:20,width:170,height:120,rx:12,fill:'#f5f8fd',stroke:'#c9d4e6'}));
+  svg.appendChild(el('text',{x:95,y:72,'font-size':13,'text-anchor':'middle','font-weight':800,fill:'#123a7a'},'Unified Manager'));
+  svg.appendChild(el('text',{x:95,y:94,'font-size':11,'text-anchor':'middle',fill:'#5c6a8a'},'34 条告警规则（示意）'));
+  MG.forEach((m,k)=>{
+    const y = 8 + k*40, on = k === i;
+    svg.appendChild(el('path',{d:`M180 80 C 260 80, 260 ${y+16}, 330 ${y+16}`,fill:'none',stroke:m[3],'stroke-width':on?3:1.2,opacity:on?1:.35}));
+    svg.appendChild(el('rect',{x:330,y,width:300,height:32,rx:8,fill:on?'#fff':'#fafbfd',stroke:m[3],'stroke-width':on?2:1,opacity:on?1:.6}));
+    svg.appendChild(el('text',{x:344,y:y+21,'font-size':12.5,'font-weight':700,fill:m[3]},m[0]));
+    svg.appendChild(el('text',{x:616,y:y+21,'font-size':12,'text-anchor':'end',fill:'#5c6a8a'},m[2]+' 条'));
+  });
+  $('#mgT').textContent = MG[i][0]; $('#mgD').textContent = MG[i][1];
+}));
+
+/* ── 存储类即契约 ── */
+const SC = {
+  gold:['<span class="c"># 存储类 gold-db</span>\n<span class="k">performance</span>   &lt; 1 ms\n<span class="k">rpo</span>           ≤ 1 hour\n<span class="k">protection</span>    3-2-1\n<span class="k">cost_ceiling</span>  declared\n<span class="k">autonomy</span>      per objective · <span class="s">capacity: act</span>\n<span class="k">blast_radius</span>  bounded',
+        '同一个修复：静默执行','类已经授权了它，所以不会叫醒任何人；动作记入账本，事后可查。'],
+  dev:['<span class="c"># 存储类 dev-scratch</span>\n<span class="k">performance</span>   best effort\n<span class="k">rpo</span>           24 hours\n<span class="k">protection</span>    snapshot only\n<span class="k">autonomy</span>      <span class="p">capacity: propose</span>\n<span class="k">blast_radius</span>  bounded',
+        '同一个修复：只提议，不执行','因为这个类就是这么规定的。智能体本身没有任何变化。'],
+  none:['<span class="c"># 未分类资源</span>\n<span class="c"># 没有存储类 → 没有契约 → 没有自治</span>',
+        '标记为覆盖缺口','未分类资源永远不会被悄悄处理，只会作为覆盖缺口提示给你，由监督者跟踪。']
+};
+$$('[data-sc]').forEach(b=> b.addEventListener('click', ()=>{
+  toggleGroup('data-sc', b);
+  const s = SC[b.dataset.sc];
+  $('#scCode').innerHTML = s[0]; $('#scT').textContent = s[1]; $('#scD').textContent = s[2];
+}));
+
+/* ── 五个角色 ── */
+const ORG = [
+  ['监督者','Supervisor Agent','唯一的协调者。盯住缺口：没有修复手段的告警、没有存储类的资源、漂移趋势、反复出问题的对象。',320,40],
+  ['问题处理者','Problem-Solvers','跨容量、性能、数据保护、网络安全与成本做分诊和修复。',80,150],
+  ['配置者','Provisioner','从申请到按类合规地建好：卷、保护、分层、多站点。',240,150],
+  ['资产经理','Estate Manager','财务视角：该买什么、该退役什么，以及支撑这些决定的业务论证。',400,150],
+  ['沟通者','Communications','一份记录，四类受众：存储负责人、财务、变更委员会、审计。',560,150]
+];
+function orgShow(i){
+  const svg = $('#orgSvg'); svg.innerHTML = '';
+  for(let k=1;k<5;k++) svg.appendChild(el('path',{d:`M320 82 C 320 115, ${ORG[k][3]} 115, ${ORG[k][3]} 150`,fill:'none',stroke:'#c9d4e6','stroke-width':1.6}));
+  ORG.forEach((o,k)=>{
+    const on = k === i, w = 140, x = o[3]-w/2;
+    const r = el('rect',{x,y:o[4],width:w,height:42,rx:10,fill:on?'#fdf3e4':'#fff',stroke:on?'#d5820f':'#c9d4e6','stroke-width':on?2.2:1});
+    r.style.cursor='pointer'; r.addEventListener('click', ()=> orgShow(k)); svg.appendChild(r);
+    const t = el('text',{x:o[3],y:o[4]+18,'font-size':13,'text-anchor':'middle','font-weight':800,fill:on?'#9a5c06':'#123a7a'},o[0]); t.style.pointerEvents='none'; svg.appendChild(t);
+    const t2 = el('text',{x:o[3],y:o[4]+34,'font-size':9.5,'text-anchor':'middle',fill:'#8d97b2'},o[1]); t2.style.pointerEvents='none'; svg.appendChild(t2);
+  });
+  svg.appendChild(el('rect',{x:20,y:222,width:290,height:40,rx:10,fill:'#efecfb',stroke:'#b3a8ea'}));
+  svg.appendChild(el('text',{x:165,y:247,'font-size':12,'text-anchor':'middle',fill:'#3d2f9a','font-weight':700},'独立验证者 · 事前事后打分'));
+  svg.appendChild(el('rect',{x:330,y:222,width:290,height:40,rx:10,fill:'#e6f6ef',stroke:'#8fd0b2'}));
+  svg.appendChild(el('text',{x:475,y:247,'font-size':12,'text-anchor':'middle',fill:'#0b6b45','font-weight':700},'共享运维记忆 · 带范围锁'));
+  $('#orgT').textContent = ORG[i][0] + ' · ' + ORG[i][1]; $('#orgD').textContent = ORG[i][2];
+}
+orgShow(0);
+
+/* ── 确定性闸门 ── */
+const VERDICTS = [['ALLOW','放行','#0e9a62'],['THROTTLE','限流','#0067c5'],['SANDBOX','沙箱','#6a5ad4'],['ESCALATE','上报','#d5820f'],['DENY','拒绝','#d33a5c']];
+const GT = [
+  ['gold-db 卷扩容 10%',0,'在 gold-db 授权的容量目标与影响范围内，即时凭据签发，执行后凭据失效，动作带反向操作。'],
+  ['同时调整 40 个卷的 QoS',1,'单个动作合规，但批量规模接近影响范围上限，闸门分批放行（示意）。'],
+  ['首次使用的修复方案',2,'先在隔离环境中验证效果，由独立验证者对结果打分后再决定（示意）。'],
+  ['按工单文本修改快照策略',3,'不可信输入（工单文本）+ 敏感访问 + 状态变更，三者同时出现触发二元法则，必须有人参与。'],
+  ['删除 gold-db 的快照',4,'超出该类编写的影响范围，闸门直接拒绝；智能体无法通过推理绕过。']
+];
+const gb = $('#gtBtns'), gv = $('#gtVerdicts');
+GT.forEach((g,k)=>{
+  const b = document.createElement('button');
+  b.className = 'btn sm' + (k===0?' on':''); b.textContent = g[0]; b.dataset.gt = k; b.dataset.toggleGroup = 'gt';
+  b.addEventListener('click', ()=>{
+    toggleGroup('data-gt', b);
+    $$('.vbox', gv).forEach((v,j)=>{
+      const on = j === g[1];
+      v.style.opacity = on ? 1 : .3; v.style.borderColor = on ? VERDICTS[j][2] : 'var(--line)';
+      v.style.boxShadow = on ? '0 3px 14px rgba(21,35,65,.12)' : 'none';
+    });
+    $('#gtT').textContent = g[0] + ' → ' + VERDICTS[g[1]][0];
+    $('#gtD').textContent = g[2];
+  });
+  gb.appendChild(b);
+});
+VERDICTS.forEach(v=>{
+  const d = document.createElement('div');
+  d.className = 'vbox';
+  d.style.cssText = 'border:2px solid var(--line);border-radius:11px;padding:10px 6px;text-align:center;background:#fff;transition:.25s';
+  d.innerHTML = '<div class="verdict" style="color:'+v[2]+';font-size:15px">'+v[0]+'</div><div style="font-size:11.5px;color:var(--dim)">'+v[1]+'</div>';
+  gv.appendChild(d);
+});
+
+/* ── 信任阶梯 ── */
+const RG = [
+  [0,'—','全部由你完成。'],
+  [20,'回答问题，把资产展示给你看。','提问、判断、执行。'],
+  [45,'诊断并提出方案。','逐个批准每个动作。'],
+  [75,'在你的策略内行动。','监督，设定护栏。'],
+  [95,'端到端维持目标成立。','处理例外。']
+];
+function rgShow(i){
+  $$('#rungs .rung').forEach((r,k)=> r.classList.toggle('on', k===i));
+  $('#rgPct').textContent = 'L' + i; $('#rgBar').style.width = RG[i][0] + '%';
+  $('#rgSys').textContent = RG[i][1]; $('#rgYou').textContent = RG[i][2];
+}
+$$('#rungs .rung').forEach((r,k)=> r.addEventListener('click', ()=> rgShow(k)));
+rgShow(2);
+
+/* ── 概念演示 ── */
+const CD = [
+  ['声明','编写 ERP 生产库的存储类：性能、RPO、保护、成本上限，以及每个目标各自的自治策略；把它分配给工作负载。'],
+  ['漂移','资产发生变化。告警点名的是被打破的目标，而不是越过的某个阈值。'],
+  ['行动','问题处理者制定计划，验证者打分，闸门裁决。三步都通过后才执行任何操作。'],
+  ['上报','风险更高的动作被上报而不是直接执行。本地手段用尽后，资产经理把它转成一份采购论证。'],
+  ['证明','结果账本：一段时间内的合规情况与采取过的动作，再把同一份记录渲染给审计查看。']
+];
+function cdShow(i){
+  $$('#cdSteps .st').forEach((s,k)=> s.classList.toggle('on', k===i));
+  $('#cdT').textContent = CD[i][0]; $('#cdD').textContent = CD[i][1];
+}
+$$('#cdSteps .st').forEach((s,k)=> s.addEventListener('click', ()=> cdShow(k)));
+cdShow(0);
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav !== '告警到修复' && typeof alReset === 'function') alReset();
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+<dialog class="vdlg" id="vDlg" aria-label="讲解视频">
+  <div class="vbar"><span>NetApp Console 自治运维 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./console-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+<script>
+const vDlg=document.getElementById('vDlg'), vPlayer=document.getElementById('vPlayer');
+document.getElementById('vOpen').addEventListener('click',()=>{vDlg.showModal(); vPlayer.play().catch(()=>{});});
+document.getElementById('vClose').addEventListener('click',()=>vDlg.close());
+vDlg.addEventListener('click',e=>{if(e.target===vDlg)vDlg.close();});
+vDlg.addEventListener('close',()=>vPlayer.pause());
+</script>
+</body>
+</html>

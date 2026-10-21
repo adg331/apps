@@ -129,6 +129,7 @@ ul.pts li::before{content:'▸'; position:absolute; left:2px; color:var(--cyan)}
 .quote b{color:var(--txt)}
 .callout{margin-top:12px; padding:10px 14px; border-left:3px solid var(--cyan); background:rgba(0,103,197,.05); border-radius:0 10px 10px 0; font-size:12.3px; color:var(--dim); line-height:1.7}
 .callout b{color:var(--txt); margin-right:6px}
+#vlt .s-title{font-size:14.5px} #vlt .s-label{font-size:13.5px} #vlt .s-small{font-size:12.5px}
 .callout.warn{border-left-color:var(--orange); background:rgba(217,123,22,.05)}
 .callout.red{border-left-color:var(--red); background:rgba(214,54,90,.05)}
 .fitGrid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
@@ -155,6 +156,10 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2
 }
 @media (max-width:1250px){ .grid4,.cards{grid-template-columns:repeat(2,1fr)} .grid3{grid-template-columns:1fr} }
 @media (max-width:1100px){ .grid2,.stageWrap,.fitGrid{grid-template-columns:1fr} .tabs{display:none} }
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
 </style>
 </head>
 <body>
@@ -175,7 +180,7 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2
 
 <!-- ═══════ 幕1 ═══════ -->
 <section class="scene" id="sc1">
-  <h1>先算一笔账：回退窗口<span class="hl">缩短一小时值多少</span></h1>
+  <h1 style="display:flex;align-items:center">先算一笔账：回退窗口<span class="hl">缩短一小时值多少</span><button class="btn on" id="vOpen" type="button" style="margin-left:auto;white-space:nowrap;font-size:14px">▶ 观看 5 分钟讲解视频</button></h1>
   <div class="sub">制造业的勒索软件事件里，真正的成本是排产中断、质量追溯断链和交付延期。恢复点离事发时刻越近，需要重做的生产数据就越少。拖动滑块，看两种恢复点粒度的差别。</div>
   <div class="grid2">
     <div class="panel">
@@ -484,7 +489,7 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2
     <div class="card"><div class="k">STEP 01</div><div class="t">选定首批卷并启用</div><div class="d">从 MES 共享、工艺配方、质检影像等业务价值高、变更模式稳定的卷开始。可按卷启用，也可在 SVM 级设为新建卷默认启用；9.18.1 起可在集群级对所有已有卷批量启用。</div></div>
     <div class="card"><div class="k">STEP 02</div><div class="t">打通告警通道</div><div class="d">威胁升级到「中」级时 ONTAP 生成 EMS 通知。9.14.1 起还可对「创建 ARP 快照」与「发现新文件扩展名」两类事件单独开启告警，默认关闭，可按卷或按 SVM 设置。</div></div>
     <div class="card"><div class="k">STEP 03</div><div class="t">约定研判与恢复流程</div><div class="d">告警后先确认是真实攻击还是误报。判定为误报会更新告警画像，下次出现同类文件扩展名不再告警；判定结果同时决定快照保留时长。</div></div>
-    <div class="card"><div class="k">STEP 04</div><div class="t">用 MAV 保护关键操作</div><div class="d">9.13.1 起可对禁用 ARP、暂停 ARP、清除可疑标记三条命令配置多管理员校验规则，需要两名及以上已认证管理员共同批准。</div></div>
+    <div class="card"><div class="k">STEP 04</div><div class="t">用 MAV 保护关键操作</div><div class="d">9.13.1 起可对禁用 ARP、暂停 ARP、清除可疑标记三条命令配置多管理员校验规则，需要两名及以上已认证管理员共同批准。9.20.1 计划支持把 Entra ID / IdP 用户组设为审批人，审批人名单可在身份系统里集中维护。</div></div>
   </div>
 
   <div class="grid2" style="margin-top:16px">
@@ -514,14 +519,119 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2
           <tr><td>快照</td><td>ARP 快照被锁定且无法被管理员删除，是恢复的直接依据</td></tr>
           <tr><td>SnapLock</td><td>合规留存场景的不可变保护；注意 SnapLock 卷本身不在 ARP 支持范围内</td></tr>
           <tr><td>多管理员校验</td><td>关键的破坏性操作需多人批准，凭据被盗不等于防护立刻失效</td></tr>
+          <tr><td>Cyber Vault 隔离库</td><td>SnapLock + SnapMirror 构建的逻辑气隙副本，不可变、不可删除，生产与备份都失守时仍可信的恢复点</td></tr>
           <tr><td>Active IQ Digital Advisor</td><td>从整体态势层面提示防护缺口</td></tr>
-          <tr><td>NetApp Console 勒索软件防护服务<br><span class="tag part">可选</span></td><td>在自动响应基础上追加阻断用户等处置动作。NetApp Console 是 NetApp 托管的云侧统一管理平台（原 BlueXP 更名而来），需要具备对外连通性；在中国大陆的可用性与交付方式需单独确认</td></tr>
+          <tr><td>NetApp Console 勒索软件韧性服务<br><span class="tag part">可选</span></td><td>在自动响应基础上追加用户行为分析与阻断用户、对快照做主动扫描、按需隔离恢复环境与干净恢复（见下一幕）。服务运行在 NetApp 云端，需要具备对外连通性；在中国大陆的可用性与交付方式需单独确认</td></tr>
         </tbody>
       </table>
       <div class="callout red"><b>边界</b>没有任何勒索软件检测系统能够保证完全安全。ARP 提供的是在防病毒软件未能拦截入侵时的额外一层防御，需要与备份、异地副本、访问控制共同构成纵深防御。</div>
       <div class="callout warn"><b>本机能力与云侧服务的边界</b>上表中除最后一项外，全部为 ONTAP 本机内置能力，按卷启用即可，不依赖任何云侧连接。仅「阻断用户」这类追加处置动作需要 NetApp Console 侧的服务配合。</div>
     </div>
   </div>
+</section>
+
+<!-- ═══════ 幕7b · 隔离库、主动扫描与干净恢复（INSIGHT 2026） ═══════ -->
+<section class="scene" id="sc7b">
+  <h1>检测之外：<span class="hl">隔离库、主动扫描与干净恢复</span></h1>
+  <div class="sub">INSIGHT 2026 把防护链条延伸到恢复环节：攻击者可能潜伏数周，备份里可能已经带毒，恢复后再次感染的比例约 38%。下表与流程图标明每项能力是 ONTAP 本机内置，还是需要 NetApp Console 的勒索软件韧性服务（Ransomware Resilience）。</div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>攻击的四个阶段，分别由哪一层发现与响应</h3>
+      <table class="dt">
+        <thead><tr><th style="width:92px">阶段</th><th>检测</th><th>响应</th></tr></thead>
+        <tbody>
+          <tr><td>数据窃取<br><span style="font-size:11px;color:var(--faint)">读取关键数据</span></td><td>用户与实体行为分析（UEBA）：异常读、写、重命名、删除 <span class="tag part">Console 服务</span></td><td>阻断可疑用户、打快照 <span class="tag part">Console 服务</span></td></tr>
+          <tr><td>数据外传<br><span style="font-size:11px;color:var(--faint)">复制到外部</span></td><td>UEBA <span class="tag part">Console 服务</span>；网络侧合作伙伴</td><td>阻断用户、通知 SIEM <span class="tag part">Console 服务</span></td></tr>
+          <tr><td>数据加密<br><span style="font-size:11px;color:var(--faint)">在存储内加密原数据</span></td><td>ARP/AI：熵值、扩展名、元数据与文件头 <span class="tag ok">ONTAP 本机</span>；已知恶意扩展名拦截（FPolicy 本机模式） <span class="tag ok">ONTAP 本机</span></td><td>锁定快照、告警、留存证据 <span class="tag ok">ONTAP 本机</span>；系统下线、通知 SIEM <span class="tag part">Console 服务</span></td></tr>
+          <tr><td>数据销毁<br><span style="font-size:11px;color:var(--faint)">删除未加密副本</span></td><td>UEBA <span class="tag part">Console 服务</span></td><td>快照锁定、隔离库中的不可删副本</td></tr>
+        </tbody>
+      </table>
+      <div class="note">UEBA 按卷对 NAS 启用，经 FPolicy 收集用户活动事件，不读取文件内容。SIEM / SOAR 负责关联、研判与编排，存储层提供更早的信号。</div>
+    </div>
+
+    <div class="stageWrap" style="grid-template-columns:1fr 250px;gap:12px">
+      <div class="stage">
+        <svg id="vlt" viewBox="0 0 560 262" role="img" aria-label="隔离库与干净恢复流程">
+          <rect x="14" y="14" width="160" height="112" rx="12" class="s-box"/>
+          <text x="28" y="36" class="s-title">ONTAP 主存储</text>
+          <text x="28" y="56" class="s-label">ARP/AI 实时检测</text>
+          <text x="28" y="76" class="s-small">快照：时 / 日 / 周</text>
+          <text x="28" y="112" class="s-small">生产数据 SVM</text>
+
+          <rect id="vB" x="210" y="14" width="160" height="112" rx="12" class="s-box"/>
+          <text x="224" y="36" class="s-title">Cyber Vault 隔离库</text>
+          <text x="224" y="56" class="s-label">逻辑气隙 · SnapLock</text>
+          <text x="224" y="76" class="s-small">不可变 · 不可删除 · 隔离</text>
+          <text x="224" y="112" class="s-small">经验证的干净快照</text>
+
+          <rect id="vC" x="406" y="14" width="140" height="112" rx="12" class="s-box"/>
+          <text x="420" y="36" class="s-title">主动扫描</text>
+          <text x="420" y="56" class="s-label">加密检测</text>
+          <text x="420" y="76" class="s-label">恶意软件扫描</text>
+          <text x="420" y="112" class="s-small">揪出潜伏者</text>
+
+          <rect id="vD" x="210" y="168" width="336" height="80" rx="12" class="s-box"/>
+          <text x="224" y="190" class="s-title">隔离恢复环境（IRE）· 按需创建</text>
+          <text x="224" y="212" class="s-label">挂载快照 → 分析 → 清除 → 整理干净快照</text>
+          <text x="224" y="234" class="s-small">隔离中复扫并确认应用可用，通过后才恢复</text>
+
+          <rect id="vE" x="14" y="168" width="160" height="80" rx="12" class="s-box"/>
+          <text x="28" y="190" class="s-title">恢复到生产</text>
+          <text x="28" y="212" class="s-label">原生产 SVM</text>
+          <text x="28" y="232" class="s-small">或备用生产集群</text>
+
+          <path id="f1" class="s-flow dash" stroke="#c3cddf" marker-end="url(#ar-f)" d="M174 70 L210 70"/>
+          <path id="f2" class="s-flow dash" stroke="#c3cddf" marker-end="url(#ar-f)" d="M370 70 L406 70"/>
+          <path id="f3" class="s-flow dash" stroke="#c3cddf" marker-end="url(#ar-f)" d="M476 126 L476 168"/>
+          <path id="f4" class="s-flow dash" stroke="#c3cddf" marker-end="url(#ar-f)" d="M210 208 L174 208"/>
+
+        </svg>
+        <div class="callout" style="margin-top:6px"><b id="vSrc"></b><span id="vNote"></span></div>
+      </div>
+      <div class="sideBox">
+        <h4>RECOVERY PATH</h4>
+        <div id="vSteps"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:14px">
+    <div class="panel">
+      <h3>两种恢复方式</h3>
+      <table class="dt">
+        <thead><tr><th style="width:86px">方式</th><th>何时用</th><th>来源</th></tr></thead>
+        <tbody>
+          <tr><td>干净恢复 <span class="tag new">NEW</span></td><td>没有可信快照、需要证明数据干净时。可选从最新快照恢复以缩短停机，或整理出新的干净快照以减少数据损失</td><td>主存储、二级存储、隔离库</td></tr>
+          <tr><td>自选恢复</td><td>已经有可信快照，自己挑文件、卷或工作负载</td><td>主存储、二级存储、隔离库、备份</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>用 ONTAP 原生方式搭建隔离库</h3>
+      <div class="note" style="margin-top:0">参考 Arup 的做法，本地与云上（Cloud Volumes ONTAP）都适用，不依赖 Console 服务：</div>
+      <table class="dt">
+        <tbody>
+          <tr><td class="num" style="width:22px">1</td><td>确定目标集群，在 SnapLock 聚合上创建目标卷 <span class="mono" style="font-size:11px">volume create</span></td></tr>
+          <tr><td class="num">2</td><td>创建策略并添加规则 <span class="mono" style="font-size:11px">snapmirror policy create / add-rule</span></td></tr>
+          <tr><td class="num">3</td><td>建立隔离库关系并初始化基线传输 <span class="mono" style="font-size:11px">snapmirror create / initialize</span></td></tr>
+        </tbody>
+      </table>
+      <div class="note">隔离库的管理员账号应与生产系统分开，并采用加固配置与严格的访问控制。</div>
+    </div>
+    <div class="panel">
+      <h3>与 Commvault 的联合方案</h3>
+      <div class="note" style="margin-top:0">Intelligent Clean Recovery Engine：NetApp 负责检测，Commvault 负责编排，目标是快速且干净地恢复。</div>
+      <table class="dt">
+        <tbody>
+          <tr><td>Commvault Flex + StorageGRID</td><td><span class="tag ok">已可用</span> 可扩展的不可变对象存储，承载大规模备份</td></tr>
+          <tr><td>Commvault Flex + ONTAP</td><td><span class="tag part">即将推出</span> ARP/AI 实时检测 + 端到端干净恢复，目前开放早期体验</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn"><b>部署边界</b>ARP/AI、恶意扩展名拦截、快照锁定与 SnapLock 隔离库都是 ONTAP 本机能力。用户行为分析、主动扫描、隔离恢复环境与干净恢复由 NetApp Console 的勒索软件韧性服务编排：本地部署 Console Agent，服务本体运行在 NetApp 的云端 VPC 中，需要对外连通；在中国大陆的可用性与交付方式需单独确认。对二级存储的主动扫描在路线图上。</div>
 </section>
 
 <!-- ═══════ 幕8 · 技术流派与代表方案 ═══════ -->
@@ -660,6 +770,7 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2
         <div class="card"><div class="t">覆盖文件与虚拟化</div><div class="d">NAS 共享自 9.10.1 起，SAN 卷与 VMware 虚拟磁盘自 9.17.1 起，Hyper-V、KVM、OpenStack 自 9.17.1P5 起，MES 与 SCADA 虚拟机同样在覆盖范围内。</div></div>
       </div>
       <div class="quote">ARP/AI 的检测能力已由独立测试机构 SE Labs 验证，获得其最高等级 <b>AAA 评级</b>；官方文档给出的 NAS 环境检测准确率为 <b>99%</b>。</div>
+      <div class="callout"><b>认证</b>ONTAP 是唯一通过 NSA CSfC（Commercial Solutions for Classified）组件清单验证、可用于存储绝密数据的企业级存储，内置 NetApp CryptoMod 通过 FIPS 140-3 验证；另见 DoDIN APL 与通用准则（Common Criteria）。以官方发布的认证与验证清单为准（security.netapp.com/certs）。</div>
     </div>
 
     <div class="panel">
@@ -717,15 +828,15 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2
   <button class="navBtn" id="prevB" aria-label="上一幕">‹</button>
   <div class="dots" id="dots"></div>
   <button class="navBtn" id="nextB" aria-label="下一幕">›</button>
-  <span style="margin-left:14px">本页面依据 NetApp ONTAP 自主勒索软件防护官方文档（2026 年 6–7 月更新版）整理，为交互式概念演示，不连接真实 ONTAP，也不产生实际 I/O；页面中的文件数量、评分与时序均为示意，不构成性能基准或 RPO / RTO 承诺。没有任何勒索软件检测系统能够保证完全安全，相关能力应作为纵深防御中的一层。具体规格以对应版本的官方发布说明与产品文档为准。</span>
+  <span style="margin-left:14px">本页面依据 NetApp ONTAP 自主勒索软件防护官方文档（2026 年 6–7 月更新版）整理，第⑧幕及认证、MAV 补充内容取自 NetApp INSIGHT 2026 场次 BKO4003、BKO4000、BKO4007、BKO4001，为交互式概念演示，不连接真实 ONTAP，也不产生实际 I/O；页面中的文件数量、评分与时序均为示意，不构成性能基准或 RPO / RTO 承诺。没有任何勒索软件检测系统能够保证完全安全，相关能力应作为纵深防御中的一层。具体规格以对应版本的官方发布说明与产品文档为准。</span>
 </footer>
 
 <script>
 const $ = id => document.getElementById(id);
 
 /* ═══════ 导航 ═══════ */
-const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9'];
-const NAMES=['① 先算一笔账','② 检测原理','③ 模型差异','④ 版本矩阵','⑤ 负载适配','⑥ 规模影响','⑦ 落地防御','⑧ 流派与方案','⑨ 价值自检'];
+const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc7b','sc8','sc9'];
+const NAMES=['① 先算一笔账','② 检测原理','③ 模型差异','④ 版本矩阵','⑤ 负载适配','⑥ 规模影响','⑦ 落地防御','⑧ 隔离与恢复','⑨ 流派与方案','⑩ 价值自检'];
 let cur=0;
 const tabsEl=$('tabs'), dotsEl=$('dots');
 SCENES.forEach((_,i)=>{
@@ -744,11 +855,71 @@ function show(i){
 $('prevB').onclick=()=>show(cur-1);
 $('nextB').onclick=()=>show(cur+1);
 document.addEventListener('keydown',e=>{
+  if(vDlg.open) return;
   if(e.target.tagName==='SELECT'||e.target.tagName==='INPUT') return;
   if(e.key==='ArrowRight'||e.key==='PageDown') show(cur+1);
   else if(e.key==='ArrowLeft'||e.key==='PageUp') show(cur-1);
   else if(e.key>='1'&&e.key<='9') show(+e.key-1);
+  else if(e.key==='0') show(9);
 });
+
+/* 滚轮 / 触控板翻幕：幕内（含控制台这类小滚动框）还能滚就先滚内容，到边界后再切幕；首尾不循环 */
+let wheelLock=false, lastWheelTs=0;
+const WHEEL_CD=620, GESTURE_GAP=160;
+function innerScroll(t,dy){
+  for(let n=t; n&&n!==document.querySelector('main'); n=n.parentElement){
+    const oy=getComputedStyle(n).overflowY;
+    if((oy==='auto'||oy==='scroll') && n.scrollHeight-n.clientHeight>4){
+      if(dy<0 ? n.scrollTop>1 : n.scrollTop+n.clientHeight<n.scrollHeight-1) return n;
+    }
+  }
+  return null;
+}
+document.querySelector('main').addEventListener('wheel',e=>{
+  if(vDlg.open) return;
+  const now=e.timeStamp||Date.now(), gap=now-lastWheelTs; lastWheelTs=now;
+  function fire(dir){
+    const t=cur+dir;
+    if(t<0||t>SCENES.length-1) return;
+    wheelLock=true; show(t); setTimeout(()=>{wheelLock=false;},WHEEL_CD);
+  }
+  // 横向手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX)>Math.abs(e.deltaY)*1.4){
+    if(Math.abs(e.deltaX)<12) return;
+    e.preventDefault(); if(!wheelLock) fire(e.deltaX>0?1:-1); return;
+  }
+  const dy=e.deltaY;
+  if(Math.abs(dy)<2) return;
+  if(innerScroll(e.target,dy)) return;
+  e.preventDefault();
+  if(wheelLock) return;
+  // 可滚动的幕滚到边界的那一下不切幕，须松手再滚，避免触控板惯性"滑到底顺手翻页"
+  const sc=$(SCENES[cur]);
+  if(sc.scrollHeight-sc.clientHeight>4 && gap<GESTURE_GAP) return;
+  fire(dy>0?1:-1);
+},{passive:false});
+
+/* ═══════ 幕7b · 隔离与恢复路径 ═══════ */
+const VSTEPS=[
+  {b:'主存储实时检测',em:'ARP/AI 在数据路径内检测加密行为并锁定快照',on:[],box:[],src:'ONTAP 本机',note:'第一道防线在主存储上：实时检测，自动打快照、告警、留存证据。'},
+  {b:'复制到隔离库',em:'SnapLock 目标卷，逻辑气隙，不可变不可删',on:['f1'],box:['vB'],src:'ONTAP 本机（SnapMirror + SnapLock）',note:'关键业务数据持续复制到隔离库，对攻击者隐藏；即使拿到管理员权限也删不掉。'},
+  {b:'主动扫描快照',em:'加密检测 + 恶意软件扫描',on:['f1','f2'],box:['vB','vC'],src:'Console 勒索软件韧性服务',note:'在勒索软件激活前就发现潜伏者，得到"已知干净"的快照；结果为从验证过的干净快照快速恢复。'},
+  {b:'隔离恢复环境',em:'按需创建，分析、清除、整理干净快照',on:['f1','f2','f3'],box:['vB','vC','vD'],src:'Console 勒索软件韧性服务',note:'生产环境永远不是测试环境：在隔离中重新扫描、确认应用可用，信心在这里建立，而不是假设出来。'},
+  {b:'干净恢复到生产',em:'原生产 SVM 或备用生产集群',on:['f1','f2','f3','f4'],box:['vB','vC','vD','vE'],src:'Console 勒索软件韧性服务',note:'从预先验证的恢复点恢复只需激活，以分钟计；从备份重建并拷回，往往以天到周计。'}
+];
+let vCur=0;
+function vRender(){
+  $('vSteps').innerHTML=VSTEPS.map((s,i)=>`<div class="step${i===vCur?' on':''}" role="button" tabindex="0" data-i="${i}"><span class="n">0${i+1}</span><div><b>${s.b}</b><em>${s.em}</em></div></div>`).join('');
+  [...$('vSteps').children].forEach(d=>d.onclick=()=>{vCur=+d.dataset.i;vRender();});
+  const s=VSTEPS[vCur];
+  ['f1','f2','f3','f4'].forEach(id=>{const p=$(id),on=s.on.includes(id);
+    p.setAttribute('stroke',on?'#0f9d63':'#c3cddf');p.setAttribute('marker-end',on?'url(#ar-g)':'url(#ar-f)');});
+  ['vB','vC','vD','vE'].forEach(id=>{const r=$(id),on=s.box.includes(id);
+    r.style.stroke=on?'#0f9d63':'';r.style.fill=on?'rgba(15,157,99,.06)':'';});
+  $('vNote').textContent=s.note;
+  $('vSrc').textContent='提供方：'+s.src;
+}
+vRender();
 
 /* ═══════ 幕1 ═══════ */
 const ARP_INTERVAL=4;
@@ -1024,6 +1195,17 @@ document.querySelectorAll('#sc9 select').forEach(s=>s.addEventListener('change',
 checkFit();
 
 show(0);
+</script>
+<dialog class="vdlg" id="vDlg" aria-label="讲解视频">
+  <div class="vbar"><span>ONTAP ARP/AI · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./arp-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+<script>
+const vDlg=document.getElementById('vDlg'), vPlayer=document.getElementById('vPlayer');
+document.getElementById('vOpen').addEventListener('click',()=>{vDlg.showModal(); vPlayer.play().catch(()=>{});});
+document.getElementById('vClose').addEventListener('click',()=>vDlg.close());
+vDlg.addEventListener('click',e=>{if(e.target===vDlg)vDlg.close();});
+vDlg.addEventListener('close',()=>vPlayer.pause());
 </script>
 </body>
 </html>
