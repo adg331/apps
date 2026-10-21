@@ -223,6 +223,10 @@ footer{
 .split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
 .arrowx{font-size:20px;color:var(--faint)}
 @media(max-width:900px){.split{grid-template-columns:1fr}}
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
 </style>
 </head>
 <body>
@@ -255,7 +259,10 @@ footer{
         <div class="chip" data-jump="12">AFX</div>
         <div class="chip" data-jump="14">特性速查</div>
       </div>
-      <div class="an" style="--d:.56s;margin-top:30px">
+      <div class="an" style="--d:.5s;margin-top:26px">
+        <button class="btn on" id="vOpen" type="button">▶ 观看 5 分钟讲解视频</button>
+      </div>
+      <div class="an" style="--d:.56s;margin-top:18px">
         <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
       </div>
     </div>
@@ -878,6 +885,7 @@ $('#next').addEventListener('click', ()=> go(idx+1));
 $$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
 
 document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
   else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
@@ -903,6 +911,7 @@ const WHEEL_CD  = 620;   // 切幕后的冷却时间
 const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
 
 track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
   const now = e.timeStamp || Date.now();
   const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
   lastWheelTs = now;
@@ -1379,6 +1388,17 @@ function onEnter(i){
 /* 初始化 */
 go(0, true);
 })();
+</script>
+<dialog class="vdlg" id="vDlg" aria-label="讲解视频">
+  <div class="vbar"><span>ONTAP 9.20.1 新特性 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./o9201-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+<script>
+const vDlg=document.getElementById('vDlg'), vPlayer=document.getElementById('vPlayer');
+document.getElementById('vOpen').addEventListener('click',()=>{vDlg.showModal(); vPlayer.play().catch(()=>{});});
+document.getElementById('vClose').addEventListener('click',()=>vDlg.close());
+vDlg.addEventListener('click',e=>{if(e.target===vDlg)vDlg.close();});
+vDlg.addEventListener('close',()=>vPlayer.pause());
 </script>
 </body>
 </html>

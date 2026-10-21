@@ -190,6 +190,10 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible,.navBtn:f
   .stageWrap,.fitGrid,.grid2,.grid3{grid-template-columns:1fr}
   .foot-note{display:none}
 }
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
 </style>
 </head>
 <body>
@@ -203,6 +207,7 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible,.navBtn:f
 <header>
   <div class="logo">SnapMirror active sync · NAS</div>
   <small>ONTAP 9.19.1</small>
+  <button class="btn" id="vOpen" type="button" style="margin-left:12px;white-space:nowrap">▶ 观看讲解视频</button>
   <div class="tabs" id="tabs"></div>
 </header>
 
@@ -704,7 +709,7 @@ select:focus,.btn:focus-visible,.tab:focus-visible,.step:focus-visible,.navBtn:f
       <div class="cards grid2">
         <div class="card"><span class="k">路径 A</span><div class="t">新建双站点部署</div><div class="d">两端集群与 Mediator 就位后打通集群互联网络，按 SVM 逐个建立保护关系。</div></div>
         <div class="card"><span class="k">路径 B</span><div class="t">现有集群增量启用</div><div class="d">受保护与未受保护 SVM 可共存，先纳入最关键的 SVM，验证后逐步扩大。</div></div>
-        <div class="card"><span class="k">路径 C</span><div class="t">由 SVM-DR 转换</div><div class="d">支持 SM-as NAS 转换为 SVM-DR；反向不支持，转换方向需在设计阶段确定。</div></div>
+        <div class="card"><span class="k">路径 C</span><div class="t">转换为 SVM-DR</div><div class="d">支持 SM-as NAS 转换为 SVM-DR；反向不支持，转换方向需在设计阶段确定。</div></div>
         <div class="card"><span class="k">路径 D</span><div class="t">分阶段站点迁移</div><div class="d">按 SVM 逐个切换到新站点，把一次性割接拆解为多次可回退的小步骤。</div></div>
       </div>
       <div class="panel" style="margin-top:14px">
@@ -817,12 +822,49 @@ function show(i){
 document.getElementById('prev').addEventListener('click',()=>show(idx-1));
 document.getElementById('next').addEventListener('click',()=>show(idx+1));
 document.addEventListener('keydown',e=>{
+  if(vDlg.open) return;
   const tn=e.target.tagName;
   if(tn==='SELECT'||tn==='INPUT'||tn==='TEXTAREA') return;
   if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();show(idx+1);}
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(idx-1);}
   else if(/^[1-9]$/.test(e.key)){show(+e.key-1);}
 });
+
+/* 滚轮 / 触控板翻幕：幕内（含日志这类小滚动框）还能滚就先滚内容，到边界后再切幕；首尾不循环 */
+let wheelLock=false, lastWheelTs=0;
+const WHEEL_CD=620, GESTURE_GAP=160, mainEl=document.querySelector('main');
+function innerScroll(t,dy){
+  for(let n=t; n&&n!==mainEl; n=n.parentElement){
+    const oy=getComputedStyle(n).overflowY;
+    if((oy==='auto'||oy==='scroll') && n.scrollHeight-n.clientHeight>4){
+      if(dy<0 ? n.scrollTop>1 : n.scrollTop+n.clientHeight<n.scrollHeight-1) return n;
+    }
+  }
+  return null;
+}
+mainEl.addEventListener('wheel',e=>{
+  if(vDlg.open) return;
+  const now=e.timeStamp||Date.now(), gap=now-lastWheelTs; lastWheelTs=now;
+  function fire(dir){
+    const t=idx+dir;
+    if(t<0||t>SCENES.length-1) return;
+    wheelLock=true; show(t); setTimeout(()=>{wheelLock=false;},WHEEL_CD);
+  }
+  // 横向手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX)>Math.abs(e.deltaY)*1.4){
+    if(Math.abs(e.deltaX)<12) return;
+    e.preventDefault(); if(!wheelLock) fire(e.deltaX>0?1:-1); return;
+  }
+  const dy=e.deltaY;
+  if(Math.abs(dy)<2) return;
+  if(innerScroll(e.target,dy)) return;
+  e.preventDefault();
+  if(wheelLock) return;
+  // 可滚动的幕滚到边界的那一下不切幕，须松手再滚，避免触控板惯性"滑到底顺手翻页"
+  const sc=document.getElementById(SCENES[idx]);
+  if(sc.scrollHeight-sc.clientHeight>4 && gap<GESTURE_GAP) return;
+  fire(dy>0?1:-1);
+},{passive:false});
 
 /* ================= 幕1 · scale planning ================= */
 const LIM={svm:50,vol:400,per:80};
@@ -1070,6 +1112,17 @@ function checkFit(){
 }
 document.querySelectorAll('#sc8 select').forEach(s=>s.addEventListener('change',checkFit));
 checkFit();
+</script>
+<dialog class="vdlg" id="vDlg" aria-label="讲解视频">
+  <div class="vbar"><span>SnapMirror active sync for NAS · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./smas-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+<script>
+const vDlg=document.getElementById('vDlg'), vPlayer=document.getElementById('vPlayer');
+document.getElementById('vOpen').addEventListener('click',()=>{vDlg.showModal(); vPlayer.play().catch(()=>{});});
+document.getElementById('vClose').addEventListener('click',()=>vDlg.close());
+vDlg.addEventListener('click',e=>{if(e.target===vDlg)vDlg.close();});
+vDlg.addEventListener('close',()=>vPlayer.pause());
 </script>
 </body>
 </html>
