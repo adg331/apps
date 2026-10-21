@@ -7,3 +7,8 @@
 
 # 讲解视频工作目录（配音、时间轴、动画源文件），只提交成品 MP4
 teaser/
+
+# 本地留存、不上线的文件
+nvidia-stx/AI推理上下文存储_*.html
+nvidia-stx/CLAUDE.md
+eda/index.tabs.html
