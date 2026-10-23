@@ -1,6 +1,6 @@
 /* 讲解视频播放计数：在视频按钮旁显示总播放次数，并在播放时上报。
    计数 id 取视频文件名（lustre-deep.mp4 → lustre-deep），首页弹层与子页面共用同一计数。
-   后端见 workers/play-counter；接口不可达时静默降级，不影响播放。 */
+   后端见 workers/play-counter；接口不可达时不显示次数，不影响播放。 */
 (() => {
   "use strict";
   const API = "https://play-counter.play-counter.workers.dev";
@@ -26,14 +26,14 @@
   const counts = {};
   function render() {
     targets.forEach(([el, id]) => {
-      if (!id || !counts[id]) return;
+      if (!id) return;
       let span = el.querySelector(".pc-n");
       if (!span) {
         span = document.createElement("span");
         span.className = "pc-n";
         el.appendChild(span);
       }
-      span.textContent = "· " + fmt(counts[id]) + " 次播放";
+      span.textContent = "· " + fmt(counts[id] || 0) + " 次播放";
     });
   }
 
@@ -45,8 +45,8 @@
   }
 
   fetch(API + "/counts", { signal: AbortSignal.timeout(6000) })
-    .then(r => r.ok ? r.json() : {})
-    .then(data => { Object.assign(counts, data); render(); })
+    .then(r => { if (!r.ok) throw r.status; return r.json(); })
+    .then(data => { Object.assign(counts, data); render(); })   // 读取成功才显示，0 次也显示
     .catch(() => {});
 
   // 同一浏览器会话内每个视频只计一次，暂停续播、重复打开弹层都不重复计
