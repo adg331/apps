@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>NetApp 虚拟化现代化 · 交互演示</title>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+.vbtn{margin-top:22px;font-size:14px;padding:10px 22px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--sh)}
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+.vdlg .vbar .btn{flex:0 0 auto}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+</style>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  if (location.hostname !== "adg331.github.io") return;   // 只统计线上访问，本地预览不上报
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?0a7443d4f6cacdefbb3711234e999137";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</head>
+<body>
+
+<dialog class="vdlg" id="vDlg" aria-label="虚拟化现代化讲解视频">
+  <div class="vbar"><span>虚拟化现代化 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./virt-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>NetApp 虚拟化现代化</b><span>KEEP · SHIFT · MODERNIZE</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp INSIGHT 2026 · 虚拟化专题</span></div>
+      <div class="big an" style="--d:.14s">虚拟化现代化</div>
+      <div class="sub an" style="--d:.26s">先把 VMware 用好，再按工作负载选择路线</div>
+      <p class="desc an" style="--d:.34s">虚拟化平台正在变成一个可选项，数据底座需要保持不变。本页按「保留 · 迁移 · 现代化」三条路径，讲清 ONTAP 在每条路径上分别做什么，以及如何把混合环境放在一套运维里管理。</p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">为什么是现在</div>
+        <div class="chip" data-jump="4">保留 · 优化 VMware</div>
+        <div class="chip" data-jump="8">迁移 · 按负载迁出</div>
+        <div class="chip" data-jump="12">现代化 · VM 与容器同平台</div>
+        <div class="chip" data-jump="17">统一运维</div>
+      </div>
+      <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 6 分钟讲解视频</button></div>
+      <div class="an" style="--d:.56s;margin-top:30px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>Overview</span></div>
+        <h1>一张图看懂：<span class="g">平台可以换，数据底座不动</span></h1>
+        <p class="lead">多数企业最终会是混合形态：一部分负载留在 VMware，一部分迁到其他虚拟化平台，一部分改造成容器。ONTAP 在三条路径上提供同一套数据服务，迁移时数据可以原地不动。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="dc" style="--ac:#0067c5" data-jump="4">
+          <div class="hd"><span class="nm">保留 · 先把 VMware 用好</span><span class="ct">4 幕</span></div>
+          <ul><li>ONTAP tools 融入 vCenter</li><li>把数据处理卸载到存储，腾出主机核数</li><li>用 DII 找出闲置资源</li><li>VCF 9.1 参考架构与双活</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#6a5ad4" data-jump="8">
+          <div class="hd"><span class="nm">迁移 · 按负载迁出</span><span class="ct">4 幕</span></div>
+          <ul><li>替代平台全景与取舍</li><li>Shift Toolkit：FlexClone 原地转换</li><li>ESXi → OpenShift 迁移流程</li><li>Nutanix 计算集群接 ONTAP</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#0e9a62" data-jump="12">
+          <div class="hd"><span class="nm">现代化 · VM 与容器同平台</span><span class="ct">5 幕</span></div>
+          <ul><li>KubeVirt 如何在 Kubernetes 里跑 VM</li><li>Trident 存储供给与盘型设计</li><li>并行控制器：最高 11 倍</li><li>Trident Protect 保护与容灾</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#d5820f" data-jump="17">
+          <div class="hd"><span class="nm">统一运维与实践</span><span class="ct">3 幕</span></div>
+          <ul><li>混合环境用一套 Console 管理</li><li>KEEP / SHIFT / MODERNIZE 客户实践</li><li>选型时要先对齐的五个问题</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+      </div>
+      <div class="kpis an" style="--d:.2s;margin-top:14px">
+        <div class="kpi"><b>&gt;50%</b><span>VMware 客户正在评估替代方案（市场调研数据）</span></div>
+        <div class="kpi v"><b>~5 分钟</b><span>Shift Toolkit 转换一台 VM，与 VM 大小无关（厂商测试）</span></div>
+        <div class="kpi g"><b>最高 11×</b><span>Trident 并行控制器的存储操作速度（1000 PV 基准）</span></div>
+        <div class="kpi o"><b>80–90%</b><span>改用外部存储后，存储相关的主机 CPU 消耗降幅</span></div>
+      </div>
+      <p class="note an" style="--d:.26s">以上数字来自 NetApp INSIGHT 2026 场次资料，均为市场数据或厂商测试中的观测值，非性能承诺；实际效果因环境而异。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 市场重置 ══════════════════ -->
+  <section class="scene" data-sec="为什么是现在" data-nav="市场重置">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>为什么是现在 · 01</span></div>
+        <h1>虚拟化平台成了变量，<span class="g">数据底座必须是常量</span></h1>
+        <p class="lead">续约改为按核订阅后，问题从「基础设施够不够」变成「已有的基础设施用得有多充分」。与此同时，平台选择正在变成按工作负载决定，而不是全公司一刀切。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-fd="silo" data-toggle-group="fd">每个平台各带一套存储</button>
+            <button class="btn on" data-fd="one" data-toggle-group="fd">ONTAP 作为统一数据底座</button>
+            <span class="hint" style="margin-left:auto" id="fdState"></span>
+          </div>
+          <svg viewBox="0 0 640 300" id="fdSvg" style="max-height:330px"></svg>
+          <p class="note">示意图：平台名称仅为举例，不代表推荐顺序。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>三种压力同时出现</h3>
+            <div class="li warn"><b>预算</b>：续约价格和商务条款不确定，按核计费让每一个核、每一 GB 内存都直接进成本。</div>
+            <div class="li warn"><b>风险</b>：仓促迁移可能只是把问题搬了个地方，而不是解决问题。</div>
+            <div class="li ok"><b>机会</b>：借这次重新评估，按工作负载制定平台策略。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>四个动作，不必同时发生</h3>
+            <div class="li"><b>评估</b>：不急于下结论，先把替代方案评估清楚。</div>
+            <div class="li"><b>优化</b>：在 VMware / VCF 上先拿到更多价值。</div>
+            <div class="li"><b>现代化</b>：把选定的应用迁向容器、AI 与云原生模式。</div>
+            <div class="li"><b>运维</b>：无论平台怎么变，可见性、保护和治理保持一致。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 决策框架 ══════════════════ -->
+  <section class="scene" data-sec="为什么是现在" data-nav="按负载决策">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>为什么是现在 · 02</span></div>
+        <h1>从工作负载出发，<span class="g">而不是从平台出发</span></h1>
+        <p class="lead">答案通常是组合：保留（KEEP）、迁移（SHIFT）、现代化（MODERNIZE），下线（RETIRE）永远是第四个选项。选一个示例负载，看它在三个维度上的位置落到哪条路径。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px" id="wlBtns">
+            <button class="btn sm on" data-wl="mes" data-toggle-group="wl">MES 数据库</button>
+            <button class="btn sm" data-wl="erp" data-toggle-group="wl">老旧 ERP 套件</button>
+            <button class="btn sm" data-wl="file" data-toggle-group="wl">分厂文件与工具服务器</button>
+            <button class="btn sm" data-wl="ai" data-toggle-group="wl">新建质检 AI 推理服务</button>
+          </div>
+          <div id="wlSliders"></div>
+          <div class="g3" style="margin-top:12px" id="wlPaths">
+            <div class="vc" data-path="keep"><span class="k">KEEP · 保留</span><div class="t">留在 VMware，先优化</div><div class="d">依赖 VMware 特性，迁移容忍度低</div></div>
+            <div class="vc" data-path="shift"><span class="k">SHIFT · 迁移</span><div class="t">换平台，应用不改</div><div class="d">收益大于迁移成本和风险时</div></div>
+            <div class="vc" data-path="mod"><span class="k">MODERNIZE · 现代化</span><div class="t">重构为容器</div><div class="d">业务值得改变运维模式时</div></div>
+          </div>
+          <p class="note">示例负载与评分为示意，用来演示讨论方法；实际判断需要结合五个维度逐项评估。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>五个维度，让决策回到事实</h3>
+            <div class="li"><b>业务关键度</b>：SLA、恢复要求、合规约束。</div>
+            <div class="li"><b>平台依赖</b>：用到了哪些特性、工具、技能。</div>
+            <div class="li"><b>成本压力</b>：许可、容量、运维投入。</div>
+            <div class="li"><b>运维改造量</b>：人员、流程、支持体系。</div>
+            <div class="li"><b>数据可移动性</b>：保护、迁移、治理。三条路径都需要它。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>如实比较三条路径</h3>
+            <div class="tw" style="box-shadow:none">
+              <table class="dt">
+                <thead><tr><th>维度</th><th>保留</th><th>迁移</th><th>现代化</th></tr></thead>
+                <tbody>
+                  <tr><td class="h">近期扰动</td><td>低</td><td>中</td><td>高</td></tr>
+                  <tr><td class="h">应用改动</td><td>低</td><td>低–中</td><td>高</td></tr>
+                  <tr><td class="h">技能转换</td><td>低</td><td>中–高</td><td>高</td></tr>
+                  <tr><td class="h">见效时间</td><td>快</td><td>分阶段</td><td>较长</td></tr>
+                  <tr><td class="h">长期收益</td><td>优化</td><td>成本与灵活性</td><td>运维模式升级</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · ONTAP tools ══════════════════ -->
+  <section class="scene" data-sec="保留 · 优化 VMware" data-nav="ONTAP tools">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>保留 · 01</span></div>
+        <h1>在 vCenter 里完成存储运维，<span class="g">按负载选协议</span></h1>
+        <p class="lead">ONTAP tools for VMware vSphere 把数据存储的生命周期、主机配置、自动化和保护集成进 vCenter，虚拟化管理员不用切换工具。同一套 ONTAP 同时提供块、文件和对象，不同负载选不同的数据存储形态。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn on" data-pr="gen" data-toggle-group="pr">通用 VM（大规模部署）</button>
+            <button class="btn" data-pr="db" data-toggle-group="pr">延迟敏感的一级数据库</button>
+            <button class="btn" data-pr="app" data-toggle-group="pr">虚拟机内直接挂载应用数据</button>
+          </div>
+          <svg viewBox="0 0 640 250" id="prSvg" style="max-height:290px"></svg>
+          <div class="stbody" id="prBody" style="margin-top:10px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>ONTAP tools 在 vCenter 里做什么</h3>
+            <div class="li"><b>数据存储生命周期</b>：VMFS 与 NFS 数据存储的创建、扩容、回收。</div>
+            <div class="li"><b>主机配置</b>：按存储最佳实践设置主机参数。</div>
+            <div class="li"><b>自动化</b>：REST API 编排可重复的流程。</div>
+            <div class="li"><b>保护集成</b>：vSphere 操作直接衔接存储快照与复制。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业 IT 的意义</h3>
+            <div class="li ok"><b>产线系统扩容不排队</b>：MES、SCADA 历史库所在的数据存储在 vCenter 里直接扩，不必另开存储工单。</div>
+            <div class="li ok"><b>标准化落地到每个分厂</b>：主机设置按同一套最佳实践下发，分厂少人值守也能保持一致。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 卸载到存储 ══════════════════ -->
+  <section class="scene" data-sec="保留 · 优化 VMware" data-nav="卸载到存储">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>保留 · 02</span></div>
+        <h1>每卸载一项数据服务，<span class="g">就少买一份核数</span></h1>
+        <p class="lead">按核计费之后，主机上用来处理存储的 CPU 和内存同样要付许可费。把复制、置零、克隆、去重压缩交给 ONTAP，主机核数就能留给业务 VM。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div id="ofSliders"></div>
+          <svg viewBox="0 0 640 170" id="ofSvg" style="max-height:200px;margin-top:6px"></svg>
+          <div class="kpis" style="margin-top:10px">
+            <div class="kpi o"><b id="ofUsed">—</b><span>存储处理占用的核数（软件定义存储）</span></div>
+            <div class="kpi g"><b id="ofBack">—</b><span>改用外部 ONTAP 后可腾出的核数</span></div>
+            <div class="kpi"><b id="ofHosts">—</b><span>相当于少买的主机台数</span></div>
+          </div>
+          <p class="note">按区间估算（软件定义存储占 10–20% CPU；外部存储使存储相关 CPU 消耗降低 80–90%，此处取 85%）；示意计算，不含去重额外开销与网络、机柜等连带成本。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>交给 ONTAP 的四类工作</h3>
+            <div class="li"><b>数据路径卸载</b>：VAAI 与 VAAI-NAS 把复制、置零、克隆、锁交给阵列。</div>
+            <div class="li"><b>快照与克隆</b>：阵列快照和 FlexClone 秒级生成省空间的 VM 副本。</div>
+            <div class="li"><b>存储效率</b>：内联去重、压缩、紧缩在阵列上完成。</div>
+            <div class="li"><b>高效协议</b>：NFS 与 NVMe/TCP 每次 I/O 的主机 CPU 开销低。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>新功能：NFS 数据存储支持 VAAI UNMAP</h3>
+            <div class="li ok">NFS 数据存储上删除的块可以回收给阵列，降低每 TB 成本。</div>
+            <div class="li ok"><b>核心观点</b>：卸载不只是性能手段，它省下的是不必购买许可的核数与内存。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · DII 找浪费 ══════════════════ -->
+  <section class="scene" data-sec="保留 · 优化 VMware" data-nav="找出浪费">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>保留 · 03</span></div>
+        <h1>把「感觉资源配多了」<span class="g">变成有数据的回收计划</span></h1>
+        <p class="lead">Data Infrastructure Insights（DII）根据使用规律给出调整建议，并兼顾 vSAN、NUMA 和集群最小规模等约束。持续做，而不是一次性清理。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-rs="before" data-toggle-group="rs">调整前</button>
+            <button class="btn" data-rs="after" data-toggle-group="rs">按建议调整后</button>
+            <span class="hint" style="margin-left:auto" id="rsState"></span>
+          </div>
+          <svg viewBox="0 0 640 260" id="rsSvg" style="max-height:300px"></svg>
+          <div class="lg"><span><i style="background:#0067c5"></i>CPU 利用率</span><span><i style="background:#6a5ad4"></i>内存利用率</span><span><i style="background:#c9d4e6"></i>可腾空的主机</span></div>
+          <p class="note">示意：12 台主机的利用率为假设值；调整后的目标水位取约 55% CPU、约 80% 内存。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>DII 找什么</h3>
+            <div class="li"><b>规格过大的 VM</b>：CPU、内存长期分配远高于实际使用。</div>
+            <div class="li"><b>隐藏容量</b>：已关机的 VM、孤立的 VMDK。</div>
+            <div class="li"><b>主机密度</b>：按应用、部门标出利用不足的主机，对照许可成本。</div>
+            <div class="li"><b>映射到存储</b>：VM 对应到 ONTAP 卷与 LUN，问题能追到底层。</div>
+          </div>
+          <div class="kpis an" style="--d:.24s">
+            <div class="kpi g"><b>7,536</b><span>一次 90 天分析中识别出的可回收核数（客户案例）</span></div>
+            <div class="kpi"><b>33%</b><span>基础设施利用率提升（IDC 对 DII 的调研）</span></div>
+          </div>
+          <div class="panel tint an" style="--d:.3s">
+            <h3>对制造业 IT 的意义</h3>
+            <div class="li ok">换线、新项目上线时临时扩出来的测试 VM，往往没人回收。季度一次的 DII 复盘能把这些资源找回来。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · VCF 参考架构 ══════════════════ -->
+  <section class="scene" data-sec="保留 · 优化 VMware" data-nav="VCF 参考架构">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>保留 · 04</span></div>
+        <h1>VCF 9.1 参考架构：<span class="g">计算与存储分离、跨站点双活</span></h1>
+        <p class="lead">外部 ONTAP 与 VMware 最新方向一致，可以替代 vSAN。下图是 vSphere Metro Storage Cluster（vMSC）示例：两站点用 SnapMirror active sync 双活，第三站点异步复制，在线数据存储由 ARP/AI 防护。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-vm="ok" data-toggle-group="vmsc">正常运行</button>
+            <button class="btn dg" data-vm="siteA" data-toggle-group="vmsc">站点 A 故障</button>
+            <button class="btn dg" data-vm="ransom" data-toggle-group="vmsc">数据存储遭勒索加密</button>
+          </div>
+          <svg viewBox="0 0 640 290" id="vmSvg" style="max-height:320px"></svg>
+          <div class="stbody" id="vmBody" style="margin-top:8px;min-height:70px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>设计要点</h3>
+            <div class="li"><b>计算存储分离</b>：容量和性能各自扩展，不用为了加存储买节点。</div>
+            <div class="li"><b>协议按层级选</b>：NFS 求规模与简单，NVMe/TCP、NVMe/FC 给一级延迟敏感负载。</div>
+            <div class="li"><b>全闪存与对称双活 SAN</b>：AFF、ASA 让高密度部署可预期。</div>
+            <div class="li"><b>深度集成</b>：VASA/VAAI、ONTAP tools、VM 到 LUN/卷的可见性。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业的价值</h3>
+            <div class="li ok"><b>MES / SCADA 不断线</b>：单个机房故障时，另一站点的主机直接接管，产线报警与数据采集不中断。</div>
+            <div class="li ok"><b>ERP 月结长事务</b>：双活镜像零数据丢失，月结期间不必为站点风险停批。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · 替代平台 ══════════════════ -->
+  <section class="scene" data-sec="迁移 · 按负载迁出" data-nav="替代平台全景">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>迁移 · 01</span></div>
+        <h1>替代平台不止一个，<span class="g">各有各的取舍</span></h1>
+        <p class="lead">主要选项如下。按你最关心的特征筛选；右列是 NetApp 在该平台上的接入方式。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="viz an" style="--d:.12s">
+        <div class="btnrow" style="margin-bottom:10px">
+          <button class="btn on" data-alt="all" data-toggle-group="alt">全部</button>
+          <button class="btn" data-alt="close" data-toggle-group="alt">最接近 vSphere 使用习惯</button>
+          <button class="btn" data-alt="k8s" data-toggle-group="alt">VM 与容器融合</button>
+          <button class="btn" data-alt="win" data-toggle-group="alt">Windows 生态</button>
+          <button class="btn" data-alt="kvm" data-toggle-group="alt">基于 KVM</button>
+          <span class="hint" style="margin-left:auto" id="altCount"></span>
+        </div>
+        <div class="tw" style="box-shadow:none">
+          <table class="dt" id="altTable">
+            <thead><tr><th style="width:210px">平台</th><th>定位</th><th style="width:330px">NetApp 接入方式</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="note">平台定位依据 INSIGHT 2026 场次 BKO2007 资料整理，未做排序；各平台在本地市场的供货与支持情况需单独确认。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · Shift Toolkit ══════════════════ -->
+  <section class="scene" data-sec="迁移 · 按负载迁出" data-nav="Shift Toolkit">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>迁移 · 02</span></div>
+        <h1>NetApp Shift Toolkit：<span class="g">转换磁盘，而不是复制数据</span></h1>
+        <p class="lead">源 VM 放在 ONTAP 的 NFS 数据存储上时，Shift 用 FlexClone 在原地生成目标格式的磁盘，不搬数据，所以转换耗时基本不随 VM 大小增长。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <span class="hint">VM 大小：</span>
+            <button class="btn sm" data-sz="0" data-toggle-group="sz">20 GB</button>
+            <button class="btn sm" data-sz="1" data-toggle-group="sz">40 GB</button>
+            <button class="btn sm on" data-sz="2" data-toggle-group="sz">100 GB</button>
+            <button class="btn sm" id="szPlay" style="margin-left:auto">▶ 播放转换过程</button>
+          </div>
+          <svg viewBox="0 0 640 250" id="szSvg" style="max-height:280px"></svg>
+          <p class="note">转换耗时为厂商对比数据（分钟），非性能承诺；动画按比例缩放时间。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>支持的转换方向</h3>
+            <div class="li"><b>VMware ⇔ Hyper-V</b>：VHDX，支持端到端迁移。</div>
+            <div class="li"><b>VMware ⇒ KVM</b>：QCOW2 / RAW，可用于 OpenShift、Proxmox。</div>
+            <div class="li"><b>原生 KubeVirt</b>：Shift 转换磁盘，Trident 导入为 PVC。</div>
+            <div class="li"><b>OLVM 与 OpenShift</b>：提供 API 与示例脚本。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>使用前提与收益</h3>
+            <div class="li warn"><b>前提</b>：待转换的 VM 必须位于 NetApp NAS（NFS）存储上。</div>
+            <div class="li ok"><b>收益</b>：停机时间短、不绑定单一平台、减少迁移与许可开支。</div>
+            <div class="li ok"><b>对制造业</b>：一个换班窗口内就能完成一批产线配套 VM 的切换。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · ESXi → OpenShift ══════════════════ -->
+  <section class="scene" data-sec="迁移 · 按负载迁出" data-nav="迁到 OpenShift">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>迁移 · 03</span></div>
+        <h1>从 ESXi 到 OpenShift Virtualization：<span class="g">与 MTV 集成的转换流程</span></h1>
+        <p class="lead">Shift 与 Red Hat Migration Toolkit for Virtualization（MTV）集成，大规模迁移仍由 MTV 编排，磁盘转换交给 ONTAP。点击步骤查看每一步做什么。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="steps an" style="--d:.1s" id="mtvSteps"></div>
+      <div class="g23">
+        <div class="stbody an" style="--d:.14s" id="mtvBody"></div>
+        <div class="kpis an" style="--d:.2s;grid-template-columns:repeat(2,1fr)">
+          <div class="kpi v"><b>~50,000</b><span>EMEA 技术服务商：VM 规模，不到 90 天开始迁往 OpenShift Virtualization（此前评估约需两年）</span></div>
+          <div class="kpi g"><b>~11,000</b><span>美国金融服务机构：VM 全部迁出 VMware，规避续约</span></div>
+        </div>
+      </div>
+      <div class="g3 an" style="--d:.26s;margin-top:13px">
+        <div class="vc"><span class="k">ROLE · MTV</span><div class="t">迁移编排</div><div class="d">迁移计划、批次、网络与存储映射仍在 MTV 中管理。</div></div>
+        <div class="vc"><span class="k">ROLE · ONTAP + SHIFT</span><div class="t">磁盘转换</div><div class="d">快照保护源 VM，FlexClone 原地生成目标磁盘。</div></div>
+        <div class="vc"><span class="k">ROLE · TRIDENT</span><div class="t">导入为 PVC</div><div class="d">转换后的磁盘以 PVC 形式交给 KubeVirt，带 VM 标识标签。</div></div>
+      </div>
+      <p class="note an" style="--d:.3s">流程依据 BKOLS1006 场次；客户数字来自 BKO3016 场次中的客户案例，为客户观测值。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · Nutanix + ONTAP ══════════════════ -->
+  <section class="scene" data-sec="迁移 · 按负载迁出" data-nav="Nutanix 接 ONTAP">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>迁移 · 04</span></div>
+        <h1>Nutanix 计算集群接 ONTAP：<span class="g">换虚拟化平台，不必同时换存储</span></h1>
+        <p class="lead">Nutanix 与 NetApp 的新合作：AHV 计算集群通过 NFSv3 使用 ONTAP 作为外部存储，控制面走 ONTAP REST API。计算和存储各自扩展，已有的 NetApp 存储投资可以继续使用。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn" data-nx="hci" data-toggle-group="nx">超融合：计算存储一起扩</button>
+            <button class="btn on" data-nx="ext" data-toggle-group="nx">计算集群 + ONTAP 外部存储</button>
+          </div>
+          <div id="nxSliders"></div>
+          <svg viewBox="0 0 640 210" id="nxSvg" style="max-height:240px"></svg>
+          <p class="note">示意：每节点容量与计算需求为假设值，用来说明扩展方式的差别。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>方案状态与要求</h3>
+            <div class="li"><b>GA 时间</b>：目标为 2026 年第四季度；FlexPod 版本在规划中。<span class="tag warn">产品方向</span></div>
+            <div class="li"><b>存储</b>：AFF A 系列、AFF C 系列、FAS；ONTAP 9.15.1P19 或 9.16.1P13 及以上。</div>
+            <div class="li"><b>Nutanix</b>：AOS 7.6.0.10、AHV 11.2、Prism Central 7.6、Move 6.2.0 及以上。</div>
+            <div class="li"><b>计算</b>：至少 3 个节点，每节点 12 核、64 GB，2 × 10Gb 以上绑定网卡。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>不只是数据存储</h3>
+            <div class="li ok">虚拟机内可直接挂载 NFS、SMB3、iSCSI、NVMe/TCP，也可使用 StorageGRID 对象存储。</div>
+            <div class="li ok">ONTAP 快照、复制与 ARP/AI 防勒索同样作用于 Nutanix 环境。</div>
+            <div class="li warn">Shift Toolkit 与 Nutanix Move 配合的零拷贝迁移即将推出。<span class="tag warn">产品方向</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · KubeVirt ══════════════════ -->
+  <section class="scene" data-sec="现代化 · VM 与容器同平台" data-nav="KubeVirt 原理">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>现代化 · 01</span></div>
+        <h1>KubeVirt：<span class="g">把虚拟机当作 Kubernetes 里的 Pod 来运行</span></h1>
+        <p class="lead">每台 VM 是一个 virt-launcher Pod 里的 QEMU/KVM 进程，存储用 PVC，网络用 Service，健康检查用探针。OpenShift Virtualization 的底层就是 KubeVirt。点击组件查看说明。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <svg viewBox="0 0 640 300" id="kvSvg" style="max-height:330px"></svg>
+          <div class="stbody" id="kvBody" style="margin-top:8px;min-height:70px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>为什么选择 KubeVirt</h3>
+            <div class="li"><b>成本与锁定</b>：开源，属于 CNCF 项目。</div>
+            <div class="li"><b>一个平台、一套技能</b>：VM 与容器共用 kubectl、GitOps、RBAC。</div>
+            <div class="li"><b>渐进式现代化</b>：老 VM 原样运行，新负载按云原生方式建设。</div>
+            <div class="li"><b>可移植</b>：任何符合规范的 Kubernetes 集群都能运行同样的 VM。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>实时迁移的前提</h3>
+            <div class="li warn">VM 磁盘的 PVC 必须是 ReadWriteMany（RWX）。</div>
+            <div class="li">ONTAP 的 NFS、iSCSI、NVMe/TCP、FC 都能提供 RWX（块设备为 Block 模式）。</div>
+            <div class="li">建议为迁移流量单独划一个网络。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · Trident 供给 ══════════════════ -->
+  <section class="scene" data-sec="现代化 · VM 与容器同平台" data-nav="Trident 供给">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>现代化 · 02</span></div>
+        <h1>NetApp Trident：<span class="g">一个 CSI 驱动接所有 ONTAP</span></h1>
+        <p class="lead">Trident 连接 Kubernetes 与 NetApp 存储，开源免费，提供 7×24 企业级支持，是 OpenShift 认证 Operator。从管理员配置到容器挂载，一次存储供给分十步。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn on" id="tpPlay">▶ 播放供给流程</button>
+            <span class="hint" style="margin-left:auto" id="tpState">第 0 步</span>
+          </div>
+          <svg viewBox="0 0 640 280" id="tpSvg" style="max-height:310px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>能力范围</h3>
+            <div class="li"><b>协议</b>：NFS、iSCSI、SMB、NVMe/TCP、FC。</div>
+            <div class="li"><b>访问模式</b>：RWO、RWOP、RWX、ROX。</div>
+            <div class="li"><b>平台</b>：FAS、AFF、ASA、AFX，以及各公有云上的 ONTAP 服务。</div>
+            <div class="li"><b>CSI 特性</b>：快照、卷组快照、在线扩容、拓扑感知。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>管理与安全</h3>
+            <div class="li">配额、QoS、PVC 自动扩容、原地快照恢复、SnapMirror 复制。</div>
+            <div class="li">NVE / NAE 静态加密、主机侧 LUKS 加密、iSCSI CHAP、NFS 导出策略。</div>
+            <div class="li">节点异常关机时自动卷故障转移；Prometheus 与 DII 监控。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · 盘型设计 ══════════════════ -->
+  <section class="scene" data-sec="现代化 · VM 与容器同平台" data-nav="存储设计">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>现代化 · 03</span></div>
+        <h1>存储设计决定 VM 性能：<span class="g">每块盘都是一个独立的 PVC</span></h1>
+        <p class="lead">KubeVirt 的存储结构接近 vVol：每块虚拟盘对应一个 PVC。VMware 上是少数几个大数据存储，这里可能是成千上万个 PVC。选择盘的角色和负载类型，查看推荐的设置组合。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <span class="hint">盘的角色：</span>
+            <button class="btn sm on" data-dk="boot" data-toggle-group="dk">启动盘</button>
+            <button class="btn sm" data-dk="data" data-toggle-group="dk">数据盘</button>
+          </div>
+          <div class="btnrow" style="margin-bottom:10px">
+            <span class="hint">负载类型：</span>
+            <button class="btn sm on" data-dw="gen" data-toggle-group="dw">通用</button>
+            <button class="btn sm" data-dw="db" data-toggle-group="dw">自管存储布局的数据库</button>
+            <button class="btn sm" data-dw="rdm" data-toggle-group="dw">从 VMware RDM 物理模式转换</button>
+          </div>
+          <div class="tw" style="box-shadow:none"><table class="dt" id="dkTable"><tbody></tbody></table></div>
+          <p class="note">推荐组合依据 BKOLS1006 场次中的映射与最佳实践整理，实际需结合负载测试确定。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>两层设置，别混在一起</h3>
+            <div class="li"><b>Trident 与 PVC 决定「存储是什么」</b>：后端协议（驱动）、volumeMode、accessMode。</div>
+            <div class="li"><b>KubeVirt 决定「怎么交给 VM」</b>：以 disk 还是 lun 挂载、总线是 virtio 还是 scsi。</div>
+            <div class="li"><b>virtio</b>：I/O 栈薄，每块盘一个 PCI 设备，速度优先。</div>
+            <div class="li"><b>scsi</b>：完整 SCSI 命令模型，lun 透传必需，热插拔更好，规模优先。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>落地建议</h3>
+            <div class="li ok">为 VM 负载单独建一个 SVM，并对各 SVM 设置 QoS，避免个别负载挤占资源。</div>
+            <div class="li ok">NFS 负载用专用导出策略并关闭 showmount；CDI 导入优先用 NFSv4.x。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 15 · 并行控制器 ══════════════════ -->
+  <section class="scene" data-sec="现代化 · VM 与容器同平台" data-nav="并行控制器">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>现代化 · 04</span></div>
+        <h1>成千上万个 PVC 的规模：<span class="g">Trident 并行控制器最高快 11 倍</span></h1>
+        <p class="lead">VM 迁到 Kubernetes 后，存储对象数量从几十个数据存储变成成千上万个 PVC，供给和快照操作的速度就成了瓶颈。Trident 26.06 起，ontap-nas 与 ontap-san 的并行控制器正式可用。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <span class="hint">基准：Trident 26.06 · ontap-san · iSCSI · 1000 个 PV · 单个 ONTAP 后端</span>
+          </div>
+          <div id="parBars"></div>
+          <div class="lg"><span><i style="background:#c9d4e6"></i>串行控制器</span><span><i style="background:#0e9a62"></i>并行控制器</span></div>
+          <p class="note">完成 1000 次操作的总耗时（分钟），来自 BKO3020 场次的基准数据，为特定环境下的观测值。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>近期已发布</h3>
+            <div class="li">ASA 平台支持 NVMe/TCP 与 FC；卷组快照；安全 SMB。</div>
+            <div class="li">支持 AFX 与 AIDE；ONTAP 均衡放置；AFX 上的 FlexGroup。</div>
+            <div class="li">PVC 自动扩容（AutoGrow）；节点异常关机时卷自动故障转移。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>路线图 26.10 / 27.02 <span class="tag warn">产品方向</span></h3>
+            <div class="li">并行控制器扩展到 ASA r2 与 FlexGroup，未来版本默认启用。</div>
+            <div class="li">RWX 卷的 LUKS 加密（主要面向 KubeVirt 与 OpenShift Virtualization）。</div>
+            <div class="li">NVMe/TCP over TLS；SnapMirror active sync（iSCSI，单 Kubernetes 集群）。</div>
+            <div class="li">基于 COSI 动态供给 StorageGRID 与 ONTAP S3 存储桶。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 16 · 保护 ══════════════════ -->
+  <section class="scene" data-sec="现代化 · VM 与容器同平台" data-nav="保护与容灾">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>现代化 · 05</span></div>
+        <h1>保护 KubeVirt 虚拟机：<span class="g">费力的做法与省力的做法</span></h1>
+        <p class="lead">KubeVirt 自带快照与恢复，但需要按任务分别创建资源，也没有异地备份和容灾。Trident Protect 用一个 Application 资源覆盖 VM、PVC 与配置，备份、克隆、容灾一体完成。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-pt="native" data-toggle-group="pt">KubeVirt 原生</button>
+            <button class="btn on" data-pt="tp" data-toggle-group="pt">Trident Protect</button>
+            <button class="btn sm" id="ptPlay" style="margin-left:auto">▶ 播放一次备份</button>
+          </div>
+          <svg viewBox="0 0 640 230" id="ptSvg" style="max-height:260px"></svg>
+          <div class="stbody" id="ptBody" style="margin-top:8px;min-height:60px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>三种工具，各管一段</h3>
+            <div class="li"><b>Trident Protect</b>：Kubernetes 原生资源，快照、备份（restic/kopia）、恢复，以及基于 SnapMirror 的异步容灾 AppMirror。</div>
+            <div class="li"><b>NetApp Backup and Recovery</b>：基于 SnapMirror 的备份，策略化保护 VM 与容器，备份不可变、传输与静态均加密。</div>
+            <div class="li"><b>NetApp Disaster Recovery</b>：编排存储、网络、计算的自动容灾计划，覆盖 OpenShift 与 VMware。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>客户案例：一家游戏公司</h3>
+            <div class="li ok">迁到 OpenShift Virtualization 后，用 Backup and Recovery 按策略保护 Windows / Linux VM，备份送到 ONTAP S3 作为异地副本，团队不必成为 OpenShift 专家也能满足备份 SLA。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 17 · 统一运维 ══════════════════ -->
+  <section class="scene" data-sec="统一运维" data-nav="统一运维">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>统一运维</span></div>
+        <h1>平台更多样，<span class="g">运维不能更碎片化</span></h1>
+        <p class="lead">VM、容器、AI 负载跑在不同平台上之后，存储运维需要从「一个集群一个工具」变成「按集群群组管理」。NetApp Console 提供群组视图、存储类与偏离检测、Console Assistant，并可本地部署。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="steps" id="opSteps" style="margin-bottom:10px"></div>
+          <div class="stbody" id="opBody"></div>
+          <div class="g4" style="margin-top:12px">
+            <div class="vc"><span class="k">SEE</span><div class="t">群组可见</div><div class="d">按群组看容量、IOPS、吞吐与健康。</div></div>
+            <div class="vc"><span class="k">PROTECT</span><div class="t">保护与恢复</div><div class="d">统一的保护与恢复流程。</div></div>
+            <div class="vc"><span class="k">GUIDE</span><div class="t">最佳实践</div><div class="d">存储类绑定策略，偏离自动标出。</div></div>
+            <div class="vc"><span class="k">ACT</span><div class="t">自动化</div><div class="d">自然语言查询与受控的变更操作。</div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>客户反复提到的三个问题</h3>
+            <div class="li warn"><b>管理割裂</b>：每套工具只掌握一部分事实。</div>
+            <div class="li warn"><b>无法规模化</b>：几十到几百个集群逐个操作，固件升级一季度要花一周。</div>
+            <div class="li warn"><b>主权缺口</b>：只能在云端运行的智能运维，进不了要求隔离的环境。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>本地部署</h3>
+            <div class="li ok">管理平面运行在客户数据中心内，适合数据主权或物理隔离要求，制造业工厂网络同样适用。</div>
+            <div class="li"><a href="../console-autonomy/" target="_blank" rel="noopener" style="color:var(--blue);font-weight:700">详见 Bay 15：Console 本地部署与自治运维 →</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 18 · 客户实践 ══════════════════ -->
+  <section class="scene" data-sec="客户实践" data-nav="客户实践">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>客户实践</span></div>
+        <h1>三条路径上的<span class="g">客户实践</span></h1>
+        <p class="lead">客户案例，按路径筛选。数字为各客户在自身环境中的观测值，不同案例之间不可直接比较。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="btnrow an" style="--d:.1s;margin-bottom:12px">
+        <button class="btn on" data-cs="all" data-toggle-group="cs">全部</button>
+        <button class="btn" data-cs="keep" data-toggle-group="cs">保留 · 优化</button>
+        <button class="btn" data-cs="shift" data-toggle-group="cs">迁移</button>
+        <button class="btn" data-cs="mod" data-toggle-group="cs">现代化</button>
+      </div>
+      <div class="g3 an" style="--d:.14s" id="csGrid"></div>
+      <p class="note an" style="--d:.2s">案例来源：INSIGHT 2026 场次 BKO3016、BKO3020、BKO2008 场次资料。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 19 · 总结 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="价值总结">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>总结</span></div>
+        <h1>先优化，再选择，<span class="g">始终用一套数据底座</span></h1>
+        <p class="lead">无论最终保留、迁移还是现代化，数据都在 ONTAP 上，保护、效率与可见性不随平台变化。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="vc"><span class="k">01 · OPTIMIZE TODAY</span><div class="t">今天就把 VMware 用好</div><div class="d">卸载数据服务、用 DII 回收闲置资源、按 VCF 9.1 设计计算存储分离。腾出的核数直接回到预算。</div></div>
+        <div class="vc"><span class="k">02 · PRESERVE CHOICE</span><div class="t">为明天保留选择</div><div class="d">Shift 原地转换磁盘，Nutanix、OpenShift、Hyper-V 都能接着用 ONTAP，换平台不必换存储。</div></div>
+        <div class="vc"><span class="k">03 · OPERATE CONSISTENTLY</span><div class="t">始终一致地运维</div><div class="d">Trident 与 Trident Protect 覆盖 VM 和容器，Console 统一群组视图，可本地部署。</div></div>
+      </div>
+      <div class="g2" style="margin-top:13px">
+        <div class="panel an" style="--d:.18s">
+          <h3>选型说明：决策前先对齐的五个问题</h3>
+          <div class="li"><b>01</b> 哪些负载真正依赖 VMware 特有的能力？</div>
+          <div class="li"><b>02</b> 总成本是多少？包括硬件、软件、服务、运维，以及风险。</div>
+          <div class="li"><b>03</b> 哪些应用值得重构，而不只是搬迁？</div>
+          <div class="li"><b>04</b> 平台变化会影响哪些运维流程？</div>
+          <div class="li"><b>05</b> 未来要依靠哪些供应商？</div>
+        </div>
+        <div class="panel tint an" style="--d:.24s">
+          <h3>参考资料</h3>
+          <div class="li">NetApp INSIGHT 2026 场次资料（2026-09-29 至 10-01）：BKO2007 Run any virtualization better on NetApp、BKO3016 Your virtualization playbook、BKO3021 Optimizing VMware-based virtualized environments。</div>
+          <div class="li">BKO3020 OpenShift Virtualization on NetApp、BKO2008 Making containers smarter with Trident、BKOLS1006 KubeVirt &amp; NetApp Trident、BKO3030 New path for virtualization（Nutanix）。</div>
+          <div class="li">本页信息时点为 2026 年 10 月；标注「产品方向」的内容以 NetApp 正式发布与互操作矩阵（IMT）为准。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 讲解视频弹层 ═══════════ */
+const vDlg = $('#vDlg'), vPlayer = $('#vPlayer');
+$('#vOpen').addEventListener('click', ()=>{ vDlg.showModal(); vPlayer.play().catch(()=>{}); });
+$('#vClose').addEventListener('click', ()=> vDlg.close());
+vDlg.addEventListener('click', e=>{ if(e.target === vDlg) vDlg.close(); });
+vDlg.addEventListener('close', ()=> vPlayer.pause());
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+/* ═══════════ 幕内交互：每个交互图示一段，命名对应幕名 ═══════════ */
+const NS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text != null) e.textContent = text;
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const C = {blue:'#0067c5', violet:'#6a5ad4', green:'#0e9a62', orange:'#d5820f', red:'#d33a5c', teal:'#0c8e86',
+  ink:'#152341', dim:'#5c6a8a', faint:'#8d97b2', line:'#dce3ef', line2:'#c9d4e6', deep:'#123a7a', soft:'#eaf2fd', softB:'#93b6e4'};
+function box(svg, x, y, w, h, title, sub, o){
+  o = o || {};
+  const g = sv('g', {}, svg);
+  sv('rect', {x, y, width:w, height:h, rx:o.rx||10, fill:o.fill||C.soft, stroke:o.stroke||C.softB, 'stroke-width':o.sw||1.2,
+    'stroke-dasharray':o.dash||''}, g);
+  sv('text', {x:x+w/2, y:y+(sub?h/2-2:h/2+5), 'text-anchor':'middle', 'font-size':o.fs||13, 'font-weight':750, fill:o.color||C.deep}, g, title);
+  if(sub) sv('text', {x:x+w/2, y:y+h/2+14, 'text-anchor':'middle', 'font-size':10.5, fill:C.dim}, g, sub);
+  return g;
+}
+function line(svg, d, color, w, dash){ return sv('path', {d, stroke:color, 'stroke-width':w||2, fill:'none', 'stroke-dasharray':dash||''}, svg); }
+function toggleGroup(attr, fn){
+  $$('['+attr+']').forEach(b=> b.addEventListener('click', ()=>{
+    $$('['+attr+']').forEach(x=> x.classList.toggle('on', x===b));
+    fn(b.getAttribute(attr), b);
+  }));
+}
+function slider(host, key, label, min, max, step, val, fmt, onInput){
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:12px;margin:6px 0;font-size:12.6px;color:var(--dim)';
+  row.innerHTML = `<span style="width:150px;flex:none">${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" data-k="${key}" style="flex:1;accent-color:#0067c5"><b class="mono" style="width:86px;text-align:right;color:var(--ink)"></b>`;
+  host.appendChild(row);
+  const inp = row.querySelector('input'), out = row.querySelector('b');
+  const upd = ()=>{ out.textContent = fmt(+inp.value); onInput && onInput(); };
+  inp.addEventListener('input', upd); upd();
+  return inp;
+}
+
+/* ── 市场重置：孤岛 vs 统一底座 ── */
+function fdDraw(mode){
+  const s = $('#fdSvg'); s.innerHTML = '';
+  const P = [['VMware / VCF', C.blue], ['Nutanix AHV', C.teal], ['OpenShift 虚拟化', C.red], ['Hyper-V', C.violet]];
+  P.forEach((p,i)=>{
+    const x = 18 + i*155;
+    box(s, x, 20, 140, 54, p[0], '虚拟化平台', {stroke:p[1], fill:'#fff', color:p[1]});
+    if(mode === 'silo'){
+      box(s, x, 150, 140, 54, '专属存储', '各自的工具与流程', {fill:'#fbecef', stroke:'#e7a3b3', color:C.red});
+      line(s, `M${x+70} 74 L${x+70} 150`, C.line2, 2);
+    } else {
+      line(s, `M${x+70} 74 L${x+70} 180`, p[1], 2.4);
+    }
+  });
+  if(mode === 'silo'){
+    sv('text', {x:320, y:240, 'text-anchor':'middle', 'font-size':12.5, fill:C.red, 'font-weight':700}, s, '换平台 = 换存储 + 搬数据 + 重建保护与运维流程');
+    sv('text', {x:320, y:262, 'text-anchor':'middle', 'font-size':11.5, fill:C.dim}, s, '每条路径各自带来一套迁移成本');
+    $('#fdState').textContent = '平台与存储绑定';
+  } else {
+    sv('rect', {x:18, y:180, width:605, height:66, rx:12, fill:'#eef6ff', stroke:C.blue, 'stroke-width':1.6}, s);
+    sv('text', {x:320, y:206, 'text-anchor':'middle', 'font-size':15, 'font-weight':800, fill:C.deep}, s, 'NetApp ONTAP · 统一数据底座');
+    sv('text', {x:320, y:228, 'text-anchor':'middle', 'font-size':11.5, fill:C.dim}, s, '效率 · 保护 · 迁移 · 安全 · 可观测：在每个平台上保持一致');
+    sv('text', {x:320, y:278, 'text-anchor':'middle', 'font-size':12.5, fill:C.green, 'font-weight':700}, s, '平台按负载选择，数据留在原处');
+    $('#fdState').textContent = '平台可替换，数据不动';
+  }
+}
+toggleGroup('data-fd', fdDraw);
+
+/* ── 按负载决策 ── */
+const WL = {
+  mes:  {dep:3, tol:1, mod:1, why:'产线实时依赖、停机窗口极短，且大量运维流程建立在 vSphere 特性上：先优化再说。'},
+  erp:  {dep:1, tol:2, mod:1, why:'应用本身不打算重构，但对虚拟化平台没有特殊依赖：迁到其他平台，应用不改。'},
+  file: {dep:1, tol:3, mod:1, why:'通用 VM，可接受分批短暂停机，依赖少：适合作为第一批迁移试点。'},
+  ai:   {dep:1, tol:3, mod:3, why:'新建服务、迭代快，与容器生态契合：直接按云原生方式建设。'}
+};
+const wlLv = ['','低','中','高'];
+const wlIn = {};
+function wlPick(){
+  if(!wlIn.mod) return;
+  const d = +wlIn.dep.value, t = +wlIn.tol.value, m = +wlIn.mod.value;
+  const path = d >= 3 || t <= 1 ? 'keep' : (m >= 3 && t >= 2 ? 'mod' : 'shift');
+  $$('#wlPaths .vc').forEach(c=>{
+    const on = c.dataset.path === path;
+    c.style.borderColor = on ? 'var(--blue)' : '';
+    c.style.background = on ? 'linear-gradient(178deg,rgba(0,103,197,.09),#fff)' : '';
+    c.style.boxShadow = on ? '0 4px 16px rgba(0,103,197,.18)' : '';
+    c.style.opacity = on ? 1 : .55;
+  });
+}
+(function(){
+  const h = $('#wlSliders');
+  wlIn.dep = slider(h, 'dep', '对 VMware 特性的依赖', 1, 3, 1, 3, v=>wlLv[v], wlPick);
+  wlIn.tol = slider(h, 'tol', '迁移容忍度', 1, 3, 1, 1, v=>wlLv[v], wlPick);
+  wlIn.mod = slider(h, 'mod', '重构为容器的价值', 1, 3, 1, 1, v=>wlLv[v], wlPick);
+  const why = document.createElement('div'); why.id = 'wlWhy';
+  why.style.cssText = 'font-size:12.6px;color:var(--dim);margin-top:6px;min-height:20px';
+  h.appendChild(why);
+})();
+toggleGroup('data-wl', k=>{
+  const w = WL[k];
+  [['dep',w.dep],['tol',w.tol],['mod',w.mod]].forEach(([n,v])=>{ wlIn[n].value = v; wlIn[n].dispatchEvent(new Event('input')); });
+  $('#wlWhy').textContent = w.why;
+});
+
+/* ── ONTAP tools：按负载选协议 ── */
+const PR = {
+  gen: {hl:['NFS'], t:'NFS 数据存储（v3 / v4.1）', d:'规模大、管理简单。VAAI-NAS 把克隆与置零交给阵列，新支持的 VAAI UNMAP 可回收已删除的块；Shift Toolkit 的原地转换也要求 VM 位于 NFS 数据存储上。'},
+  db:  {hl:['VMFS'], t:'VMFS 块数据存储（NVMe/TCP、NVMe/FC、FC、iSCSI）', d:'一级延迟敏感负载走 NVMe 协议；ASA 提供对称双活 SAN 路径。NVMe 协议在降低主机 CPU 开销的同时可带来 20–100% 更高的 IOPS。'},
+  app: {hl:['APP'], t:'虚拟机内直接挂载应用数据', d:'应用在 VM 内直接使用 NVMe/TCP、iSCSI、NFS / SMB 文件或 S3 对象，数据保护与迁移不依赖数据存储层。'}
+};
+function prDraw(k){
+  const s = $('#prSvg'); s.innerHTML = '';
+  box(s, 230, 10, 180, 46, 'vCenter', 'ONTAP tools 插件', {fill:'#fff', stroke:C.blue});
+  const cols = [['VMFS','块数据存储','iSCSI · FC · NVMe-oF'],['NFS','文件数据存储','NFS v3 · v4.1'],['APP','应用数据','NVMe/TCP · iSCSI · 文件 · 对象']];
+  cols.forEach((c,i)=>{
+    const x = 30 + i*200, on = PR[k].hl.includes(c[0]);
+    line(s, `M320 56 L${x+80} 100`, on ? C.blue : C.line2, on ? 2.6 : 1.4, on ? '' : '4 4');
+    box(s, x, 100, 160, 62, c[1], c[2], {fill:on?'#dbe8fb':'#f5f7fb', stroke:on?C.blue:C.line, sw:on?2.2:1, color:on?C.deep:C.faint});
+  });
+  sv('rect', {x:30, y:190, width:560, height:46, rx:10, fill:'#eef6ff', stroke:C.blue}, s);
+  sv('text', {x:310, y:211, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.deep}, s, '同一套 ONTAP');
+  sv('text', {x:310, y:228, 'text-anchor':'middle', 'font-size':10.5, fill:C.dim}, s, '效率 · 保护 · 迁移 · 安全 · 可观测');
+  $('#prBody').innerHTML = `<h4>${PR[k].t}</h4><p>${PR[k].d}</p>`;
+}
+toggleGroup('data-pr', prDraw);
+
+/* ── 卸载到存储：核数估算 ── */
+const of = {};
+function ofCalc(){
+  if(!of.ovh) return;
+  const H = +of.hosts.value, Cc = +of.cores.value, ov = +of.ovh.value/100;
+  const total = H*Cc, used = total*ov, back = used*.85, hosts = back/Cc;
+  $('#ofUsed').textContent = Math.round(used).toLocaleString();
+  $('#ofBack').textContent = Math.round(back).toLocaleString();
+  $('#ofHosts').textContent = hosts.toFixed(1) + ' 台';
+  const s = $('#ofSvg'); s.innerHTML = '';
+  const W = 560, x0 = 50;
+  [['软件定义存储', used, 0], ['外部 ONTAP', used-back, 1]].forEach(([n,u,i])=>{
+    const y = 22 + i*70;
+    sv('text', {x:x0, y:y-6, 'font-size':12, 'font-weight':700, fill:C.ink}, s, n + ' · 共 ' + total.toLocaleString() + ' 核');
+    sv('rect', {x:x0, y, width:W, height:26, rx:7, fill:'#e8eef8'}, s);
+    const wu = W*u/total;
+    sv('rect', {x:x0, y, width:Math.max(wu,2), height:26, rx:7, fill:i?C.green:C.orange}, s);
+    sv('text', {x:x0+wu+8, y:y+18, 'font-size':11.5, fill:C.dim}, s, '存储处理 ' + Math.round(u).toLocaleString() + ' 核');
+  });
+}
+(function(){
+  const h = $('#ofSliders');
+  of.hosts = slider(h, 'hosts', 'ESXi 主机数', 8, 200, 4, 48, v=>v+' 台', ofCalc);
+  of.cores = slider(h, 'cores', '每台主机核数', 16, 128, 16, 64, v=>v+' 核', ofCalc);
+  of.ovh   = slider(h, 'ovh', '存储处理占 CPU', 10, 20, 1, 15, v=>v+'%', ofCalc);
+  ofCalc();
+})();
+
+/* ── 找出浪费：主机利用率 ── */
+const RS0 = [[22,48],[31,55],[18,40],[27,52],[35,61],[20,45],[25,50],[16,38],[29,57],[24,49],[19,42],[33,58]];
+function rsDraw(mode){
+  const s = $('#rsSvg'); s.innerHTML = '';
+  const n = RS0.length, totC = RS0.reduce((a,r)=>a+r[0],0), totM = RS0.reduce((a,r)=>a+r[1],0);
+  const keep = mode === 'after' ? Math.max(Math.ceil(totC/55), Math.ceil(totM/80)) : n;
+  const bw = 40, gap = 10, x0 = 30, B = 220, Hh = 180;
+  sv('line', {x1:20, x2:620, y1:B-Hh*.55, y2:B-Hh*.55, stroke:C.blue, 'stroke-dasharray':'4 4', opacity:.5}, s);
+  sv('text', {x:620, y:B-Hh*.55-5, 'text-anchor':'end', 'font-size':10.5, fill:C.blue}, s, 'CPU 目标 ~55%');
+  sv('line', {x1:20, x2:620, y1:B-Hh*.8, y2:B-Hh*.8, stroke:C.violet, 'stroke-dasharray':'4 4', opacity:.5}, s);
+  sv('text', {x:620, y:B-Hh*.8-5, 'text-anchor':'end', 'font-size':10.5, fill:C.violet}, s, '内存目标 ~80%');
+  for(let i=0;i<n;i++){
+    const x = x0 + i*(bw+gap);
+    let c, m;
+    if(mode === 'after'){ if(i < keep){ c = totC/keep; m = totM/keep; } else { c = 0; m = 0; } }
+    else { c = RS0[i][0]; m = RS0[i][1]; }
+    if(mode === 'after' && i >= keep){
+      sv('rect', {x, y:B-Hh, width:bw, height:Hh, rx:5, fill:'#f2f5fa', stroke:C.line2, 'stroke-dasharray':'4 4'}, s);
+      sv('text', {x:x+bw/2, y:B-Hh/2, 'text-anchor':'middle', 'font-size':10.5, fill:C.faint}, s, '可腾空');
+    } else {
+      sv('rect', {x, y:B-Hh*c/100, width:bw/2-2, height:Hh*c/100, rx:3, fill:C.blue}, s);
+      sv('rect', {x:x+bw/2, y:B-Hh*m/100, width:bw/2-2, height:Hh*m/100, rx:3, fill:C.violet}, s);
+    }
+    sv('text', {x:x+bw/2, y:B+16, 'text-anchor':'middle', 'font-size':10, fill:C.faint, 'font-family':'monospace'}, s, 'H'+(i+1));
+  }
+  $('#rsState').textContent = mode === 'after' ? `${keep} 台主机承载相同负载，${n-keep} 台可腾空` : `${n} 台主机，平均 CPU ${Math.round(totC/n)}%`;
+}
+toggleGroup('data-rs', rsDraw);
+
+/* ── VCF 参考架构：故障注入 ── */
+const VM_TXT = {
+  ok:    ['正常运行', '站点 A、B 的主机都在读写同一组数据存储；SnapMirror active sync 保持两站点同步，第三站点异步保留一份副本，FabricPool 把冷数据分层出去。'],
+  siteA: ['站点 A 故障', '中介（Mediator）确认站点 A 不可用，站点 B 的 ONTAP 自动接管读写；vSphere HA 在站点 B 重启受影响的 VM。双活镜像保证零数据丢失。'],
+  ransom:['数据存储遭勒索加密', 'ARP/AI 检测到异常加密行为，自动创建快照并告警；同步镜像会如实复制被加密的数据，所以恢复依靠的是加密发生前的快照，而不是镜像本身。']
+};
+function vmDraw(k){
+  const s = $('#vmSvg'); s.innerHTML = '';
+  const down = k === 'siteA', rans = k === 'ransom';
+  sv('rect', {x:20, y:14, width:600, height:40, rx:10, fill:'#fff', stroke:C.blue}, s);
+  sv('text', {x:320, y:39, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.deep}, s, 'vSphere Metro Storage Cluster · 统一访问');
+  const site = (x, name, dead)=>{
+    sv('rect', {x, y:70, width:220, height:150, rx:12, fill:dead?'#fbecef':'#f7f9fd', stroke:dead?C.red:C.line2, 'stroke-dasharray':dead?'6 4':''}, s);
+    sv('text', {x:x+14, y:90, 'font-size':11, fill:dead?C.red:C.faint, 'font-family':'monospace'}, s, name + (dead?' · 不可用':''));
+    for(let i=0;i<3;i++){
+      const vx = x+18+i*66, moved = down && name.includes('B') && i===2;
+      sv('rect', {x:vx, y:100, width:52, height:30, rx:6, fill:dead?'#f3d6dd':(moved?'#dff5ea':'#eaf2fd'), stroke:dead?'#e7a3b3':(moved?C.green:C.softB)}, s);
+      sv('text', {x:vx+26, y:120, 'text-anchor':'middle', 'font-size':11, fill:dead?C.red:C.deep}, s, moved?'VM↻':'VM');
+    }
+    const enc = rans;
+    sv('rect', {x:x+18, y:150, width:184, height:52, rx:8, fill:dead?'#f3d6dd':(enc?'#fdf0e0':'#eef6ff'), stroke:dead?'#e7a3b3':(enc?C.orange:C.blue)}, s);
+    sv('text', {x:x+110, y:172, 'text-anchor':'middle', 'font-size':12, 'font-weight':750, fill:dead?C.red:(enc?C.orange:C.deep)}, s, 'ONTAP · VMFS 数据存储');
+    sv('text', {x:x+110, y:190, 'text-anchor':'middle', 'font-size':10.5, fill:C.dim}, s, enc?'ARP/AI 检测到异常加密 → 自动快照':'ARP/AI 防护中');
+  };
+  site(20, '站点 A', down);
+  site(400, '站点 B', false);
+  line(s, 'M240 176 L400 176', down?C.line2:C.green, 3, down?'6 5':'');
+  sv('text', {x:320, y:168, 'text-anchor':'middle', 'font-size':10.5, fill:down?C.faint:C.green, 'font-weight':700}, s, 'SnapMirror active sync');
+  box(s, 270, 190, 100, 32, 'Mediator', null, {fs:11.5, fill:'#fff', stroke:C.line2, color:C.dim});
+  line(s, 'M510 220 L510 246', C.violet, 2, '5 4');
+  box(s, 400, 246, 220, 34, '第三站点 · SnapMirror 异步', null, {fs:11.5, fill:'#f3f0fd', stroke:C.violet, color:C.violet});
+  line(s, 'M130 220 L130 246', C.faint, 1.6, '4 4');
+  box(s, 20, 246, 220, 34, 'FabricPool · 冷数据分层', null, {fs:11.5, fill:'#f5f7fb', stroke:C.line2, color:C.dim});
+  $('#vmBody').innerHTML = `<h4>${VM_TXT[k][0]}</h4><p>${VM_TXT[k][1]}</p>`;
+}
+toggleGroup('data-vm', vmDraw);
+
+/* ── 替代平台全景 ── */
+const ALT = [
+  ['Nutanix', ['close'], '与 vSphere 最接近，尤其适合主要只用 ESXi 与 vCenter 的环境。', 'AHV 计算集群通过 NFSv3 接 ONTAP 外部存储（GA 目标 2026 Q4）'],
+  ['Red Hat OpenShift Virtualization（另有 SUSE）', ['k8s','kvm'], '面向未来的技术路线，用 Kubernetes 管理 VM，VM 与容器同平台。', 'Trident CSI 与 Trident Protect；Shift 与 MTV 集成'],
+  ['Microsoft Windows Server Hyper-V', ['win'], '简单，技能基础广，企业集成与许可模式成熟。', 'Shift Toolkit 支持 VMware ⇔ Hyper-V 端到端迁移'],
+  ['Microsoft Azure Local', ['win'], '基于 Windows Server Hyper-V，把本地基础设施作为云服务交付。', '基于 Hyper-V，可沿用 Hyper-V 的迁移路径'],
+  ['Proxmox VE', ['close','kvm'], '可直接替换 vSphere 的选项，近期宣布了 7×24 支持与 Omnissa 认证。', 'Shift 转换为 QCOW2 / RAW 磁盘'],
+  ['Oracle Virtualization', ['kvm'], '成熟的 KVM 变体，管理工具完善，许可有优势。', 'Shift 提供迁移到 OLVM 的 API 与示例脚本'],
+  ['HPE Morpheus', ['kvm'], '基于 Ubuntu KVM、快速演进的 AI 云平台，多厂商支持。', '基于 KVM，可用 Shift 转换磁盘'],
+  ['公有云 IaaS', [], '在当前硬件价格下，直接迁上云的吸引力明显上升。', '各公有云上的 ONTAP 存储服务']
+];
+function altDraw(f){
+  const rows = ALT.filter(a=> f === 'all' || a[1].includes(f));
+  $('#altTable tbody').innerHTML = rows.map(a=>`<tr><td class="h">${a[0]}</td><td>${a[2]}</td><td>${a[3]}</td></tr>`).join('');
+  $('#altCount').textContent = `显示 ${rows.length} / ${ALT.length}`;
+}
+toggleGroup('data-alt', altDraw);
+
+/* ── Shift Toolkit：转换耗时对比 ── */
+const SZ = [[20,5,25],[40,5,42],[100,5,102]];
+let szIdx = 2, szTimer = null;
+function szDraw(p){
+  const s = $('#szSvg'); s.innerHTML = '';
+  const [gb, a, b] = SZ[szIdx], max = 110, x0 = 150, W = 440;
+  sv('text', {x:20, y:22, 'font-size':12, fill:C.dim}, s, `转换一台 ${gb} GB 的 VM（分钟）`);
+  [['NetApp Shift', a, C.green, 'FlexClone 原地生成目标磁盘，不复制数据'], ['第三方工具', b, C.orange, '逐块读取并写入新磁盘']].forEach(([n,v,c,d],i)=>{
+    const y = 46 + i*78, cur = Math.min(v, p*max);
+    sv('text', {x:20, y:y+18, 'font-size':13, 'font-weight':750, fill:C.ink}, s, n);
+    sv('text', {x:20, y:y+36, 'font-size':10.5, fill:C.faint}, s, i ? '数据量越大越慢' : '耗时与 VM 大小无关');
+    sv('rect', {x:x0, y, width:W, height:30, rx:8, fill:'#e8eef8'}, s);
+    sv('rect', {x:x0, y, width:Math.max(2, W*cur/max), height:30, rx:8, fill:c}, s);
+    sv('text', {x:x0+Math.max(2, W*cur/max)+8, y:y+20, 'font-size':13, 'font-weight':800, fill:c, 'font-family':'monospace'}, s, (cur >= v ? v : Math.round(cur)) + ' min');
+    sv('text', {x:x0, y:y+48, 'font-size':10.5, fill:C.dim}, s, d);
+  });
+  const r = (b/a).toFixed(1);
+  sv('text', {x:320, y:226, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.violet}, s, `这一档约快 ${r} 倍（厂商口径：5–20 倍）`);
+}
+function szPlay(){
+  clearInterval(szTimer); let p = 0;
+  szTimer = setInterval(()=>{ p += .02; szDraw(Math.min(p,1)); if(p >= 1) clearInterval(szTimer); }, 30);
+}
+toggleGroup('data-sz', k=>{ szIdx = +k; clearInterval(szTimer); szDraw(1); });
+$('#szPlay').addEventListener('click', szPlay);
+
+/* ── ESXi → OpenShift：转换步骤 ── */
+const MTV = [
+  ['收集 VM 信息', '从 ESXi 收集待迁移 VM 的配置与磁盘信息。'],
+  ['创建迁移计划', '在 MTV 中创建迁移计划，并在计划 YAML 中指定使用磁盘转换。'],
+  ['快照保护', '对源 VM 打一份 ONTAP 快照，迁移过程中随时可回退。'],
+  ['FlexClone 转换', '用 FlexClone 在原地把 VMDK 转换成目标格式，不复制数据。'],
+  ['导入为 PVC', '由 Trident 把转换后的磁盘导入为 PVC。'],
+  ['打上标识', 'PVC 标签带 vmid 与 vmUUID，注释记录原 VMDK 路径，便于追溯。'],
+  ['启动迁移', '启动 MTV 迁移，镜像转换为 KubeVirt 可用的格式。'],
+  ['创建虚拟机', '在 OpenShift Virtualization 中创建使用 VirtIO 接口的虚拟机。']
+];
+(function(){
+  const h = $('#mtvSteps');
+  MTV.forEach((m,i)=>{
+    const d = document.createElement('div'); d.className = 'st' + (i===0?' on':'');
+    d.innerHTML = `<div class="n">STEP ${String(i+1).padStart(2,'0')}</div><div class="l">${m[0]}</div>`;
+    d.addEventListener('click', ()=> mtvShow(i));
+    h.appendChild(d);
+  });
+})();
+function mtvShow(i){
+  $$('#mtvSteps .st').forEach((d,k)=> d.classList.toggle('on', k===i));
+  const who = i < 2 ? 'MTV' : (i < 4 ? 'ONTAP + Shift' : (i < 6 ? 'Trident' : 'MTV + KubeVirt'));
+  $('#mtvBody').innerHTML = `<h4>第 ${i+1} 步 · ${MTV[i][0]} <span class="tag b">${who}</span></h4><p>${MTV[i][1]}</p>`;
+}
+mtvShow(0);
+let mtvTimer = null;
+function mtvAuto(){ clearInterval(mtvTimer); let i = 0; mtvShow(0); mtvTimer = setInterval(()=>{ i++; if(i >= MTV.length){ clearInterval(mtvTimer); return; } mtvShow(i); }, 1300); }
+
+/* ── Nutanix：扩展方式 ── */
+let nxMode = 'ext'; const nx = {};
+function nxDraw(){
+  if(!nx.tb) return;
+  const tb = +nx.tb.value, compute = 4, perNode = 40;
+  const hciNodes = Math.max(compute, Math.ceil(tb/perNode)), ext = nxMode === 'ext';
+  const s = $('#nxSvg'); s.innerHTML = '';
+  const n = ext ? compute : hciNodes;
+  sv('text', {x:20, y:20, 'font-size':12, fill:C.dim}, s, ext ? `计算节点固定 ${compute} 台，容量由 ONTAP 独立扩展` : `每节点约 ${perNode} TB（假设），容量需求推动节点数`);
+  for(let i=0;i<Math.min(n,12);i++){
+    const x = 20 + i*50;
+    sv('rect', {x, y:34, width:42, height:56, rx:7, fill:i<compute?'#e6f4f3':'#fdf0e0', stroke:i<compute?C.teal:C.orange}, s);
+    sv('text', {x:x+21, y:58, 'text-anchor':'middle', 'font-size':10, fill:C.ink, 'font-weight':700}, s, 'AHV');
+    sv('text', {x:x+21, y:74, 'text-anchor':'middle', 'font-size':9.5, fill:C.dim}, s, ext ? '计算' : '计算+盘');
+  }
+  if(n > 12) sv('text', {x:620, y:66, 'text-anchor':'end', 'font-size':12, fill:C.orange, 'font-weight':700}, s, `… 共 ${n} 台`);
+  if(ext){
+    line(s, 'M120 92 L120 122', C.teal, 2);
+    sv('rect', {x:20, y:122, width:600, height:48, rx:10, fill:'#eef6ff', stroke:C.blue}, s);
+    sv('text', {x:320, y:143, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.deep}, s, `ONTAP 外部存储 · ${tb} TB`);
+    sv('text', {x:320, y:160, 'text-anchor':'middle', 'font-size':10.5, fill:C.dim}, s, 'NFSv3 数据面 + ONTAP REST API 控制面');
+  }
+  sv('text', {x:20, y:196, 'font-size':13, 'font-weight':800, fill:ext?C.green:C.orange}, s,
+    ext ? `需要 ${compute} 台计算节点` : `需要 ${hciNodes} 台节点，其中 ${hciNodes-compute} 台只是为了容量而买`);
+}
+(function(){ nx.tb = slider($('#nxSliders'), 'tb', '存储容量需求', 80, 600, 20, 320, v=>v+' TB', nxDraw); })();
+toggleGroup('data-nx', k=>{ nxMode = k; nxDraw(); });
+
+/* ── KubeVirt：组件 ── */
+const KV = {
+  api:   ['virt-api', '接收用户请求，校验自定义资源（VM、VMI 等）。运行在控制平面节点。'],
+  ctrl:  ['virt-controller', '决定 VM 实例（VMI）运行在哪个节点，并创建对应的 virt-launcher Pod。运行在控制平面节点。'],
+  hdl:   ['virt-handler', '以 DaemonSet 运行在每个工作节点，执行 VM 生命周期操作，并上报节点的 CPU、内存、GPU 等资源。'],
+  launch:['virt-launcher Pod', '每台运行中的 VM 对应一个 Pod，在其中通过 libvirt 运行 QEMU/KVM，负责启停、暂停、迁移，并挂接磁盘与网络。'],
+  pvc:   ['PVC · 由 Trident 供给', 'VM 的每块盘是一个 PVC，背后是 ONTAP 卷、LUN 或 NVMe 命名空间。实时迁移要求 RWX。'],
+  ctr:   ['容器', '同一个集群、同一套 kubectl、GitOps 与 RBAC，容器和 VM 并排运行。']
+};
+function kvDraw(sel){
+  const s = $('#kvSvg'); s.innerHTML = '';
+  const hit = (g,k)=>{ g.style.cursor = 'pointer'; g.addEventListener('click', ()=> kvDraw(k)); };
+  sv('rect', {x:16, y:10, width:608, height:62, rx:12, fill:'#f7f9fd', stroke:C.line2}, s);
+  sv('text', {x:30, y:28, 'font-size':10.5, fill:C.faint, 'font-family':'monospace'}, s, 'CONTROL PLANE');
+  [['api',180,'virt-api'],['ctrl',380,'virt-controller']].forEach(([k,x,t])=>{
+    const on = sel === k; hit(box(s, x, 24, 170, 38, t, null, {fs:12.5, fill:on?'#dbe8fb':'#fff', stroke:on?C.blue:C.softB, sw:on?2.2:1}), k);
+  });
+  [0,1].forEach(w=>{
+    const x = 16 + w*312;
+    sv('rect', {x, y:88, width:296, height:150, rx:12, fill:'#fff', stroke:C.line2}, s);
+    sv('text', {x:x+12, y:106, 'font-size':10.5, fill:C.faint, 'font-family':'monospace'}, s, 'WORKER ' + (w+1));
+    hit(box(s, x+12, 114, 272, 26, 'virt-handler', null, {fs:11.5, fill:sel==='hdl'?'#dbe8fb':'#f5f8fd', stroke:sel==='hdl'?C.blue:C.line2, sw:sel==='hdl'?2:1}), 'hdl');
+    const lg = box(s, x+12, 150, 160, 76, 'virt-launcher Pod', 'QEMU/KVM · VM', {fs:12, fill:sel==='launch'?'#dbe8fb':'#eaf2fd', stroke:sel==='launch'?C.blue:C.softB, sw:sel==='launch'?2.2:1});
+    hit(lg, 'launch');
+    hit(box(s, x+184, 150, 100, 76, '容器', 'Pod', {fs:12, fill:sel==='ctr'?'#e2f5ec':'#f2faf6', stroke:sel==='ctr'?C.green:'#9fd5bd', sw:sel==='ctr'?2.2:1, color:C.green}), 'ctr');
+    line(s, `M${x+92} 226 L${x+92} 252`, C.violet, 2);
+  });
+  line(s, 'M296 43 L380 43', C.line2, 1.4);
+  hit(box(s, 16, 252, 608, 40, 'PVC（RWX）· Trident · ONTAP', null, {fs:12.5, fill:sel==='pvc'?'#e9e5fb':'#f3f0fd', stroke:C.violet, sw:sel==='pvc'?2.2:1.2, color:C.violet}), 'pvc');
+  $('#kvBody').innerHTML = `<h4>${KV[sel][0]}</h4><p>${KV[sel][1]}</p>`;
+}
+kvDraw('launch');
+
+/* ── Trident：十步供给 ── */
+const TP = [
+  ['管理员','配置存储后端'],['管理员','在 K8s 中安装 Trident'],['管理员','添加一个或多个后端'],['管理员','按卷类型定义 StorageClass'],['用户','创建 PVC'],
+  ['Trident','检测到 PVC 创建'],['Trident','找出满足该类的存储池'],['Trident','在合适的池中创建卷'],['Trident','创建 PV 并与 PVC 绑定'],['Kubelet','把卷挂载给容器或 VM']
+];
+let tpStep = 0, tpTimer = null;
+function tpDraw(){
+  const s = $('#tpSvg'); s.innerHTML = '';
+  TP.forEach((t,i)=>{
+    const col = i < 5 ? 0 : 1, row = i % 5, x = 16 + col*316, y = 10 + row*52;
+    const done = i < tpStep, cur = i === tpStep-1;
+    sv('rect', {x, y, width:296, height:42, rx:10, fill:cur?'#dbe8fb':(done?'#f2faf6':'#f7f9fd'), stroke:cur?C.blue:(done?'#9fd5bd':C.line), 'stroke-width':cur?2.2:1}, s);
+    sv('circle', {cx:x+22, cy:y+21, r:12, fill:done?(cur?C.blue:C.green):'#dfe6f2'}, s);
+    sv('text', {x:x+22, y:y+25, 'text-anchor':'middle', 'font-size':11, fill:done?'#fff':C.faint, 'font-weight':800}, s, i+1);
+    sv('text', {x:x+44, y:y+18, 'font-size':10, fill:C.faint, 'font-family':'monospace'}, s, t[0]);
+    sv('text', {x:x+44, y:y+33, 'font-size':12.5, fill:done?C.ink:C.dim, 'font-weight':done?700:500}, s, t[1]);
+  });
+  line(s, 'M312 31 L332 31', C.line2, 1.2);
+  $('#tpState').textContent = '第 ' + tpStep + ' / 10 步';
+}
+function tpPlay(){ clearInterval(tpTimer); tpStep = 0; tpDraw(); tpTimer = setInterval(()=>{ tpStep++; tpDraw(); if(tpStep >= 10) clearInterval(tpTimer); }, 520); }
+$('#tpPlay').addEventListener('click', tpPlay);
+tpDraw();
+
+/* ── 存储设计：推荐组合 ── */
+function dkDraw(){
+  const role = $('[data-dk].on').dataset.dk, w = $('[data-dw].on').dataset.dw;
+  let r;
+  if(w === 'gen') r = role === 'boot'
+    ? {drv:'ontap-nas', vm:'Filesystem', am:'RWX', disk:'disk', bus:'virtio', sc:'面向克隆与快照速度（NAS + FlexClone），设为默认虚拟化存储类', pr:'只做快照，短保留'}
+    : {drv:'ontap-nas', vm:'Filesystem', am:'RWX', disk:'disk', bus:'virtio', sc:'面向持续 I/O，回收策略 Retain', pr:'快照 + 备份，长保留'};
+  else if(w === 'db') r = {drv:'ontap-san', vm:'Block', am:'RWX', disk:'lun', bus:'scsi', sc:'面向吞吐与延迟（SAN + QoS），由 VM 自管磁盘布局', pr:'快照 + 备份，长保留'};
+  else r = {drv:'ontap-san', vm:'Block', am:'RWX', disk:'lun', bus:'scsi', sc:'原始块设备交给 VM，保持 SCSI 透传语义', pr:'快照 + 备份，长保留'};
+  if(w !== 'gen' && role === 'boot') r = {drv:'ontap-nas', vm:'Filesystem', am:'RWX', disk:'disk', bus:'virtio', sc:'启动盘仍建议走 NAS + FlexClone，便于克隆与回滚', pr:'只做快照，短保留'};
+  const rows = [['Trident 驱动', r.drv], ['PVC volumeMode', r.vm], ['PVC accessMode', r.am + '（实时迁移需要）'], ['KubeVirt 盘类型', r.disk], ['总线', r.bus], ['存储类策略', r.sc], ['Trident Protect 策略', r.pr]];
+  $('#dkTable tbody').innerHTML = rows.map(x=>`<tr><td class="h" style="width:150px">${x[0]}</td><td><span class="mono" style="color:var(--ink)">${x[1]}</span></td></tr>`).join('');
+}
+toggleGroup('data-dk', dkDraw);
+toggleGroup('data-dw', dkDraw);
+
+/* ── 并行控制器：1000 PV 基准 ── */
+const PAR = [['创建卷',1648,477],['挂载（Publish）',777,155],['卸载（Unpublish）',233,157],['创建快照',1803,164],['从快照克隆',3384,805],['删除克隆',1454,257],['删除快照',1238,123],['删除卷',1238,263]];
+function parDraw(p){
+  const h = $('#parBars'); h.innerHTML = '';
+  const max = 3384;
+  PAR.forEach(([n,a,b])=>{
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:120px 1fr 62px;gap:10px;align-items:center;margin:5px 0;font-size:12.4px';
+    const fmt = s=> (s/60).toFixed(s>=600?0:1);
+    row.innerHTML = `<span style="color:var(--ink);font-weight:650">${n}</span>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div style="height:9px;border-radius:5px;background:#c9d4e6;width:${a/max*100*p}%;transition:width .5s"></div>
+        <div style="height:9px;border-radius:5px;background:#0e9a62;width:${b/max*100*p}%;transition:width .5s"></div>
+      </div>
+      <b class="mono" style="color:var(--green);text-align:right">${(a/b).toFixed(1)}×</b>`;
+    row.title = `串行 ${fmt(a)} 分钟 → 并行 ${fmt(b)} 分钟`;
+    h.appendChild(row);
+  });
+}
+parDraw(1);
+
+/* ── 保护：原生 vs Trident Protect ── */
+const PT = {
+  native: ['KubeVirt 原生：费力的做法', ['先开启快照特性开关','每项任务各建一个资源','快照只在同一阵列','克隆限同一命名空间','恢复需要先停 VM','没有计划、保留与容灾']],
+  tp:     ['Trident Protect：省力的做法', ['备份元数据到 AppVault','自动冻结 VM 文件系统','创建卷快照','解冻文件系统','快照复制到对象存储','AppMirror 异步容灾与回切']]
+};
+let ptMode = 'tp', ptTimer = null;
+function ptDraw(step){
+  const s = $('#ptSvg'); s.innerHTML = '';
+  const d = PT[ptMode], good = ptMode === 'tp';
+  d[1].forEach((t,i)=>{
+    const col = i % 3, row = Math.floor(i/3), x = 16 + col*206, y = 14 + row*96;
+    const lit = good ? i < step : true;
+    sv('rect', {x, y, width:192, height:78, rx:12, fill:good?(lit?'#e2f5ec':'#f7f9fd'):'#fbecef', stroke:good?(lit?C.green:C.line):'#e7a3b3', 'stroke-width':good&&i===step-1?2.4:1.2}, s);
+    sv('text', {x:x+14, y:y+24, 'font-size':10.5, fill:good?C.green:C.red, 'font-family':'monospace'}, s, good ? 'STEP ' + (i+1) : '限制 ' + (i+1));
+    sv('text', {x:x+14, y:y+50, 'font-size':13, 'font-weight':700, fill:lit?C.ink:C.faint}, s, t);
+  });
+  $('#ptBody').innerHTML = good
+    ? '<h4>一个 Application 资源覆盖 VM、PVC 与配置</h4><p>按计划自动备份并按策略保留；可原地恢复、恢复到新命名空间或另一个集群；容灾基于异步 SnapMirror，支持计划内切换与回切。</p>'
+    : '<h4>能用，但要自己拼起来</h4><p>VolumeSnapshot、VirtualMachineSnapshot、VirtualMachineRestore、VirtualMachineClone 各自独立；没有异地备份，也没有容灾。</p>';
+}
+function ptPlay(){ if(ptMode !== 'tp') return; clearInterval(ptTimer); let k = 0; ptDraw(0); ptTimer = setInterval(()=>{ k++; ptDraw(k); if(k >= 6) clearInterval(ptTimer); }, 650); }
+toggleGroup('data-pt', k=>{ ptMode = k; clearInterval(ptTimer); ptDraw(6); });
+$('#ptPlay').addEventListener('click', ptPlay);
+
+/* ── 统一运维：四个阶段 ── */
+const OP = [
+  ['被动响应', '人仍然做所有事', '工单驱动，各平台各用一套工具，手工排障，经验散在 wiki 里。'],
+  ['主动预防', '人仍然发起', '遥测、预测性告警、容量预测。系统告诉你，你来决定。'],
+  ['自治', '人仍然审批', '在护栏内闭环处理：容量、QoS、勒索响应。'],
+  ['自治资产', '人只声明目标', '你声明想要的结果，具名智能体持续维持并证明做到了。']
+];
+(function(){
+  const h = $('#opSteps');
+  OP.forEach((o,i)=>{
+    const d = document.createElement('div'); d.className = 'st' + (i===0?' on':'');
+    d.innerHTML = `<div class="n">STAGE ${i+1}</div><div class="l">${o[0]}</div>`;
+    d.addEventListener('click', ()=> opShow(i));
+    h.appendChild(d);
+  });
+})();
+function opShow(i){
+  $$('#opSteps .st').forEach((d,k)=> d.classList.toggle('on', k===i));
+  $('#opBody').innerHTML = `<h4>${OP[i][0]} · ${OP[i][1]}</h4><p>${OP[i][2]}</p>`;
+}
+opShow(0);
+
+/* ── 客户实践 ── */
+const CS = [
+  ['keep', '美国大型医院', '$528,592', '每年节省的 VCF 订阅费用；识别出 40 台利用不足的主机，减少 1508 个 CPU 核。'],
+  ['keep', '美国大型大学', '$1.3M', '三年总节省（含 ASA）；计算成本约降 25%，网络约降 50%，借助 ONTAP 不可变快照备份成本约降 65%。'],
+  ['shift', 'EMEA 技术服务商', '~50,000 VM', '约 2000 万美元的续约 90 天内到期，借助 Shift 与 MTV 集成，不到 90 天开始迁往 OpenShift Virtualization。'],
+  ['shift', '美国金融服务机构', '~11,000 VM', '续约 6 个月内到期，VM 全部迁出 VMware；Trident Protect 提供原生集成的备份与保护。'],
+  ['shift', '欧洲工业集团', '数百万美元', '从 VMware 迁到 OpenShift Virtualization 时遇到规模问题，Trident + ONTAP 通过规模与性能测试，成为数据平台。'],
+  ['mod', 'APJ 托管服务商', '~40% VM', '借续约契机把约 40% 的 VM 迁到 OpenShift 与 OpenShift Virtualization；RPO/RTO 约改善 12 倍，打补丁约快 2 倍。'],
+  ['mod', 'Red Hat 全球 IT', '~40M IOPS', 'NetApp 全闪存支撑内部 AI 模型训练与 OpenShift 应用，吞吐约 1 TB/s；Trident 为 AI 推理环境提供持久存储。'],
+  ['mod', '一家游戏公司', '满足备份 SLA', '迁到 OpenShift Virtualization 后，用 Backup and Recovery 按策略保护 VM，备份送到 ONTAP S3。']
+];
+const CSL = {keep:['保留 · 优化','#0067c5'], shift:['迁移','#6a5ad4'], mod:['现代化','#0e9a62']};
+function csDraw(f){
+  $('#csGrid').innerHTML = CS.filter(c=> f === 'all' || c[0] === f).map(c=>
+    `<div class="vc" style="border-top:3px solid ${CSL[c[0]][1]}"><span class="k" style="color:${CSL[c[0]][1]}">${CSL[c[0]][0]} · ${c[1]}</span><div class="t mono" style="font-size:20px;color:${CSL[c[0]][1]}">${c[2]}</div><div class="d">${c[3]}</div></div>`).join('');
+}
+toggleGroup('data-cs', csDraw);
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav === 'Shift Toolkit') setTimeout(szPlay, 420);
+  if(nav === '迁到 OpenShift') setTimeout(mtvAuto, 420);
+  if(nav === 'Trident 供给') setTimeout(tpPlay, 420);
+  if(nav === '保护与容灾') setTimeout(ptPlay, 420);
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+</body>
+</html>
