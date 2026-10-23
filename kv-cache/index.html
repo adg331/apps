@@ -27,19 +27,20 @@ body{
 /* ===== 顶栏 ===== */
 header{
   display:flex; align-items:center; gap:16px;
-  padding:14px 28px; border-bottom:1px solid var(--line);
+  padding:14px 24px; border-bottom:1px solid var(--line);
   background:rgba(255,255,255,.78); backdrop-filter:blur(6px); z-index:10;
 }
 .logo{
+  flex-shrink:0; white-space:nowrap;
   font-weight:800; font-size:20px; letter-spacing:.5px;
   background:linear-gradient(90deg,var(--cyan),var(--violet));
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
 .logo small{font-size:12px; color:var(--dim); -webkit-text-fill-color:var(--dim); margin-left:8px; font-weight:400}
-.tabs{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end}
+.tabs{display:flex; gap:5px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end}
 .tab{
   border:1px solid var(--line); background:transparent; color:var(--dim);
-  padding:6px 14px; border-radius:20px; cursor:pointer; font-size:13px;
+  padding:6px 9px; border-radius:20px; cursor:pointer; font-size:12.5px; white-space:nowrap;
   transition:.2s;
 }
 .tab:hover{color:var(--txt); border-color:var(--cyan)}
@@ -325,8 +326,24 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
 .liS{font-size:12.5px; line-height:1.7; color:var(--dim); margin-bottom:7px}
 .liS b{color:var(--txt)}
 
+/* ===== 幕 · 智能体循环 / 共享层（来自 INSIGHT 2026 BKO1025） ===== */
+.bkGrid{display:grid; grid-template-columns:1.15fr .85fr; gap:18px}
+.bkSide{display:flex; flex-direction:column; gap:14px}
+.bkViz{background:linear-gradient(178deg,#fbfcff,#f2f6fd)}
+.bkViz svg{width:100%; height:auto; display:block; max-height:360px}
+.bkCtl{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px}
+.bkCtl .st{margin-left:auto; font-size:12px; color:var(--faint)}
+.bkStats{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.bkStats .stat{min-width:0}
+.bkStats .stat.warn .v{color:var(--orange)}
+.liS.warn b{color:var(--orange)}
+.liS.ok b{color:var(--green)}
+.cards.bkMetric .card .k{font-size:11px; font-weight:800; letter-spacing:.6px; color:var(--cyan)}
+.cards.bkMetric .card.cost .k{color:var(--orange)}
+.cards.bkMetric .card .t{font-size:20px}
+
 @media (max-width:1100px){
-  .grid2,.chatWrap{grid-template-columns:1fr}
+  .grid2,.chatWrap,.bkGrid{grid-template-columns:1fr}
   .cards{grid-template-columns:repeat(2,1fr)}
   .scnGrid{grid-template-columns:repeat(2,1fr)}
   .scnDetail,.lowerRow,.ladder,.msGrid{grid-template-columns:1fr}
@@ -366,6 +383,71 @@ var _hmt = _hmt || [];
 </dialog>
 
 <main>
+
+<!-- ═══════ 幕0 · 为什么需要：智能体多步循环 ═══════ -->
+<section class="scene" id="sc0">
+  <h1>推理已经变成<span class="hl">智能体式的多步循环</span></h1>
+  <div class="sub">一次任务不再是"一问一答"，而是 预填充 → 解码 → 工具调用 → 下一轮。每一轮都要带上之前积累的全部上下文 —— KV Cache 因此从临时缓存变成了"长期记忆"。</div>
+  <div class="bkGrid">
+    <div class="panel bkViz">
+      <div class="bkCtl">
+        <button class="btn primary" id="agPlay">▶ 播放 6 轮</button>
+        <button class="btn" id="agReset">重置</button>
+        <span class="st" id="agState">第 0 轮</span>
+      </div>
+      <svg viewBox="0 0 640 330" id="agSvg">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7d8db0"/></marker>
+        <marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0067c5"/></marker>
+        <marker id="ahv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6f5bd6"/></marker></defs>
+        <rect x="10" y="8" width="620" height="122" rx="12" fill="#fff" stroke="#d9e0ef"/>
+        <text x="618" y="124" text-anchor="end" font-size="10.5" fill="#8b94b3" font-family="monospace">AGENTIC LOOP</text>
+        <path d="M560 82 L600 82 L600 22 L40 22 L40 82 L66 82" fill="none" stroke="#7d8db0" stroke-width="1.6" marker-end="url(#ah)"/>
+        <rect x="250" y="12" width="140" height="20" rx="6" fill="#eef3fb" stroke="#c9d4e6"/>
+        <text x="320" y="26" text-anchor="middle" font-size="11" fill="#5b6788">智能体下一轮</text>
+        <rect class="agb" data-k="0" x="70" y="58" width="130" height="48" rx="10" fill="#eaf2fd" stroke="#93b6e4"/>
+        <text x="135" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#123a7a">预填充</text>
+        <text x="135" y="96" text-anchor="middle" font-size="10" fill="#5b6788">Prefill · 读入上下文</text>
+        <rect class="agb" data-k="1" x="250" y="58" width="130" height="48" rx="10" fill="#eaf2fd" stroke="#93b6e4"/>
+        <text x="315" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#123a7a">解码</text>
+        <text x="315" y="96" text-anchor="middle" font-size="10" fill="#5b6788">Decode · 逐 token 生成</text>
+        <rect class="agb" data-k="2" x="430" y="58" width="130" height="48" rx="10" fill="#eaf2fd" stroke="#93b6e4"/>
+        <text x="495" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#123a7a">工具调用</text>
+        <text x="495" y="96" text-anchor="middle" font-size="10" fill="#5b6788">Tool call · 结果并回</text>
+        <path d="M200 82 L246 82" stroke="#7d8db0" stroke-width="1.6" marker-end="url(#ah)"/>
+        <path d="M380 82 L426 82" stroke="#7d8db0" stroke-width="1.6" marker-end="url(#ah)"/>
+        <path id="agRd" d="M118 208 L118 112" stroke="#0067c5" stroke-width="2.6" marker-end="url(#ahb)" opacity=".25"/>
+        <text x="110" y="168" text-anchor="end" font-size="11" fill="#0067c5">读：复用历史上下文</text>
+        <path id="agWr" d="M152 112 L152 208" stroke="#6f5bd6" stroke-width="2.6" marker-end="url(#ahv)" opacity=".25"/>
+        <text x="160" y="168" font-size="11" fill="#6f5bd6">写：本轮新增 KV</text>
+        <rect x="10" y="212" width="620" height="112" rx="12" fill="#fff" stroke="#d9e0ef"/>
+        <text x="22" y="230" font-size="11" fill="#8b94b3" font-family="monospace">KV CACHE · 随轮次累积（示意）</text>
+        <line x1="250" y1="314" x2="620" y2="314" stroke="#c9d4e6"/>
+        <g id="agStack"></g>
+        <text x="560" y="236" text-anchor="middle" font-size="10.5" fill="#8b94b3">需要保留的容量 ↑</text>
+      </svg>
+      <div class="note">※ 示意图依据 INSIGHT 2026 场次 BKO1025 讲者材料重绘；柱高仅表示随轮次累积的趋势，不代表具体容量。</div>
+    </div>
+    <div class="bkSide">
+      <div class="panel">
+        <div class="dt"><span class="bar"></span>上下文为什么越来越重</div>
+        <div class="liS"><b>从聊天到工作流</b>：AI 从单轮问答转向多步任务，智能体需要可复用的推理上下文。</div>
+        <div class="liS"><b>上下文持续增长</b>：序列更长、会话更久，每一轮都在前一轮基础上追加。</div>
+        <div class="liS"><b>KV Cache 成为长期记忆</b>：性能取决于能否把上下文存下来并快速复用。</div>
+      </div>
+      <div class="panel">
+        <div class="dt"><span class="bar"></span>由此带来的四个基础设施问题（本页依次回答）</div>
+        <div class="liS warn"><b>容量</b>：能为多少会话保留 KV Cache？—— 显存墙</div>
+        <div class="liS warn"><b>共享</b>：上下文能否被其他 GPU 节点复用？—— 分层架构 / 共享层</div>
+        <div class="liS warn"><b>带宽</b>：读回速度能否快过重新计算？—— 命中演示 / TTFT 对比</div>
+        <div class="liS warn"><b>收益</b>：最终能换来多少吞吐与时延改善？—— 衡量指标 / NetApp 实测</div>
+      </div>
+      <div class="bkStats">
+        <div class="stat"><div class="v kpi" id="agRead">0</div><div class="l">需读回的历史轮次</div></div>
+        <div class="stat"><div class="v kpi" id="agWrite" style="color:var(--violet)">0</div><div class="l">本轮新写入的增量</div></div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ═══════ 幕1 · 问题：显存墙 ═══════ -->
 <section class="scene" id="sc1">
@@ -453,7 +535,43 @@ var _hmt = _hmt || [];
         </div>
       </div>
     </div>
-    <div class="note" id="s2note">※ 关键点：任何一层的命中都<b>远快于重新计算</b>，具体加速倍数取决于命中层级与标定模型 —— 详见第 3 幕（Token 生成演示）与第 4 幕（TTFT 量化对比）。</div>
+    <div class="note" id="s2note">※ 关键点：任何一层的命中都<b>远快于重新计算</b>，具体加速倍数取决于命中层级与标定模型 —— 详见第 5 幕（Token 生成演示）与第 6 幕（TTFT 量化对比）。</div>
+  </div>
+</section>
+
+<!-- ═══════ 幕2b · 共享层：解除会话与节点的绑定 ═══════ -->
+<section class="scene" id="sc2s">
+  <h1>共享 KV Cache：<span class="hl">请求不再被会话位置绑住</span></h1>
+  <div class="sub">KV Cache 只存在本地（HBM / DRAM / 本地 NVMe）时，路由器只能把会话发回"有缓存的那台"，于是有的节点排队、有的节点空闲。共享存储层让任意节点都能接手。</div>
+  <div class="bkGrid">
+    <div class="panel bkViz">
+      <div class="bkCtl">
+        <button class="gdsBtn" data-share="off">无共享</button>
+        <button class="gdsBtn on" data-share="on">共享 KV Cache</button>
+        <span class="st" id="shState"></span>
+      </div>
+      <svg viewBox="0 0 640 330" id="shSvg"></svg>
+      <div class="memLegend">
+        <span><span class="sw" style="background:#0067c5"></span>会话 1</span><span><span class="sw" style="background:#6f5bd6"></span>会话 2</span>
+        <span><span class="sw" style="background:#d97b16"></span>会话 3</span><span><span class="sw" style="background:#0d8f80"></span>会话 4</span>
+      </div>
+      <div class="note">※ 依据 BKO1025 讲者材料（NVIDIA 提供）重绘，路由器以 NVIDIA Dynamo 为例。</div>
+    </div>
+    <div class="bkSide">
+      <div class="panel">
+        <div class="dt"><span class="bar"></span><span id="shTitle">共享之后</span></div>
+        <div id="shBody"></div>
+      </div>
+      <div class="bkStats">
+        <div class="stat ok"><div class="v kpi" id="shBusy">4 / 4</div><div class="l">正在工作的节点</div></div>
+        <div class="stat warn"><div class="v kpi" id="shQ">0</div><div class="l">排队等待的请求</div></div>
+      </div>
+      <div class="panel">
+        <div class="dt"><span class="bar"></span>对推理平台的意义</div>
+        <div class="liS ok"><b>负载均衡</b>：调度只看节点空闲程度，不必迁就缓存位置。</div>
+        <div class="liS ok"><b>扩缩容与故障</b>：新加入或接替的节点直接从 AFX 共享池读回上下文，无需重算。</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -478,7 +596,7 @@ var _hmt = _hmt || [];
         <span><span class="sw" style="background:var(--nvme)"></span>NVMe 加载</span>
         <span><span class="sw" style="background:#8fa7dc"></span>KV 就绪</span>
       </div>
-      <div class="ttftBox"><span class="t kpi" id="p3ttft">0.00</span><span class="u">秒 · 模拟 TTFT（按第 4 幕同一模型换算）</span></div>
+      <div class="ttftBox"><span class="t kpi" id="p3ttft">0.00</span><span class="u">秒 · 模拟 TTFT（按第 6 幕同一模型换算）</span></div>
       <div class="stream" id="p3stream">— 首 token 输出区 —</div>
     </div>
     <div class="panel">
@@ -566,6 +684,34 @@ var _hmt = _hmt || [];
     </div>
   </div>
   <div class="note">※ 数据均为各论文在其自身硬件与负载条件下的自报结果，非 NetApp 实测，不同论文之间、与前几幕示意值之间均不可直接比较；"对共享存储层的含义"为基于论文观测的推导，需结合实际负载验证。资料来源：USENIX FAST '26 论文 SolidAttention、CacheSlide、Bidaw、AITURBO、PPC/modelFS。</div>
+</section>
+
+<!-- ═══════ 幕5b · 衡量指标 ═══════ -->
+<section class="scene" id="sc5m">
+  <h1>用四个指标衡量<span class="hl">共享 KV Cache 的收益</span></h1>
+  <div class="sub">两项是收益：单卡吞吐和单卡并发会话。另两项是代价：带宽和容量的成本。评估方案时四项要一起看 —— 下一幕的 NetApp 实测，看的就是收益这一侧。</div>
+  <div class="cards bkMetric">
+    <div class="card"><div class="k">收益 · THROUGHPUT</div><div class="t">TPS / GPU</div><div class="d">每块 GPU 每秒生成的 token 数。省掉重复预填充后，算力用在生成上。</div></div>
+    <div class="card"><div class="k">收益 · CONCURRENCY</div><div class="t">会话数 / GPU</div><div class="d">每块 GPU 能同时服务的会话数。上下文不必常驻显存，并发上限随之提高。</div></div>
+    <div class="card cost"><div class="k">代价 · BANDWIDTH</div><div class="t">$ / Gbps</div><div class="d">读回 KV Cache 必须足够快，才能比重新计算更划算。带宽成本决定这笔账。</div></div>
+    <div class="card cost"><div class="k">代价 · CAPACITY</div><div class="t">TB / GPU</div><div class="d">为更多会话保留 KV Cache 所需的容量。写入带宽还会影响闪存寿命，进而影响容量规划。</div></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>共享 KV Cache 带来的增益</div>
+      <div class="liS ok"><b>提高吞吐</b>：同样的 GPU 生成更多 token（TPS/GPU ↑）。</div>
+      <div class="liS ok"><b>提高并发</b>：同样的 GPU 承载更多会话（会话数/GPU ↑）。</div>
+      <div class="liS ok"><b>降低首 token 时间</b>：命中缓存的请求跳过大部分预填充，用户和智能体更快看到响应。</div>
+    </div>
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>存储层需要满足的条件</div>
+      <div class="liS"><b>读带宽</b>：足够快地把 KV Cache 读回 GPU。</div>
+      <div class="liS"><b>容量</b>：能为更多会话长期保留 KV Cache。</div>
+      <div class="liS"><b>写带宽与耐久</b>：持续写入带来的闪存磨损，决定了需要多少容量来分摊寿命。</div>
+      <div class="liS"><b>成本</b>：以 $/Gbps 与 TB/GPU 衡量，控制带宽和容量的投入。</div>
+    </div>
+  </div>
+  <div class="note">※ 指标定义依据 INSIGHT 2026 场次 BKO1025 讲者材料。</div>
 </section>
 
 <!-- ═══════ 幕6 · NetApp 实测：共享存储层 ═══════ -->
@@ -664,7 +810,7 @@ var _hmt = _hmt || [];
   <h1>NetApp AFX：让 KV Cache 成为<span class="hl">可管理的存储资产</span></h1>
   <div class="sub">从"HBM 装不下就重算"到"分层驻留、按需回填、集群共享"。</div>
   <div class="cards">
-    <div class="card"><div class="ic">⚡</div><div class="t">TTFT 数量级下降</div><div class="d">从"重算"变成"取数"：TTFT 从全量 prefill 的秒级，降到最佳层命中的毫秒级 —— 具体倍数随标定模型与命中层级变化，见第 3、4 幕实时数据。</div></div>
+    <div class="card"><div class="ic">⚡</div><div class="t">TTFT 数量级下降</div><div class="d">从"重算"变成"取数"：TTFT 从全量 prefill 的秒级，降到最佳层命中的毫秒级 —— 具体倍数随标定模型与命中层级变化，见第 5、6 幕实时数据。</div></div>
     <div class="card"><div class="ic">📈</div><div class="t">并发与吞吐提升</div><div class="d">HBM 只留热块，同卡可承载更多活跃会话；prefill 算力被释放给 decode，GPU 有效利用率上升。</div></div>
     <div class="card"><div class="ic">💰</div><div class="t">单位成本下降</div><div class="d">用 NVMe / 网络存储的 $/GB 承接 HBM 的容量压力，同等 SLA 下所需 GPU 数量减少。</div></div>
     <div class="card"><div class="ic">🔗</div><div class="t">集群级前缀共享</div><div class="d">系统提示、知识库文档等公共前缀入 AFX 池共享，一处 prefill 全集群命中；GDS/RDMA 数据路径绕过 CPU，回填不抢算力。</div></div>
@@ -725,7 +871,7 @@ var _hmt = _hmt || [];
       </div>
     </div>
 
-    <div class="termSecTitle"><span class="bar"></span>KV 体积怎么算（第 1 幕"每 token KV 大小"的四个参数）</div>
+    <div class="termSecTitle"><span class="bar"></span>KV 体积怎么算（第 2 幕"每 token KV 大小"的四个参数）</div>
     <div class="termGrid">
       <div class="termCard">
         <div class="termHead"><span class="termName">层数</span><span class="termEn">Layers · 如 80 层</span></div>
@@ -769,7 +915,7 @@ var _hmt = _hmt || [];
       </div>
     </div>
 
-    <div class="termSecTitle"><span class="bar"></span>存储侧研究（第 5 幕"业界研究"）</div>
+    <div class="termSecTitle"><span class="bar"></span>存储侧研究（第 7 幕"业界研究"）</div>
     <div class="termGrid">
       <div class="termCard">
         <div class="termHead"><span class="termName">重用距离</span><span class="termEn">Reuse Distance</span></div>
@@ -852,8 +998,8 @@ const fmtTok = kb => kb>=1024 ? (kb/1024).toFixed(2)+' MB' : kb>=100 ? kb.toFixe
 const sleep = ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ═══════════ 导航 ═══════════ */
-const SCENES = ['sc1','sc2','sc3','sc4','sc5f','sc5n','sc5v','sc5','sc6'];
-const NAMES  = ['① 显存墙','② 分层架构','③ 命中演示','④ TTFT 对比','⑤ 业界研究','⑥ NetApp 实测','⑦ 框架与展望','⑧ 价值总结','⑨ 术语速查'];
+const SCENES = ['sc0','sc1','sc2','sc2s','sc3','sc4','sc5f','sc5m','sc5n','sc5v','sc5','sc6'];
+const NAMES  = ['① 智能体','② 显存墙','③ 分层','④ 共享层','⑤ 命中','⑥ TTFT','⑦ 业界研究','⑧ 指标','⑨ 实测','⑩ 展望','⑪ 总结','⑫ 术语'];
 let cur = 0;
 const tabsEl = $('tabs'), dotsEl = $('dots');
 SCENES.forEach((_,i)=>{
@@ -867,7 +1013,8 @@ function show(i){
   [...tabsEl.children].forEach((t,k)=>t.classList.toggle('on',k===cur));
   [...dotsEl.children].forEach((d,k)=>d.classList.toggle('on',k===cur));
   $(SCENES[cur]).scrollTop = 0;         // 每次切幕默认从顶部开始看
-  if(cur!==1) stopAuto();
+  if(SCENES[cur]!=='sc2') stopAuto();
+  if(SCENES[cur]==='sc0') setTimeout(agPlay,420); else agStop();
 }
 $('prevB').onclick=()=>show(cur-1);
 $('nextB').onclick=()=>show(cur+1);
@@ -1371,13 +1518,126 @@ function vfDraw(f){
 }
 document.querySelectorAll('[data-vf]').forEach(x=>x.onclick=()=>vfDraw(x.dataset.vf));
 
+/* ═══════════ 幕 · 智能体循环（BKO1025 讲者材料重绘） ═══════════ */
+let agTurn=0, agTimer=null;
+function agDraw(){
+  const g=$('agStack'); g.innerHTML='';
+  const bw=46, gap=12, x0=262;
+  for(let t=1;t<=agTurn;t++){
+    const x=x0+(t-1)*(bw+gap);
+    for(let k=1;k<=t;k++)
+      sv('rect',{x, y:314-12*k, width:bw, height:11, rx:2.5, fill:k===t?'#6f5bd6':'#cfe0f7', stroke:k===t?'#6f5bd6':'#93b6e4'},g);
+    sv('text',{x:x+bw/2, y:314-12*t-5, 'text-anchor':'middle', 'font-size':10, fill:'#5b6788'},g,'第'+t+'轮');
+  }
+  $('agState').textContent='第 '+agTurn+' 轮';
+  $('agRead').textContent=agTurn>1?(agTurn-1)+' 轮':'0';
+  $('agWrite').textContent=agTurn?'1 轮':'0';
+}
+function agPhase(k){
+  document.querySelectorAll('.agb').forEach(r=>{
+    const on=+r.dataset.k===k;
+    r.setAttribute('fill',on?'#dbe8fb':'#eaf2fd');
+    r.setAttribute('stroke',on?'#0067c5':'#93b6e4');
+    r.setAttribute('stroke-width',on?2.4:1);
+  });
+  $('agRd').setAttribute('opacity',k===0&&agTurn>1?1:.25);
+  $('agWr').setAttribute('opacity',k===2?1:.25);
+}
+function agStop(){ clearTimeout(agTimer); agTimer=null; }
+function agReset(){ agStop(); agTurn=0; agPhase(-1); agDraw(); }
+function agPlay(){
+  agReset();
+  let step=0;
+  (function tick(){
+    if(agTurn>=6&&step%3===0){ agPhase(-1); return; }
+    const ph=step%3;
+    if(ph===0){ agTurn++; agDraw(); }
+    agPhase(ph); step++;
+    agTimer=setTimeout(tick,520);
+  })();
+}
+$('agPlay').onclick=agPlay;
+$('agReset').onclick=agReset;
+
+/* ═══════════ 幕 · 共享层：会话绑定 vs 共享（BKO1025 讲者材料重绘） ═══════════ */
+const SH_C=['#0067c5','#6f5bd6','#d97b16','#0d8f80'];
+const SH_TXT={
+  on :['共享之后',[
+    ['ok','<b>任意节点可接手</b>：共享存储让新请求可以放在任何节点，TTFT 最小化。'],
+    ['ok','<b>四个会话并行</b>：每个节点各运行一个会话，没有请求排队。'],
+    ['ok','<b>缓存集中保存</b>：KV Cache 存在共享层，各节点按需读回。']]],
+  off:['没有共享时',[
+    ['warn','<b>请求排队</b>：会话 2 的 KV 在节点 1 上，只能等节点 1 空出来，TTFT 增加。'],
+    ['warn','<b>服务器闲置</b>：节点 3、4 有空闲算力，却因为 KV Cache 不在本地而用不上。'],
+    ['warn','<b>重算代价</b>：如果强行调度到空闲节点，就要从头重新预填充。']]]
+};
+function shDraw(on){
+  const svg=$('shSvg'); svg.innerHTML='';
+  sv('rect',{x:250, y:6, width:140, height:44, rx:10, fill:'#eefaf4', stroke:'#0f9d63', 'stroke-width':1.6},svg);
+  sv('text',{x:320, y:27, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:'#123a7a'},svg,'路由器');
+  sv('text',{x:320, y:42, 'text-anchor':'middle', 'font-size':10, fill:'#5b6788'},svg,'Dynamo router');
+  const nx=[20,177,334,491], nw=129;
+  // 无共享：节点1 跑会话1、队列里有2；节点2 跑会话3、队列里有4；节点3/4 空闲
+  const run  =on?[0,1,2,3]:[0,2,-1,-1];
+  const queue=on?[-1,-1,-1,-1]:[1,3,-1,-1];
+  const local=on?[[],[],[],[]]:[[0,1],[2,3],[],[]];
+  nx.forEach((x,i)=>{
+    const busy=run[i]>=0;
+    sv('path',{d:`M320 50 L${x+nw/2} 100`, stroke:busy?'#0f9d63':'#c9d4e6', 'stroke-width':busy?2:1.2, 'stroke-dasharray':busy?'':'4 4', fill:'none'},svg);
+    sv('rect',{x, y:122, width:nw, height:112, rx:12, fill:busy?'#fff':'#f5f7fb', stroke:busy?'#c9d4e6':'#d9e0ef'},svg);
+    sv('text',{x:x+10, y:140, 'font-size':10.5, fill:'#8b94b3', 'font-family':'monospace'},svg,'GPU 节点 '+(i+1));
+    sv('rect',{x:x+nw/2-15, y:96, width:30, height:22, rx:5, fill:'#2a3550'},svg);
+    if(queue[i]>=0){
+      sv('circle',{cx:x+nw/2, cy:107, r:8, fill:SH_C[queue[i]]},svg);
+      sv('text',{x:x+nw/2, y:111, 'text-anchor':'middle', 'font-size':10, fill:'#fff', 'font-weight':800},svg,queue[i]+1);
+    }
+    if(busy){
+      sv('circle',{cx:x+34, cy:172, r:15, fill:SH_C[run[i]]},svg);
+      sv('text',{x:x+34, y:177, 'text-anchor':'middle', 'font-size':13, fill:'#fff', 'font-weight':800},svg,run[i]+1);
+      sv('text',{x:x+56, y:176, 'font-size':11, fill:'#5b6788'},svg,'运行中');
+    } else {
+      sv('text',{x:x+nw/2, y:176, 'text-anchor':'middle', 'font-size':11.5, fill:'#8b94b3'},svg,'空闲');
+    }
+    if(local[i].length){
+      local[i].forEach((c,j)=>{
+        sv('rect',{x:x+14+j*38, y:200, width:32, height:22, rx:5, fill:SH_C[c]},svg);
+        sv('text',{x:x+30+j*38, y:215, 'text-anchor':'middle', 'font-size':10.5, fill:'#fff', 'font-weight':800},svg,c+1);
+      });
+      sv('text',{x:x+nw-6, y:215, 'text-anchor':'end', 'font-size':9.5, fill:'#8b94b3'},svg,'本地 KV');
+    } else if(!on){
+      sv('text',{x:x+nw/2, y:215, 'text-anchor':'middle', 'font-size':9.5, fill:'#8b94b3'},svg,'无相关 KV');
+    }
+  });
+  if(on){
+    sv('rect',{x:120, y:262, width:400, height:58, rx:12, fill:'#f3f0fd', stroke:'#6f5bd6', 'stroke-width':1.6},svg);
+    sv('text',{x:136, y:282, 'font-size':11, fill:'#6f5bd6', 'font-weight':800},svg,'共享 KV Cache');
+    sv('text',{x:136, y:300, 'font-size':10, fill:'#8b94b3'},svg,'AFX 共享池');
+    [0,1,2,3].forEach(c=>{
+      sv('rect',{x:250+c*62, y:276, width:50, height:30, rx:6, fill:SH_C[c]},svg);
+      sv('text',{x:275+c*62, y:296, 'text-anchor':'middle', 'font-size':12, fill:'#fff', 'font-weight':800},svg,c+1);
+    });
+    nx.forEach(x=>sv('path',{d:`M${x+nw/2} 236 L${Math.max(140,Math.min(500,x+nw/2))} 262`, stroke:'#6f5bd6', 'stroke-width':1.6, fill:'none'},svg));
+  } else {
+    sv('text',{x:320, y:268, 'text-anchor':'middle', 'font-size':12, fill:'#d6365a', 'font-weight':700},svg,'会话 2、4 必须等待持有其 KV 的节点 → 排队，TTFT 上升');
+    sv('text',{x:320, y:290, 'text-anchor':'middle', 'font-size':12, fill:'#d97b16', 'font-weight':700},svg,'节点 3、4 没有相关 KV → 闲置');
+  }
+  const t=SH_TXT[on?'on':'off'];
+  $('shTitle').textContent=t[0];
+  $('shBody').innerHTML=t[1].map(([c,h])=>`<div class="liS ${c}">${h}</div>`).join('');
+  $('shBusy').textContent=on?'4 / 4':'2 / 4';
+  $('shQ').textContent=on?'0':'2';
+  $('shState').textContent=on?'4 个节点全部工作':'2 个节点排队，2 个闲置';
+  document.querySelectorAll('[data-share]').forEach(b=>b.classList.toggle('on',(b.dataset.share==='on')===on));
+}
+document.querySelectorAll('[data-share]').forEach(b=>b.onclick=()=>shDraw(b.dataset.share==='on'));
+
 /* ═══════════ 初始化 ═══════════ */
 applySliderRanges();
 switchModel('gqa70b');
 setGDS(true);
 show(0);
 setTimeout(s4update,50);
-msDraw('cpu'); cvDraw(); vfDraw('all');
+msDraw('cpu'); cvDraw(); vfDraw('all'); agReset(); shDraw(true);
 </script>
 </body>
 </html>
