@@ -645,6 +645,65 @@ var _hmt = _hmt || [];
   <div class="callout warn"><b>部署边界</b>ARP/AI、恶意扩展名拦截、快照锁定与 SnapLock 隔离库都是 ONTAP 本机能力。用户行为分析、主动扫描、隔离恢复环境与干净恢复由 NetApp Console 的勒索软件韧性服务编排：本地部署 Console Agent，服务本体运行在 NetApp 的云端 VPC 中，需要对外连通；在中国大陆的可用性与交付方式需单独确认。对二级存储的主动扫描在路线图上。</div>
 </section>
 
+<!-- ═══════ 幕7c · 真实案例：矢崎巴西 ═══════ -->
+<section class="scene" id="sc7c">
+  <h1>真实案例：<span class="hl">汽车线束工厂遭遇勒索攻击</span></h1>
+  <div class="sub">矢崎巴西（YAZAKI do Brasil）生产汽车线束，是日系主机厂的一级供应商，巴西各工厂统一采用 NetApp 存储承载 SAP ERP 与车间 MES。2025 年 12 月，勒索软件攻入其巴西总部 Tatuí 工厂，ERP 与 MES 数据开始被加密，生产中断。点击右侧步骤，看 ONTAP 在攻击进行中和之后分别做了什么。</div>
+
+  <div class="stageWrap">
+    <div>
+      <div class="stage">
+        <svg id="yzSvg" viewBox="0 0 640 150" role="img" aria-label="矢崎巴西勒索事件恢复时间线">
+          <line x1="70" y1="75" x2="570" y2="75" stroke="#d9e0ef" stroke-width="4" stroke-linecap="round"/>
+          <line id="yzProg" x1="70" y1="75" x2="70" y2="75" stroke="#0f9d63" stroke-width="4" stroke-linecap="round"/>
+          <g id="yzNodes"></g>
+        </svg>
+        <div class="callout" style="margin-top:6px"><b id="yzSrc"></b><span id="yzNote"></span></div>
+      </div>
+      <div class="bigStat">
+        <div class="stat ok"><div class="v">42 TB</div><div class="l">数据受保护并全部恢复</div></div>
+        <div class="stat blue"><div class="v">144 台</div><div class="l">VM，零数据丢失、未支付赎金</div></div>
+        <div class="stat ok"><div class="v">3 天</div><div class="l">90% 的 VM（关键系统）回到生产</div></div>
+        <div class="stat warn"><div class="v">数周</div><div class="l">同样的恢复用常规备份还原的估算</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="sideBox">
+        <h4>RECOVERY CHAIN</h4>
+        <div id="yzSteps"></div>
+      </div>
+      <div class="quote">「我们从来不需要和任何人谈判，数据一直都在。」<br><b>Thiago Ruiz</b>，矢崎南方共同市场区域 IT 经理</div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:14px">
+    <div class="panel">
+      <h3>产线停不起：四重约束</h3>
+      <table class="dt"><tbody>
+        <tr><td style="width:74px"><b>时延</b></td><td>车间 MES 与 SAP 联动，毫秒级时延决定产线能否继续，只能部署在工厂本地</td></tr>
+        <tr><td><b>合规</b></td><td>IATF 16949 要求应急预案明确覆盖网络攻击；主机厂合同可能只给 24 小时申报停产</td></tr>
+        <tr><td><b>威胁</b></td><td>制造业连续五年是受攻击最多的行业；攻击者通常先破坏备份</td></tr>
+        <tr><td><b>预算</b></td><td>要在既定预算内拿到所需的存储能力</td></tr>
+      </tbody></table>
+    </div>
+    <div class="panel">
+      <h3>标准化架构</h3>
+      <table class="dt"><tbody>
+        <tr><td style="width:74px"><b>平台</b></td><td>各工厂 FAS 混合闪存，总部 AFF 全闪存，统一 ONTAP One 许可</td></tr>
+        <tr><td><b>防护</b></td><td>ARP 覆盖文件（NAS）与块（SAN）负载；多管理员验证、MFA、SnapLock 防篡改快照、卷加密</td></tr>
+        <tr><td><b>集成</b></td><td>SnapCenter 与 ONTAP tools for VMware，在 vCenter 内管理存储</td></tr>
+      </tbody></table>
+    </div>
+    <div class="panel">
+      <h3>决定结果的一步</h3>
+      <div class="note" style="margin-top:0">SAP 与 MES 跑在块存储上，而 ARP 最初只覆盖了文件数据。2025 年底，一次 ONTAP 升级把 ARP 扩展到 SAN 负载（ONTAP 9.17.1 起支持）。</div>
+      <div class="callout" style="margin-top:8px"><b>几周后</b>攻击发生，最关键的块存储负载已经在防护范围内。</div>
+    </div>
+  </div>
+
+  <div class="note">案例来源：NetApp INSIGHT 2026 场次 PBKO1006（2026-09-30），数字为客户在自身环境中的观测值。任何勒索软件检测系统都无法保证拦截全部攻击，ARP 是纵深防御中的重要一层。</div>
+</section>
+
 <!-- ═══════ 幕8 · 技术流派与代表方案 ═══════ -->
 <section class="scene" id="sc8">
   <h1>五种技术流派，<span class="hl">以及各自的代表方案</span></h1>
@@ -839,15 +898,15 @@ var _hmt = _hmt || [];
   <button class="navBtn" id="prevB" aria-label="上一幕">‹</button>
   <div class="dots" id="dots"></div>
   <button class="navBtn" id="nextB" aria-label="下一幕">›</button>
-  <span style="margin-left:14px">本页面依据 NetApp ONTAP 自主勒索软件防护官方文档（2026 年 6–7 月更新版）整理，第⑧幕及认证、MAV 补充内容取自 NetApp INSIGHT 2026 场次 BKO4003、BKO4000、BKO4007、BKO4001，为交互式概念演示，不连接真实 ONTAP，也不产生实际 I/O；页面中的文件数量、评分与时序均为示意，不构成性能基准或 RPO / RTO 承诺。没有任何勒索软件检测系统能够保证完全安全，相关能力应作为纵深防御中的一层。具体规格以对应版本的官方发布说明与产品文档为准。</span>
+  <span style="margin-left:14px">本页面依据 NetApp ONTAP 自主勒索软件防护官方文档（2026 年 6–7 月更新版）整理，第⑧幕及认证、MAV 补充内容取自 NetApp INSIGHT 2026 场次 BKO4003、BKO4000、BKO4007、BKO4001，第⑨幕案例取自场次 PBKO1006，为交互式概念演示，不连接真实 ONTAP，也不产生实际 I/O；页面中的文件数量、评分与时序均为示意，不构成性能基准或 RPO / RTO 承诺。没有任何勒索软件检测系统能够保证完全安全，相关能力应作为纵深防御中的一层。具体规格以对应版本的官方发布说明与产品文档为准。</span>
 </footer>
 
 <script>
 const $ = id => document.getElementById(id);
 
 /* ═══════ 导航 ═══════ */
-const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc7b','sc8','sc9'];
-const NAMES=['① 先算一笔账','② 检测原理','③ 模型差异','④ 版本矩阵','⑤ 负载适配','⑥ 规模影响','⑦ 落地防御','⑧ 隔离与恢复','⑨ 流派与方案','⑩ 价值自检'];
+const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc7b','sc7c','sc8','sc9'];
+const NAMES=['① 先算一笔账','② 检测原理','③ 模型差异','④ 版本矩阵','⑤ 负载适配','⑥ 规模影响','⑦ 落地防御','⑧ 隔离与恢复','⑨ 真实案例','⑩ 流派与方案','⑪ 价值自检'];
 let cur=0;
 const tabsEl=$('tabs'), dotsEl=$('dots');
 SCENES.forEach((_,i)=>{
@@ -909,6 +968,30 @@ document.querySelector('main').addEventListener('wheel',e=>{
   if(sc.scrollHeight-sc.clientHeight>4 && gap<GESTURE_GAP) return;
   fire(dy>0?1:-1);
 },{passive:false});
+
+/* ═══════ 幕7c · 矢崎巴西：恢复链条 ═══════ */
+const YZ=[
+  {t:'攻击开始',b:'ERP 与 MES 数据被加密',em:'勒索软件攻入总部工厂，生产中断',src:'2025 年 12 月 · Tatuí',note:'攻击直接落在承载 SAP 与车间 MES 的块存储卷上。'},
+  {t:'< 1 秒',b:'实时检测',em:'ARP 在块卷上识别异常加密模式',src:'ONTAP 本机 · ARP',note:'加密刚开始就被识别，检测用时不到一秒。'},
+  {t:'秒级',b:'自动快照并锁定',em:'捕获加密扩散前的干净副本，RPO = 0',src:'ONTAP 本机 · 快照锁定',note:'检测时刻自动创建快照并锁定，防止调查期间因保留期到期而丢失证据。几秒内就有了干净的恢复点。'},
+  {t:'取证',b:'FlexClone 克隆每台 VM',em:'取证团队在副本上工作，不碰生产',src:'ONTAP 本机 · FlexClone',note:'回滚之前先为每台 VM 克隆一份，取证分析在克隆上进行，不影响生产环境，也不占用额外完整容量。'},
+  {t:'3 天',b:'SnapRestore 恢复生产',em:'恢复本身以分钟计；等待的是企业取证流程',src:'ONTAP 本机 · SnapRestore',note:'从 ARP 创建的快照恢复，用时以分钟计。3 天后 90% 的 VM（关键系统）回到生产，等待时间来自企业自己的取证流程，而不是技术。'}
+];
+let yzCur=1;
+function yzRender(){
+  const X=i=>70+i*125;
+  $('yzNodes').innerHTML=YZ.map((s,i)=>{
+    const on=i<=yzCur, me=i===yzCur, c=i===0?'#d6365a':(on?'#0f9d63':'#c3cddf');
+    return `<g style="cursor:pointer" data-i="${i}"><circle cx="${X(i)}" cy="75" r="${me?12:9}" fill="${on||i===0?c:'#fff'}" stroke="${c}" stroke-width="3"/>`+
+      `<text x="${X(i)}" y="${i%2?34:116}" text-anchor="middle" font-size="14" font-weight="700" fill="${me?'#182342':'#5b6788'}">${s.t}</text>`+
+      `<text x="${X(i)}" y="${i%2?51:133}" text-anchor="middle" font-size="11" fill="#5b6788">${s.b}</text></g>`;}).join('');
+  $('yzProg').setAttribute('x2',X(yzCur));
+  [...$('yzNodes').children].forEach(g=>g.onclick=()=>{yzCur=+g.dataset.i;yzRender();});
+  $('yzSteps').innerHTML=YZ.map((s,i)=>`<div class="step${i===yzCur?' on':''}" role="button" tabindex="0" data-i="${i}"><span class="n">0${i+1}</span><div><b>${s.b}</b><em>${s.em}</em></div></div>`).join('');
+  [...$('yzSteps').children].forEach(d=>d.onclick=()=>{yzCur=+d.dataset.i;yzRender();});
+  $('yzSrc').textContent=YZ[yzCur].src; $('yzNote').textContent=YZ[yzCur].note;
+}
+yzRender();
 
 /* ═══════ 幕7b · 隔离与恢复路径 ═══════ */
 const VSTEPS=[
