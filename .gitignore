@@ -12,6 +12,3 @@ teaser/
 nvidia-stx/AI推理上下文存储_*.html
 nvidia-stx/CLAUDE.md
 eda/index.tabs.html
-
-# wrangler 本地缓存
-.wrangler/

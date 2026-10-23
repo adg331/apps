@@ -1,8 +1,0 @@
-name = "play-counter"
-main = "worker.js"
-compatibility_date = "2026-09-01"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "play-counter"
-database_id = "746cb5b3-afdb-4680-840a-6d01a110e452"
