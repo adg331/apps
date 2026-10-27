@@ -651,10 +651,40 @@ var _hmt = _hmt || [];
   <p class="note">独立形态与收购后方向依据 DataPelago 文档、AWS APN Blog（2026-09）、NAND Research 与 Techzine（2026-07）的公开报道整理。</p>
 </div></section>
 
-<!-- ⑯ 路线图全景 -->
+<!-- ⑯ Decision Fabric -->
+<section class="scene" id="scdf"><div class="wrap">
+  <div class="hd in" style="--c:var(--vi)"><span class="no">15</span><div><div class="k">ROADMAP · DECISION FABRIC · 决策上下文</div><h1>每项配置都对，却没人说得清为什么 <span class="st rm">ROADMAP</span></h1></div></div>
+  <p class="sub">一两年内，访问数据的多半不再是人，而是以机器速度查询、修改、执行的智能体。过去三十年，存储回答"数据安全、可用吗"；接下来还要回答"智能体对这份数据的推理可不可信"。可"为什么这样配置"的上下文，散落在备忘录、聊天记录、旧审计材料和已离职同事的脑子里。</p>
+  <div class="g-l in">
+    <div class="card pad">
+      <div class="row"><div class="seg" id="dfSeg"><button class="on" data-df="now">今天</button><button data-df="rec">有决策记录之后</button></div><span class="lab">示例 · 内容虚构</span></div>
+      <div class="console" id="dfCon" style="min-height:0"></div>
+      <div id="dfOut" class="mt2"></div>
+    </div>
+    <div class="card" style="align-self:start">
+      <div class="pad" style="padding-bottom:6px"><span class="lab">这些能力你早就有 · 只是服务对象变成了智能体</span></div>
+      <table class="dt"><thead><tr><th>决策记录需要的特性</th><th>今天的名字</th></tr></thead><tbody>
+        <tr><td class="h">只追加</td><td>快照与不可变副本</td></tr>
+        <tr><td class="h">明确的版本取代</td><td>版本化策略、变更控制、保留窗口</td></tr>
+        <tr><td class="h">可归属</td><td>RBAC、审计日志、身份集成</td></tr>
+        <tr><td class="h">权限感知检索</td><td>导出策略、多租户、SVM 隔离</td></tr>
+        <tr><td class="h">防篡改</td><td>WORM 与合规锁定</td></tr>
+        <tr><td class="h">可离线运行</td><td>隔离与断网部署</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+  <div class="grid3 mt in">
+    <div class="callout" style="--c:var(--vi)"><b>AI Data Hub 七层</b>：① 存储资产、② 元数据目录<span class="st ga">现已可用</span>；③ 实体与本体、④ 向量库与 NVIDIA 合作<span class="st pv">即将推出</span>；⑤ 分析与接口、⑥ 知识图谱与决策织物、⑦ 智能体体验<span class="st rm">方向</span>。</div>
+    <div class="callout" style="--c:var(--am)"><b>周一就能做</b>：挑一条真实规则（如保留锁），数数它的理由写在几处；逐一检查保留锁、导出策略、分层排除，标出说不清来源的；指定谁负责把决策和数据关联起来。</div>
+    <div class="callout" style="--c:var(--ro)"><b>说明</b>：Decision Fabric 为前瞻性方向，可能调整，不构成交付承诺；左侧示例卷与决策记录为虚构内容。全部层次均可部署在自有环境内，包括隔离和断网环境。</div>
+  </div>
+  <p class="note">依据 BKO1008 场次资料整理（NetApp 与 NVIDIA 联合场次）。</p>
+</div></section>
+
+<!-- ⑰ 路线图全景 -->
 <section class="scene" id="sc13"><div class="wrap">
-  <div class="hd in" style="--c:var(--am)"><span class="no">15</span><div><div class="k">ROADMAP · 了解 → 信任 → 激活</div><h1>路线图全部落地之后</h1></div></div>
-  <div class="row"><p class="sub" style="margin:0">后续版本在同一部署上叠加，不需要重建架构。状态依据 AIDE 产品页、2026-09-29 新闻稿与 BKO1000 / BKO1006 场次；路线图项目未公布时间表。点击能力查看说明。</p>
+  <div class="hd in" style="--c:var(--am)"><span class="no">16</span><div><div class="k">ROADMAP · 了解 → 信任 → 激活</div><h1>路线图全部落地之后</h1></div></div>
+  <div class="row"><p class="sub" style="margin:0">后续版本在同一部署上叠加，不需要重建架构。状态依据 AIDE 产品页、2026-09-29 新闻稿与 BKO1000 / BKO1006 / BKO1008 场次；路线图项目未公布时间表。点击能力查看说明。</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="seg" id="rmSeg"><button class="on" data-rf="all">全部</button><button data-rf="ga">GA</button><button data-rf="pv">预览</button><button data-rf="rm">路线图</button></div><button class="btn ghost" id="rmFull">◎ 全实现视图</button></div></div>
   <div class="callout mt2" id="rmNote" style="display:none;--c:var(--am)"><b>全实现视图</b>：假设预览与路线图能力全部落地后的能力全景，为愿景示意；相关能力未公布时间表，以官方发布为准。</div>
   <div class="rmwrap mt2 in" id="rmWrap">
@@ -670,9 +700,9 @@ var _hmt = _hmt || [];
   </div>
 </div></section>
 
-<!-- ⑰ 上手路径 -->
+<!-- ⑱ 上手路径 -->
 <section class="scene" id="sc14"><div class="wrap">
-  <div class="hd in" style="--c:var(--in)"><span class="no">16</span><div><div class="k">GETTING STARTED · 上手路径</div><h1>从一次全厂数据盘点开始</h1></div></div>
+  <div class="hd in" style="--c:var(--in)"><span class="no">17</span><div><div class="k">GETTING STARTED · 上手路径</div><h1>从一次全厂数据盘点开始</h1></div></div>
   <p class="sub">评估期内免费使用（新闻稿：前 6 个月），覆盖 NetApp 与非 NetApp 存储；评估期后按届时的打包与定价执行，后续高级能力可能单独打包。</p>
   <div class="grid4 in">
     <div class="card pad"><div class="lab">STEP 1</div><b style="font-size:18px">登记</b><p style="font-size:13.5px;color:var(--dim)">在 netapp.com/forms/map-your-data 登记，获取准备指南（登记不提供提前访问）。</p></div>
@@ -1018,7 +1048,7 @@ const RM=[
    ['pv','结构化 + 非结构化联合查询','与 Starburst 集成：ERP 里的供应商与发票数据、对象存储里的合同 PDF，一条自然语言问题同时查两边，例如"找出有逾期发票、合同条款与 ERP 不一致的供应商"。不复制数据，沿用现有 RBAC。'],
    ['pv','语义搜索与权限感知检索','合同等文本切片、向量化后存于 NetApp 存储内；检索时先剔除用户无权查看的文件，只把选中的少数文件放进模型上下文。'],
    ['pv','代理式服务（数据到上下文）','新闻稿列为预览。'],
-   ['rm','知识图谱与 Decision Fabric','产品页列为路线图，未公布时间表。'],
+   ['rm','知识图谱与 Decision Fabric','产品页列为路线图，未公布时间表。作用是保存"决定了什么、为什么、被什么取代"，并检查新工作是否与既有决策冲突，见第 15 幕。'],
    ['rm','存储侧加速数据处理（DataPelago）','集成形态、部署位置与时间未公布。']]]
 ];
 $('#rmCols').innerHTML=RM.map((c,ci)=>`<div class="card rmcol" style="--c:${c[3]}"><span class="w">${c[1]}</span><span class="en">${c[2]}</span><div class="vis">${c[4]}</div>${c[5].map((it,ii)=>`<button class="rit" data-st="${it[0]}" data-r="${ci}-${ii}">${STB[it[0]]}<span>${it[1]}</span></button>`).join('')}</div>`).join('');
@@ -1033,9 +1063,21 @@ $('#rmFull').addEventListener('click',()=>{const on=$('#rmWrap').classList.toggl
 pickRm('2-1');
 seg('dpSeg',b=>{const near=b.dataset.dp==='near'; $('#dpG1').style.display=near?'none':''; $('#dpG2').style.display=near?'':'none';});
 
+seg('dfSeg',b=>drawDF(b.dataset.df));
+function drawDF(m){
+  const rows=[['vol','qc_images_2019','40 TB · 质检影像归档'],['tier','performance',''],['tiering-policy','none',''],['snapshot-policy','arch-7y',''],['compliance-lock','enabled',''],['retention-until','2030-03',''],['export-policy','qc-restricted',''],['owner','svm mes_prod',''],['last-modified','2023-09-14','']];
+  let h=rows.map(r=>'<span class="k">'+r[0].padEnd(17)+'</span>'+r[1]+(r[2]?'  <span class="c"># '+r[2]+'</span>':'')).join('\n');
+  h+='\n<span class="k">'+'decision'.padEnd(17)+'</span>'+(m==='now'?'<span class="w">— 无此字段</span>':'<span class="ok">D-2025-091 ↓</span>');
+  $('#dfCon').innerHTML=h;
+  $('#dfOut').innerHTML=m==='now'
+    ?'<div class="callout" style="--c:var(--ro)"><b>为什么这个 40 TB 的卷还在性能层、被锁定、又排除在分层之外？</b>理由分散在五处：一份已被新版取代却没人加链接的合规备忘录、一段争论过这条约束的聊天记录、两年前审计材料里的一页、一个正确但没人解释的保留设置，以及一位四件事都清楚、但已在 2024 年离职的架构师。</div>'
+    :'<div class="callout" style="--c:var(--gr)"><b>D-2025-091</b>：2019 批次质检原始影像保留在性能层，锁定至 2030-03。<br><b>决定</b>：2025-03-12，质量总监与 IT 架构负责人。<b>原因</b>：客户审核要求原始影像可追溯，召回调查需当班调阅。<b>约束</b>：快照策略、导出策略与分层排除。<b>被取代</b>：尚无。<br>智能体查询这个卷时，能同时拿到配置和背后的决策；有新决策取代它时，取代关系一并可查。</div>';
+}
+drawDF('now');
+
 /* ═══════════ 幕式导航 ═══════════ */
-const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9','sc10','scx1','sc11','sc12','scx2','scdp','sc13','sc14'];
-const NAMES=['① 封面','② 版本演进','③ 架构全景','④ 部署模型','⑤ 规模估算','⑥ 数据接入','⑦ 扫描机制','⑧ 元数据','⑨ 仪表盘','⑩ 发现到执行','⑪ 实测·盘点','⑫ 访问治理','⑬ MCP','⑭ 实测·审计','⑮ DataPelago','⑯ 路线图','⑰ 上手路径'];
+const SCENES=['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9','sc10','scx1','sc11','sc12','scx2','scdp','scdf','sc13','sc14'];
+const NAMES=['① 封面','② 版本演进','③ 架构全景','④ 部署模型','⑤ 规模估算','⑥ 数据接入','⑦ 扫描机制','⑧ 元数据','⑨ 仪表盘','⑩ 发现到执行','⑪ 实测·盘点','⑫ 访问治理','⑬ MCP','⑭ 实测·审计','⑮ DataPelago','⑯ 决策上下文','⑰ 路线图','⑱ 上手路径'];
 const track=$('#track'), mainEl=$('#main');
 let cur=0,navLock=false,acc=0,accTimer=null;
 SCENES.forEach((id,i)=>{
