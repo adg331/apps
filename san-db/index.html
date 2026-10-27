@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>关键业务块存储与数据库 · 交互演示</title>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+.tag.rmap{color:var(--orange);background:transparent;border:1px dashed var(--orange)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+.vbtn{margin-top:22px;font-size:14px;padding:10px 22px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--sh)}
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+.vdlg .vbar .btn{flex:0 0 auto}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+/* 平台矩阵 */
+table.pf td[data-pf]{transition:.2s;border-left:1px solid var(--line)}
+table.pf td[data-pf] b{display:block;color:var(--ink);font-size:13px}
+table.pf td[data-pf] span{display:block;font-size:11.8px;color:var(--faint);margin-top:2px}
+table.pf td[data-pf].on{background:linear-gradient(178deg,rgba(0,103,197,.12),rgba(106,90,212,.06));box-shadow:inset 0 0 0 2px var(--blue)}
+table.pf td[data-pf].on b{color:var(--blue)}
+table.pf td.na{color:var(--line2);border-left:1px solid var(--line)}
+table.pf td{padding:12px 14px}
+</style>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  if (location.hostname !== "adg331.github.io") return;   // 只统计线上访问，本地预览不上报
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?0a7443d4f6cacdefbb3711234e999137";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</head>
+<body>
+
+<dialog class="vdlg" id="vDlg" aria-label="关键业务块存储讲解视频">
+  <div class="vbar"><span>NetApp 关键业务块存储与数据库 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./db-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>NetApp 关键业务块存储</b><span>SAN · DATABASE · EF80</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp ONTAP SAN · EF80 · INSIGHT 2026</span></div>
+      <div class="big an" style="--d:.14s">关键业务块存储与数据库</div>
+      <div class="sub an" style="--d:.26s">可预期的低延迟、不停机的运维、可信的恢复点</div>
+      <p class="desc an" style="--d:.34s">MES 核心库、ERP 与 SAP HANA、质量追溯数据库跑在块存储上：延迟一抖，产线就等；维护一停，月结就拖。本演示从平台选型、部署调优、保护与韧性讲到微秒级数据库存储，最后用一次真实的 SAP 换代看结果。</p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">为什么</div>
+        <div class="chip" data-jump="4">平台选型</div>
+        <div class="chip" data-jump="6">部署与调优</div>
+        <div class="chip" data-jump="9">保护与韧性</div>
+        <div class="chip" data-jump="11">数据库负载</div>
+        <div class="chip" data-jump="13">EF80 微秒级</div>
+        <div class="chip" data-jump="16">SAP 换代案例</div>
+      </div>
+      <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 6 分钟讲解视频</button></div>
+      <div class="an" style="--d:.56s;margin-top:30px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>Overview</span></div>
+        <h1>关键业务要的不只是"快"，<span class="g">而是每一次都一样快、一直在线</span></h1>
+        <p class="lead">一个面向关键业务的块存储平台，要同时回答四件事：怎么运维和换代、怎么按目标保护、怎么扛住网络攻击、怎么服务不同的数据库负载。点击卡片进入对应章节。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="dc" style="--ac:var(--red)" data-jump="2"><div class="hd"><span class="nm">为什么现在</span><span class="ct">01</span></div>
+          <ul><li>四重压力与对应的平台响应</li><li>从工具堆叠到统一底座</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--blue)" data-jump="4"><div class="hd"><span class="nm">平台选型与架构</span><span class="ct">02</span></div>
+          <ul><li>按延迟预算选平台，不按型号选</li><li>ONTAP 全闪：HA、多协议、按卷调效率</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--teal)" data-jump="6"><div class="hd"><span class="nm">部署、调优与运维</span><span class="ct">03</span></div>
+          <ul><li>上线前证明 p99，而不是平均值</li><li>导入、管理、观测、自动化一体</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--violet)" data-jump="9"><div class="hd"><span class="nm">保护与网络韧性</span><span class="ct">04</span></div>
+          <ul><li>按应用边界与恢复目标设计保护</li><li>镜像不等于可恢复：锁定、隔离、演练</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--orange)" data-jump="11"><div class="hd"><span class="nm">数据库负载与 EF80</span><span class="ct">05</span></div>
+          <ul><li>集群数据库、非中断运维、克隆加速</li><li>EF80 微秒级延迟与动态磁盘池</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--green)" data-jump="16"><div class="hd"><span class="nm">SAP HANA 换代案例</span><span class="ct">06</span></div>
+          <ul><li>波士顿大学：14 台主机换成 6 台</li><li>SAP 存储指标全部达标，备份缩短四分之一</li></ul><div class="go">进入 →</div></div>
+      </div>
+      <div class="g4 an" style="--d:.2s;margin-top:13px">
+        <div class="kpi"><b>p99</b><span>衡量关键业务的是尾延迟，不是平均值</span></div>
+        <div class="kpi v"><b>NDO</b><span>扩容、升级、换代都不停业务</span></div>
+        <div class="kpi o"><b>µs 级</b><span>EF80 为交易型数据库提供微秒级延迟</span></div>
+        <div class="kpi g"><b>0.16 ms</b><span>SAP HANA 日志卷 4 KB 写延迟（客户实测）</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 四重压力 ══════════════════ -->
+  <section class="scene" data-sec="为什么" data-nav="四重压力">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--red)"><i></i><span>Why now · 01</span></div>
+        <h1>关键业务的块存储底座，<span class="g">正在被四股压力同时推着走</span></h1>
+        <p class="lead">每一股压力都需要平台层面的回应，而不是再加一个工具。点选一项，看它对应的平台响应，以及在工厂里的样子。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-pr="demand" data-toggle-group="pr">需求持续上升</button>
+            <button class="btn" data-pr="rpo" data-toggle-group="pr">恢复目标收紧</button>
+            <button class="btn" data-pr="cyber" data-toggle-group="pr">网络风险改变模型</button>
+            <button class="btn" data-pr="aging" data-toggle-group="pr">基础设施老化</button>
+          </div>
+          <svg viewBox="0 0 640 340" id="prSvg" style="max-height:380px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="prT">—</h3>
+            <div class="li"><b>压力</b>：<span id="prP">—</span></div>
+            <div class="li ok"><b>平台响应</b>：<span id="prR">—</span></div>
+            <div class="li warn"><b>在工厂里</b>：<span id="prM">—</span></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>来自一线的声音</h3>
+            <p style="font-size:12.8px;color:var(--dim)">"数据库团队被要求让更多关键业务系统保持在线、版本最新、受到保护且性能达标，同时还要降低成本和运维摩擦。"</p>
+            <p class="note">NetApp 企业咨询解决方案架构师的观察，依据 BKO3025 场次资料整理。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 现状与目标 ══════════════════ -->
+  <section class="scene" data-sec="为什么" data-nav="现状与目标">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--red)"><i></i><span>From → To · 01</span></div>
+        <h1>换的是底座，<span class="g">不是上面的应用</span></h1>
+        <p class="lead">以一家虚构的综合示例企业为例：四个维度各有痛点。切换"现状"与"目标"，看一次底座现代化把它们分别变成什么。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="panel an" style="--d:.1s;margin-bottom:13px">
+        <div class="btnrow">
+          <span style="font-size:12.6px;font-weight:700;color:var(--ink)">查看</span>
+          <button class="btn sm on" data-st="cur" data-toggle-group="st">现状</button>
+          <button class="btn sm" data-st="tgt" data-toggle-group="st">目标</button>
+          <span class="flag o" id="stFlag" style="margin-left:8px">—</span>
+        </div>
+      </div>
+      <div class="g4 an" style="--d:.16s">
+        <div class="vc"><span class="k">运维</span><div class="t sw" data-cur="工具堆叠" data-tgt="一套运维模型">—</div><div class="d sw" data-cur="逐个工具手工协调，每换一次设备就多一套界面。" data-tgt="统一迁移、管理与监控，不需要为任何一个应用换平台。">—</div></div>
+        <div class="vc"><span class="k">连续性</span><div class="t sw" data-cur="策略碎片化" data-tgt="按目标保护">—</div><div class="d sw" data-cur="不同负载的保护方式各不相同，没人说得清哪套系统能丢多少。" data-tgt="每个负载按实际 RPO / RTO 设计保护，而不是一刀切的 SLA。">—</div></div>
+        <div class="vc"><span class="k">网络韧性</span><div class="t sw" data-cur="恢复点暴露" data-tgt="锁定并演练">—</div><div class="d sw" data-cur="备份从生产环境就能直接触达，攻击者也能。" data-tgt="恢复副本锁定、隔离、定期演练，需要时真的能用。">—</div></div>
+        <div class="vc"><span class="k">工作负载</span><div class="t sw" data-cur="各自一套手册" data-tgt="同一底座上的工作流">—</div><div class="d sw" data-cur="每个应用一套操作流程，换人就断档。" data-tgt="在同一个 ONTAP 底座上跑各负载的专属操作：一个平台，多种结果。">—</div></div>
+      </div>
+      <div class="g2 an" style="--d:.22s;margin-top:13px">
+        <div class="panel tint">
+          <h3>客户反馈 · 制造与科技行业</h3>
+          <p style="font-size:12.8px;color:var(--dim)">"我们有大约 1,200 个控制器……整个生命周期都得跑起来。一旦运行起来、不用去动它，就没问题。"</p>
+        </div>
+        <div class="panel tint">
+          <h3>客户反馈 · 消费品行业</h3>
+          <p style="font-size:12.8px;color:var(--dim)">"NetApp 是我们边缘基础设施的关键伙伴，尤其是数据中心和制造运营里的块存储。"</p>
+        </div>
+      </div>
+      <p class="note">示例企业为虚构的综合案例，客户反馈来自 2026 年 2–3 月的客户访谈，依据 BKO3025 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · 平台选型 ══════════════════ -->
+  <section class="scene" data-sec="平台选型" data-nav="平台选型">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>Platform fit · 02</span></div>
+        <h1>按延迟预算选平台，<span class="g">不按型号选</span></h1>
+        <p class="lead">同一产品家族分两条操作系统线：ONTAP 侧重丰富的数据服务与多协议整合，SANtricity 侧重专用块性能与简洁。选一类负载，看哪一格亮起。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="panel an" style="--d:.1s;margin-bottom:13px">
+        <div class="btnrow">
+          <span style="font-size:12.6px;font-weight:700;color:var(--ink)">负载</span>
+          <button class="btn sm on" data-wk="oltp" data-toggle-group="wk">核心交易库 · MES / ERP</button>
+          <button class="btn sm" data-wk="ull" data-toggle-group="wk">超低延迟纯块负载</button>
+          <button class="btn sm" data-wk="virt" data-toggle-group="wk">虚拟化与容器整合</button>
+          <button class="btn sm" data-wk="cap" data-toggle-group="wk">大容量二线负载</button>
+          <button class="btn sm" data-wk="sec" data-toggle-group="wk">备份与二级存储</button>
+          <button class="btn sm" data-wk="ai" data-toggle-group="wk">AI 与大规模分析</button>
+        </div>
+      </div>
+      <div class="g23">
+        <div class="tw an" style="--d:.16s">
+          <table class="dt pf">
+            <thead><tr><th style="width:110px">操作系统</th><th>混合闪存</th><th>容量闪存</th><th>性能闪存</th><th>解耦架构</th></tr></thead>
+            <tbody>
+              <tr><td class="h">ONTAP</td>
+                <td data-pf="fas"><b>FAS</b><span>生命周期内数据成本最低，二级存储</span></td>
+                <td data-pf="c"><b>AFF / ASA C 系列</b><span>容量优化，性价比最佳</span></td>
+                <td data-pf="a"><b>AFF / ASA A 系列</b><span>关键业务的最佳性能</span></td>
+                <td data-pf="afx"><b>AFX</b><span>解耦架构，承载密集 AI 负载</span></td></tr>
+              <tr><td class="h">SANtricity</td>
+                <td data-pf="e4000"><b>E4000</b><span>混合闪存块存储</span></td>
+                <td class="na">—</td>
+                <td data-pf="ef"><b>EF80 / EF50 · EF600 / EF300</b><span>为性能与简洁专门打造</span></td>
+                <td class="na">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.2s">
+            <h3 id="wkT">—</h3>
+            <p style="font-size:13px;color:var(--dim)" id="wkD">—</p>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>关键业务负载的三类</h3>
+            <div class="li"><b>实时应用</b>：交易、欺诈检测、AIOps，每一跳都算进延迟预算</div>
+            <div class="li"><b>企业应用与数据库</b>：Oracle、SQL Server、SAP HANA，日志卷独立并给最低延迟</div>
+            <div class="li"><b>虚拟化与容器</b>：VMware、KVM、Kubernetes，按层 QoS 避免相互干扰</div>
+          </div>
+        </div>
+      </div>
+      <p class="note">负载与平台的对应为示例，依据 BKO3017、BKO3019 场次资料整理；实际选型以负载评估为准。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 全闪架构 ══════════════════ -->
+  <section class="scene" data-sec="平台选型" data-nav="全闪架构">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>Architecture · 02</span></div>
+        <h1>硬件加 ONTAP 端到端设计：<span class="g">低延迟是架构出来的</span></h1>
+        <p class="lead">双控制器 HA、双交换网络、多路径。注入一个故障，看主机侧还剩多少条路径、业务是否中断。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-ha="ok" data-toggle-group="ha">正常运行</button>
+            <button class="btn dg" data-ha="fab" data-toggle-group="ha">交换网络 A 中断</button>
+            <button class="btn dg" data-ha="node" data-toggle-group="ha">控制器 N1 故障</button>
+          </div>
+          <svg viewBox="0 0 640 330" id="haSvg" style="max-height:360px"></svg>
+          <div class="btnrow" style="margin-top:8px"><span class="flag" id="haFlag">—</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>平台如何交付</h3>
+            <div class="li"><b>平台栈</b>：NVMe 控制器、WAFL、NVRAM 与缓存</div>
+            <div class="li"><b>任意协议，一个 SVM</b>：NVMe/FC、FC、iSCSI、NFS、SMB、S3</div>
+            <div class="li"><b>不停、不慢</b>：双控制器 HA、主动/主动路径、非中断运维</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>效率与保护按延迟预算调</h3>
+            <div class="li ok"><b>效率只用在值得的地方</b>：内联压缩、去重、紧缩可按卷开启、调整或关闭</div>
+            <div class="li ok"><b>保护内置</b>：快照与 SnapMirror 负责恢复；MetroCluster 与 SnapMirror active sync 负责不停机（见 Bay 19）</div>
+          </div>
+        </div>
+      </div>
+      <p class="note">拓扑为示意，依据 BKO3017 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · 部署与迁移 ══════════════════ -->
+  <section class="scene" data-sec="部署与调优" data-nav="部署与迁移">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--teal)"><i></i><span>Deploy · 03</span></div>
+        <h1>从第一天就为性能部署：<span class="g">上线前定容量、定位置、做验证</span></h1>
+        <p class="lead">容量、拓扑、数据路径任何一项没做对，部署就不算成功；迁移和验证的每一步都要守住延迟预算。点击步骤查看要点。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="steps an" style="--d:.1s" id="dpSteps">
+        <div class="st on" data-i="0"><div class="n">01 · 规划</div><div class="l">容量</div></div>
+        <div class="st" data-i="1"><div class="n">02 · 规划</div><div class="l">拓扑</div></div>
+        <div class="st" data-i="2"><div class="n">03 · 规划</div><div class="l">数据路径</div></div>
+        <div class="st" data-i="3"><div class="n">04 · 实施</div><div class="l">迁移</div></div>
+        <div class="st" data-i="4"><div class="n">05 · 实施</div><div class="l">验证</div></div>
+        <div class="st" data-i="5"><div class="n">06 · 实施</div><div class="l">上线</div></div>
+      </div>
+      <div class="g23">
+        <div class="stbody an" style="--d:.14s;min-height:150px"><h4 id="dpT">—</h4><p id="dpD">—</p><p style="margin-top:9px;font-size:12.6px;color:var(--teal)" id="dpM">—</p></div>
+        <div class="panel tint an" style="--d:.2s">
+          <h3>下次架构评审时问自己三个问题</h3>
+          <div class="li"><b>设计</b>：延迟预算是端到端定义的，还是只盯着阵列？</div>
+          <div class="li"><b>部署</b>：切换之前，是否已在预生产环境证明了 p99？</div>
+          <div class="li"><b>运维</b>：变慢时，能不能在几分钟而不是几天内定位到某一层？</div>
+        </div>
+      </div>
+      <p class="note">依据 BKO3017 场次资料整理。FLI 为 Foreign LUN Import，将外部阵列的 LUN 导入 ONTAP。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · 看 p99 ══════════════════ -->
+  <section class="scene" data-sec="部署与调优" data-nav="看 p99">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--teal)"><i></i><span>Tune · 03</span></div>
+        <h1>平均延迟会藏住尾部尖刺：<span class="g">先测量，再有目的地调优</span></h1>
+        <p class="lead">同一段延迟数据，按分钟平均看一切正常；看原始样本和 p99，才发现每隔一阵就有一次尖刺。对交易型数据库，正是这些尖刺让事务排队。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-lv="avg" data-toggle-group="lv">按分钟平均看</button>
+            <button class="btn" data-lv="raw" data-toggle-group="lv">看原始样本与 p99</button>
+            <span class="tag n" style="margin-left:auto">示意数据</span>
+          </div>
+          <svg viewBox="0 0 640 250" id="latSvg" style="max-height:290px"></svg>
+          <div class="kpis" style="margin-top:10px">
+            <div class="kpi t"><b id="lvAvg">—</b><span>平均延迟</span></div>
+            <div class="kpi o"><b id="lvP99">—</b><span>p99 延迟</span></div>
+            <div class="kpi" style="border-color:rgba(211,58,92,.35)"><b id="lvMax" style="color:var(--red)">—</b><span id="lvMaxL">最大值</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>调优方法</h3>
+            <div class="steps" style="margin-bottom:0;flex-direction:column;gap:7px">
+              <div class="st" style="cursor:default"><div class="n">01 · 建基线</div><div class="l">打开监测工具，复现负载</div></div>
+              <div class="st" style="cursor:default"><div class="n">02 · 隔离层次</div><div class="l">主机、网络、阵列、数据服务逐层排查</div></div>
+              <div class="st" style="cursor:default"><div class="n">03 · 对比基线</div><div class="l">一次只改一个变量，每一步都测量</div></div>
+              <div class="st" style="cursor:default"><div class="n">04 · 重建基线</div><div class="l">每次重大变更后重新测一遍</div></div>
+            </div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>目标</h3>
+            <div class="li ok">稳态和峰值时都可预期：同时跟踪两种状态下的 p99</div>
+            <div class="li warn">危险信号：平均延迟好看，尾部尖刺被平均掉了</div>
+          </div>
+        </div>
+      </div>
+      <p class="note">曲线为示意数据，用于说明平均值与 p99 的差别；方法依据 BKO3017 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · 统一运维 ══════════════════ -->
+  <section class="scene" data-sec="部署与调优" data-nav="统一运维">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--teal)"><i></i><span>Operate · 03</span></div>
+        <h1>把 ONTAP 当作一个系统来运维，<span class="g">把整个环境看清楚</span></h1>
+        <p class="lead">先把外部块数据导入 ONTAP，上层应用不变；再用 Console 管理、DII 观测、自动化工具固化流程。点选一项看它负责什么。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-op="mig" data-toggle-group="op">导入</button>
+            <button class="btn" data-op="mgmt" data-toggle-group="op">管理</button>
+            <button class="btn" data-op="obs" data-toggle-group="op">观测</button>
+            <button class="btn" data-op="auto" data-toggle-group="op">自动化</button>
+          </div>
+          <svg viewBox="0 0 640 320" id="opSvg" style="max-height:350px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="opT">—</h3>
+            <div id="opL"></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>客户反馈</h3>
+            <p style="font-size:12.8px;color:var(--dim)">"我们同时用 Fibre Channel 和 iSCSI 给客户提供服务，他们感觉不到差别。在企业数据中心里我们一直很成功。"</p>
+            <p style="font-size:12.8px;color:var(--dim);margin-top:8px">"NetApp 能提供块、文件以及对象服务的统一存储，而且比 EMC 更具成本效益、性能也更好。"<span style="color:var(--faint)"> —— IT 行业基础架构架构师</span></p>
+            <p class="note">依据 BKO3025 场次资料整理。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · 按恢复目标设计 ══════════════════ -->
+  <section class="scene" data-sec="保护与韧性" data-nav="按目标设计">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--violet)"><i></i><span>Protect · 04</span></div>
+        <h1>从负载的恢复目标出发，<span class="g">保护的是应用边界，不是一堆零散对象</span></h1>
+        <p class="lead">数据文件、日志、共享元数据如果各自做快照，时间点就对不齐。切换两种方式，看恢复点能不能直接用。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-cg="sep" data-toggle-group="cg">各对象分别做快照</button>
+            <button class="btn on" data-cg="cg" data-toggle-group="cg">一致性组统一快照</button>
+          </div>
+          <svg viewBox="0 0 640 280" id="cgSvg" style="max-height:310px"></svg>
+          <div class="btnrow" style="margin-top:6px"><span class="flag" id="cgFlag">—</span></div>
+        </div>
+        <div class="tw an" style="--d:.18s;align-self:start">
+          <table class="dt">
+            <thead><tr><th>业务问题</th><th>设计含义</th><th>需要确认</th></tr></thead>
+            <tbody>
+              <tr><td class="h">能丢多少数据？（RPO）</td><td>复制频率，或同步写路径</td><td>应用与一致性边界</td></tr>
+              <tr><td class="h">能停多久？（RTO）</td><td>切换、恢复与重启顺序</td><td>自动化与运维就绪度</td></tr>
+              <tr><td class="h">要覆盖哪种故障？</td><td>本地、站点、数据损坏或网络攻击</td><td>保护层次与管理域</td></tr>
+              <tr><td class="h">怎么证明能恢复？</td><td>对已知恢复点做演练</td><td>演练频率、责任人与证据</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="note">一致性组只有在应用边界清楚时才能减少协调工作；应用侧编排与存储策略互补，存储一致性不能替代应用编排。依据 BKO3025 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · 镜像不等于可恢复 ══════════════════ -->
+  <section class="scene" data-sec="保护与韧性" data-nav="网络韧性">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--violet)"><i></i><span>Withstand · 04</span></div>
+        <h1>可用不等于有可信的恢复点：<span class="g">镜像会把勒索软件也忠实地复制过去</span></h1>
+        <p class="lead">业务连续性和网络攻击后的恢复是两个不同的设计问题。依次点击，看攻击发生时镜像和隔离副本各自的状态。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-cy="ok" data-toggle-group="cy">正常运行</button>
+            <button class="btn dg" data-cy="atk" data-toggle-group="cy">勒索加密发生</button>
+            <button class="btn" data-cy="rec" data-toggle-group="cy">从隔离副本恢复</button>
+          </div>
+          <svg viewBox="0 0 640 300" id="cySvg" style="max-height:330px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>归档、隔离、演练</h3>
+            <div class="li"><b>独立管理域</b>：生产管理员的凭据碰不到恢复副本</div>
+            <div class="li"><b>锁定保留</b>：保留期内不可删除、不可修改</div>
+            <div class="li"><b>访问受限</b>：只有恢复流程能读</div>
+            <div class="li ok"><b>已验证的恢复点</b>：演练过，才知道能用</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>演练闭环</h3>
+            <div class="steps" style="margin-bottom:0">
+              <div class="st" style="cursor:default"><div class="n">计划</div><div class="l">定范围与责任人</div></div>
+              <div class="st" style="cursor:default"><div class="n">演练</div><div class="l">完整走一次恢复</div></div>
+              <div class="st" style="cursor:default"><div class="n">改进</div><div class="l">发现的问题进入下一轮</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">依据 BKO3025 场次资料整理。勒索软件检测与恢复详见 Bay 08，零 RPO 双活详见 Bay 19。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · 集群数据库与 NDO ══════════════════ -->
+  <section class="scene" data-sec="数据库负载" data-nav="集群与 NDO">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--orange)"><i></i><span>Databases · 05</span></div>
+        <h1>集群数据库切换不用重新设计存储，<span class="g">计划内变更不再自动等于停机</span></h1>
+        <p class="lead">共享存储上的集群数据库靠 SCSI 预留控制谁能写。让持有预留的节点故障，看预留如何转移、路径行为是否一致。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-rs="ok" data-toggle-group="rs">正常运行</button>
+            <button class="btn dg" data-rs="fail" data-toggle-group="rs">节点 2 故障</button>
+          </div>
+          <svg viewBox="0 0 640 290" id="rsSvg" style="max-height:320px"></svg>
+          <div class="btnrow" style="margin-top:6px"><span class="flag" id="rsFlag">—</span></div>
+        </div>
+        <div class="panel an" style="--d:.18s">
+          <h3>把非中断运维规划进存储生命周期</h3>
+          <div class="li ok"><b>扩容</b>：按负载规划纵向或横向扩容</div>
+          <div class="li ok"><b>负载重平衡</b>：卷与 LUN 在线迁移，用于计划内的负载均衡</div>
+          <div class="li ok"><b>软件升级</b>：沿经过验证的升级路径升级 ONTAP</div>
+          <div class="li ok"><b>硬件换代</b>：用受支持的非中断流程更换控制器</div>
+          <p class="note">前提是主机、多路径、协议与 ONTAP 的组合经过验证；方案设计要让主机、路径与预留行为一致。</p>
+          <div class="hr"></div>
+          <h3>在工厂里</h3>
+          <div class="li warn">控制器换代不再需要申请全厂停线窗口；ERP 月结期间也能完成计划内的负载调整。</div>
+        </div>
+      </div>
+      <p class="note">依据 BKO3025 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · 克隆加速 ══════════════════ -->
+  <section class="scene" data-sec="数据库负载" data-nav="克隆加速">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--orange)"><i></i><span>Databases · 05</span></div>
+        <h1>从生产变更到验证副本，<span class="g">节省空间的克隆缩短中间这段路</span></h1>
+        <p class="lead">基于快照的克隆只记录变化的数据块。拖动滑块增加副本数量，比较完整拷贝和克隆各占多少容量。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div style="display:flex;align-items:center;gap:14px;font-size:13px;color:var(--dim)">
+            <span style="white-space:nowrap">副本数量</span>
+            <input type="range" id="clN" min="1" max="10" value="4" style="flex:1;accent-color:var(--orange)" aria-label="副本数量">
+            <b class="mono" id="clNv" style="min-width:56px;text-align:right;color:var(--ink)">4 份</b>
+            <span class="tag n">示意</span>
+          </div>
+          <svg viewBox="0 0 640 260" id="clSvg" style="margin-top:10px;max-height:290px"></svg>
+          <div class="kpis" style="margin-top:10px">
+            <div class="kpi o"><b id="clFull">—</b><span>完整拷贝共占容量</span></div>
+            <div class="kpi g"><b id="clCl">—</b><span>克隆共占容量</span></div>
+            <div class="kpi t"><b id="clSave">—</b><span>节省的容量</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>可重复的三类流程</h3>
+            <div class="li"><b>SAP 系统刷新</b>：用生产快照刷新质量与测试系统</div>
+            <div class="li"><b>数据库测试与开发</b>：每个团队一份真实数据副本</div>
+            <div class="li"><b>虚拟化验证</b>：补丁和升级先在克隆上走一遍</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>需要说清的一点</h3>
+            <div class="li warn">整个流程的时长取决于应用侧的恢复与后处理，不只是存储克隆这一步。</div>
+            <div class="li ok"><b>在工厂里</b>：MES 升级前，用前一晚的生产数据克隆完整演练一遍。</div>
+          </div>
+        </div>
+      </div>
+      <p class="note">示意按 10 TB 数据库、每份副本变化 10% 计算；实际节省取决于变化率与保留时长。依据 BKO3025 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · EF80 ══════════════════ -->
+  <section class="scene" data-sec="EF80 微秒级" data-nav="EF80 平台">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--orange)"><i></i><span>EF80 · 05</span></div>
+        <h1>别让存储拖住数据库：<span class="g">EF80 提供可预期的微秒级延迟</span></h1>
+        <p class="lead">专用块存储让从应用到介质的路径尽量短：层次越少，延迟越低，也越容易运维。点选四个价值点查看说明。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="kpis an" style="--d:.1s;margin-bottom:13px">
+        <div class="kpi o"><b>110 GB/s+</b><span>最大读吞吐</span></div>
+        <div class="kpi"><b>57 GB/s</b><span>最大写吞吐</span></div>
+        <div class="kpi v"><b>500 万</b><span>最大读 IOPS</span></div>
+        <div class="kpi t"><b>1.5 PB</b><span>2U 内的原始容量上限</span></div>
+        <div class="kpi g"><b>5 种</b><span>InfiniBand、NVMe/RoCE、NVMe/FC、FC、NVMe/TCP</span></div>
+      </div>
+      <div class="g23">
+        <div class="viz an" style="--d:.14s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-ev="lat" data-toggle-group="ev">亚毫秒响应</button>
+            <button class="btn" data-ev="tp" data-toggle-group="ev">持续吞吐</button>
+            <button class="btn" data-ev="rel" data-toggle-group="ev">可靠不中断</button>
+            <button class="btn" data-ev="sim" data-toggle-group="ev">架构简洁</button>
+          </div>
+          <svg viewBox="0 0 640 220" id="efSvg" style="max-height:250px"></svg>
+        </div>
+        <div class="panel an" style="--d:.2s">
+          <h3 id="evT">—</h3>
+          <p style="font-size:13px;color:var(--dim)" id="evD">—</p>
+          <div class="hr"></div>
+          <h3>适用场景</h3>
+          <div class="li">金融交易、预订与订票、分析与 AI、客户体验类系统</div>
+          <div class="li warn"><b>在工厂里</b>：具备同类访问模式的高并发交易型库，例如实时质量判定与追溯查询</div>
+        </div>
+      </div>
+      <p class="note">规格依据 BKO3019 场次资料；制造业场景为同类访问模式的类比，需结合实际负载验证。EF80 与 Lustre 的组合见 Bay 14。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · DDP 重建 ══════════════════ -->
+  <section class="scene" data-sec="EF80 微秒级" data-nav="动态磁盘池">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--orange)"><i></i><span>DDP · 05</span></div>
+        <h1>闪存没有消除重建问题，<span class="g">动态磁盘池让整个池一起重建</span></h1>
+        <p class="lead">盘越大，重建越久。传统 RAID 的重建受限于一块替换盘的写带宽；动态磁盘池（DDP）把数据条带打散到所有盘上，所有幸存盘一起参与。模拟一块盘故障看看。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-dd="ok" data-toggle-group="dd">正常</button>
+            <button class="btn dg" data-dd="fail" data-toggle-group="dd">10 号盘故障</button>
+            <button class="btn" data-dd="rb" data-toggle-group="dd">池内重建</button>
+          </div>
+          <svg viewBox="0 0 640 250" id="ddSvg" style="max-height:270px"></svg>
+          <div class="lg"><span><i style="background:#0067c5"></i>条带 A</span><span><i style="background:#6a5ad4"></i>条带 B</span><span><i style="background:#0c8e86"></i>条带 C</span><span><i style="background:#eef3fb;border:1px dashed #8d97b2"></i>池内预留空间</span></div>
+          <p style="font-size:12.6px;color:var(--dim);margin-top:8px" id="ddMsg">—</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>重建一块 15.3 TB NVMe 盘的时间</h3>
+            <svg viewBox="0 0 420 120" id="rbSvg"></svg>
+            <p class="note">示意数据：15.3 TB NVMe SSD 级别盘、系统空闲时的估算，不是 EF80 的实测。</p>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对数据库真正重要的</h3>
+            <div class="li ok">不是重建要多久，而是重建期间查询响应时间会不会变</div>
+            <div class="li ok">重建分摊到整个池，主机 I/O 受影响很小</div>
+            <div class="li ok">无需等替换盘就开始重建；第二块盘再坏时，丢了两片的条带优先重建</div>
+          </div>
+        </div>
+      </div>
+      <p class="note">EF80 · 24 块 NVMe 盘组成一个池，8+2 条带固定跨 10 块盘，同一条带不会有两片落在同一块盘上。依据 BKO3019 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 15 · 保护选项与配置 ══════════════════ -->
+  <section class="scene" data-sec="EF80 微秒级" data-nav="池内配置">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--orange)"><i></i><span>Configure · 05</span></div>
+        <h1>一个池，三种保护：<span class="g">保护方式按卷选，不再按池选</span></h1>
+        <p class="lead">镜像 5+5 与纠删码 8+2 可以共存于同一组盘、同一个池：日志卷用镜像，数据卷用 8+2，不用再为数据库的每个组件单建一个池。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-pt="m55" data-toggle-group="pt">镜像 5+5</button>
+            <button class="btn on" data-pt="e82" data-toggle-group="pt">纠删码 8+2</button>
+            <button class="btn" data-pt="e162" data-toggle-group="pt">纠删码 16+2</button>
+          </div>
+          <svg viewBox="0 0 640 170" id="ptSvg" style="max-height:190px"></svg>
+          <div class="g3" style="margin-top:10px">
+            <div class="kpi"><b id="ptOv">—</b><span>容量开销</span></div>
+            <div class="kpi v"><b id="ptW">—</b><span>每条带跨盘数</span></div>
+            <div class="kpi o"><b id="ptU" style="font-size:16px;line-height:1.5">—</b><span>典型用途</span></div>
+          </div>
+          <p style="font-size:12.6px;color:var(--dim);margin-top:9px" id="ptD">—</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>为数据库配置池</h3>
+            <div class="li"><b>数据与日志放同一个池</b>：与"日志单独隔离"的习惯相反，用池内保护方式来区分</div>
+            <div class="li"><b>段大小</b>：SANtricity 12.0 起 SSD 与 NVMe 默认 32K，更贴合数据库页大小</div>
+            <div class="li"><b>重建优先级</b>：保持"高"，默认值就是最佳实践</div>
+            <div class="li"><b>控制器均衡</b>：卷按数量和功能分布到两个控制器，开启自动负载均衡</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>Oracle 验证</h3>
+            <div class="li ok">Oracle 26ai 四节点 RAC、12 TB 数据库、NVMe/RoCE 连接</div>
+            <div class="li ok">SLOB2 读负载下可重复的读性能接近 <b>300 万 IOPS</b>，峰值超过 <b>400 万</b></div>
+          </div>
+        </div>
+      </div>
+      <p class="note">验证环境：EF80（24 块 7.68 TB NVMe SSD）+ 4 台 Cisco UCS C240 M8；数字为特定测试条件下的观测值，非性能承诺。依据 BKO3019 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 16 · BU 换代前后 ══════════════════ -->
+  <section class="scene" data-sec="客户案例" data-nav="SAP 换代">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--green)"><i></i><span>Customer · 06</span></div>
+        <h1>波士顿大学 SAP HANA 换代：<span class="g">主机少了一半多，负载反而更轻松</span></h1>
+        <p class="lead">把本地盘上的 HANA 虚拟机迁到 NVMe/TCP 连接的 AFF A50 全闪，主机从 14 台降到 6 台。选一项指标，比较换代前（7 月）与换代后（8 月）。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g32">
+        <div class="tw an" style="--d:.12s;align-self:start">
+          <table class="dt">
+            <thead><tr><th style="width:84px">项目</th><th>换代前</th><th>换代后</th></tr></thead>
+            <tbody>
+              <tr><td class="h">主机</td><td>14 台（6 台四路 + 8 台刀片）</td><td><b style="color:var(--green)">6 台</b> UCS X410c M7</td></tr>
+              <tr><td class="h">CPU</td><td>40 路 / 800 核</td><td>24 路 / 672 核</td></tr>
+              <tr><td class="h">内存</td><td>24 TiB</td><td>36 TiB</td></tr>
+              <tr><td class="h">虚拟化</td><td>ESXi 6.7（已停止支持）</td><td>ESXi 8.0.3</td></tr>
+              <tr><td class="h">网络</td><td>48 口 10 GbE</td><td>48 口 50 GbE</td></tr>
+              <tr><td class="h">存储</td><td>本地 SAS/SSD + NFS</td><td>NVMe/TCP 连 AFF A50 全闪，ONTAP 9.18.1</td></tr>
+            </tbody>
+          </table>
+          <div class="kpis" style="padding:12px">
+            <div class="kpi g"><b>−57%</b><span>物理主机</span></div>
+            <div class="kpi"><b>73 → 83</b><span>虚拟机数</span></div>
+            <div class="kpi v"><b>+50%</b><span>已装内存</span></div>
+          </div>
+        </div>
+        <div class="viz an" style="--d:.16s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn sm on" data-bm="tp" data-toggle-group="bm">集群峰值吞吐</button>
+            <button class="btn sm" data-bm="vm" data-toggle-group="bm">同批 VM 峰值带宽</button>
+            <button class="btn sm" data-bm="iops" data-toggle-group="bm">同批 VM 峰值 IOPS</button>
+            <button class="btn sm" data-bm="lat" data-toggle-group="bm">峰值延迟中位数</button>
+            <button class="btn sm" data-bm="cpu" data-toggle-group="bm">CPU 实际需求与装机</button>
+          </div>
+          <svg viewBox="0 0 640 250" id="buSvg" style="max-height:280px"></svg>
+          <p style="font-size:12.8px;color:var(--dim);margin-top:6px" id="buD">—</p>
+        </div>
+      </div>
+      <p class="note">客户实测数据，来自换代前后两次环境采集（同批 VM 指两次采集中都存在的 68 台）。依据 BKO3031 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 17 · SAP 指标与备份 ══════════════════ -->
+  <section class="scene" data-sec="客户案例" data-nav="SAP 指标与备份">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--green)"><i></i><span>Customer · 06</span></div>
+        <h1>SAP 存储指标全部达标且留有余量，<span class="g">全量备份缩短四分之一</span></h1>
+        <p class="lead">SAP 官方的硬件配置检查工具（HCMT）在新平台上跑出的结果，以及换代前后十个 HANA 全量备份任务的时长对比。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="tw an" style="--d:.12s;align-self:start">
+          <table class="dt" id="hcmtT">
+            <thead><tr><th>SAP 要求</th><th style="width:96px">门限</th><th style="width:100px">实测</th><th style="width:170px">余量</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p class="note" style="padding:0 12px 10px 31px">HCMT 运行于 2026-08-16：UCS X410c M7 + AFF A50，NVMe/TCP，ONTAP 9.18.1P6；每项为两轮测试均值。</p>
+        </div>
+        <div class="viz an" style="--d:.16s">
+          <h3 style="font-size:14px;font-weight:750;margin-bottom:8px">耗时最长的五个全量备份任务（小时）</h3>
+          <svg viewBox="0 0 560 200" id="bkSvg" style="max-height:220px"></svg>
+          <div class="kpis" style="margin-top:8px">
+            <div class="kpi g"><b>−24.7%</b><span>合计时长 45.1 h → 34.0 h</span></div>
+            <div class="kpi"><b>11.2 h</b><span>每轮还给备份窗口的时间</span></div>
+            <div class="kpi v"><b>40 / 40</b><span>十个任务的四项统计全部改善</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note">客户实测数据，依据 BKO3031 场次资料整理。最慢的那几晚改善最多：均值缩短 25%，最长时长缩短 31%。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 18 · 读延迟排查 ══════════════════ -->
+  <section class="scene" data-sec="客户案例" data-nav="延迟排查">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--green)"><i></i><span>Customer · 06</span></div>
+        <h1>一个例外和它的根因：<span class="g">延迟预算是端到端的</span></h1>
+        <p class="lead">换代后大部分指标都在变好，唯独 HANA 节点的读延迟翻了一倍。负载和 I/O 大小几乎没变，根因最后落在主机侧的驱动上。按时间顺序点开看。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="steps an" style="--d:.1s" id="rlSteps">
+        <div class="st on" data-i="0"><div class="n">7 月 · 换代前</div><div class="l">本地盘，读延迟约 9 ms</div></div>
+        <div class="st" data-i="1"><div class="n">8 月 · 切换后</div><div class="l">读延迟翻倍</div></div>
+        <div class="st" data-i="2"><div class="n">8 月 28 日 · 根因</div><div class="l">NVMe/TCP 驱动更换</div></div>
+        <div class="st" data-i="3"><div class="n">9 月 · 复测</div><div class="l">稳态低于 1 ms</div></div>
+      </div>
+      <div class="g23">
+        <div class="viz an" style="--d:.14s">
+          <svg viewBox="0 0 640 240" id="rlSvg" style="max-height:270px"></svg>
+        </div>
+        <div class="stbody an" style="--d:.18s"><h4 id="rlT">—</h4><p id="rlD">—</p></div>
+      </div>
+      <p class="note">客户实测数据，读延迟为 15 台 HANA 虚拟机的平均读延迟中位数。依据 BKO3031 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 19 · 价值总结 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="价值总结">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--green)"><i></i><span>Summary</span></div>
+        <h1>现代化一次，<span class="g">不必重写任何一个应用</span></h1>
+        <p class="lead">关键业务块存储的四个动作，落在同一个底座上。下一步：盘点负载，选出第一批现代化对象。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="vc"><span class="k">01 · 现代化运维</span><div class="t">统一迁移、管理、监控</div><div class="d">FLI 导入外部 LUN，Console 管理、DII 观测，应用一个都不用换平台。</div></div>
+        <div class="vc"><span class="k">02 · 保护</span><div class="t">按真实 RPO / RTO 设计</div><div class="d">以应用边界为单位，MES 秒级、ERP 分钟级、归档天级，不搞一刀切。</div></div>
+        <div class="vc"><span class="k">03 · 抵御</span><div class="t">锁定、隔离、演练</div><div class="d">恢复副本放进独立管理域，演练过才算数，而不是只在测试时能用。</div></div>
+        <div class="vc"><span class="k">04 · 应用</span><div class="t">一个平台，多种结果</div><div class="d">集群数据库、SAP 刷新、虚拟化验证跑在同一个 ONTAP 底座上；极致延迟交给 EF80。</div></div>
+      </div>
+      <div class="g23" style="margin-top:13px">
+        <div class="panel an" style="--d:.18s">
+          <h3>对制造业意味着什么</h3>
+          <div class="li ok"><b>产线不等存储</b>：MES 核心库看 p99，延迟尖刺不再让工单排队</div>
+          <div class="li ok"><b>换代不停线</b>：控制器、ONTAP 升级都走非中断流程，不必申请全厂停机窗口</div>
+          <div class="li ok"><b>月结准时</b>：SAP / ERP 在全闪上跑，备份窗口缩短，长事务不被挤压</div>
+          <div class="li ok"><b>追溯可信</b>：质量数据的恢复点锁定在独立管理域，攻击后也能拿回来</div>
+        </div>
+        <div class="panel tint an" style="--d:.24s">
+          <h3>参考资料 · NetApp INSIGHT 2026 场次</h3>
+          <div class="li">BKO3025 · ONTAP SAN：关键业务的现代可信底座</div>
+          <div class="li">BKO3017 · NetApp 全闪存承载关键业务</div>
+          <div class="li">BKO3019 · 为关键数据库实现微秒级延迟</div>
+          <div class="li">BKO3031 · 波士顿大学 SAP 换代选择 NetApp 与 NVMe</div>
+          <div class="li">TR-4684 · 用 NVMe/FC 实施现代 SAN；TR-5017 · EF80 介绍</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+/* ═══════════ 幕内交互：每个交互图示一段，命名对应幕名 ═══════════ */
+/* ═══════════ 讲解视频弹层 ═══════════ */
+const vDlg = $('#vDlg'), vPlayer = $('#vPlayer');
+const vOpen = $('#vOpen');
+if(vOpen) vOpen.addEventListener('click', ()=>{ vDlg.showModal(); vPlayer.play().catch(()=>{}); });
+$('#vClose').addEventListener('click', ()=> vDlg.close());
+vDlg.addEventListener('click', e=>{ if(e.target === vDlg) vDlg.close(); });
+vDlg.addEventListener('close', ()=> vPlayer.pause());
+
+/* ═══════════ 通用：开关组与步骤条 ═══════════ */
+function group(attr, fn){
+  const bs = $$('['+attr+']');
+  bs.forEach(b=> b.addEventListener('click', ()=>{
+    bs.forEach(x=> x.classList.toggle('on', x===b));
+    fn(b.getAttribute(attr), b);
+  }));
+}
+function stepper(id, fn){
+  const box = $('#'+id), ss = $$('.st', box);
+  ss.forEach(s=> s.addEventListener('click', ()=>{
+    ss.forEach(x=> x.classList.toggle('on', x===s));
+    fn(+s.dataset.i);
+  }));
+  fn(0);
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, parent, text){
+  const e = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text != null) e.textContent = text;
+  if(parent) parent.appendChild(e);
+  return e;
+}
+
+const C = {blue:'#0067c5', violet:'#6a5ad4', green:'#0e9a62', orange:'#d5820f', red:'#d33a5c', teal:'#0c8e86',
+  ink:'#152341', dim:'#5c6a8a', faint:'#8d97b2', line:'#dce3ef', line2:'#c9d4e6', p2:'#f5f8fd', p3:'#eef3fb'};
+const MONO = 'SF Mono,Menlo,monospace';
+function box(svg, x, y, w, h, o){
+  o = o || {};
+  sv('rect',{x, y, width:w, height:h, rx:o.rx||10, fill:o.fill||'#fff', stroke:o.stroke||C.line2,
+    'stroke-width':o.sw||1.4, 'stroke-dasharray':o.dash||''}, svg);
+  if(o.t) sv('text',{x:x+w/2, y:y+(o.t2?h/2-3:h/2+5), 'text-anchor':'middle','font-size':o.fs||13,'font-weight':750, fill:o.tc||C.ink}, svg, o.t);
+  if(o.t2) sv('text',{x:x+w/2, y:y+h/2+14, 'text-anchor':'middle','font-size':11, fill:o.tc2||C.dim}, svg, o.t2);
+}
+function ln(svg, x1, y1, x2, y2, o){
+  o = o || {};
+  return sv('line',{x1, y1, x2, y2, stroke:o.c||C.line2, 'stroke-width':o.w||2, 'stroke-dasharray':o.dash||'', 'stroke-linecap':'round', opacity:o.op==null?1:o.op}, svg);
+}
+function arrowDefs(svg){
+  const d = sv('defs',{}, svg);
+  [['aB',C.blue],['aR',C.red],['aG',C.green],['aD',C.line2],['aV',C.violet],['aO',C.orange]].forEach(([id,c])=>{
+    const m = sv('marker',{id, viewBox:'0 0 10 10', refX:9, refY:5, markerWidth:7, markerHeight:7, orient:'auto-start-reverse'}, d);
+    sv('path',{d:'M0,0 L10,5 L0,10 z', fill:c}, m);
+  });
+}
+
+/* ═══════════ 四重压力 ═══════════ */
+const PR = {
+  demand:{n:'需求持续上升', p:'数据量与 I/O 持续攀升。', r:'统一到一个存储底座，而不是继续增加阵列与工具。',
+    m:'MES 采集点、质检影像与追溯数据逐年增长，分散的阵列越来越难管。', c:C.blue, x:30, y:30},
+  rpo:{n:'恢复目标收紧', p:'应用对 RPO 与 RTO 的要求越来越高。', r:'按应用要求管理 RPO / RTO，建立与目标对应的策略组。',
+    m:'MES 要秒级恢复，ERP 要分钟级，归档可以按天：同一套策略覆盖不了。', c:C.violet, x:420, y:30},
+  cyber:{n:'网络风险改变模型', p:'勒索软件与凭据泄露威胁的是恢复点本身。', r:'镜像不够，答案是锁定、隔离、演练过的副本。',
+    m:'被加密的不只是生产库，备份如果在同一个管理域里，也会一起被删。', c:C.red, x:30, y:240},
+  aging:{n:'基础设施老化', p:'手工流程与老旧阵列增加运维风险。', r:'迁移数据而不是迁移应用；用非中断运维（NDO）规划变更，维护不再自动等于停机。',
+    m:'控制器换代、系统升级都要申请停线窗口，一拖再拖，设备越用越旧。', c:C.orange, x:420, y:240}
+};
+function drawPR(k){
+  const svg = $('#prSvg'); svg.innerHTML = '';
+  box(svg, 220, 130, 200, 80, {t:'ONTAP', t2:'一个运行底座', fill:'#f1eefe', stroke:C.violet, sw:2, fs:18});
+  Object.keys(PR).forEach(key=>{
+    const d = PR[key], on = key === k;
+    const cx = d.x + 95, cy = d.y + 35;
+    ln(svg, cx, cy, 320, 170, {c:on?d.c:C.line2, w:on?3:1.6, dash:on?'':'5 5'});
+    const g = sv('g',{style:'cursor:pointer'}, svg);
+    sv('rect',{x:d.x, y:d.y, width:190, height:70, rx:12, fill:on?d.c:'#fff', stroke:on?d.c:C.line2, 'stroke-width':1.6}, g);
+    sv('text',{x:cx, y:cy-3, 'text-anchor':'middle','font-size':14,'font-weight':780, fill:on?'#fff':C.ink}, g, d.n);
+    sv('text',{x:cx, y:cy+17, 'text-anchor':'middle','font-size':11, fill:on?'rgba(255,255,255,.85)':C.dim}, g, on?'→ 查看平台响应':'点击查看');
+    g.addEventListener('click', ()=> $('[data-pr="'+key+'"]').click());
+  });
+  const d = PR[k];
+  $('#prT').textContent = d.n; $('#prP').textContent = d.p; $('#prR').textContent = d.r; $('#prM').textContent = d.m;
+}
+group('data-pr', k=> drawPR(k));
+
+/* ═══════════ 现状与目标 ═══════════ */
+group('data-st', k=>{
+  $$('.sw').forEach(e=> e.textContent = e.dataset[k]);
+  $$('.sw.t').forEach(e=> e.style.color = k==='cur' ? C.red : C.green);
+  const f = $('#stFlag');
+  f.className = 'flag' + (k==='cur' ? ' r' : '');
+  f.textContent = k==='cur' ? '四个维度各自为政' : '同一个 ONTAP 底座，应用不改';
+});
+
+/* ═══════════ 平台选型 ═══════════ */
+const WK = {
+  oltp:{on:['a'], t:'核心交易库 · MES / ERP', d:'既要稳定的低延迟，又要快照、复制、克隆与多协议等丰富数据服务：AFF / ASA A 系列。日志卷独立放置并给最低延迟。'},
+  ull:{on:['ef'], t:'超低延迟纯块负载', d:'以块性能与简洁为先、数据服务需求少的负载，例如高并发交易型数据库：EF80 / EF50、EF600 / EF300。从应用到介质的路径最短。'},
+  virt:{on:['a','c'], t:'虚拟化与容器整合', d:'VMware、KVM、Kubernetes 混合负载，按层用 QoS 隔离、避免相互干扰：性能层放 A 系列，容量层放 C 系列，一个存储层同时服务虚拟机与容器。'},
+  cap:{on:['c'], t:'大容量二线负载', d:'容量优先、同时要兼顾性价比的负载：AFF / ASA C 系列。'},
+  sec:{on:['fas','e4000'], t:'备份与二级存储', d:'看重整个生命周期的数据成本：ONTAP 侧用 FAS，SANtricity 侧有 E4000。'},
+  ai:{on:['afx','ef'], t:'AI 与大规模分析', d:'AFX 以解耦架构承载密集 AI 负载；EF80 配合 Lustre 并行文件系统的方案见 Bay 14。'}
+};
+group('data-wk', k=>{
+  const w = WK[k];
+  $$('td[data-pf]').forEach(td=> td.classList.toggle('on', w.on.includes(td.dataset.pf)));
+  $('#wkT').textContent = w.t; $('#wkD').textContent = w.d;
+});
+
+/* ═══════════ 全闪架构：HA 与多路径 ═══════════ */
+function drawHA(st){
+  const svg = $('#haSvg'); svg.innerHTML = '';
+  const H = [320,40], FA = [170,135], FB = [470,135], N1 = [170,230], N2 = [470,230], S = [320,300];
+  const fabDown = st === 'fab', nodeDown = st === 'node';
+  const links = [
+    [H,FA,'A'], [H,FB,'B'], [FA,N1,'A1'], [FA,N2,'A2'], [FB,N1,'B1'], [FB,N2,'B2']
+  ];
+  let alive = 0;
+  links.forEach(([p,q,id])=>{
+    const dead = (fabDown && id[0]==='A') || (nodeDown && id.endsWith('1') && id.length===2);
+    if(!dead && id.length===2) alive++;
+    ln(svg, p[0], p[1], q[0], q[1], {c:dead?C.red:C.blue, w:dead?1.6:2.6, dash:dead?'5 5':'', op:dead?.6:1});
+  });
+  ln(svg, N1[0], N1[1]+22, S[0]-60, S[1], {c:nodeDown?C.line2:C.teal, w:2.4, dash:nodeDown?'5 5':''});
+  ln(svg, N2[0], N2[1]+22, S[0]+60, S[1], {c:C.teal, w:2.4});
+  ln(svg, N1[0]+62, N1[1], N2[0]-62, N2[1], {c:nodeDown?C.orange:C.violet, w:2, dash:'3 4'});
+  sv('text',{x:320, y:N1[1]-8, 'text-anchor':'middle','font-size':10.5, fill:nodeDown?C.orange:C.violet}, svg, nodeDown?'N2 接管 N1 的存储':'HA 互联');
+  box(svg, H[0]-90, H[1]-24, 180, 46, {t:'数据库主机', t2:'多路径 · 双 HBA', fill:'#fff', stroke:C.ink});
+  box(svg, FA[0]-70, FA[1]-20, 140, 40, {t:'交换网络 A', fill:fabDown?'#fdecef':'#fff', stroke:fabDown?C.red:C.line2, tc:fabDown?C.red:C.ink});
+  box(svg, FB[0]-70, FB[1]-20, 140, 40, {t:'交换网络 B', fill:'#fff'});
+  box(svg, N1[0]-62, N1[1]-22, 124, 44, {t:'控制器 N1', fill:nodeDown?'#fdecef':'#eef4fd', stroke:nodeDown?C.red:C.blue, tc:nodeDown?C.red:C.ink});
+  box(svg, N2[0]-62, N2[1]-22, 124, 44, {t:'控制器 N2', fill:'#eef4fd', stroke:C.blue});
+  box(svg, S[0]-110, S[1]-4, 220, 30, {t:'NVMe 盘柜 S1', fill:'#e8f6f4', stroke:C.teal, fs:12.5});
+  if(nodeDown) sv('text',{x:N1[0], y:N1[1]+40, 'text-anchor':'middle','font-size':11,'font-weight':700, fill:C.red}, svg, '✕ 故障');
+  sv('text',{x:600, y:40, 'text-anchor':'end','font-size':12, fill:C.dim}, svg, '主机侧可用路径');
+  sv('text',{x:600, y:70, 'text-anchor':'end','font-size':28,'font-weight':800,'font-family':MONO, fill:alive===4?C.blue:C.orange}, svg, alive+' / 4');
+  const f = $('#haFlag');
+  if(st === 'ok'){ f.className = 'flag'; f.textContent = '4 条路径全部可用，I/O 分布在两个控制器上'; }
+  else if(fabDown){ f.className = 'flag o'; f.textContent = '网络 A 中断：剩 2 条路径经网络 B 继续服务，业务不中断'; }
+  else { f.className = 'flag o'; f.textContent = 'N1 故障：N2 接管其存储，主机多路径切到剩余路径，业务不中断'; }
+}
+group('data-ha', k=> drawHA(k));
+
+/* ═══════════ 部署步骤 ═══════════ */
+const DP = [
+  ['容量：按并发需求和故障切换余量定', '不按平均值定容量。要算的是并发峰值，以及一个控制器接管全部负载时还剩多少余量。', '工厂里：按换班交接、月结批处理这类峰值时段来算，而不是按日均。'],
+  ['拓扑：HA 对是底线', '一对 HA 控制器是最低配置；聚合和卷按负载特征来匹配，关键库与批处理分开放。', '工厂里：MES 核心库和报表分析不要挤在同一个聚合上。'],
+  ['数据路径：从主机到介质', '多路径、分区（zoning）、HBA、SVM 隔离都属于数据路径。任何一段没做对，阵列再快也白搭。', '工厂里：分厂与总部机房的交换网络与 HBA 固件版本，一起纳入检查清单。'],
+  ['迁移：守住延迟预算', '用 FLI 导入、分阶段切换，或新旧并行运行一段时间。每一步都要确认延迟预算没有被吃掉。', '工厂里：利用换班或计划检修窗口分批切换，产线系统最后切。'],
+  ['验证：负载下的 p99', '同时用合成负载与贴近应用的负载；在负载下做故障切换和快照；看 p99，不看平均值。', '工厂里：在预生产环境回放真实的 MES 事务，再做一次控制器切换。'],
+  ['上线：基线、监控、手册', '上线时基线已经采集、监控已经打开、运行手册已经在手。', '工厂里：把上线基线存档，之后每次变更都拿它对比。']
+];
+stepper('dpSteps', i=>{ $('#dpT').textContent = DP[i][0]; $('#dpD').textContent = DP[i][1]; $('#dpM').textContent = DP[i][2]; });
+
+/* ═══════════ 看 p99（示意数据） ═══════════ */
+const LAT = (()=>{
+  let s = 7; const r = ()=> (s = (s*16807) % 2147483647) / 2147483647;
+  const a = [];
+  for(let i=0;i<300;i++){
+    let v = 0.22 + r()*0.16;
+    if(i % 37 === 11 || i % 53 === 29) v = 1.6 + r()*3.4;
+    else if(r() < 0.04) v = 0.7 + r()*0.6;
+    a.push(+v.toFixed(3));
+  }
+  return a;
+})();
+function pct(a, p){ const b = a.slice().sort((x,y)=>x-y); return b[Math.min(b.length-1, Math.floor(p*b.length))]; }
+function drawLat(mode){
+  const svg = $('#latSvg'); svg.innerHTML = '';
+  const X0 = 46, W = 580, Y0 = 220, Hh = 196, max = 5.5;
+  const y = v => Y0 - v/max*Hh;
+  [0,1,2,3,4,5].forEach(t=>{
+    ln(svg, X0, y(t), X0+W, y(t), {c:C.line, w:1});
+    sv('text',{x:X0-8, y:y(t)+4, 'text-anchor':'end','font-size':10.5,'font-family':MONO, fill:C.faint}, svg, t+' ms');
+  });
+  sv('text',{x:X0+W, y:Y0+22, 'text-anchor':'end','font-size':10.5, fill:C.faint}, svg, '时间 →（每个点为一次采样）');
+  const avg = LAT.reduce((s,v)=>s+v,0)/LAT.length, p99 = pct(LAT, .99), mx = Math.max(...LAT);
+  const dx = W / LAT.length;
+  if(mode === 'avg'){
+    const win = 30, pts = [];
+    for(let i=0;i<LAT.length;i+=win){
+      const seg = LAT.slice(i, i+win), m = seg.reduce((s,v)=>s+v,0)/seg.length;
+      pts.push([X0 + (i+win/2)*dx, y(m)]);
+    }
+    sv('polyline',{points:pts.map(p=>p.join(',')).join(' '), fill:'none', stroke:C.teal, 'stroke-width':3}, svg);
+    pts.forEach(p=> sv('circle',{cx:p[0], cy:p[1], r:4, fill:C.teal}, svg));
+    sv('text',{x:X0+10, y:y(1.4), 'font-size':12.5,'font-weight':700, fill:C.teal}, svg, '每分钟平均：始终在 0.5 ms 上下，看起来一切正常');
+    $('#lvMax').textContent = Math.max(...pts.map(p=> (Y0-p[1])/Hh*max)).toFixed(2)+' ms';
+    $('#lvMaxL').textContent = '分钟平均的最大值';
+  }else{
+    LAT.forEach((v,i)=>{
+      const hi = v > p99*0.999;
+      sv('rect',{x:X0+i*dx, y:y(v), width:Math.max(1, dx-0.6), height:Y0-y(v), fill:v>1.5?C.red:(hi?C.orange:'#9fb6d6')}, svg);
+    });
+    ln(svg, X0, y(p99), X0+W, y(p99), {c:C.orange, w:2, dash:'6 4'});
+    sv('text',{x:X0+W-4, y:y(p99)-6, 'text-anchor':'end','font-size':11.5,'font-weight':700, fill:C.orange}, svg, 'p99 = '+p99.toFixed(2)+' ms');
+    ln(svg, X0, y(avg), X0+W, y(avg), {c:C.teal, w:1.6, dash:'3 3'});
+    sv('text',{x:X0+6, y:y(avg)-6, 'font-size':11, fill:C.teal}, svg, '平均 '+avg.toFixed(2)+' ms');
+    $('#lvMax').textContent = mx.toFixed(2)+' ms';
+    $('#lvMaxL').textContent = '单次采样最大值';
+  }
+  $('#lvAvg').textContent = avg.toFixed(2)+' ms';
+  $('#lvP99').textContent = mode==='avg' ? '看不到' : p99.toFixed(2)+' ms';
+}
+group('data-lv', k=> drawLat(k));
+
+/* ═══════════ 统一运维 ═══════════ */
+const OP = {
+  mig:{t:'导入：标准化平台，不改数据库', l:[
+    ['外部块数据','用 FLI 把外部阵列的 LUN 导入 ONTAP，上层应用保持不变'],
+    ['虚拟化负载','在 vCenter 里直接配置 ONTAP 存储'],
+    ['内置数据服务','导入之后即可使用保护、效率与可恢复能力']]},
+  mgmt:{t:'管理：NetApp Console', l:[
+    ['部署与监控','部署、监控 ONTAP 集群'],
+    ['协调数据服务','统一调度经过审批的数据服务'],
+    ['生命周期与机群','生命周期管理、日常管理与跨集群的机群管理']]},
+  obs:{t:'观测：Data Infrastructure Insights（DII）', l:[
+    ['暴露风险与浪费','把容量浪费和配置风险找出来'],
+    ['建立负载基线','为关键负载建立性能基线，变化一眼可见'],
+    ['关联基础设施行为','把主机、网络、存储的行为关联起来；可观测包括非 NetApp 在内的整个环境']]},
+  auto:{t:'自动化：REST API、Ansible、Terraform、Python、PowerShell', l:[
+    ['标准化工作流','只跑经过审批的工作流'],
+    ['策略驱动','用策略统一配置，而不是逐台手工设'],
+    ['消除一次性手册','把每次都要临时写的操作步骤固化下来']]}
+};
+function drawOP(k){
+  const svg = $('#opSvg'); svg.innerHTML = ''; arrowDefs(svg);
+  const hot = (id)=> id === k;
+  const col = {mig:C.orange, mgmt:C.blue, obs:C.teal, auto:C.violet};
+  box(svg, 30, 20, 580, 50, {t:'自动化：REST API · Ansible · Terraform · Python · PowerShell', fill:hot('auto')?'#f1eefe':'#fff', stroke:hot('auto')?C.violet:C.line2, sw:hot('auto')?2.4:1.4, fs:12.5});
+  box(svg, 30, 100, 280, 60, {t:'NetApp Console', t2:'管理 ONTAP', fill:hot('mgmt')?'#eef4fd':'#fff', stroke:hot('mgmt')?C.blue:C.line2, sw:hot('mgmt')?2.4:1.4});
+  box(svg, 330, 100, 280, 60, {t:'Data Infrastructure Insights', t2:'观测整个异构环境', fill:hot('obs')?'#e8f6f4':'#fff', stroke:hot('obs')?C.teal:C.line2, sw:hot('obs')?2.4:1.4});
+  box(svg, 30, 200, 380, 90, {t:'ONTAP 集群（作为一个系统运维）', t2:'SAN：NVMe/FC · FC · iSCSI · NVMe/TCP', fill:'#f5f8fd', stroke:C.blue, sw:1.6});
+  box(svg, 450, 200, 160, 40, {t:'外部阵列 LUN', fill:hot('mig')?'#fff4e5':'#fff', stroke:hot('mig')?C.orange:C.line2, sw:hot('mig')?2.4:1.4, fs:12});
+  box(svg, 450, 250, 160, 40, {t:'vCenter', fill:hot('mig')?'#fff4e5':'#fff', stroke:hot('mig')?C.orange:C.line2, sw:hot('mig')?2.4:1.4, fs:12});
+  const a = (x1,y1,x2,y2,on,c)=> sv('line',{x1,y1,x2,y2, stroke:on?c:C.line2, 'stroke-width':on?2.6:1.6, 'marker-end':'url(#'+(on?(c===C.violet?'aV':c===C.orange?'aO':'aB'):'aD')+')'}, svg);
+  a(170,70,170,98, hot('auto'), C.violet); a(470,70,470,98, hot('auto'), C.violet);
+  a(170,160,170,198, hot('mgmt'), C.blue);
+  a(470,160,330,198, hot('obs'), C.blue);
+  a(450,220,412,226, hot('mig'), C.orange); a(450,270,412,262, hot('mig'), C.orange);
+  if(hot('mig')) sv('text',{x:430, y:300+12, 'text-anchor':'middle','font-size':11,'font-weight':700, fill:C.orange}, svg, 'FLI 导入，应用不变');
+  const d = OP[k];
+  $('#opT').textContent = d.t;
+  $('#opL').innerHTML = d.l.map(x=> '<div class="li"><b>'+x[0]+'</b>：'+x[1]+'</div>').join('');
+}
+group('data-op', k=> drawOP(k));
+
+/* ═══════════ 一致性组 ═══════════ */
+function drawCG(k){
+  const svg = $('#cgSvg'); svg.innerHTML = '';
+  const cg = k === 'cg';
+  sv('rect',{x:20, y:20, width:600, height:170, rx:16, fill:cg?'rgba(106,90,212,.05)':'none', stroke:cg?C.violet:C.line2, 'stroke-width':cg?2:1.4, 'stroke-dasharray':'7 5'}, svg);
+  sv('text',{x:36, y:42, 'font-size':12,'font-weight':700, fill:cg?C.violet:C.faint}, svg, cg?'一致性组：一个策略边界':'应用保护边界（未被当作一个整体）');
+  const objs = [['数据文件','LUN 1–4'],['重做日志','LUN 5–6'],['共享元数据','LUN 7']];
+  const ts = cg ? ['10:00:00.000','10:00:00.000','10:00:00.000'] : ['10:00:00.120','10:00:02.870','10:00:05.400'];
+  objs.forEach((o,i)=>{
+    const x = 50 + i*195;
+    box(svg, x, 60, 160, 64, {t:o[0], t2:o[1], fill:'#fff', stroke:C.blue});
+    sv('rect',{x:x+10, y:136, width:140, height:30, rx:8, fill:cg?'#e7f6ef':'#fdecef', stroke:cg?C.green:C.red}, svg);
+    sv('text',{x:x+80, y:156, 'text-anchor':'middle','font-size':12,'font-family':MONO,'font-weight':700, fill:cg?C.green:C.red}, svg, '快照 '+ts[i]);
+  });
+  sv('text',{x:320, y:222, 'text-anchor':'middle','font-size':13,'font-weight':750, fill:cg?C.green:C.red}, svg,
+    cg ? '三个对象落在同一时刻：恢复点可直接拉起数据库' : '日志比数据文件晚 2.75 秒，元数据又晚 2.53 秒');
+  sv('text',{x:320, y:246, 'text-anchor':'middle','font-size':11.5, fill:C.dim}, svg,
+    cg ? 'MES 核心库的数据、日志与共享配置作为一个整体保护与复制' : '恢复后需要数据库自行修复，最坏情况下无法启动');
+  const f = $('#cgFlag');
+  f.className = 'flag' + (cg ? '' : ' r');
+  f.textContent = cg ? '一致的恢复点' : '恢复点不一致';
+}
+group('data-cg', k=> drawCG(k));
+
+/* ═══════════ 网络韧性 ═══════════ */
+function drawCY(k){
+  const svg = $('#cySvg'); svg.innerHTML = ''; arrowDefs(svg);
+  const atk = k === 'atk', rec = k === 'rec';
+  const A = {x:30, y:40}, B = {x:420, y:40}, V = {x:420, y:190};
+  sv('rect',{x:395, y:170, width:230, height:118, rx:14, fill:'none', stroke:C.violet, 'stroke-dasharray':'6 4', 'stroke-width':1.6}, svg);
+  sv('text',{x:610, y:284, 'text-anchor':'end','font-size':10.5,'font-weight':700, fill:C.violet}, svg, '独立管理域');
+  box(svg, A.x, A.y, 190, 90, {t:'站点 A · 生产', t2: atk?'✕ 已被加密':(rec?'✓ 已从隔离副本恢复':'正常读写'),
+    fill:atk?'#fdecef':(rec?'#e7f6ef':'#eef4fd'), stroke:atk?C.red:(rec?C.green:C.blue), tc2:atk?C.red:(rec?C.green:C.dim), sw:2});
+  box(svg, B.x, B.y, 190, 90, {t:'站点 B · 镜像', t2: atk||rec?'✕ 损坏已同步过来':'与生产一致',
+    fill:atk||rec?'#fdecef':'#eef4fd', stroke:atk||rec?C.red:C.blue, tc2:atk||rec?C.red:C.dim, sw:2});
+  box(svg, V.x+5, V.y, 180, 80, {t:'🔒 SnapVault 归档', t2:'锁定保留 · 访问受限', fill:'#e7f6ef', stroke:C.green, sw:2, tc2:C.green});
+  sv('line',{x1:222, y1:85, x2:416, y2:85, stroke:atk||rec?C.red:C.blue, 'stroke-width':2.4, 'marker-end':'url(#'+(atk||rec?'aR':'aB')+')'}, svg);
+  sv('text',{x:319, y:76, 'text-anchor':'middle','font-size':11.5,'font-weight':700, fill:atk||rec?C.red:C.blue}, svg, atk||rec?'复制把损坏也带了过去':'复制');
+  if(!rec){
+    sv('path',{d:'M125,132 C125,230 300,230 421,230', fill:'none', stroke:C.blue, 'stroke-width':2, 'stroke-dasharray':'6 4', 'marker-end':'url(#aB)'}, svg);
+    sv('text',{x:250, y:248, 'text-anchor':'middle','font-size':11.5, fill:C.blue}, svg, atk?'归档副本不受生产凭据控制':'按策略归档');
+  }else{
+    sv('path',{d:'M421,240 C300,240 140,240 125,135', fill:'none', stroke:C.green, 'stroke-width':3, 'marker-end':'url(#aG)'}, svg);
+    sv('text',{x:250, y:258, 'text-anchor':'middle','font-size':12,'font-weight':700, fill:C.green}, svg, '从已验证的恢复点恢复');
+  }
+  if(atk){
+    sv('text',{x:125, y:30, 'text-anchor':'middle','font-size':11.5,'font-weight':700, fill:C.red}, svg, '勒索软件 · 凭据泄露 · 恶意管理员');
+  }
+}
+group('data-cy', k=> drawCY(k));
+
+/* ═══════════ 集群数据库预留 ═══════════ */
+function drawRS(k){
+  const svg = $('#rsSvg'); svg.innerHTML = '';
+  const fail = k === 'fail';
+  const holder = fail ? 0 : 1;
+  [0,1,2].forEach(i=>{
+    const x = 40 + i*200, down = fail && i===1;
+    box(svg, x, 30, 160, 70, {t:'数据库节点 '+(i+1), t2: down?'✕ 故障':(i===holder?'持有预留 · 写入':'已注册'),
+      fill:down?'#fdecef':(i===holder?'#fff4e5':'#fff'), stroke:down?C.red:(i===holder?C.orange:C.line2), sw:i===holder||down?2.2:1.4,
+      tc2:down?C.red:(i===holder?C.orange:C.dim)});
+    if(i===holder) sv('text',{x:x+146, y:50, 'text-anchor':'end','font-size':16}, svg, '🔑');
+    ln(svg, x+80, 100, 320, 190, {c:down?C.red:C.blue, w:down?1.4:2.2, dash:down?'5 5':''});
+  });
+  box(svg, 140, 190, 360, 60, {t:'ONTAP 共享集群存储', t2:'一致的路径行为 · 预留控制路径', fill:'#eef4fd', stroke:C.blue, sw:1.8});
+  if(fail){
+    sv('path',{d:'M290,62 C260,8 140,8 132,26', fill:'none', stroke:C.orange, 'stroke-width':2, 'stroke-dasharray':'5 4'}, svg);
+    sv('text',{x:210, y:14, 'text-anchor':'middle','font-size':11,'font-weight':700, fill:C.orange}, svg, '预留转移到节点 1');
+  }
+  const f = $('#rsFlag');
+  f.className = 'flag' + (fail ? ' o' : '');
+  f.textContent = fail ? '集群软件把预留交给节点 1，存储路径行为不变，无需改存储设计' : '节点 2 持有预留，其余节点已注册、随时可接替';
+}
+group('data-rs', k=> drawRS(k));
+
+/* ═══════════ 克隆（示意：10 TB 库，每份副本变化 10%） ═══════════ */
+function drawCL(){
+  const n = +$('#clN').value, DB = 10, chg = 0.1;
+  $('#clNv').textContent = n + ' 份';
+  const full = DB*(1+n), cl = DB*(1+n*chg);
+  const svg = $('#clSvg'); svg.innerHTML = '';
+  const max = DB*11, X0 = 120, W = 480;
+  const bar = (y, label, segs)=>{
+    sv('text',{x:X0-12, y:y+24, 'text-anchor':'end','font-size':12.5,'font-weight':700, fill:C.ink}, svg, label);
+    let x = X0;
+    segs.forEach(([v,c,t])=>{
+      const w = v/max*W;
+      sv('rect',{x, y, width:Math.max(0,w-1.5), height:38, rx:5, fill:c}, svg);
+      if(t && w > 40) sv('text',{x:x+w/2, y:y+24, 'text-anchor':'middle','font-size':10.5,'font-weight':700, fill:'#fff'}, svg, t);
+      x += w;
+    });
+    sv('text',{x:x+8, y:y+24, 'font-size':11.5,'font-family':MONO, fill:C.dim}, svg, ((segs.reduce((s,a)=>s+a[0],0))).toFixed(0)+' TB');
+  };
+  const fs = [[DB,C.blue,'生产']]; for(let i=0;i<n;i++) fs.push([DB,C.orange, n<=6?'副本'+(i+1):'']);
+  const cs = [[DB,C.blue,'生产']]; for(let i=0;i<n;i++) cs.push([DB*chg,C.green,'']);
+  bar(40, '完整拷贝', fs);
+  bar(120, '快照克隆', cs);
+  sv('text',{x:X0, y:200, 'font-size':11.5, fill:C.dim}, svg, '克隆与生产共享未变化的数据块，只为变化部分占用空间');
+  sv('text',{x:X0, y:222, 'font-size':11.5, fill:C.dim}, svg, '三类流程：SAP 系统刷新 · 数据库测试开发 · 虚拟化验证');
+  $('#clFull').textContent = full.toFixed(0)+' TB';
+  $('#clCl').textContent = cl.toFixed(0)+' TB';
+  $('#clSave').textContent = Math.round((1-cl/full)*100)+'%';
+}
+$('#clN').addEventListener('input', drawCL); drawCL();
+
+/* ═══════════ EF80 ═══════════ */
+const EV = {
+  lat:{t:'亚毫秒响应，实时决策', d:'消除存储瓶颈，交易量增长时不卡顿、不争抢；亚毫秒的响应让决策更快、更有依据。', hi:'media'},
+  tp:{t:'持续吞吐，每笔交易都一样', d:'专为在真实交易负载下维持极高 IOPS 而设计：端到端 NVMe、SANtricity OS 控制，性能保持一致。', hi:'path'},
+  rel:{t:'久经验证的可靠，不中断', d:'非中断更新、预测性健康检查，以及几十年的工程积累，让关键业务的数据源始终在线可用。', hi:'ctrl'},
+  sim:{t:'架构简洁：最短的路径也是最快的', d:'专用块存储让从应用到介质的路径保持最短：层次更少、延迟更低、运维更简单、行为更可预期。', hi:'all'}
+};
+function drawEF(k){
+  const svg = $('#efSvg'); svg.innerHTML = ''; arrowDefs(svg);
+  const hi = EV[k].hi;
+  const st = ['数据库主机','NVMe 网络','EF80 控制器','NVMe 介质'];
+  const ids = ['host','path','ctrl','media'];
+  st.forEach((s,i)=>{
+    const x = 20 + i*158, on = hi==='all' || hi===ids[i];
+    box(svg, x, 40, 130, 70, {t:s, t2:['Oracle · SQL · HANA','RoCE · FC · TCP','SANtricity OS','24 块 · 2U'][i],
+      fill:on?'#fff4e5':'#fff', stroke:on?C.orange:C.line2, sw:on?2.4:1.4});
+    if(i<3) sv('line',{x1:x+132, y1:75, x2:x+156, y2:75, stroke:hi==='all'?C.orange:C.line2, 'stroke-width':2.4, 'marker-end':'url(#'+(hi==='all'?'aO':'aD')+')'}, svg);
+  });
+  sv('text',{x:320, y:150, 'text-anchor':'middle','font-size':13,'font-weight':750, fill:C.ink}, svg, EV[k].t);
+  // 2U 机箱示意
+  for(let i=0;i<24;i++){
+    sv('rect',{x:110+i*17.5, y:172, width:14, height:30, rx:2.5, fill:hi==='media'||hi==='all'?C.orange:'#c9d4e6', opacity:.35+.65*((i%6)/6)}, svg);
+  }
+  sv('text',{x:96, y:192, 'text-anchor':'end','font-size':10.5,'font-family':MONO, fill:C.faint}, svg, 'EF80 2U');
+  $('#evT').textContent = EV[k].t; $('#evD').textContent = EV[k].d;
+}
+group('data-ev', k=> drawEF(k));
+
+/* ═══════════ 动态磁盘池 ═══════════ */
+const DD = (()=>{
+  const S = [
+    {id:'A', c:C.blue,   drives:[0,2,5,7,9,11,14,17,20,22], to:3},
+    {id:'B', c:C.violet, drives:[1,3,6,9,12,13,15,18,21,23], to:4},
+    {id:'C', c:C.teal,   drives:[0,4,8,10,12,16,17,19,20,23]}
+  ];
+  const occ = {};
+  S.forEach((s,si)=>{
+    s.rows = s.drives.map((d,j)=>{
+      let r = (j*2 + si*3) % 5;
+      while(occ[d+':'+r]) r = (r+1) % 5;
+      occ[d+':'+r] = 1; return r;
+    });
+  });
+  return S;
+})();
+function drawDD(k){
+  const svg = $('#ddSvg'); svg.innerHTML = '';
+  const X0 = 28, cw = 24.5, ch = 26, Y0 = 26;
+  const failed = k !== 'ok', rebuilt = k === 'rb';
+  for(let d=0; d<24; d++){
+    const x = X0 + d*cw, dead = failed && d===9;
+    sv('rect',{x:x, y:Y0-4, width:cw-4, height:ch*6+12, rx:5, fill:dead?'#fdecef':'#fbfcff', stroke:dead?C.red:C.line, 'stroke-width':dead?1.8:1}, svg);
+    sv('text',{x:x+(cw-4)/2, y:Y0+ch*6+24, 'text-anchor':'middle','font-size':9.5,'font-family':MONO, fill:dead?C.red:C.faint,'font-weight':dead?800:400}, svg, d+1);
+    sv('rect',{x:x+2, y:Y0+ch*5+2, width:cw-8, height:ch-6, rx:3, fill:'#eef3fb', stroke:'#8d97b2', 'stroke-dasharray':'2 2'}, svg);
+  }
+  DD.forEach(s=>{
+    s.drives.forEach((d,j)=>{
+      const x = X0 + d*cw + 2, y = Y0 + s.rows[j]*ch + 2, lost = failed && d===9;
+      sv('rect',{x, y, width:cw-8, height:ch-6, rx:3, fill:lost?'#fff':s.c, stroke:lost?C.red:'none', 'stroke-dasharray':lost?'3 2':'', opacity:lost?1:.9}, svg);
+      sv('text',{x:x+(cw-8)/2, y:y+14, 'text-anchor':'middle','font-size':9.5,'font-weight':700, fill:lost?C.red:'#fff'}, svg, s.id);
+    });
+    if(rebuilt && s.to != null){
+      const x = X0 + s.to*cw + 2, y = Y0 + 5*ch + 2;
+      sv('rect',{x, y, width:cw-8, height:ch-6, rx:3, fill:s.c, stroke:C.orange, 'stroke-width':2}, svg);
+      sv('text',{x:x+(cw-8)/2, y:y+14, 'text-anchor':'middle','font-size':9.5,'font-weight':700, fill:'#fff'}, svg, s.id);
+    }
+  });
+  if(rebuilt){
+    DD.filter(s=> s.to!=null).forEach(s=>{
+      s.drives.filter(d=> d!==9).forEach(d=>{
+        ln(svg, X0+d*cw+cw/2-2, Y0+ch*5-4, X0+s.to*cw+cw/2-2, Y0+ch*5+4, {c:s.c, w:1, op:.35});
+      });
+    });
+  }
+  const msg = {
+    ok:'三个条带各跨 10 块盘，打散在 24 块盘上；每块盘都服务所有卷，没有热点，也没有闲置的热备盘：预留空间分布在整个池里。',
+    fail:'10 号盘故障：盘上只有条带 A、B 各一片需要重建，而不是整块盘。不必等替换盘。',
+    rb:'从多块幸存盘并行读取，重算出丢失的两片，写进其他盘上的预留空间，且不与同条带的其他片落在同一块盘上。替换盘什么时候装都可以。'
+  };
+  $('#ddMsg').textContent = msg[k];
+}
+group('data-dd', k=>{ drawDD(k); if(k === 'rb') animRB(); });
+let rbT = 0;
+function drawRB(p){
+  const svg = $('#rbSvg'); svg.innerHTML = '';
+  const W = 290, max = 18;
+  [['传统 RAID 8+2 卷组', 17.6, C.red], ['动态磁盘池', 4.1, C.green]].forEach(([n,v,c],i)=>{
+    const y = 14 + i*48;
+    sv('text',{x:0, y:y+13, 'font-size':11.5,'font-weight':700, fill:C.ink}, svg, n);
+    sv('rect',{x:0, y:y+20, width:W, height:16, rx:4, fill:C.p3}, svg);
+    const w = Math.min(v, max*p)/max*W;
+    sv('rect',{x:0, y:y+20, width:w, height:16, rx:4, fill:c}, svg);
+    sv('text',{x:w+8, y:y+33, 'font-size':12,'font-weight':800,'font-family':MONO, fill:c}, svg, (Math.min(v, max*p)).toFixed(1)+' h');
+  });
+  if(p >= 1) sv('text',{x:410, y:112, 'text-anchor':'end','font-size':11,'font-weight':700, fill:C.green}, svg, '约快 4 倍，降级运行少 13 小时');
+}
+function animRB(){
+  cancelAnimationFrame(rbT);
+  const t0 = performance.now();
+  const step = now=>{ const p = Math.max(0, Math.min(1, (now-t0)/1800)); drawRB(p); if(p<1) rbT = requestAnimationFrame(step); };
+  rbT = requestAnimationFrame(step);
+}
+drawRB(1);
+
+/* ═══════════ 保护选项 ═══════════ */
+const PT = {
+  m55:{n:10, d:5, p:0, m:5, ov:'50%', u:'重做日志、写密集卷', t:'性能闪存 · 镜像 5+5：写延迟更低，适合重做日志、写密集、对延迟最敏感的卷；保护强度低于 8+2，单盘故障即出现关键条带。'},
+  e82:{n:10, d:8, p:2, m:0, ov:'20%', u:'数据文件与索引', t:'性能闪存 · 纠删码 8+2：数据库的默认选择，在容量效率与保护之间取得平衡，大多数数据卷需要的就是它。'},
+  e162:{n:18, d:16, p:2, m:0, ov:'约 11%', u:'容量型闪存', t:'容量闪存 · 纠删码 16+2：用于 30 TB、60 TB 的大容量盘，此时 EF80 只用动态磁盘池、不再有传统 RAID；不是数据库的典型选择。'}
+};
+function drawPT(k){
+  const d = PT[k], svg = $('#ptSvg'); svg.innerHTML = '';
+  const cw = Math.min(32, 580/d.n), X0 = (640 - cw*d.n)/2;
+  for(let i=0;i<d.n;i++){
+    const isM = d.m && i>=d.m, isP = !d.m && i>=d.d;
+    const c = isM ? C.violet : (isP ? C.orange : C.blue);
+    sv('rect',{x:X0+i*cw+2, y:30, width:cw-4, height:60, rx:5, fill:c, opacity:isM?.55:.9}, svg);
+    sv('text',{x:X0+i*cw+cw/2, y:66, 'text-anchor':'middle','font-size':10.5,'font-weight':700, fill:'#fff'}, svg, isM?'M':(isP?'P':'D'));
+  }
+  sv('text',{x:320, y:18, 'text-anchor':'middle','font-size':12,'font-weight':700, fill:C.ink}, svg, '一个条带 · 跨 '+d.n+' 块盘');
+  const lg = d.m ? [['D 数据',C.blue],['M 镜像副本',C.violet]] : [['D 数据',C.blue],['P 校验',C.orange]];
+  lg.forEach(([t,c],i)=>{ sv('rect',{x:240+i*100, y:110, width:12, height:12, rx:3, fill:c}, svg); sv('text',{x:258+i*100, y:121, 'font-size':11.5, fill:C.dim}, svg, t); });
+  sv('text',{x:320, y:152, 'text-anchor':'middle','font-size':11.5, fill:C.dim}, svg, k==='e162' ? '容量闪存池使用' : '与另一种方式共存于同一组盘、同一个池');
+  $('#ptOv').textContent = d.ov; $('#ptW').textContent = d.n+' 块'; $('#ptU').textContent = d.u; $('#ptD').textContent = d.t;
+}
+group('data-pt', k=> drawPT(k));
+
+/* ═══════════ 波士顿大学：换代前后 ═══════════ */
+const BU = {
+  tp:{u:'MB/s', a:6498, b:11010, n:'+69%', d:'集群峰值吞吐从 6,498 MB/s 升到 11,010 MB/s。'},
+  vm:{u:'MB/s', a:14696, b:29322, n:'2.0×', d:'两次采集都在的 68 台 VM，峰值带宽之和翻了一倍。'},
+  iops:{u:'IOPS', a:123000, b:183000, n:'+49%', d:'同一批 VM 的峰值 IOPS 从 12.3 万升到 18.3 万。'},
+  lat:{u:'ms', a:90, b:20, n:'−78%', d:'68 台 VM 的峰值延迟中位数从 90 ms 降到 20 ms；写延迟峰值超过 50 ms 的 VM 从 51 台降到 18 台，68 台中 55 台改善。', low:true},
+  cpu:{u:'GHz', a:1799, b:1344, n:'−25%', d:'实际 CPU 需求几乎不变（70.0 → 71.1 GHz），但装机主频少了四分之一：同样的工作，用少 8 台的主机完成。', low:true, extra:[70.0,71.1]}
+};
+function drawBU(k){
+  const d = BU[k], svg = $('#buSvg'); svg.innerHTML = '';
+  const max = Math.max(d.a, d.b)*1.15, H = 170, Y0 = 200;
+  const fmt = v => v >= 1000 ? v.toLocaleString('en-US') : String(v);
+  [['换代前 · 7 月', d.a, '#9fb6d6'], ['换代后 · 8 月', d.b, d.low? C.green : C.blue]].forEach(([n,v,c],i)=>{
+    const x = 150 + i*200, h = v/max*H;
+    sv('rect',{x, y:Y0-h, width:110, height:h, rx:8, fill:c}, svg);
+    sv('text',{x:x+55, y:Y0-h-10, 'text-anchor':'middle','font-size':16,'font-weight':800,'font-family':MONO, fill:C.ink}, svg, fmt(v)+' '+d.u);
+    sv('text',{x:x+55, y:Y0+20, 'text-anchor':'middle','font-size':12, fill:C.dim}, svg, n);
+  });
+  if(d.extra){
+    sv('text',{x:560, y:110, 'text-anchor':'middle','font-size':11.5, fill:C.dim}, svg, '实际需求');
+    sv('text',{x:560, y:132, 'text-anchor':'middle','font-size':14,'font-weight':800,'font-family':MONO, fill:C.violet}, svg, d.extra[0]+' → '+d.extra[1]);
+  }
+  ln(svg, 120, Y0, 520, Y0, {c:C.line2, w:1.4});
+  sv('text',{x:600, y:50, 'text-anchor':'end','font-size':26,'font-weight':800,'font-family':MONO, fill:d.low?C.green:C.blue}, svg, d.n);
+  $('#buD').textContent = d.d;
+}
+group('data-bm', k=> drawBU(k));
+
+/* ═══════════ SAP HCMT 与备份 ═══════════ */
+const HC = [
+  ['日志卷写延迟 · 4 KB', '< 1 ms', '0.16 ms', 6, '好 6 倍'],
+  ['日志卷写延迟 · 16 KB', '< 1 ms', '0.26 ms', 4, '好 4 倍'],
+  ['数据卷写延迟 · 16 KB', '< 10 ms', '0.27 ms', 37, '好 37 倍'],
+  ['日志顺序写 · 1 MB', '≥ 250 MB/s', '3,061 MB/s', 12, '超出 12 倍'],
+  ['读吞吐', '≥ 400 MB/s', '5,891 MB/s', 15, '超出 15 倍'],
+  ['写吞吐', '≥ 250 MB/s', '3,187 MB/s', 13, '超出 13 倍']
+];
+$('#hcmtT tbody').innerHTML = HC.map(r=>{
+  const w = Math.round(Math.log(r[3]+1)/Math.log(38)*100);
+  return '<tr><td class="h">'+r[0]+'</td><td>'+r[1]+'</td><td class="mono" style="color:var(--green);font-weight:700">'+r[2]+'</td>'+
+    '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:none;width:'+w*0.7+'px;height:9px;border-radius:4px;background:var(--green)"></div><span style="white-space:nowrap">'+r[4]+'</span></div></td></tr>';
+}).join('');
+(function drawBK(){
+  const svg = $('#bkSvg');
+  const J = [['任务 1',7.9,5.2],['任务 2',7.0,5.2],['任务 3',6.4,5.0],['任务 4',6.1,5.1],['任务 5',4.5,3.6]];
+  const X0 = 70, W = 400, max = 8.5;
+  J.forEach(([n,a,b],i)=>{
+    const y = 8 + i*38;
+    sv('text',{x:X0-10, y:y+20, 'text-anchor':'end','font-size':12, fill:C.ink}, svg, n);
+    sv('rect',{x:X0, y:y+4, width:a/max*W, height:13, rx:3, fill:'#9fb6d6'}, svg);
+    sv('rect',{x:X0, y:y+19, width:b/max*W, height:13, rx:3, fill:C.green}, svg);
+    sv('text',{x:X0+a/max*W+6, y:y+15, 'font-size':10.5,'font-family':MONO, fill:C.dim}, svg, a+' h');
+    sv('text',{x:X0+b/max*W+6, y:y+30, 'font-size':10.5,'font-family':MONO,'font-weight':700, fill:C.green}, svg, b+' h  −'+Math.round((1-b/a)*100)+'%');
+  });
+  sv('rect',{x:420, y:0, width:10, height:10, rx:2, fill:'#9fb6d6'}, svg); sv('text',{x:434, y:9, 'font-size':10.5, fill:C.dim}, svg, '换代前');
+  sv('rect',{x:486, y:0, width:10, height:10, rx:2, fill:C.green}, svg); sv('text',{x:500, y:9, 'font-size':10.5, fill:C.dim}, svg, '换代后');
+})();
+
+/* ═══════════ 读延迟排查 ═══════════ */
+const RL = [
+  ['7 月 · 换代前：本地盘', 'HANA 虚拟机跑在本地 PERC SAS/SSD 上，平均读延迟中位数约 9 ms。这是要被替换的旧平台，也是对比的起点。'],
+  ['8 月 · 切换后：唯一一个变差的指标', '15 台 HANA 节点的读延迟中位数升到约 20 ms，期间在 15–36 ms 之间波动。但负载几乎没变：可比的 8 台 VM，I/O 大小 147 → 156 KB，读 IOPS 只增加 32%，每 100 KB 的延迟却从 7.5 ms 变成 14.4 ms。所以这不是负载造成的。'],
+  ['8 月 28 日 · 根因在主机侧', 'ESXi 内置的 NVMe/TCP 传输驱动从 nvmetcp 1.0.1.36（ESXi 8.0.3g 内置）更换为 1.0.1.37（ESXi 8.0.3i 内置）。旧驱动下延迟在 15–36 ms，新驱动下降到 0–1 ms。阵列侧没有任何改动。'],
+  ['9 月 · 复测：稳态低于 1 ms', '同样 15 台 HANA VM 的稳态读延迟低于 1 ms；全集群延迟中位数为 0 ms，约 3,700 个样本中只有 25 个超过 10 ms，且全部落在备份窗口内。同一阵列上的非 HANA 负载整夜维持 400–750 MB/s、延迟 0–2 ms。']
+];
+function drawRL(i){
+  const svg = $('#rlSvg'); svg.innerHTML = '';
+  const X0 = 60, Y0 = 200, H = 170, max = 40;
+  const y = v => Y0 - v/max*H;
+  [0,10,20,30,40].forEach(t=>{
+    ln(svg, X0, y(t), 620, y(t), {c:C.line, w:1});
+    sv('text',{x:X0-8, y:y(t)+4, 'text-anchor':'end','font-size':10.5,'font-family':MONO, fill:C.faint}, svg, t+' ms');
+  });
+  const P = [[130, 9, '7 月'], [300, 20, '8 月'], [450, 20, '8/28'], [580, 0.8, '9 月']];
+  sv('rect',{x:240, y:y(36), width:200, height:y(15)-y(36), rx:6, fill:'rgba(211,58,92,.1)'}, svg);
+  sv('text',{x:340, y:y(36)-6, 'text-anchor':'middle','font-size':10.5, fill:C.red}, svg, '波动区间 15–36 ms');
+  const shown = P.slice(0, i+1);
+  sv('polyline',{points:shown.map(p=> p[0]+','+y(p[1])).join(' '), fill:'none', stroke:i>=3?C.green:C.blue, 'stroke-width':3}, svg);
+  P.forEach((p,j)=>{
+    const on = j <= i, c = j===3 ? C.green : (j===0 ? C.blue : C.red);
+    sv('circle',{cx:p[0], cy:y(p[1]), r:on?7:5, fill:on?c:'#fff', stroke:c, 'stroke-width':2, opacity:on?1:.35}, svg);
+    sv('text',{x:p[0], y:Y0+20, 'text-anchor':'middle','font-size':11.5, fill:on?C.ink:C.faint}, svg, p[2]);
+    if(on) sv('text',{x:p[0], y:y(p[1])-14, 'text-anchor':'middle','font-size':13,'font-weight':800,'font-family':MONO, fill:c}, svg, j===3?'<1 ms':(p[1]+' ms'));
+  });
+  if(i >= 2){
+    ln(svg, 450, y(40), 450, Y0, {c:C.orange, w:2, dash:'5 4'});
+    sv('text',{x:458, y:y(38), 'font-size':11,'font-weight':700, fill:C.orange}, svg, '驱动更换');
+  }
+  $('#rlT').textContent = RL[i][0]; $('#rlD').textContent = RL[i][1];
+}
+stepper('rlSteps', i=> drawRL(i));
+
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效 ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav === '动态磁盘池') setTimeout(animRB, 420);
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+</body>
+</html>

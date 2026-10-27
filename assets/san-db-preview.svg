@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="t d"><title id="t">NetApp 关键业务块存储与数据库</title><desc id="d">数据库主机经多路径连到双控制器全闪存储，延迟曲线以 p99 衡量，尾部尖刺被压平。</desc><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#edf7ff"/><stop offset="1" stop-color="#f9fbff"/></linearGradient><linearGradient id="b" x2="1"><stop stop-color="#0067c5"/><stop offset="1" stop-color="#6a5ad4"/></linearGradient><filter id="s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dy="10" stdDeviation="12" flood-color="#294e72" flood-opacity=".14"/></filter><pattern id="g" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#78a9d3" stroke-opacity=".11"/></pattern></defs><rect width="800" height="450" fill="url(#bg)"/><rect width="800" height="450" fill="url(#g)"/><circle cx="710" cy="70" r="120" fill="#d5820f" opacity=".05"/><g filter="url(#s)"><rect x="58" y="42" width="684" height="366" rx="18" fill="#fff" stroke="#cbddec"/></g><path d="M58 104V60a18 18 0 0118-18h648a18 18 0 0118 18v44z" fill="#f8fbfe"/><path d="M58 104h684" stroke="#d8e5f0"/><circle cx="86" cy="73" r="6" fill="#0067c5"/>
+<g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif">
+<text x="103" y="70" font-size="17" font-weight="750" fill="#15324d">关键业务块存储 · 数据库</text><text x="103" y="89" font-size="11" fill="#6b8299" letter-spacing=".5">ONTAP SAN · NVMe · EF80 · SAP HANA</text>
+<g font-size="12" font-weight="700">
+<rect x="96" y="132" width="150" height="46" rx="10" fill="#fff" stroke="#152341"/><text x="171" y="160" text-anchor="middle" fill="#152341">数据库主机</text>
+<path d="M140 178 L118 230 M140 178 L224 230 M202 178 L118 230 M202 178 L224 230" stroke="#0067c5" stroke-width="2.2" fill="none"/>
+<rect x="84" y="230" width="68" height="40" rx="9" fill="#eef4fd" stroke="#0067c5"/><text x="118" y="255" text-anchor="middle" fill="#123a7a">N1</text>
+<rect x="190" y="230" width="68" height="40" rx="9" fill="#eef4fd" stroke="#0067c5"/><text x="224" y="255" text-anchor="middle" fill="#123a7a">N2</text>
+<path d="M152 250 H190" stroke="#6a5ad4" stroke-width="2" stroke-dasharray="3 4"/>
+<rect x="96" y="300" width="150" height="34" rx="9" fill="#e8f6f4" stroke="#0c8e86"/><text x="171" y="322" text-anchor="middle" fill="#0c8e86">NVMe 全闪</text>
+<path d="M118 270 L150 300 M224 270 L192 300" stroke="#0c8e86" stroke-width="2"/>
+</g>
+<g transform="translate(300 128)">
+<rect width="410" height="206" rx="12" fill="#fbfcff" stroke="#dce3ef"/>
+<path d="M20 180H392" stroke="#dce3ef"/>
+<g fill="#9fb6d6"><rect x="24" y="166" width="5" height="14"/><rect x="34" y="163" width="5" height="17"/><rect x="44" y="167" width="5" height="13"/><rect x="54" y="164" width="5" height="16"/><rect x="74" y="166" width="5" height="14"/><rect x="84" y="162" width="5" height="18"/><rect x="94" y="165" width="5" height="15"/><rect x="104" y="167" width="5" height="13"/><rect x="124" y="164" width="5" height="16"/><rect x="134" y="166" width="5" height="14"/><rect x="144" y="163" width="5" height="17"/><rect x="164" y="165" width="5" height="15"/><rect x="174" y="167" width="5" height="13"/><rect x="184" y="164" width="5" height="16"/></g>
+<g fill="#d33a5c"><rect x="64" y="70" width="5" height="110"/><rect x="114" y="96" width="5" height="84"/><rect x="154" y="58" width="5" height="122"/></g>
+<path d="M196 150 C230 150 240 162 260 164" stroke="#8d97b2" stroke-dasharray="4 4" fill="none"/>
+<g fill="#0e9a62"><rect x="270" y="168" width="5" height="12"/><rect x="280" y="167" width="5" height="13"/><rect x="290" y="169" width="5" height="11"/><rect x="300" y="167" width="5" height="13"/><rect x="310" y="168" width="5" height="12"/><rect x="320" y="166" width="5" height="14"/><rect x="330" y="168" width="5" height="12"/><rect x="340" y="167" width="5" height="13"/><rect x="350" y="169" width="5" height="11"/><rect x="360" y="168" width="5" height="12"/><rect x="370" y="167" width="5" height="13"/><rect x="380" y="168" width="5" height="12"/></g>
+<path d="M20 64H200" stroke="#d5820f" stroke-width="2" stroke-dasharray="6 4"/><text x="24" y="54" font-size="11.5" font-weight="700" fill="#d5820f">p99 尖刺</text>
+<path d="M264 158H392" stroke="#0e9a62" stroke-width="2" stroke-dasharray="6 4"/><text x="388" y="148" text-anchor="end" font-size="11.5" font-weight="700" fill="#0e9a62">p99 &lt; 1 ms</text>
+<text x="20" y="28" font-size="12" font-weight="750" fill="#15324d">看尾延迟，不看平均值</text>
+</g>
+<g font-size="11" font-weight="700"><rect x="300" y="350" width="120" height="30" rx="15" fill="#eef4fd"/><text x="360" y="370" text-anchor="middle" fill="#0067c5">非中断运维</text><rect x="430" y="350" width="130" height="30" rx="15" fill="#fff4e5"/><text x="495" y="370" text-anchor="middle" fill="#9a5a00">EF80 微秒级</text><rect x="570" y="350" width="140" height="30" rx="15" fill="#e7f6ef"/><text x="640" y="370" text-anchor="middle" fill="#0e9a62">SAP 指标全达标</text></g>
+</g></svg>
