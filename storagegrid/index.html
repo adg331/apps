@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>NetApp StorageGRID · 对象存储与开放湖仓</title>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+.vbtn{margin-top:22px;font-size:14px;padding:10px 22px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--sh)}
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+.vdlg .vbar .btn{flex:0 0 auto}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+</style>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  if (location.hostname !== "adg331.github.io") return;   // 只统计线上访问，本地预览不上报
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?0a7443d4f6cacdefbb3711234e999137";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</head>
+<body>
+
+<dialog class="vdlg" id="vDlg" aria-label="StorageGRID 讲解视频">
+  <div class="vbar"><span>NetApp StorageGRID · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./sg-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>NetApp StorageGRID</b><span>OBJECT · LAKEHOUSE</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp INSIGHT 2026 · 对象存储专题</span></div>
+      <div class="big an" style="--d:.14s">NetApp StorageGRID</div>
+      <div class="sub an" style="--d:.26s">从海量对象存储，到开放的数据湖仓</div>
+      <p class="desc an" style="--d:.34s">对象存储已经从冷归档变成一级基础设施。本页讲清 StorageGRID 的架构与数据管理、12.1 的新能力，以及把 Iceberg 表层和目录放进存储里的 Lakehouse Tables。</p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">为什么是对象存储</div>
+        <div class="chip" data-jump="4">数据管理</div>
+        <div class="chip" data-jump="7">安全与多站点</div>
+        <div class="chip" data-jump="9">开放湖仓</div>
+        <div class="chip" data-jump="15">迁移与实践</div>
+      </div>
+      <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 6 分钟讲解视频</button></div>
+      <div class="an" style="--d:.56s;margin-top:30px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>Overview</span></div>
+        <h1>一张图看懂：<span class="g">一套对象存储，承载从归档到分析的全部数据</span></h1>
+        <p class="lead">StorageGRID 用一个多站点的全局命名空间承载 S3 对象，按策略决定数据放在哪里、存几份、保留多久；在此之上，Iceberg 表层和目录直接内置在存储里，任何分析引擎都能就地查询。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="dc" style="--ac:#0067c5" data-jump="2">
+          <div class="hd"><span class="nm">为什么是对象存储</span><span class="ct">2 幕</span></div>
+          <ul><li>从冷归档到一级负载</li><li>多站点、单一命名空间的架构</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#6a5ad4" data-jump="4">
+          <div class="hd"><span class="nm">数据管理与安全</span><span class="ct">5 幕</span></div>
+          <ul><li>ILM 策略：放哪里、存几份</li><li>分支桶：回退、排除、隔离</li><li>缓存与元数据节点</li><li>12.1 新特性与下一版本</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#0e9a62" data-jump="9">
+          <div class="hd"><span class="nm">开放湖仓</span><span class="ct">6 幕</span></div>
+          <ul><li>表层的二十年演变</li><li>Iceberg 让对象变成表</li><li>Lakehouse Tables：目录内置于存储</li><li>多站点一个目录，任意引擎</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#d5820f" data-jump="15">
+          <div class="hd"><span class="nm">迁移与实践</span><span class="ct">3 幕</span></div>
+          <ul><li>从 Hadoop / HDFS 分阶段迁移</li><li>客户实践：查询提速、TCO 下降</li><li>跨存储层的 AI 数据管道</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+      </div>
+      <div class="kpis an" style="--d:.2s;margin-top:14px">
+        <div class="kpi"><b>1 EB</b><span>单个 grid 的容量上限</span></div>
+        <div class="kpi v"><b>1 万亿+</b><span>单个 grid 的对象数上限</span></div>
+        <div class="kpi g"><b>16 个站点</b><span>一个 grid、一个命名空间，站点间双活</span></div>
+        <div class="kpi o"><b>15 个 9</b><span>分层纠删码下的数据持久性（厂商口径）</span></div>
+      </div>
+      <p class="note an" style="--d:.26s">规格依据 NetApp INSIGHT 2026 场次资料，以对应版本的产品文档为准。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 从冷归档到一级负载 ══════════════════ -->
+  <section class="scene" data-sec="为什么是对象存储" data-nav="一级负载">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>为什么是对象存储 · 01</span></div>
+        <h1>对象存储已经从冷归档，<span class="g">变成应用的持久层</span></h1>
+        <p class="lead">云原生应用把状态交给 S3：应用本身无状态、横向扩展，持久性、可用性和状态管理由对象存储负责。数据中心故障时，应用感知不到。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-cn="old" data-toggle-group="cn">传统：应用自己管状态</button>
+            <button class="btn on" data-cn="new" data-toggle-group="cn">云原生：S3 作为持久层</button>
+            <button class="btn dg sm" id="cnFail" style="margin-left:auto">注入站点故障</button>
+          </div>
+          <svg viewBox="0 0 640 270" id="cnSvg" style="max-height:310px"></svg>
+          <div class="stbody" id="cnBody" style="margin-top:8px;min-height:60px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>对象负载的变化</h3>
+            <div class="li"><b>以前</b>：备份、归档、媒体库，写一次很少读。</div>
+            <div class="li"><b>现在</b>：数据湖、分析、AI 训练语料、Web 应用、IoT 与流数据，读写都频繁，对吞吐和小对象性能都有要求。</div>
+            <div class="li"><b>架构含义</b>：对象存储需要像公有云一样多可用区双活、单一端点、对应用透明地容忍故障。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业的意义</h3>
+            <div class="li ok"><b>车间遥测与 IoT</b>：设备日志、传感器数据以海量小对象持续写入，统一落到一个命名空间。</div>
+            <div class="li ok"><b>质量追溯</b>：检测图像、批次记录长期保留，随时可被分析与审计调用。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 架构 ══════════════════ -->
+  <section class="scene" data-sec="为什么是对象存储" data-nav="架构与部署">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>为什么是对象存储 · 02</span></div>
+        <h1>一个 grid 横跨多个站点，<span class="g">部署形态按需组合</span></h1>
+        <p class="lead">一个 grid 最多 16 个站点、1 EB 容量，站点之间双活；多个 grid 还可以联邦成一个全局命名空间。节点可以是专用设备、VMware 虚拟机或裸金属，混合部署。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-dp="all" data-toggle-group="dp">全部</button>
+            <button class="btn" data-dp="perf" data-toggle-group="dp">高性能 / 一级负载</button>
+            <button class="btn" data-dp="cap" data-toggle-group="dp">大容量 / 数据湖</button>
+            <button class="btn" data-dp="sw" data-toggle-group="dp">软件定义</button>
+            <button class="btn" data-dp="svc" data-toggle-group="dp">负载均衡与管理</button>
+          </div>
+          <div class="tw" style="box-shadow:none"><table class="dt" id="dpTable"><thead><tr><th style="width:170px">形态</th><th>定位</th></tr></thead><tbody></tbody></table></div>
+          <p class="note">型号与定位依据 BKO3011 场次资料整理，具体规格以产品文档为准。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="kpis an" style="--d:.16s;grid-template-columns:repeat(2,1fr)">
+            <div class="kpi"><b>16</b><span>单个 grid 的站点上限</span></div>
+            <div class="kpi v"><b>~10 EB</b><span>多个 grid 联邦后的全局命名空间</span></div>
+          </div>
+          <div class="panel an" style="--d:.2s">
+            <h3>像公有云一样运营</h3>
+            <div class="li"><b>多租户</b>：多级租户、配额、审计与计量，S3 IAM 桶策略与组策略。</div>
+            <div class="li"><b>流量隔离与 QoS</b>：内置高可用负载均衡，按流量分级限速，防止个别应用拖垮全局。</div>
+            <div class="li"><b>不停机运维</b>：升级、扩容、退役节点都在线完成。</div>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>冷数据的出口</h3>
+            <div class="li ok">可分层到 Amazon S3 / Glacier、Azure Blob、Google Cloud，或磁带库，取得最低存储成本。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · ILM ══════════════════ -->
+  <section class="scene" data-sec="数据管理" data-nav="ILM 策略">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>数据管理 · 01</span></div>
+        <h1>ILM 策略：<span class="g">放在哪里、存几份、保留多久</span></h1>
+        <p class="lead">全局的信息生命周期管理（ILM）策略决定对象放到哪些站点、哪类介质，用复制还是纠删码保护，以及保留多久。策略变更后，后台扫描会自动把已有对象调整到位。选一种保护方式，看对象的分布和容量开销。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-il="rep2" data-toggle-group="il">双站点各一份副本</button>
+            <button class="btn" data-il="rep3" data-toggle-group="il">三站点各一份副本</button>
+            <button class="btn on" data-il="ec" data-toggle-group="il">三站点纠删码 4+2</button>
+            <button class="btn" data-il="tier" data-toggle-group="il">一年后分层到云 / 磁带</button>
+          </div>
+          <svg viewBox="0 0 640 230" id="ilSvg" style="max-height:260px"></svg>
+          <div class="kpis" style="margin-top:8px">
+            <div class="kpi"><b id="ilOv">—</b><span>存储开销（原始数据的倍数）</span></div>
+            <div class="kpi g"><b id="ilLoss">—</b><span>可容忍的故障</span></div>
+          </div>
+          <p class="note">示意：4+2 纠删码把对象切成 4 个数据片和 2 个校验片，分布在三个站点。实际片数与布局以所配置的纠删码方案为准。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>策略可以细到桶</h3>
+            <div class="li"><b>多套策略同时生效</b>：如金、银、铜三档，用桶标签匹配。</div>
+            <div class="li"><b>租户自己选</b>：租户能看到并选择自己数据的存放方式。</div>
+            <div class="li"><b>缩小误操作影响面</b>：改一套策略，只影响打了这个标签的桶。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业的意义</h3>
+            <div class="li ok"><b>质量与追溯数据</b>：三站点纠删码长期保存，用更低开销换更高持久性。</div>
+            <div class="li ok"><b>设备原始日志</b>：近期数据留在本地，一年后自动分层到低成本介质。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 分支桶 ══════════════════ -->
+  <section class="scene" data-sec="数据管理" data-nav="分支桶">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>数据管理 · 02</span></div>
+        <h1>分支桶：<span class="g">像 Git 一样管理桶的版本</span></h1>
+        <p class="lead">基于对象版本，按时间点从一个桶派生出新桶：回到某个时刻、排除某段时间写入的坏数据，或者把可疑时段单独隔离出来取证，原桶不受影响。选一种操作，看派生出的桶里有哪些版本。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-br="rew" data-toggle-group="br">回退到 5 点之前</button>
+            <button class="btn" data-br="exc" data-toggle-group="br">排除 6–7 点写入</button>
+            <button class="btn" data-br="iso" data-toggle-group="br">隔离 8 点之后</button>
+          </div>
+          <svg viewBox="0 0 640 250" id="brSvg" style="max-height:280px"></svg>
+          <div class="stbody" id="brBody" style="margin-top:8px;min-height:56px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>典型用法</h3>
+            <div class="li"><b>AI 数据集版本</b>：main、develop、发布版本各一个分支，像代码一样管理训练数据。</div>
+            <div class="li"><b>勒索与误写恢复</b>：把被破坏的时间窗口排除掉，得到一个干净的桶。</div>
+            <div class="li"><b>取证</b>：把可疑时段单独派生出来交给安全团队，不影响生产。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>版本状态</h3>
+            <div class="li ok">StorageGRID 12.1（2026 年 7 月）支持按时间点派生分支桶。</div>
+            <div class="li warn">分支的合并与拆分在后续规划中。<span class="tag warn">产品方向</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · 性能架构 ══════════════════ -->
+  <section class="scene" data-sec="数据管理" data-nav="性能架构">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>数据管理 · 03</span></div>
+        <h1>内外两圈：<span class="g">贴近 GPU 的缓存，加上海量容量层</span></h1>
+        <p class="lead">外圈是 EB 级、单一命名空间的存储节点，对接多个 GPU 集群；内圈是靠近某个 GPU 集群部署的缓存节点，提供低延迟、高吞吐的加速层。元数据和数据也可以拆到不同节点各自扩展。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-ring="off" data-toggle-group="ring">只有存储节点</button>
+            <button class="btn on" data-ring="on" data-toggle-group="ring">加上缓存节点（内圈）</button>
+          </div>
+          <svg viewBox="0 0 640 260" id="ringSvg" style="max-height:290px"></svg>
+          <p class="note">示意图依据 BKO3011 场次资料重绘。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>元数据与数据分开扩展</h3>
+            <div class="li"><b>混合节点</b>：元数据和数据一起扩展，默认形态。</div>
+            <div class="li"><b>仅元数据节点</b>：海量小对象时只扩对象数，或给慢硬件补上元数据处理能力。</div>
+            <div class="li"><b>仅数据节点</b>：只扩容量。</div>
+          </div>
+          <div class="kpis an" style="--d:.24s;grid-template-columns:repeat(2,1fr)">
+            <div class="kpi g"><b>~4×</b><span>12.1 中 4 KB 小对象 PUT 的提升</span></div>
+            <div class="kpi"><b>60 亿</b><span>12.1 中单节点对象数（提升 50%）</span></div>
+          </div>
+          <div class="panel tint an" style="--d:.3s">
+            <h3>对制造业的意义</h3>
+            <div class="li ok">产线传感器、设备日志大多是 KB 级小对象。小对象写入性能和单节点对象数，直接决定能接入多少条产线。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · 12.1 新特性 ══════════════════ -->
+  <section class="scene" data-sec="安全与多站点" data-nav="12.1 新特性">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>安全与多站点 · 01</span></div>
+        <h1>StorageGRID 12.1：<span class="g">多 grid 一个端点，关键变更多人审批</span></h1>
+        <p class="lead">2026 年 7 月发布。重点是跨 grid 的联邦、更严格的变更管控与身份集成，以及对 AI 小对象负载的性能提升。按类别筛选。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-nw="all" data-toggle-group="nw">全部</button>
+            <button class="btn" data-nw="fed" data-toggle-group="nw">联邦与规模</button>
+            <button class="btn" data-nw="sec" data-toggle-group="nw">安全与身份</button>
+            <button class="btn" data-nw="s3" data-toggle-group="nw">S3 接口</button>
+            <button class="btn" data-nw="ops" data-toggle-group="nw">运维</button>
+          </div>
+          <div class="tw" style="box-shadow:none"><table class="dt" id="nwTable"><tbody></tbody></table></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>全局命名空间：一个 S3 端点</h3>
+            <div class="li">多个 grid 共用一个全局端点（如 s3.company.com）。</div>
+            <div class="li">每个租户的联邦连接数从 1 增加到 10；账户同步复制用户、组和访问密钥。</div>
+            <div class="li warn">12.1 中 grid 之间不会自动故障切换，需要手动切换。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>多管理员审批（MAV）</h3>
+            <div class="li">激活 ILM 策略这类高影响操作，必须另一位管理员批准后才执行。</div>
+            <div class="li">请求 7 天过期，全流程留痕，满足审计要求。默认关闭，由 Root 启用。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · 下一版本 ══════════════════ -->
+  <section class="scene" data-sec="安全与多站点" data-nav="下一版本">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>安全与多站点 · 02</span></div>
+        <h1>下一版本：<span class="g">对象级勒索检测，与自管密钥</span></h1>
+        <p class="lead">对象写入时就在线检测可疑内容，自动告警并拦截；加密密钥可以交给企业自己的 KMS 按桶管理。点击「写入一批对象」，看检测如何工作。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" id="arPlay">▶ 写入一批对象</button>
+            <span class="tag warn" style="margin-left:6px">私有预览</span>
+            <span class="hint" style="margin-left:auto" id="arState"></span>
+          </div>
+          <svg viewBox="0 0 640 250" id="arSvg" style="max-height:280px"></svg>
+          <p class="note">示意：对象名称与检测结果为演示用；功能处于私有预览阶段，以正式发布为准。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>对象级勒索检测检查什么</h3>
+            <div class="li"><b>恶意扩展名</b>：已知勒索软件使用的文件扩展名。</div>
+            <div class="li"><b>扩展名与内容不符</b>：比如 .jpg 里装的不是图片。</div>
+            <div class="li"><b>文件头异常</b>：缺失或不匹配的头部信息。</div>
+            <div class="li"><b>熵值</b>：部分或全部被加密的内容。</div>
+            <div class="li ok">检测与 PUT 同时进行；可疑对象出现在桶的专门页签和审计日志里，可以自动拦截。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>SSE-KMS：用自己的 KMS 管密钥 <span class="tag warn">产品方向</span></h3>
+            <div class="li">在 Grid Manager 定义 KMS，租户在桶配置里选用；支持 Thales CipherTrust、HashiCorp Vault、Entrust。</div>
+            <div class="li">密钥会被缓存，减少对 KMS 的调用。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · 表层的演变 ══════════════════ -->
+  <section class="scene" data-sec="开放湖仓" data-nav="表层的演变">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>开放湖仓 · 01</span></div>
+        <h1>二十年来，<span class="g">「表」这一层去了哪里</span></h1>
+        <p class="lead">数据仓库有表也有事务，但贵、难扩展；Hadoop 用 Hive 元数据库记住哪些文件是表；数据湖把 Parquet 放进桶里，弹性有了，表却丢了；湖仓用 Iceberg 把表找回来，代价是要多运行一个目录服务。点击各阶段对比。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="steps an" style="--d:.1s" id="eraSteps"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.14s">
+          <svg viewBox="0 0 640 230" id="eraSvg" style="max-height:260px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="stbody an" style="--d:.18s" id="eraBody"></div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>把表层拿走，规模一大就会出问题</h3>
+            <div class="li warn"><b>并发写</b>：没有原子提交。</div>
+            <div class="li warn"><b>加一列</b>：一个字段变成一个项目。</div>
+            <div class="li warn"><b>治理</b>：只能管前缀，管不到表。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · Iceberg ══════════════════ -->
+  <section class="scene" data-sec="开放湖仓" data-nav="Iceberg">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>开放湖仓 · 02</span></div>
+        <h1>Iceberg：<span class="g">同样的字节，有了行和列</span></h1>
+        <p class="lead">Iceberg 是开放的表格式标准。它在对象存储上写一层元数据，把一堆 Parquet 对象组织成表；数据本身不移动、不转换，Parquet 还是 Parquet。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-ib="raw" data-toggle-group="ib">一桶 Parquet 对象</button>
+            <button class="btn on" data-ib="tbl" data-toggle-group="ib">同样的字节，作为 Iceberg 表</button>
+          </div>
+          <svg viewBox="0 0 640 250" id="ibSvg" style="max-height:280px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>五个词</h3>
+            <div class="li"><b>对象存储</b>：保存字节。</div>
+            <div class="li"><b>Parquet</b>：字节的列式排列方式。</div>
+            <div class="li"><b>Iceberg 表</b>：对象存储上的「含义」。</div>
+            <div class="li"><b>目录（catalog）</b>：表的索引。</div>
+            <div class="li"><b>查询引擎</b>：执行 SQL，只是客户端。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>找回的四种能力</h3>
+            <div class="li ok"><b>原子性</b>：读者不会看到写了一半的变更。</div>
+            <div class="li ok"><b>快照隔离</b>：有人写入时，查询结果不漂移。</div>
+            <div class="li ok"><b>模式演进</b>：加一列不用重写全部文件。</div>
+            <div class="li ok"><b>时间旅行</b>：可以读任意历史版本。前两项接近 ONTAP 快照的概念。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · 自建的代价 ══════════════════ -->
+  <section class="scene" data-sec="开放湖仓" data-nav="自建的代价">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>开放湖仓 · 03</span></div>
+        <h1>自己运行 Iceberg：<span class="g">表要维护，目录也要运维</span></h1>
+        <p class="lead">表需要持续维护：合并小文件、过期旧快照、清理无引用文件。目录则是另一套生产系统：选型、数据库、高可用、安全，还要同步第二套身份体系。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" id="cpPlay">▶ 演示一次小文件合并</button>
+            <span class="hint" style="margin-left:auto" id="cpState"></span>
+          </div>
+          <svg viewBox="0 0 640 230" id="cpSvg" style="max-height:260px"></svg>
+          <div class="kpis" style="margin-top:8px">
+            <div class="kpi g"><b>1,536 → 6</b><span>同样的行，文件数减少 99.6%</span></div>
+            <div class="kpi"><b>2 s → 0.1 s</b><span>查询开始读数据前的规划时间</span></div>
+          </div>
+          <p class="note">合并效果为 Dremio 工程博客中的示例，非 NetApp 基准测试。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>表的三项日常维护</h3>
+            <div class="li"><b>合并（compaction）</b>：小文件进，大文件出。</div>
+            <div class="li"><b>快照过期</b>：释放旧版本。</div>
+            <div class="li"><b>清理</b>：删除没有被引用的文件。</div>
+            <div class="li warn">不要对表所在的桶配置 ILM 过期规则，让快照过期机制决定删什么。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>目录变成了你要运维的系统</h3>
+            <div class="li">① 选一个目录 ② 运行它的数据库 ③ 做高可用 ④ 做安全 ⑤ 同步第二套身份体系</div>
+            <div class="li warn">常见的结果是：多站点 Iceberg 项目悄悄退化成单站点。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · Lakehouse Tables ══════════════════ -->
+  <section class="scene" data-sec="开放湖仓" data-nav="Lakehouse Tables">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>开放湖仓 · 04</span></div>
+        <h1>StorageGRID Lakehouse Tables：<span class="g">把表层和目录放进存储里</span></h1>
+        <p class="lead">NetApp Iceberg 目录内置在 grid 中，使用你已有的租户、密钥和策略；标准 Iceberg REST 接口与 S3 并列。目录不再是第二套生产系统。逐项对比自建与内置。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-lh="self" data-toggle-group="lh">自建 Iceberg</button>
+            <button class="btn on" data-lh="sg" data-toggle-group="lh">StorageGRID Lakehouse Tables</button>
+            <span class="tag warn" style="margin-left:6px">公开预览</span>
+          </div>
+          <div class="tw" style="box-shadow:none"><table class="dt" id="lhTable"><tbody></tbody></table></div>
+          <p class="note">公开预览功能，计划在 INSIGHT 2026 后至少 60 天的某个 StorageGRID 版本中提供，目前尚不可用，时间可能调整；表维护由 grid 执行属于后续规划。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>六步启用</h3>
+            <div class="li"><b>Grid 管理员</b>：① 创建负载均衡端点 ② 为租户启用 Lakehouse Tables</div>
+            <div class="li"><b>租户</b>：③ 创建桶并启用 ④ S3 组策略 ⑤ Iceberg 组策略</div>
+            <div class="li"><b>引擎</b>：⑥ 同时指向 S3 端点和目录端点</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>多租户沿用现有租户</h3>
+            <div class="li ok">权限可以细到命名空间，甚至单张表。</div>
+            <div class="li ok">例：finance 组只能看到 finance 命名空间下的 orders、invoices，看不到 marketing 的表。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · 多站点一个目录 ══════════════════ -->
+  <section class="scene" data-sec="开放湖仓" data-nav="多站点一个目录">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>开放湖仓 · 05</span></div>
+        <h1>多站点数据湖：<span class="g">一个 grid、一个目录</span></h1>
+        <p class="lead">自建时每个站点各有一个目录，彼此不知道对方：写入要写四份，站点之间没有协调，丢一个站点就要重建它的目录。目录内置在 grid 里之后，写一次、各站点一致，丢一个站点表还在。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-ms="four" data-toggle-group="ms">四个站点，四个目录</button>
+            <button class="btn on" data-ms="one" data-toggle-group="ms">一个 grid，一个目录</button>
+            <button class="btn dg sm" id="msFail" style="margin-left:auto">注入站点故障</button>
+          </div>
+          <svg viewBox="0 0 640 260" id="msSvg" style="max-height:290px"></svg>
+          <div class="stbody" id="msBody" style="margin-top:8px;min-height:56px"></div>
+          <p class="note">示意：站点名称为举例。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>为什么只有存储能做到</h3>
+            <div class="li">目录和数据存放在同一个多站点系统里，共享同一套复制、一致性和容灾机制。</div>
+            <div class="li">grid 本来就是多站点的，目录跟着它一起多站点。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业的意义</h3>
+            <div class="li ok"><b>多工厂一个数据湖</b>：各厂区就近写入质量与生产数据，总部直接查询全局视图。</div>
+            <div class="li ok"><b>厂区故障不影响分析</b>：一个站点离线，其他站点的表与目录照常可用。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · 任意引擎 ══════════════════ -->
+  <section class="scene" data-sec="开放湖仓" data-nav="任意引擎">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>开放湖仓 · 06</span></div>
+        <h1>每个任务选自己的引擎，<span class="g">数据只有一份</span></h1>
+        <p class="lead">同一套表、同一批版本，用同一个接口访问。批处理用 Spark，交互式 SQL 用 Trino，流处理用 Flink，临时看一眼用 DuckDB；Databricks 通过开放共享连接器直接读取，不复制数据。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px" id="egBtns"></div>
+          <svg viewBox="0 0 640 240" id="egSvg" style="max-height:270px"></svg>
+          <div class="stbody" id="egBody" style="margin-top:8px;min-height:56px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>AI 训练最常被问的问题：「第 3 版用的是哪些数据？」</h3>
+            <div class="li warn"><b>一个文件夹</b>：没法要求「把桶恢复到三月份的样子」。</div>
+            <div class="li ok"><b>一个命名版本</b>：训练前给表打上 train-v3 标签，十八个月后仍能读到同样的行。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>NetApp 开放共享连接器 <span class="tag warn">早期体验</span></h3>
+            <div class="li">把 ONTAP、StorageGRID 上的 Delta / Iceberg 表以只读、零复制的方式共享给 Databricks，由 Unity Catalog 统一治理。</div>
+            <div class="li">数据留在本地，沿用现有的安全、保留和访问策略。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 15 · Hadoop 迁移 ══════════════════ -->
+  <section class="scene" data-sec="迁移与实践" data-nav="Hadoop 迁移">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>迁移与实践 · 01</span></div>
+        <h1>从 HDFS 与 Hive，<span class="g">分阶段迁到对象存储上的 Iceberg</span></h1>
+        <p class="lead">计算与存储分离：计算层用容器化的 Spark、Trino、Flink，容量层用 StorageGRID，热元数据和高 IOPS 分析放在 ONTAP AFF 上。迁移分四步，不需要停应用。点击步骤查看。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="steps an" style="--d:.1s" id="hdSteps"></div>
+      <div class="g23">
+        <div class="stbody an" style="--d:.14s" id="hdBody"></div>
+        <div class="panel an" style="--d:.18s">
+          <h3>Hive 与 Iceberg 的查询对比（小数据集）</h3>
+          <div id="hvBars"></div>
+          <p class="note">数据来自 NetApp 技术博客中的测试，为特定环境下的观测值。</p>
+        </div>
+      </div>
+      <div class="g3 an" style="--d:.24s;margin-top:13px">
+        <div class="vc"><span class="k">CAPACITY</span><div class="t">去掉三副本</div><div class="d">HDFS 通常保存多副本；StorageGRID 用纠删码保护，容量可节省约 67%（相对三副本）。</div></div>
+        <div class="vc"><span class="k">CATALOG</span><div class="t">通用 REST 目录</div><div class="d">Apache Polaris、Project Nessie、Lakekeeper 等开放目录，让多个引擎同时读写同一批桶。</div></div>
+        <div class="vc"><span class="k">TOOLS</span><div class="t">XCP 与 DistCp</div><div class="d">XCP 可在独立服务器上运行；源集群有空闲算力时可用 Hadoop 原生的 DistCp。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 16 · 客户实践 ══════════════════ -->
+  <section class="scene" data-sec="迁移与实践" data-nav="客户实践">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>迁移与实践 · 02</span></div>
+        <h1>两个实践：<span class="g">查询更快，硬件更少</span></h1>
+        <p class="lead">NetApp 自己的 AutoSupport 分析平台每天接收 4–5 TB 遥测数据，从 Hive + HDFS 迁到 Dremio + StorageGRID；一家全球一级银行在 StorageGRID 上运行 1.5 PB 的 Iceberg 湖仓。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-as="before" data-toggle-group="as">迁移前：Hive + HDFS</button>
+            <button class="btn on" data-as="after" data-toggle-group="as">迁移后：Dremio + StorageGRID</button>
+          </div>
+          <div class="tw" style="box-shadow:none"><table class="dt" id="asTable"><tbody></tbody></table></div>
+          <div class="kpis" style="margin-top:10px">
+            <div class="kpi g"><b>&gt; 60%</b><span>计算资源减少</span></div>
+            <div class="kpi"><b>10–20×</b><span>查询提速</span></div>
+            <div class="kpi v"><b>30%</b><span>TCO 下降</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>全球一级银行 · 1.5 PB 湖仓</h3>
+            <div class="li"><b>规模</b>：1.5 PB 数据放在 StorageGRID 上，没有额外副本。</div>
+            <div class="li"><b>吞吐</b>：Spark 批处理与 Trino 即席查询并发，持续读写最高约 50 GB/s。</div>
+            <div class="li"><b>迁移</b>：用 XCP 与 DistCp 从 HDFS 分阶段迁移，应用不停机。</div>
+          </div>
+          <div class="kpis an" style="--d:.24s;grid-template-columns:repeat(2,1fr)">
+            <div class="kpi o"><b>35–45%</b><span>TCO 下降（免去 Hadoop 软件许可、缩减容量）</span></div>
+            <div class="kpi t"><b>Object Lock</b><span>不可变保留，满足监管审计</span></div>
+          </div>
+          <p class="note an" style="--d:.3s">两个案例的数字均为客户在自身环境中的观测值，依据 BKO1002、BKO1026 场次资料。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 17 · AI 管道 ══════════════════ -->
+  <section class="scene" data-sec="迁移与实践" data-nav="AI 数据管道">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>迁移与实践 · 03</span></div>
+        <h1>AI 数据管道：<span class="g">数据在三层存储之间自动流动</span></h1>
+        <p class="lead">StorageGRID 做数据湖与记录系统，ONTAP AFX 承担数据准备、RAG 与推理，E-Series + Lustre 承担并行训练，由 Apache Airflow 编排整条流水线。选择存储层是基础设施的事，不写进管道代码。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="viz an" style="--d:.12s">
+        <div class="btnrow" style="margin-bottom:8px">
+          <button class="btn on" id="aiPlay">▶ 播放流水线</button>
+          <span class="hint" style="margin-left:auto" id="aiState"></span>
+        </div>
+        <svg viewBox="0 0 1200 250" id="aiSvg" style="max-height:270px"></svg>
+      </div>
+      <div class="g3 an" style="--d:.2s;margin-top:13px">
+        <div class="vc"><span class="k">STORAGEGRID</span><div class="t">数据湖 · 记录系统</div><div class="d">接入原始数据、长期归档，推理完成后的数据也回到这里。</div></div>
+        <div class="vc"><span class="k">ONTAP AFX</span><div class="t">准备 · RAG · 推理</div><div class="d">NFS / S3，RDMA 与 GPUDirect Storage；FabricPool 把冷数据分层到 StorageGRID。<a href="../afx/" target="_blank" rel="noopener" style="color:var(--blue)">见 Bay 12 →</a></div></div>
+        <div class="vc"><span class="k">E-SERIES + LUSTRE</span><div class="t">并行训练</div><div class="d">GPUDirect Storage，训练与检查点。<a href="../lustre/" target="_blank" rel="noopener" style="color:var(--blue)">见 Bay 14 →</a></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 18 · 总结 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="价值总结">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>总结</span></div>
+        <h1>存储成为记录系统，<span class="g">每个引擎都来存储取数</span></h1>
+        <p class="lead">事实只保留一份，就在你已经运行的地方，而不是另存一份副本。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="vc"><span class="k">01 · SCALE</span><div class="t">海量与多站点</div><div class="d">单个 grid 1 EB、万亿级对象、16 个站点双活；12.1 起多个 grid 共用一个全局端点。</div></div>
+        <div class="vc"><span class="k">02 · MANAGE</span><div class="t">按策略管理</div><div class="d">ILM 决定位置、份数与保留；分支桶回退与隔离；MAV 管住关键变更。</div></div>
+        <div class="vc"><span class="k">03 · OPEN</span><div class="t">开放湖仓</div><div class="d">Iceberg 目录内置于 grid，多站点一个目录；Spark、Trino、Dremio、Databricks 共用一份数据。</div></div>
+        <div class="vc"><span class="k">04 · MODERNIZE</span><div class="t">平滑迁移</div><div class="d">从 HDFS / Hive 分阶段迁移，计算存储分离，接入跨层 AI 数据管道。</div></div>
+      </div>
+      <div class="g2" style="margin-top:13px">
+        <div class="panel an" style="--d:.18s">
+          <h3>选型说明：评估前先确认</h3>
+          <div class="li"><b>01</b> 数据分布在几个站点？是否需要跨站点的一致视图？</div>
+          <div class="li"><b>02</b> 对象规模与大小分布：小对象占比多少？</div>
+          <div class="li"><b>03</b> 现在用哪些分析引擎？目录由谁运维？</div>
+          <div class="li"><b>04</b> 有没有合规保留、不可变或自管密钥的要求？</div>
+          <div class="li"><b>05</b> 标注「预览」「产品方向」的能力，计划何时进入生产？</div>
+        </div>
+        <div class="panel tint an" style="--d:.24s">
+          <h3>参考资料</h3>
+          <div class="li">NetApp INSIGHT 2026 场次资料：BKO3026 Supercharge AI &amp; Analytics with Iceberg on StorageGRID、BKO3011 Unlock Massive Scale with NetApp Object Storage、BKO1002 Modernize your datalake for AI with StorageGRID。</div>
+          <div class="li">BKO1026 Break Free from Legacy Data Platforms with an Open Lakehouse on NetApp、BKO1028 Unlock On-prem Data for AI with NetApp + Databricks。</div>
+          <div class="li">本页信息时点为 2026 年 10 月；标注「预览」「产品方向」的内容以 NetApp 正式发布与互操作矩阵（IMT）为准。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 讲解视频弹层 ═══════════ */
+const vDlg = $('#vDlg'), vPlayer = $('#vPlayer');
+$('#vOpen').addEventListener('click', ()=>{ vDlg.showModal(); vPlayer.play().catch(()=>{}); });
+$('#vClose').addEventListener('click', ()=> vDlg.close());
+vDlg.addEventListener('click', e=>{ if(e.target === vDlg) vDlg.close(); });
+vDlg.addEventListener('close', ()=> vPlayer.pause());
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+/* ═══════════ 幕内交互：每个交互图示一段，命名对应幕名 ═══════════ */
+const NS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text != null) e.textContent = text;
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const C = {blue:'#0067c5', violet:'#6a5ad4', green:'#0e9a62', orange:'#d5820f', red:'#d33a5c', teal:'#0c8e86',
+  ink:'#152341', dim:'#5c6a8a', faint:'#8d97b2', line:'#dce3ef', line2:'#c9d4e6', deep:'#123a7a', soft:'#eaf2fd', softB:'#93b6e4'};
+function box(svg, x, y, w, h, title, sub, o){
+  o = o || {};
+  const g = sv('g', {}, svg);
+  sv('rect', {x, y, width:w, height:h, rx:o.rx||10, fill:o.fill||C.soft, stroke:o.stroke||C.softB, 'stroke-width':o.sw||1.2, 'stroke-dasharray':o.dash||''}, g);
+  sv('text', {x:x+w/2, y:y+(sub?h/2-2:h/2+5), 'text-anchor':'middle', 'font-size':o.fs||13, 'font-weight':750, fill:o.color||C.deep}, g, title);
+  if(sub) sv('text', {x:x+w/2, y:y+h/2+14, 'text-anchor':'middle', 'font-size':10.5, fill:o.subColor||C.dim}, g, sub);
+  return g;
+}
+function line(svg, d, color, w, dash){ return sv('path', {d, stroke:color, 'stroke-width':w||2, fill:'none', 'stroke-dasharray':dash||''}, svg); }
+function toggleGroup(attr, fn){
+  $$('['+attr+']').forEach(b=> b.addEventListener('click', ()=>{
+    $$('['+attr+']').forEach(x=> x.classList.toggle('on', x===b));
+    fn(b.getAttribute(attr), b);
+  }));
+}
+function stepsInto(host, items, onPick){
+  items.forEach((m,i)=>{
+    const d = document.createElement('div'); d.className = 'st' + (i===0?' on':'');
+    d.innerHTML = `<div class="n">${m[0]}</div><div class="l">${m[1]}</div>`;
+    d.addEventListener('click', ()=>{ $$('.st', host).forEach((x,k)=> x.classList.toggle('on', k===i)); onPick(i); });
+    host.appendChild(d);
+  });
+  onPick(0);
+}
+
+/* ── 一级负载：传统 vs 云原生 ── */
+let cnMode = 'new', cnDown = false;
+function cnDraw(){
+  const s = $('#cnSvg'); s.innerHTML = '';
+  const nw = cnMode === 'new';
+  ['可用区 A','可用区 B','可用区 C'].forEach((z,i)=>{
+    const x = 20 + i*208, dead = cnDown && i === 0;
+    sv('rect', {x, y:10, width:192, height:250, rx:12, fill:dead?'#fbecef':'#f7f9fd', stroke:dead?C.red:C.line2, 'stroke-dasharray':dead?'6 4':''}, s);
+    sv('text', {x:x+12, y:30, 'font-size':10.5, fill:dead?C.red:C.faint, 'font-family':'monospace'}, s, z + (dead?' · 故障':''));
+    if(nw){
+      box(s, x+16, 44, 160, 46, '应用实例', '无状态 · 横向扩展', {fill:dead?'#f3d6dd':'#fff', stroke:dead?'#e7a3b3':C.softB, color:dead?C.red:C.deep});
+      box(s, x+16, 176, 160, 66, 'StorageGRID 节点', '持久性 · 可用性', {fill:dead?'#f3d6dd':'#eef6ff', stroke:dead?'#e7a3b3':C.blue, color:dead?C.red:C.deep});
+    } else {
+      box(s, x+16, 44, 160, 46, '应用 + 本地状态', i===0?'主实例':'备实例 · 需同步', {fill:dead?'#f3d6dd':'#fff', stroke:dead?'#e7a3b3':C.softB, color:dead?C.red:C.deep});
+      box(s, x+16, 176, 160, 66, '本地存储', '各自一份', {fill:dead?'#f3d6dd':'#f5f7fb', stroke:dead?'#e7a3b3':C.line2, color:dead?C.red:C.dim});
+    }
+  });
+  if(nw){
+    sv('rect', {x:20, y:112, width:600, height:40, rx:10, fill:'#eef6ff', stroke:C.blue, 'stroke-width':1.6}, s);
+    sv('text', {x:320, y:137, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.deep}, s, '单一 S3 端点 · 负载均衡 · 一个命名空间');
+  } else {
+    line(s, 'M196 67 L224 67 M404 67 L432 67', C.orange, 2, '5 4');
+    sv('text', {x:320, y:137, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':700, fill:C.orange}, s, '应用自己做复制、选主与故障切换');
+  }
+  const t = nw
+    ? (cnDown ? ['可用区 A 故障：应用无感知', '负载均衡把请求转到其余可用区；数据由 StorageGRID 跨站点保护，应用不需要做任何切换。']
+              : ['S3 作为解耦的持久层', '应用只管计算、随时扩缩，持久性、可用性和状态全部交给对象存储。'])
+    : (cnDown ? ['可用区 A 故障：应用要自己处理', '主实例和它的本地数据一起不可用，需要应用层完成选主、追平数据和切换。']
+              : ['每个应用自己管状态', '复制、选主、故障切换都写在应用里，每个团队各做一遍。']);
+  $('#cnBody').innerHTML = `<h4>${t[0]}</h4><p>${t[1]}</p>`;
+}
+toggleGroup('data-cn', k=>{ cnMode = k; cnDraw(); });
+$('#cnFail').addEventListener('click', ()=>{ cnDown = !cnDown; $('#cnFail').textContent = cnDown ? '恢复站点' : '注入站点故障'; cnDraw(); });
+
+/* ── 架构与部署 ── */
+const DP = [
+  ['SGF6212', ['perf'], '新一代 NVMe 全闪存（TLC / QLC），高性能、高密度。面向一级负载、数据湖、分析、Web 应用、IoT 与流数据。'],
+  ['SG6260 / SG6260 扩展柜', ['cap'], '大规模部署，可达数百 PB；数据湖场景单存储节点容量最高约 3.96 PB。'],
+  ['SG5860 / SG5812', ['cap'], '成本优化平台，面向二级存储与事务型对象负载。'],
+  ['SG1200 / SG120 服务设备', ['svc'], '负载均衡节点，也用作管理节点。'],
+  ['VMware 虚拟机', ['sw'], '使用 NetApp 或第三方存储（VMDK），通过 vCenter 与 OVF 自动安装。'],
+  ['裸金属 + Docker', ['sw'], '自带硬件，使用内置盘或外部阵列；支持 RHEL、CentOS、Ubuntu、Debian。'],
+  ['云与磁带分层', ['cap'], '冷数据分层到 Amazon S3 / Glacier、Azure Blob、Google Cloud 或磁带库，取得最低成本。']
+];
+function dpDraw(f){
+  $('#dpTable tbody').innerHTML = DP.filter(d=> f === 'all' || d[1].includes(f)).map(d=>`<tr><td class="h">${d[0]}</td><td>${d[2]}</td></tr>`).join('');
+}
+toggleGroup('data-dp', dpDraw);
+
+/* ── ILM：保护方式 ── */
+const IL = {
+  rep2: {ov:'2.0×', loss:'1 个站点', d:[[1],[1],[]], t:'副本'},
+  rep3: {ov:'3.0×', loss:'2 个站点', d:[[1],[1],[1]], t:'副本'},
+  ec:   {ov:'1.5×', loss:'任意 2 个片', d:[['D1','D2'],['D3','D4'],['P1','P2']], t:'纠删码'},
+  tier: {ov:'本地 1.5× → 云 / 磁带', loss:'按目标介质', d:[['D1','D2'],['D3','D4'],['P1','P2']], t:'分层'}
+};
+function ilDraw(k){
+  const s = $('#ilSvg'); s.innerHTML = '';
+  const c = IL[k];
+  box(s, 250, 6, 140, 42, '对象 obj-7731', 'S3 PUT', {fill:'#fff', stroke:C.blue});
+  ['站点 1','站点 2','站点 3'].forEach((n,i)=>{
+    const x = 20 + i*208, frags = c.d[i];
+    sv('rect', {x, y:80, width:192, height:96, rx:12, fill:'#f7f9fd', stroke:C.line2}, s);
+    sv('text', {x:x+12, y:98, 'font-size':10.5, fill:C.faint, 'font-family':'monospace'}, s, n);
+    if(frags.length){ line(s, `M320 48 L${x+96} 80`, C.violet, 1.8); }
+    frags.forEach((f,j)=>{
+      const fx = x + 20 + j*80, isP = typeof f === 'string' && f[0] === 'P';
+      sv('rect', {x:fx, y:110, width:70, height:48, rx:8, fill:f===1?'#dbe8fb':(isP?'#f3f0fd':'#e2f5ec'), stroke:f===1?C.blue:(isP?C.violet:C.green)}, s);
+      sv('text', {x:fx+35, y:139, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:f===1?C.blue:(isP?C.violet:C.green)}, s, f===1?'完整副本':f);
+    });
+    if(!frags.length) sv('text', {x:x+96, y:139, 'text-anchor':'middle', 'font-size':12, fill:C.faint}, s, '不存放');
+  });
+  if(k === 'tier'){
+    line(s, 'M320 176 L320 196', C.orange, 2, '5 4');
+    box(s, 160, 196, 320, 30, '一年后：分层到 S3 / Glacier · Azure · 磁带', null, {fs:12, fill:'#fdf0e0', stroke:C.orange, color:C.orange});
+  } else {
+    sv('text', {x:320, y:208, 'text-anchor':'middle', 'font-size':12, fill:C.dim}, s, c.t === '纠删码' ? '4 个数据片 + 2 个校验片，任意 4 片即可还原对象' : '每个站点保存一份完整对象');
+  }
+  $('#ilOv').textContent = c.ov; $('#ilLoss').textContent = c.loss;
+}
+toggleGroup('data-il', ilDraw);
+
+/* ── 分支桶 ── */
+const BRV = [4,4,7,7,8,9,9]; // 版本写入时刻（点钟）
+const BR = {
+  rew: {f:v=>v<5, t:'回退到 5 点之前', d:'派生出的桶只包含 5 点之前的版本，等于把桶倒回到当时的状态；原桶保持不变。'},
+  exc: {f:v=>!(v>=6&&v<=7), t:'排除 6–7 点写入', d:'把 6–7 点之间写入的版本（比如被勒索软件加密或误写的对象）排除掉，其余版本保留，得到一个干净的桶。'},
+  iso: {f:v=>v>=8, t:'隔离 8 点之后', d:'只把 8 点之后写入的版本派生出来，交给安全团队取证分析，生产桶照常服务。'}
+};
+function brDraw(k){
+  const s = $('#brSvg'); s.innerHTML = '';
+  sv('text', {x:20, y:22, 'font-size':12, 'font-weight':700, fill:C.ink}, s, '原桶 · 对象版本（数字 = 写入时刻）');
+  for(let h=3; h<=10; h++){ const x = 40 + (h-3)*80; sv('text', {x, y:118, 'text-anchor':'middle', 'font-size':10.5, fill:C.faint, 'font-family':'monospace'}, s, h+':00'); }
+  sv('line', {x1:30, x2:610, y1:104, y2:104, stroke:C.line2}, s);
+  const X = h=> 40 + (h-3)*80;
+  if(k === 'exc'){ sv('rect', {x:X(6)-30, y:34, width:X(7)-X(6)+60, height:62, rx:8, fill:'rgba(211,58,92,.08)', stroke:C.red, 'stroke-dasharray':'5 4'}, s); }
+  BRV.forEach((v,i)=>{
+    const x = X(v) + (i>0 && BRV[i-1]===v ? 14 : -14) * (BRV.filter(z=>z===v).length>1?1:0), bad = v>=6 && v<=7;
+    sv('rect', {x:x-14, y:46, width:28, height:38, rx:6, fill:bad?'#fbecef':'#eaf2fd', stroke:bad?C.red:C.softB}, s);
+    sv('text', {x, y:70, 'text-anchor':'middle', 'font-size':12, 'font-weight':800, fill:bad?C.red:C.deep}, s, v);
+  });
+  sv('text', {x:20, y:150, 'font-size':12, 'font-weight':700, fill:C.green}, s, '派生的分支桶 · ' + BR[k].t);
+  sv('rect', {x:20, y:160, width:600, height:70, rx:12, fill:'#f2faf6', stroke:'#9fd5bd'}, s);
+  const kept = BRV.filter(BR[k].f);
+  kept.forEach((v,i)=>{
+    const x = 50 + i*52;
+    sv('rect', {x, y:176, width:38, height:38, rx:6, fill:'#e2f5ec', stroke:C.green}, s);
+    sv('text', {x:x+19, y:200, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.green}, s, v);
+  });
+  sv('text', {x:600, y:200, 'text-anchor':'end', 'font-size':12, fill:C.dim}, s, `${kept.length} / ${BRV.length} 个版本`);
+  $('#brBody').innerHTML = `<h4>${BR[k].t}</h4><p>${BR[k].d}</p>`;
+}
+toggleGroup('data-br', brDraw);
+
+/* ── 性能架构：内外圈 ── */
+function ringDraw(k){
+  const s = $('#ringSvg'); s.innerHTML = '';
+  const on = k === 'on';
+  sv('ellipse', {cx:320, cy:132, rx:300, ry:118, fill:'#f7f9fd', stroke:C.blue, 'stroke-width':1.6}, s);
+  sv('text', {x:320, y:34, 'text-anchor':'middle', 'font-size':12, 'font-weight':800, fill:C.blue}, s, '外圈 · StorageGRID 存储节点 · EB 级 · 单一命名空间');
+  [['GPU 集群 A',150],['GPU 集群 B',490]].forEach(([n,cx])=>{
+    if(on){
+      sv('ellipse', {cx, cy:140, rx:118, ry:72, fill:'#e2f5ec', stroke:C.green, 'stroke-width':1.6}, s);
+      sv('text', {x:cx, y:88, 'text-anchor':'middle', 'font-size':11, 'font-weight':800, fill:C.green}, s, '内圈 · 缓存节点');
+    }
+    box(s, cx-62, 110, 124, 56, n, on ? '低延迟 · 高吞吐' : '直接访问存储节点', {fill:'#fff', stroke:on?C.green:C.softB});
+  });
+  sv('text', {x:320, y:232, 'text-anchor':'middle', 'font-size':11.5, fill:C.dim}, s, on ? '缓存节点贴近 GPU 部署，作为存储加速层；外圈负责容量、可用性与持久性' : '所有 GPU 集群直接读写存储节点');
+}
+toggleGroup('data-ring', ringDraw);
+
+/* ── 12.1 新特性 ── */
+const NW = [
+  ['fed','全局命名空间','多个 grid 共用一个 S3 端点；每租户联邦连接数 1 → 10'],
+  ['fed','身份联邦','跨 grid 同步用户、组与访问密钥'],
+  ['fed','跨 grid 复制补齐存量','批量作业把已有对象补齐到跨 grid 复制，无需重新写入（需联系 NetApp 启用）'],
+  ['fed','规模','单节点对象数提升 50% 到 60 亿；每租户最多 20,000 个桶；元数据设备默认元数据容量增至 20 TiB'],
+  ['sec','多管理员审批（MAV）','激活 ILM 策略需另一位管理员批准'],
+  ['sec','OIDC 单点登录','支持 Entra ID、AD FS、Keycloak、Okta、PingFederate；提供沙盒模式先行测试'],
+  ['sec','硬件加固','可禁用 USB 端口；可在界面与 API 中修改 BMC 密码'],
+  ['s3','对象锁定','已有的桶也能开启对象锁定；CloudMirror 支持源与目标的对象锁定'],
+  ['s3','校验与上传','完整的 x-amz-checksum（SHA-256、CRC32、CRC32C、CRC64NVME），分块上传支持尾随头'],
+  ['s3','分支桶','按时间点派生分支桶'],
+  ['ops','小对象性能','4 KB 小对象 PUT 约提升 4 倍'],
+  ['ops','运维简化','界面化的节点自动恢复（无需 SSH）；任一管理节点都可恢复主管理节点；ILM 策略标签上限增至 40']
+];
+const NWL = {fed:'联邦与规模', sec:'安全与身份', s3:'S3 接口', ops:'运维'};
+function nwDraw(f){
+  $('#nwTable tbody').innerHTML = NW.filter(n=> f === 'all' || n[0] === f).map(n=>`<tr><td style="width:96px"><span class="tag n">${NWL[n[0]]}</span></td><td class="h" style="width:150px">${n[1]}</td><td>${n[2]}</td></tr>`).join('');
+}
+toggleGroup('data-nw', nwDraw);
+
+/* ── 对象级勒索检测 ── */
+const AR = [['line7/torque_0917.csv','正常',0],['qc/img_2231.jpg','正常',0],['mes/batch_8812.parquet','正常',0],['qc/img_2232.jpg.locked','恶意扩展名',1],['qc/img_2233.jpg','内容与扩展名不符',1],['mes/batch_8813.parquet','熵值异常 · 已加密',1],['line7/torque_0918.csv','正常',0]];
+let arStep = AR.length, arTimer = null;
+function arDraw(){
+  const s = $('#arSvg'); s.innerHTML = '';
+  box(s, 16, 96, 110, 56, '客户端', 'S3 PUT', {fill:'#fff'});
+  box(s, 160, 82, 150, 84, '在线检测', '扩展名 · 文件头 · 熵值', {fill:'#f3f0fd', stroke:C.violet, color:C.violet});
+  line(s, 'M126 124 L160 124', C.softB, 2);
+  line(s, 'M310 124 L340 124', C.softB, 2);
+  sv('text', {x:350, y:22, 'font-size':11.5, 'font-weight':700, fill:C.ink}, s, '桶中的结果');
+  AR.slice(0, arStep).forEach((a,i)=>{
+    const y = 32 + i*30, bad = a[2];
+    sv('rect', {x:350, y, width:276, height:24, rx:6, fill:bad?'#fbecef':'#f2faf6', stroke:bad?C.red:'#9fd5bd'}, s);
+    sv('text', {x:360, y:y+16, 'font-size':11, fill:C.ink, 'font-family':'monospace'}, s, a[0]);
+    sv('text', {x:618, y:y+16, 'text-anchor':'end', 'font-size':10.5, 'font-weight':700, fill:bad?C.red:C.green}, s, bad ? '拦截 · ' + a[1] : a[1]);
+  });
+  const n = AR.slice(0, arStep).filter(a=>a[2]).length;
+  $('#arState').textContent = `已写入 ${arStep} 个对象，拦截 ${n} 个`;
+}
+function arPlay(){ clearInterval(arTimer); arStep = 0; arDraw(); arTimer = setInterval(()=>{ arStep++; arDraw(); if(arStep >= AR.length) clearInterval(arTimer); }, 520); }
+$('#arPlay').addEventListener('click', arPlay);
+arDraw();
+
+/* ── 表层的演变 ── */
+const ERA = [
+  ['1990s – 2006','数据仓库','SQL 引擎','表','磁盘','有：表、事务。放弃它是因为：成本与规模。'],
+  ['2006 – 2015','Hadoop','计算','Hive 元数据库','HDFS','得到：廉价磁盘、任何数据。放弃：计算与存储各自扩展。'],
+  ['2015 – 2020','数据湖','计算（任意位置）','—— 没了 ——','桶里的 Parquet','得到：弹性、列式。失去：表。'],
+  ['2020 – 今天','湖仓','计算（任意位置）','Iceberg','桶里的 Parquet','把表找回来了。代价：要多运行一个目录。']
+];
+function eraShow(i){
+  const e = ERA[i], s = $('#eraSvg'); s.innerHTML = '';
+  [['计算层',e[2],C.blue],['表层',e[3],i===2?C.red:C.green],['存储层',e[4],C.violet]].forEach(([n,v,c],k)=>{
+    const y = 14 + k*72, mid = k === 1;
+    sv('text', {x:20, y:y+36, 'font-size':12, fill:C.faint}, s, n);
+    sv('rect', {x:110, y, width:510, height:58, rx:12, fill:mid?(i===2?'#fbecef':'#e2f5ec'):'#f7f9fd', stroke:mid?c:C.line2, 'stroke-width':mid?2.2:1.2, 'stroke-dasharray':mid&&i===2?'6 4':''}, s);
+    sv('text', {x:365, y:y+35, 'text-anchor':'middle', 'font-size':mid?16:14, 'font-weight':800, fill:mid?c:C.deep}, s, v);
+  });
+  $('#eraBody').innerHTML = `<h4>${e[0]} · ${e[1]}</h4><p>${e[5]}</p>`;
+}
+stepsInto($('#eraSteps'), ERA.map(e=>[e[0], e[1]]), eraShow);
+
+/* ── Iceberg：对象 → 表 ── */
+function ibDraw(k){
+  const s = $('#ibSvg'); s.innerHTML = '';
+  if(k === 'raw'){
+    sv('text', {x:20, y:22, 'font-size':12, 'font-weight':700, fill:C.ink}, s, 's3://quality-lake/inspection/');
+    for(let i=0;i<24;i++){ const x = 20 + (i%8)*76, y = 40 + Math.floor(i/8)*62;
+      sv('rect', {x, y, width:66, height:48, rx:6, fill:'#f5f7fb', stroke:C.line2}, s);
+      sv('text', {x:x+33, y:y+29, 'text-anchor':'middle', 'font-size':10, fill:C.faint, 'font-family':'monospace'}, s, 'part-'+String(i).padStart(3,'0')); }
+    sv('text', {x:320, y:240, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':700, fill:C.orange}, s, '只有字节：哪些文件属于同一张表、什么结构、哪个版本，存储并不知道');
+  } else {
+    sv('rect', {x:20, y:10, width:600, height:34, rx:8, fill:'#e2f5ec', stroke:C.green}, s);
+    sv('text', {x:320, y:32, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':800, fill:C.green}, s, 'Iceberg 元数据 · 快照 · manifest 列表 · 模式');
+    const cols = ['批次号','产线','检测项','结果','时间'], rows = [['B-8812','L7','扭矩','合格','09:14'],['B-8812','L7','外观','合格','09:15'],['B-8813','L3','尺寸','复检','09:16'],['…','…','…','…','…']];
+    cols.forEach((c,i)=>{ sv('rect', {x:20+i*120, y:58, width:120, height:30, fill:'#eef3fb', stroke:C.line}, s); sv('text', {x:80+i*120, y:78, 'text-anchor':'middle', 'font-size':12, 'font-weight':800, fill:C.deep}, s, c); });
+    rows.forEach((r,j)=> r.forEach((v,i)=>{ sv('rect', {x:20+i*120, y:88+j*30, width:120, height:30, fill:'#fff', stroke:C.line}, s); sv('text', {x:80+i*120, y:108+j*30, 'text-anchor':'middle', 'font-size':12, fill:v==='复检'?C.orange:C.ink}, s, v); }));
+    sv('text', {x:320, y:226, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':700, fill:C.green}, s, '没有移动、没有转换：Parquet 还是 Parquet，只是多了一层「含义」');
+    sv('text', {x:320, y:244, 'text-anchor':'middle', 'font-size':10.5, fill:C.faint}, s, '示例表与数据为示意');
+  }
+}
+toggleGroup('data-ib', ibDraw);
+
+/* ── 自建的代价：小文件合并 ── */
+let cpP = 1, cpTimer = null;
+function cpDraw(){
+  const s = $('#cpSvg'); s.innerHTML = '';
+  const small = Math.round(lerpN(96, 0, cpP));
+  sv('text', {x:20, y:20, 'font-size':12, 'font-weight':700, fill:C.ink}, s, '合并前：大量小文件');
+  for(let i=0;i<96;i++){ const x = 20 + (i%24)*12.5, y = 30 + Math.floor(i/24)*13;
+    sv('rect', {x, y, width:10, height:10, rx:2, fill:i<small?'#fdf0e0':'#f5f7fb', stroke:i<small?C.orange:C.line}, s); }
+  sv('text', {x:20, y:118, 'font-size':10.5, fill:C.faint}, s, '示意：每格代表 16 个小文件');
+  line(s, 'M330 70 L380 70', C.violet, 2.4);
+  sv('text', {x:355, y:62, 'text-anchor':'middle', 'font-size':11, fill:C.violet, 'font-weight':700}, s, '合并');
+  sv('text', {x:400, y:20, 'font-size':12, 'font-weight':700, fill:C.ink}, s, '合并后：少量大文件');
+  const big = Math.round(6*cpP);
+  for(let i=0;i<6;i++){ const x = 400 + (i%3)*76, y = 30 + Math.floor(i/3)*44;
+    sv('rect', {x, y, width:66, height:36, rx:6, fill:i<big?'#e2f5ec':'#f5f7fb', stroke:i<big?C.green:C.line}, s); }
+  sv('text', {x:320, y:160, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.green}, s, `文件数 ${Math.round(lerpN(1536, 6, cpP)).toLocaleString()} · 规划时间 ${lerpN(2, .1, cpP).toFixed(1)} s`);
+  sv('text', {x:320, y:186, 'text-anchor':'middle', 'font-size':11.5, fill:C.dim}, s, '同样的行数；这项工作今天要由你的引擎按计划去跑');
+  $('#cpState').textContent = cpP >= 1 ? '合并完成' : '合并中…';
+}
+function lerpN(a,b,p){ return a + (b-a)*p; }
+function cpPlay(){ clearInterval(cpTimer); cpP = 0; cpDraw(); cpTimer = setInterval(()=>{ cpP = Math.min(1, cpP + .04); cpDraw(); if(cpP >= 1) clearInterval(cpTimer); }, 40); }
+$('#cpPlay').addEventListener('click', cpPlay);
+cpDraw();
+
+/* ── Lakehouse Tables：自建 vs 内置 ── */
+const LH = [
+  ['目录','又一套生产系统：服务器、高可用、备份、容灾，还要有团队运维','grid 内置服务：受你已信任的存储高可用与容灾保护'],
+  ['启用','表是一个项目：选目录、安装、加固、配人','无需采购或上架：建桶、启用表、把引擎指过来'],
+  ['治理','治理两遍：两套身份系统手工同步，两份审计日志要对账','一套系统、一份审计：同一凭证读对象和表，审计细到单张表'],
+  ['引擎','每个工具单独集成，专有目录往往逼你复制数据','每个引擎共用一份数据：标准 Iceberg REST 与 S3 并列'],
+  ['多站点','每个站点一个目录，彼此不知道；丢站点就丢表','一个目录覆盖所有站点：加州写入、纽约查询，丢站点表还在'],
+  ['维护','合并、快照过期、清理由你的引擎按计划跑','由 grid 执行（后续规划）']
+];
+function lhDraw(k){
+  const sg = k === 'sg';
+  $('#lhTable tbody').innerHTML = LH.map(r=>`<tr><td class="h" style="width:80px">${r[0]}</td><td><span style="color:${sg?'var(--green)':'var(--red)'};font-weight:800;margin-right:6px">${sg?'✓':'✕'}</span>${sg?r[2]:r[1]}</td></tr>`).join('');
+}
+toggleGroup('data-lh', lhDraw);
+
+/* ── 多站点一个目录 ── */
+let msMode = 'one', msDown = false;
+function msDraw(){
+  const s = $('#msSvg'); s.innerHTML = '';
+  const one = msMode === 'one', sites = ['苏州工厂','重庆工厂','佛山工厂','总部数据中心'];
+  if(one){
+    sv('rect', {x:20, y:10, width:600, height:44, rx:10, fill:msDown?'#e2f5ec':'#e2f5ec', stroke:C.green, 'stroke-width':1.6}, s);
+    sv('text', {x:320, y:37, 'text-anchor':'middle', 'font-size':13.5, 'font-weight':800, fill:C.green}, s, '一个 Iceberg 目录 · 一个 grid · 一套租户与策略');
+  }
+  sites.forEach((n,i)=>{
+    const x = 20 + i*152, dead = msDown && i === 1;
+    sv('rect', {x, y:72, width:140, height:160, rx:12, fill:dead?'#fbecef':'#f7f9fd', stroke:dead?C.red:C.line2, 'stroke-dasharray':dead?'6 4':''}, s);
+    sv('text', {x:x+70, y:92, 'text-anchor':'middle', 'font-size':12, 'font-weight':800, fill:dead?C.red:C.ink}, s, n + (dead?' · 离线':''));
+    if(!one) box(s, x+14, 104, 112, 40, '目录 ' + (i+1), dead ? '随站点丢失' : '只知道本站点', {fs:12, fill:dead?'#f3d6dd':'#fdf0e0', stroke:dead?'#e7a3b3':C.orange, color:dead?C.red:C.orange});
+    else line(s, `M${x+70} 54 L${x+70} 104`, dead?C.line2:C.green, 2, dead?'4 4':'');
+    box(s, x+14, one?104:156, 112, one?110:58, '存储', one ? (dead?'其余站点照常服务':'写一次 · 各站点一致') : '各写一份', {fs:12, fill:dead?'#f3d6dd':'#eef6ff', stroke:dead?'#e7a3b3':C.blue, color:dead?C.red:C.deep});
+  });
+  const t = one
+    ? (msDown ? ['重庆工厂离线：表和目录都还在', '目录与数据由 grid 跨站点保护，其余站点的查询不受影响，站点恢复后自动追平。']
+              : ['一个目录，所有站点', '各厂区就近写入，总部看到的是同一份全局视图；写一次，各站点一致。'])
+    : (msDown ? ['重庆工厂离线：它的目录要重建', '这个站点上的表在其他站点不可见，目录需要从头重建，期间相关分析中断。']
+              : ['四个站点，四个目录', '写入时要写四份，站点之间没有协调，多站点项目往往退化成单站点。']);
+  $('#msBody').innerHTML = `<h4>${t[0]}</h4><p>${t[1]}</p>`;
+}
+toggleGroup('data-ms', k=>{ msMode = k; msDraw(); });
+$('#msFail').addEventListener('click', ()=>{ msDown = !msDown; $('#msFail').textContent = msDown ? '恢复站点' : '注入站点故障'; msDraw(); });
+
+/* ── 任意引擎 ── */
+const EG = [['Spark','重型批处理','质量数据的夜间批量清洗与聚合'],['Trino / Starburst','交互式 SQL','工艺工程师即席查询良率与缺陷分布'],['Dremio','数据平台','面向业务部门的自助分析与语义层'],['Flink','流处理','产线遥测实时写入、实时告警'],['DuckDB','快速查看，无需集群','在笔记本上直接查一张表'],['Spark + DataPelago','NetApp 提供，加速 Spark SQL','大规模数据准备与 ETL 提速'],['Databricks','开放共享连接器（早期体验）','云上分析直接读本地的表，不复制']];
+let egIdx = 0;
+function egDraw(){
+  const s = $('#egSvg'); s.innerHTML = '';
+  EG.forEach((e,i)=>{
+    const x = 14 + i*88, on = i === egIdx;
+    sv('rect', {x, y:14, width:80, height:56, rx:10, fill:on?'#dbe8fb':'#fff', stroke:on?C.blue:C.line2, 'stroke-width':on?2.2:1}, s);
+    const nm = ['Spark','Trino','Dremio','Flink','DuckDB','DataPelago','Databricks'][i];
+    sv('text', {x:x+40, y:47, 'text-anchor':'middle', 'font-size':nm.length>8?10.5:11.5, 'font-weight':800, fill:on?C.blue:C.deep}, s, nm);
+    line(s, `M${x+40} 70 L320 120`, on?C.blue:C.line, on?2.4:1.2);
+  });
+  sv('rect', {x:120, y:120, width:400, height:46, rx:12, fill:'#e2f5ec', stroke:C.green, 'stroke-width':1.6}, s);
+  sv('text', {x:320, y:142, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.green}, s, '同一套表 · 同一批版本 · 同一个接口');
+  sv('text', {x:320, y:158, 'text-anchor':'middle', 'font-size':10.5, fill:C.dim}, s, 'Iceberg REST 目录 + S3');
+  sv('rect', {x:120, y:182, width:400, height:44, rx:12, fill:'#eef6ff', stroke:C.blue}, s);
+  sv('text', {x:320, y:209, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.deep}, s, 'StorageGRID · 一份数据');
+  const e = EG[egIdx];
+  $('#egBody').innerHTML = `<h4>${e[0]} · ${e[1]}</h4><p>制造业示例：${e[2]}。</p>`;
+  $$('#egBtns .btn').forEach((b,k)=> b.classList.toggle('on', k===egIdx));
+}
+(function(){
+  EG.forEach((e,i)=>{ const b = document.createElement('button'); b.className = 'btn sm'; b.textContent = e[0]; b.addEventListener('click', ()=>{ egIdx = i; egDraw(); }); $('#egBtns').appendChild(b); });
+  egDraw();
+})();
+
+/* ── Hadoop 迁移 ── */
+const HD = [
+  ['STEP 01','扫描与分类','梳理 HDFS 目录树与 Hive 元数据库中的表结构，确定迁移范围与顺序。'],
+  ['STEP 02','批量传输','用 XCP 或 DistCp 把基线数据传到 StorageGRID S3。XCP 可以跑在生产集群上，也可以跑在独立的 Linux / Windows 服务器上。'],
+  ['STEP 03','在途转换','用 Spark 的迁移工具（migrate / snapshot）把 Hive 的 Parquet 文件转换为 Iceberg 表布局，数据文件本身不重写。'],
+  ['STEP 04','校验与切换','核对行数、校验和与元数据完整性，确认无误后再下线旧的 HDFS 分区。']
+];
+stepsInto($('#hdSteps'), HD.map(h=>[h[0], h[1]]), i=>{ $('#hdBody').innerHTML = `<h4>${HD[i][1]}</h4><p>${HD[i][2]}</p>`; });
+(function(){
+  const HV = [['COUNT(*)',4.2,1.8],['聚合与分区裁剪',8.5,3.2],['读取表结构',1.5,.3],['JOIN',12.3,5.7]];
+  $('#hvBars').innerHTML = HV.map(([n,a,b])=>`<div style="display:grid;grid-template-columns:104px 1fr 54px;gap:8px;align-items:center;margin:7px 0;font-size:12.2px">
+    <span style="color:var(--ink);font-weight:650">${n}</span>
+    <div style="display:flex;flex-direction:column;gap:3px"><div style="height:8px;border-radius:4px;background:#c9d4e6;width:${a/12.3*100}%"></div><div style="height:8px;border-radius:4px;background:#0e9a62;width:${b/12.3*100}%"></div></div>
+    <b class="mono" style="color:var(--green);text-align:right">-${Math.round((1-b/a)*100)}%</b></div>`).join('') +
+    '<div class="lg" style="margin-top:4px"><span><i style="background:#c9d4e6"></i>Hive（秒）</span><span><i style="background:#0e9a62"></i>Iceberg（秒）</span></div>';
+})();
+
+/* ── 客户实践：AutoSupport ── */
+const AS = {
+  before: [['计算','26 台服务器（每台 504 GB 内存、96 核）'],['存储','HDFS：5 个 NameNode、20 个 DataNode，双副本，总容量 3.2 PB，可用 1.6 PB'],['架构','计算与存储紧耦合，运维成本高'],['用户体验','复杂查询要跑几个小时，有的跑不出来，只能把范围缩到 3 个月']],
+  after:  [['计算','10 台服务器（同配置）'],['存储','StorageGRID 6 个存储节点，总容量 3.8 PB，纠删码 4+2，可用 2.53 PB'],['架构','计算与存储分离，纠删码兼顾效率、可用性与持久性'],['用户体验','复杂查询 30 分钟内完成，可以查 12 个月以上的数据']]
+};
+function asDraw(k){
+  $('#asTable tbody').innerHTML = AS[k].map(r=>`<tr><td class="h" style="width:80px">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+}
+toggleGroup('data-as', asDraw);
+
+/* ── AI 数据管道 ── */
+const AI = [['接入','Airbyte / XCP','StorageGRID',C.blue],['数据准备','Spark · Iceberg / Delta','ONTAP NFS 暂存',C.teal],['搬到训练层','NetApp XCP','ONTAP S3 或 Lustre',C.violet],['训练','表格回归 + 文本分类 · 检查点','E-Series + Lustre',C.violet],['微调','增量学习，不动基座模型','ONTAP AFX',C.teal],['推理','批量预测','ONTAP AFX',C.teal],['归档','FabricPool / 手动','StorageGRID',C.blue]];
+let aiStep = AI.length, aiTimer = null;
+function aiDraw(){
+  const s = $('#aiSvg'); s.innerHTML = '';
+  sv('rect', {x:10, y:8, width:1180, height:34, rx:8, fill:'#f3f0fd', stroke:C.violet}, s);
+  sv('text', {x:600, y:30, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.violet}, s, 'Apache Airflow 编排 · 运行在 Kubernetes 上');
+  AI.forEach((a,i)=>{
+    const x = 10 + i*170, on = i < aiStep, cur = i === aiStep-1;
+    sv('rect', {x, y:62, width:154, height:120, rx:12, fill:on?(cur?'#dbe8fb':'#f2faf6'):'#f7f9fd', stroke:on?(cur?C.blue:C.green):C.line, 'stroke-width':cur?2.4:1.2}, s);
+    sv('text', {x:x+77, y:90, 'text-anchor':'middle', 'font-size':15, 'font-weight':800, fill:on?C.ink:C.faint}, s, a[0]);
+    sv('text', {x:x+77, y:114, 'text-anchor':'middle', 'font-size':11, fill:C.dim}, s, a[1]);
+    sv('rect', {x:x+14, y:134, width:126, height:32, rx:8, fill:'#fff', stroke:a[3]}, s);
+    sv('text', {x:x+77, y:155, 'text-anchor':'middle', 'font-size':11.5, 'font-weight':700, fill:a[3]}, s, a[2]);
+    if(i < AI.length-1) line(s, `M${x+154} 122 L${x+170} 122`, on?C.green:C.line2, 2);
+  });
+  [['StorageGRID · 数据湖与记录系统',C.blue],['ONTAP AFX · 准备、RAG、推理',C.teal],['E-Series + Lustre · 并行训练',C.violet]].forEach(([t,c],i)=>{
+    sv('rect', {x:10+i*400, y:204, width:18, height:18, rx:4, fill:c}, s);
+    sv('text', {x:36+i*400, y:218, 'font-size':13, fill:C.dim}, s, t);
+  });
+  $('#aiState').textContent = aiStep >= AI.length ? '流水线完成' : `第 ${aiStep} / ${AI.length} 步`;
+}
+function aiPlay(){ clearInterval(aiTimer); aiStep = 0; aiDraw(); aiTimer = setInterval(()=>{ aiStep++; aiDraw(); if(aiStep >= AI.length) clearInterval(aiTimer); }, 650); }
+$('#aiPlay').addEventListener('click', aiPlay);
+aiDraw();
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav === '下一版本') setTimeout(arPlay, 420);
+  if(nav === '自建的代价') setTimeout(cpPlay, 420);
+  if(nav === 'AI 数据管道') setTimeout(aiPlay, 420);
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+</body>
+</html>

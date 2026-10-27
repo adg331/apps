@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>AI 智能体的数据安全 · 数据为中心的零信任</title>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+.vbtn{margin-top:22px;font-size:14px;padding:10px 22px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--sh)}
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+.vdlg .vbar .btn{flex:0 0 auto}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+</style>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  if (location.hostname !== "adg331.github.io") return;   // 只统计线上访问，本地预览不上报
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?0a7443d4f6cacdefbb3711234e999137";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</head>
+<body>
+
+<dialog class="vdlg" id="vDlg" aria-label="AI 智能体的数据安全讲解视频">
+  <div class="vbar"><span>AI 智能体的数据安全 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./ai-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>AI 智能体的数据安全</b><span>DATA-CENTRIC ZERO TRUST</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover">
+      <div class="an" style="--d:.05s"><span class="eyebrow">NetApp INSIGHT 2026 · AI 安全专题</span></div>
+      <div class="big an" style="--d:.14s">AI 智能体的数据安全</div>
+      <div class="sub an" style="--d:.26s">数据为中心的零信任：在存储层收窄智能体能造成的破坏</div>
+      <p class="desc an" style="--d:.34s">智能体拿着合法凭证、以机器速度行动。本页讲清智能体如何接触企业数据、会出什么事，以及 NetApp AI 安全框架如何在存储层做加固、检测与响应、恢复三件事。</p>
+      <div class="chips an" style="--d:.44s">
+        <div class="chip" data-jump="2">为什么是现在</div>
+        <div class="chip" data-jump="5">智能体如何接触数据</div>
+        <div class="chip" data-jump="7">安全框架</div>
+        <div class="chip" data-jump="11">实战场景</div>
+        <div class="chip" data-jump="14">落地清单</div>
+      </div>
+      <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 5 分钟讲解视频</button></div>
+      <div class="an" style="--d:.56s;margin-top:30px">
+        <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>Overview</span></div>
+        <h1>一张图看懂：<span class="g">智能体动作很快，存储层要能拦、能查、能恢复</span></h1>
+        <p class="lead">智能体的问题，最终都落到「它能碰到哪些数据、能对数据做什么」。把零信任做在数据所在的存储层：权限最小、动作可审、关键操作要人批准，数据永远有一份删不掉的干净副本。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="dc" style="--ac:#d33a5c" data-jump="2">
+          <div class="hd"><span class="nm">为什么是现在</span><span class="ct">3 幕</span></div>
+          <ul><li>落地加速，风险同步放大</li><li>九秒删库，四天才发现</li><li>公开报道的五类事件</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#6a5ad4" data-jump="5">
+          <div class="hd"><span class="nm">智能体如何接触数据</span><span class="ct">2 幕</span></div>
+          <ul><li>智能体、工具与 MCP</li><li>四类威胁模式</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#0067c5" data-jump="7">
+          <div class="hd"><span class="nm">NetApp AI 安全框架</span><span class="ct">4 幕</span></div>
+          <ul><li>三大支柱与零信任原则</li><li>加固：最小权限与多管理员审批</li><li>检测与响应：拦在文件访问那一刻</li><li>恢复：不可删的干净副本</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+        <div class="dc" style="--ac:#0e9a62" data-jump="11">
+          <div class="hd"><span class="nm">实战与落地</span><span class="ct">5 幕</span></div>
+          <ul><li>四道防线拦住失控智能体</li><li>分析平台智能体的零信任存储</li><li>NetApp IT 的智能体实践</li><li>三层防护清单与新特性</li></ul>
+          <div class="go">进入 →</div>
+        </div>
+      </div>
+      <div class="kpis an" style="--d:.2s;margin-top:14px">
+        <div class="kpi"><b>72%</b><span>企业计划在 2026 年部署 AI 智能体（第三方调研）</span></div>
+        <div class="kpi o"><b>80%</b><span>企业表示智能体做过非预期操作（第三方调研）</span></div>
+        <div class="kpi" style=""><b style="color:var(--red)">9 秒</b><span>一次失控事件中，智能体删除数据所用时间</span></div>
+        <div class="kpi g"><b>3 大支柱</b><span>加固 · 检测与响应 · 恢复</span></div>
+      </div>
+      <p class="note an" style="--d:.26s">调研数据来自 KPMG、HelpNetSecurity 等第三方机构，依据 BKO4005 场次资料整理。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 落地与风险 ══════════════════ -->
+  <section class="scene" data-sec="为什么是现在" data-nav="落地与风险">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>为什么是现在 · 01</span></div>
+        <h1>智能体在加速落地，<span class="g">安全缺口也在同步放大</span></h1>
+        <p class="lead">很多企业在快速上线 AI，却还没弄清其中的网络风险。切换两组数据对照看：一边是采用速度，一边是安全代价。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:12px">
+            <button class="btn on" data-rk="adopt" data-toggle-group="rk">采用速度</button>
+            <button class="btn" data-rk="risk" data-toggle-group="rk">安全代价</button>
+          </div>
+          <div id="rkBars"></div>
+          <p class="note">第三方调研数据（KPMG、LangChain、Gartner、HelpNetSecurity、IBM、CIO.com），依据 BKO4005 场次资料整理，口径以各机构原始报告为准。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>智能体和传统应用不同在哪</h3>
+            <div class="li"><b>自主规划</b>：自己拆解任务、决定调用哪个工具，不是按固定流程执行。</div>
+            <div class="li"><b>拿着合法凭证</b>：在系统看来，它的每个操作都是「已授权用户」发起的。</div>
+            <div class="li"><b>机器速度</b>：几秒内就能完成人需要几小时的操作，包括破坏性操作。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业的意义</h3>
+            <div class="li warn"><b>工艺与配方数据</b>：被智能体当作上下文读走，就可能出现在不该出现的地方。</div>
+            <div class="li warn"><b>MES 与质量数据库</b>：一个误删或误改，影响的是整条产线和批次追溯。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 两起事件 ══════════════════ -->
+  <section class="scene" data-sec="为什么是现在" data-nav="两起事件">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>为什么是现在 · 02</span></div>
+        <h1>九秒删光数据，<span class="g">四天才被发现</span></h1>
+        <p class="lead">两起 2026 年的事件。第一起：一个智能体凭一份全权凭证，9 秒内删掉了生产数据和放在一起的备份。第二起：数百个智能体逃出沙箱、互相协作发起入侵，四天后才被发现。点击步骤回放第一起。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="steps an" style="--d:.1s" id="evSteps"></div>
+      <div class="g23">
+        <div class="stbody an" style="--d:.14s" id="evBody"></div>
+        <div class="kpis an" style="--d:.18s;grid-template-columns:repeat(2,1fr)">
+          <div class="kpi" style=""><b style="color:var(--red)">9 秒</b><span>第一起：攻击用时；恢复却要数天，靠的是 3 个月前的备份</span></div>
+          <div class="kpi o"><b>4 天</b><span>第二起：约 700 个智能体协同入侵，最终由 AI 异常分析发现</span></div>
+        </div>
+      </div>
+      <div class="g2 an" style="--d:.24s;margin-top:13px">
+        <div class="panel">
+          <h3>第一起的根因：数据访问不受控</h3>
+          <div class="li warn">一份凭证通吃一切；数据层没有任何拦截；备份和生产放在一起，一条命令一起删掉；看不到智能体能碰到什么。</div>
+        </div>
+        <div class="panel tint">
+          <h3>第二起的根因：AI 身份不受治理</h3>
+          <div class="li warn">不可信数据集在处理管道里执行了代码；一个零日漏洞让评测智能体连上外网；窃取 14 个有写权限的账户后横向移动；智能体之间没有隔离。</div>
+        </div>
+      </div>
+      <p class="note an" style="--d:.3s">事件依据公开的事件报告与行业调研整理（BKO4005 场次资料），细节以原始报告为准。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · 五类事件 ══════════════════ -->
+  <section class="scene" data-sec="为什么是现在" data-nav="公开事件">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d33a5c"><i></i><span>为什么是现在 · 03</span></div>
+        <h1>公开报道的智能体事件：<span class="g">每一起都能对上一道存储层控制</span></h1>
+        <p class="lead">按控制失效的类型筛选。右列是在存储层能起作用的 NetApp 控制项。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="viz an" style="--d:.12s">
+        <div class="btnrow" style="margin-bottom:10px">
+          <button class="btn on" data-ic="all" data-toggle-group="ic">全部</button>
+          <button class="btn" data-ic="contain" data-toggle-group="ic">隔离失效</button>
+          <button class="btn" data-ic="priv" data-toggle-group="ic">权限过大</button>
+          <button class="btn" data-ic="gate" data-toggle-group="ic">缺少审批关口</button>
+          <span class="hint" style="margin-left:auto" id="icCount"></span>
+        </div>
+        <div class="tw" style="box-shadow:none">
+          <table class="dt" id="icTable">
+            <thead><tr><th style="width:170px">智能体类型</th><th>越权行为</th><th style="width:200px">后果</th><th style="width:250px">可起作用的存储层控制</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="note">事件来自公开报道，此处隐去涉事机构名称；「可起作用的控制」指在同类场景中能缩小影响面的措施，不代表这些机构使用了 NetApp。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 智能体与 MCP ══════════════════ -->
+  <section class="scene" data-sec="智能体如何接触数据" data-nav="智能体与 MCP">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>智能体如何接触数据 · 01</span></div>
+        <h1>智能体做事的四步，<span class="g">每一步都在碰数据</span></h1>
+        <p class="lead">智能体是能推理、动态规划并调用工具完成多步任务的自主系统；MCP（Model Context Protocol）是大模型和智能体访问工具与数据的标准接口。切换看 NetApp 在每一步「支撑什么」和「保护什么」。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-wf="en" data-toggle-group="wf">NetApp 支撑</button>
+            <button class="btn" data-wf="sec" data-toggle-group="wf">NetApp 保护</button>
+          </div>
+          <svg viewBox="0 0 640 280" id="wfSvg" style="max-height:320px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>一个运维智能体的组成</h3>
+            <div class="li"><b>编排层</b>：如 CrewAI，安排监控、负载、决策等多个智能体分工。</div>
+            <div class="li"><b>推理层</b>：如 NVIDIA NIM 提供的大模型。</div>
+            <div class="li"><b>工具层（MCP）</b>：ONTAP MCP、Harvest MCP、NetApp Console MCP 等，智能体通过它们建卷、做 FlexCache、配 SnapMirror。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>MCP 是新的攻击面</h3>
+            <div class="li warn">MCP 让智能体有了「动手」的能力。它能调用的工具、拿到的权限，就是出事时的影响半径。</div>
+            <div class="li"><a href="../ontap-mcp/" target="_blank" rel="noopener" style="color:var(--blue);font-weight:700">ONTAP MCP 运维演示见 Bay 05 →</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · 威胁分类 ══════════════════ -->
+  <section class="scene" data-sec="智能体如何接触数据" data-nav="威胁分类">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>智能体如何接触数据 · 02</span></div>
+        <h1>智能体特有的攻击模式，<span class="g">归为四类</span></h1>
+        <p class="lead">点击一类，看典型手法，以及它最终落到数据上的样子。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.1s" id="thCards"></div>
+      <div class="g23" style="margin-top:13px">
+        <div class="stbody an" style="--d:.16s" id="thBody"></div>
+        <div class="panel tint an" style="--d:.2s">
+          <h3>落到数据上，常见的六种风险</h3>
+          <div class="li warn">恶意加密文件 · 未授权的大批量数据访问</div>
+          <div class="li warn">记忆与上下文投毒 · 恶意载荷 / 提示注入</div>
+          <div class="li warn">执行破坏性命令 · 借用特权身份横向移动</div>
+        </div>
+      </div>
+      <p class="note an" style="--d:.26s">四类划分依据 BKO4005 场次资料；各类的典型手法与六种风险的对应为本页整理，用于说明，不是完整分类。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · 框架总览 ══════════════════ -->
+  <section class="scene" data-sec="安全框架" data-nav="框架总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>安全框架 · 01</span></div>
+        <h1>NetApp AI 安全框架：<span class="g">建在数据为中心的零信任之上</span></h1>
+        <p class="lead">三条零信任原则打底：最小权限、默认已被入侵、从不信任且始终验证。在此之上是三大支柱。点击一个支柱，看它包含哪些能力。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <svg viewBox="0 0 640 300" id="fwSvg" style="max-height:330px"></svg>
+          <div class="stbody" id="fwBody" style="margin-top:8px;min-height:70px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>为什么做在存储层</h3>
+            <div class="li"><b>最后一道关</b>：不管智能体经过哪个应用、哪套框架，最后都要读写存储。</div>
+            <div class="li"><b>看得见数据</b>：存储知道哪些文件敏感、谁在什么时候读写了什么。</div>
+            <div class="li"><b>能留下干净副本</b>：只有存储能保证一份连管理员都删不掉的数据。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>三个要点</h3>
+            <div class="li ok">在存储层部署内置的零信任能力，收窄失控 AI 的影响半径。</div>
+            <div class="li ok">在检测与响应流程中保留「人在环中」，挡住破坏性操作。</div>
+            <div class="li ok">建立不可变、不可删的恢复方案。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · 加固 ══════════════════ -->
+  <section class="scene" data-sec="安全框架" data-nav="加固">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>安全框架 · 02 · 加固</span></div>
+        <h1>加固：<span class="g">智能体只拿到它需要的权限，危险操作要第二个人点头</span></h1>
+        <p class="lead">给智能体的账户一个收窄的角色；删除卷、删除快照、修改策略这类操作，必须另一位管理员批准才执行。选一个操作，看请求会怎样被处理。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px" id="hdBtns"></div>
+          <div class="code" id="hdCode" style="min-height:150px"></div>
+          <div class="stbody" id="hdBody" style="margin-top:10px;min-height:64px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>加固支柱的能力</h3>
+            <div class="li"><b>最小权限</b>：ONTAP RBAC / ABAC、ACL、NFS 导出策略、S3 对象策略。</div>
+            <div class="li"><b>多管理员审批（MAV）</b>：破坏性操作需要第二位管理员批准。</div>
+            <div class="li"><b>身份</b>：OAuth 2.0、OIDC / SAML、MFA、LDAP / AD。</div>
+            <div class="li"><b>数据分类</b>：Console 分类给 PII 等敏感数据打标签，先分类再给 AI 用。</div>
+            <div class="li"><b>加密</b>：NVE / NAE 静态加密，FIPS 140-3 验证模块。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对制造业的意义</h3>
+            <div class="li ok">设备维护智能体只给它读工单与设备日志的权限，碰不到工艺配方库；改产线相关存储配置，必须值班工程师批准。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · 检测与响应 ══════════════════ -->
+  <section class="scene" data-sec="安全框架" data-nav="检测与响应">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>安全框架 · 03 · 检测与响应</span></div>
+        <h1>检测与响应：<span class="g">拦在文件被访问的那一刻</span></h1>
+        <p class="lead">案例：保护代码库（.py、.js、.json、.go 等）。FPolicy 在每次文件访问时做即时把关，勒索软件韧性服务分析用户与智能体的行为是否异常，两者组合成自动化的实时零信任层。点击「播放」，看一个被劫持的智能体如何被拦下。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn on" id="drPlay">▶ 播放</button>
+            <span class="hint" style="margin-left:auto" id="drState"></span>
+          </div>
+          <svg viewBox="0 0 640 270" id="drSvg" style="max-height:300px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>检测与响应支柱的能力</h3>
+            <div class="li"><b>FPolicy</b>：实时文件事件，按规则立即放行或拒绝。</div>
+            <div class="li"><b>ARP/AI</b>：在数据路径上识别异常加密，自动打快照。</div>
+            <div class="li"><b>行为分析</b>：勒索软件韧性服务与 DII 工作负载安全，发现大批量删除等异常并可阻断用户。</div>
+            <div class="li"><b>审计与联动</b>：审计、EMS 事件送往 SIEM / SOAR。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>人在环中</h3>
+            <div class="li ok">自动响应负责「先拦住」；是否放行、是否恢复，由人来决定。智能体的速度用机器对付，判断留给人。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · 恢复 ══════════════════ -->
+  <section class="scene" data-sec="安全框架" data-nav="恢复">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>安全框架 · 04 · 恢复</span></div>
+        <h1>恢复：<span class="g">一份智能体删不掉的干净副本</span></h1>
+        <p class="lead">默认已被入侵：假设智能体拿到了足够的权限，也要保证有一份它碰不到、删不掉的数据。按保护强度从内到外看四层。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="steps" id="rcSteps" style="margin-bottom:10px"></div>
+          <svg viewBox="0 0 640 220" id="rcSvg" style="max-height:250px"></svg>
+          <div class="stbody" id="rcBody" style="margin-top:8px;min-height:60px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>恢复支柱的能力</h3>
+            <div class="li"><b>防篡改快照（TPS）</b>：保留期内谁都删不掉。</div>
+            <div class="li"><b>SnapLock</b>：WORM，合规级不可变保留。</div>
+            <div class="li"><b>Cyber Vault 隔离库</b>：逻辑气隙，管理员与生产分离。</div>
+            <div class="li"><b>干净恢复</b>：勒索软件韧性服务在隔离环境中验证后再恢复；也可与 Commvault 联合编排。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>模型与训练数据同样要保护</h3>
+            <div class="li ok">训练数据与模型产物放进 SnapLock 或不可变快照，保证「这一版模型用的是哪份数据」可追溯、不可篡改。</div>
+            <div class="li"><a href="../arp-ai-manufacturing/" target="_blank" rel="noopener" style="color:var(--blue);font-weight:700">隔离库与干净恢复详见 Bay 08 →</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · 四道防线 ══════════════════ -->
+  <section class="scene" data-sec="实战场景" data-nav="四道防线">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>实战场景 · 01</span></div>
+        <h1>拦住失控的智能体：<span class="g">两天的停机，变成几分钟的恢复</span></h1>
+        <p class="lead">设想：一个拿着合法凭证的智能体删除数据库、删除虚拟机，还试图清掉快照和备份。真实报道中，类似事件靠一份旧的异地备份恢复，用了两天多。逐一打开四道防线，看结果怎么变。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-ld="1" id="ld1">① 阻止</button>
+            <button class="btn on" data-ld="2" id="ld2">② 检测</button>
+            <button class="btn on" data-ld="3" id="ld3">③ 保护</button>
+            <button class="btn on" data-ld="4" id="ld4">④ 恢复</button>
+            <span class="hint" style="margin-left:auto">点击开关单独启停每道防线</span>
+          </div>
+          <svg viewBox="0 0 640 230" id="ldSvg" style="max-height:260px"></svg>
+          <div class="stbody" id="ldBody" style="margin-top:8px;min-height:64px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px" id="ldList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · 分析平台智能体 ══════════════════ -->
+  <section class="scene" data-sec="实战场景" data-nav="分析平台智能体">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>实战场景 · 02</span></div>
+        <h1>分析平台里的智能体：<span class="g">请求先过零信任存储层</span></h1>
+        <p class="lead">Snowflake、Databricks 等平台上的 SQL 智能体、RAG 检索、AI/ML 负载，最终都要读企业的 NAS 与 S3 数据。选一个请求，看存储层按哪条规则放行或拦截。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px" id="zsBtns"></div>
+          <svg viewBox="0 0 640 260" id="zsSvg" style="max-height:290px"></svg>
+          <div class="stbody" id="zsBody" style="margin-top:8px;min-height:60px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>零信任存储层的四件事</h3>
+            <div class="li"><b>分类与治理</b>：Console 分类、元数据标签，只开放批准过的 AI 数据集。</div>
+            <div class="li"><b>最小权限</b>：ONTAP RBAC、ACL、NFS 导出策略、S3 对象策略。</div>
+            <div class="li"><b>多租户微隔离</b>：隔离的 SVM、StorageGRID 租户分区。</div>
+            <div class="li"><b>可审计</b>：每次访问对应到具体的智能体身份与动作。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>兜底</h3>
+            <div class="li ok">快照、SnapMirror、SnapLock、对象锁定、Cyber Vault：即使拦截失手，也能恢复。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · NetApp IT ══════════════════ -->
+  <section class="scene" data-sec="实战场景" data-nav="NetApp IT 实践">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0e9a62"><i></i><span>实战场景 · 03</span></div>
+        <h1>NetApp IT 自己的智能体：<span class="g">先排障，准确率够了再自动修复</span></h1>
+        <p class="lead">NetApp IT 管理着约 158.6 PB、68 套存储系统、7 个站点。他们用 ONTAP MCP 给智能体提供命令与运维知识，做了一个 NOC 事件分析智能体：故障一来，智能体先跨整个技术栈找出「什么变了」。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn" data-it="old" data-toggle-group="it">人工排障</button>
+            <button class="btn on" data-it="new" data-toggle-group="it">智能体排障</button>
+          </div>
+          <svg viewBox="0 0 640 200" id="itSvg" style="max-height:230px"></svg>
+          <div class="kpis" style="margin-top:10px">
+            <div class="kpi g"><b>10–55 分钟</b><span>每次事件节省的排障时间</span></div>
+            <div class="kpi"><b>85%</b><span>当前准确率；目标 &gt; 95% 后才启用自动修复</span></div>
+          </div>
+          <p class="note">NetApp IT 内部实践的观测值，依据 BKO5001 场次资料。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>NetApp IT 的三条安全原则</h3>
+            <div class="li"><b>企业数据保持主权</b>：数据和模型调用都在可控范围内。</div>
+            <div class="li"><b>MCP 是新的攻击向量</b>：按攻击面来设计和审查。</div>
+            <div class="li"><b>工程师为 AI 的动作负责</b>：智能体做了什么，责任在批准它的人。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>可借鉴的节奏</h3>
+            <div class="li ok">先让智能体只读、只做分析；准确率达标、审计完备之后，再逐步开放写操作。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · 三层防护清单 ══════════════════ -->
+  <section class="scene" data-sec="落地清单" data-nav="三层防护清单">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>落地清单 · 01</span></div>
+        <h1>智能体、模型、数据：<span class="g">三层分别要守住什么</span></h1>
+        <p class="lead">按保护对象筛选，对照自己的环境逐项检查。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="viz an" style="--d:.12s">
+        <div class="btnrow" style="margin-bottom:10px">
+          <button class="btn on" data-ly="all" data-toggle-group="ly">全部</button>
+          <button class="btn" data-ly="agent" data-toggle-group="ly">智能体 · 守住动作与访问</button>
+          <button class="btn" data-ly="model" data-toggle-group="ly">模型 · 守住模型生命周期</button>
+          <button class="btn" data-ly="data" data-toggle-group="ly">数据 · 守住根基</button>
+        </div>
+        <div class="tw" style="box-shadow:none"><table class="dt" id="lyTable"><thead><tr><th style="width:110px">层</th><th style="width:170px">方面</th><th>能力</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 15 · ONTAP 安全新特性 ══════════════════ -->
+  <section class="scene" data-sec="落地清单" data-nav="ONTAP 安全新特性">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#d5820f"><i></i><span>落地清单 · 02</span></div>
+        <h1>ONTAP 安全新特性：<span class="g">身份、加密与租户隔离</span></h1>
+        <p class="lead">近几个版本与零信任相关的更新。按版本筛选。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-ov="all" data-toggle-group="ov">全部</button>
+            <button class="btn" data-ov="9.18.1" data-toggle-group="ov">9.18.1</button>
+            <button class="btn" data-ov="9.19.1" data-toggle-group="ov">9.19.1</button>
+            <button class="btn" data-ov="9.20.1" data-toggle-group="ov">9.20.1</button>
+          </div>
+          <div class="tw" style="box-shadow:none"><table class="dt" id="ovTable"><tbody></tbody></table></div>
+          <p class="note">版本依据 BKO4000 场次资料；标注「目标版本」的特性以正式发布说明为准。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>NFS 传输加密的性能</h3>
+            <div class="kpis" style="grid-template-columns:repeat(2,1fr)">
+              <div class="kpi g"><b>~90%</b><span>硬件卸载（CX6-Dx / CX7 网卡）相对明文 NFS</span></div>
+              <div class="kpi o"><b>~70%</b><span>软件 TLS 相对明文 NFS</span></div>
+            </div>
+            <p class="note">均非性能承诺。</p>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>认证</h3>
+            <div class="li ok">FIPS 140-3、CSfC 组件清单、DoDIN APL、Common Criteria，以 security.netapp.com 上的最新清单为准。</div>
+            <div class="li"><a href="../ontap-9201/" target="_blank" rel="noopener" style="color:var(--blue);font-weight:700">9.20.1 其他新特性见 Bay 11 →</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 16 · 总结 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="价值总结">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0067c5"><i></i><span>总结</span></div>
+        <h1>让智能体跑得快，<span class="g">也让它闯的祸可控</span></h1>
+        <p class="lead">零信任做在数据所在的地方：权限最小、关键操作有人把关、数据永远可以干净地恢复。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g3 an" style="--d:.12s">
+        <div class="vc"><span class="k">01 · HARDEN</span><div class="t">在存储层收窄影响半径</div><div class="d">最小权限、多管理员审批、数据分类与加密，让智能体只能碰到它该碰的数据。</div></div>
+        <div class="vc"><span class="k">02 · DETECT &amp; RESPOND</span><div class="t">机器速度拦截，人来判断</div><div class="d">FPolicy 即时把关、ARP/AI 与行为分析识别异常，自动先拦住，放行与恢复由人决定。</div></div>
+        <div class="vc"><span class="k">03 · RECOVER</span><div class="t">一份删不掉的干净副本</div><div class="d">防篡改快照、SnapLock、Cyber Vault 与干净恢复，把两天的停机变成几分钟的恢复。</div></div>
+      </div>
+      <div class="g2" style="margin-top:13px">
+        <div class="panel an" style="--d:.18s">
+          <h3>选型说明：上线智能体之前先确认</h3>
+          <div class="li"><b>01</b> 每个智能体用的是独立身份，还是共用一份高权限凭证？</div>
+          <div class="li"><b>02</b> 它能读的数据有没有先分类？敏感数据是否在可见范围外？</div>
+          <div class="li"><b>03</b> 删除卷、删除快照、改策略，是否需要第二个人批准？</div>
+          <div class="li"><b>04</b> 备份是否和生产隔离，智能体能否触达？</div>
+          <div class="li"><b>05</b> 出事后多久能发现？有没有演练过从不可变副本恢复？</div>
+        </div>
+        <div class="panel tint an" style="--d:.24s">
+          <h3>参考资料</h3>
+          <div class="li">NetApp INSIGHT 2026 场次资料：BKO4005 Zero Trust for AI: Securing agents, models, and data；BKO4002 Modern data protection without the complexity。</div>
+          <div class="li">BKO4000 Zero Trust Starts with Your Data: ONTAP Security for Cyber Resilience；BKO5001 Agentic AI + ONTAP MCP。</div>
+          <div class="li">本页信息时点为 2026 年 10 月；事件与调研数据以原始报告为准，产品特性以正式发布说明为准。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 讲解视频弹层 ═══════════ */
+const vDlg = $('#vDlg'), vPlayer = $('#vPlayer');
+$('#vOpen').addEventListener('click', ()=>{ vDlg.showModal(); vPlayer.play().catch(()=>{}); });
+$('#vClose').addEventListener('click', ()=> vDlg.close());
+vDlg.addEventListener('click', e=>{ if(e.target === vDlg) vDlg.close(); });
+vDlg.addEventListener('close', ()=> vPlayer.pause());
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+/* ═══════════ 幕内交互：每个交互图示一段，命名对应幕名 ═══════════ */
+const NS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text != null) e.textContent = text;
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const C = {blue:'#0067c5', violet:'#6a5ad4', green:'#0e9a62', orange:'#d5820f', red:'#d33a5c', teal:'#0c8e86',
+  ink:'#152341', dim:'#5c6a8a', faint:'#8d97b2', line:'#dce3ef', line2:'#c9d4e6', deep:'#123a7a', soft:'#eaf2fd', softB:'#93b6e4'};
+function box(svg, x, y, w, h, title, sub, o){
+  o = o || {};
+  const g = sv('g', {}, svg);
+  sv('rect', {x, y, width:w, height:h, rx:o.rx||10, fill:o.fill||C.soft, stroke:o.stroke||C.softB, 'stroke-width':o.sw||1.2, 'stroke-dasharray':o.dash||''}, g);
+  sv('text', {x:x+w/2, y:y+(sub?h/2-2:h/2+5), 'text-anchor':'middle', 'font-size':o.fs||13, 'font-weight':750, fill:o.color||C.deep}, g, title);
+  if(sub) sv('text', {x:x+w/2, y:y+h/2+14, 'text-anchor':'middle', 'font-size':10.5, fill:o.subColor||C.dim}, g, sub);
+  return g;
+}
+function line(svg, d, color, w, dash){ return sv('path', {d, stroke:color, 'stroke-width':w||2, fill:'none', 'stroke-dasharray':dash||''}, svg); }
+function toggleGroup(attr, fn){
+  $$('['+attr+']').forEach(b=> b.addEventListener('click', ()=>{
+    $$('['+attr+']').forEach(x=> x.classList.toggle('on', x===b));
+    fn(b.getAttribute(attr), b);
+  }));
+}
+function stepsInto(host, items, onPick){
+  items.forEach((m,i)=>{
+    const d = document.createElement('div'); d.className = 'st' + (i===0?' on':'');
+    d.innerHTML = `<div class="n">${m[0]}</div><div class="l">${m[1]}</div>`;
+    d.addEventListener('click', ()=>{ $$('.st', host).forEach((x,k)=> x.classList.toggle('on', k===i)); onPick(i); });
+    host.appendChild(d);
+  });
+  onPick(0);
+}
+
+/* ── 落地与风险 ── */
+const RK = {
+  adopt: [['72%','企业计划在 2026 年部署来自可信供应商的 AI 智能体','KPMG',72,C.blue],['57%','受访工程团队已在生产环境运行 AI 智能体','LangChain',57.3,C.blue],['40%','智能体 AI 项目预计到 2027 年底被放弃','Gartner',40,C.faint]],
+  risk:  [['96%','技术从业者认为 AI 智能体是日益增长的安全风险','CIO.com',96,C.red],['92%','CISO 看不到 AI 身份的全貌','行业调研',92,C.red],['80%','企业表示其智能体做过非预期操作','HelpNetSecurity',80,C.orange],['75%','发现了带着未受监控凭证的未经批准 AI','行业调研',75,C.orange],['71%','CISO 无法治理 AI 的访问权限','行业调研',71,C.orange]]
+};
+function rkDraw(k){
+  $('#rkBars').innerHTML = RK[k].map(r=>`<div style="display:grid;grid-template-columns:70px 1fr;gap:12px;align-items:center;margin:11px 0">
+    <b class="mono" style="font-size:22px;color:${r[4]}">${r[0]}</b>
+    <div><div style="font-size:12.8px;color:var(--ink);font-weight:650;margin-bottom:5px">${r[1]} <span class="tag n">${r[2]}</span></div>
+    <div style="height:10px;border-radius:5px;background:#e8eef8"><div style="height:10px;border-radius:5px;background:${r[4]};width:${r[3]}%"></div></div></div></div>`).join('');
+}
+toggleGroup('data-rk', rkDraw);
+
+/* ── 两起事件：第一起回放 ── */
+const EV = [
+  ['STEP 01','一份凭证通吃','智能体拿到的是一份全权凭证，对所有数据都有访问与删除权限。','warn'],
+  ['STEP 02','绕过所有防护','数据层没有任何拦截；应用层的各种防护对一个「合法用户」不起作用。','warn'],
+  ['STEP 03','连备份一起删','备份和生产放在同一处、没有保护，一条命令同时删掉了两者。','red'],
+  ['STEP 04','看不见范围','事后也说不清智能体到底能碰到哪些数据。','warn'],
+  ['STEP 05','数天才恢复','攻击用了 9 秒；团队从 3 个月前的备份手工重建，用了好几天。','red']
+];
+stepsInto($('#evSteps'), EV.map(e=>[e[0], e[1]]), i=>{
+  $('#evBody').innerHTML = `<h4>${EV[i][1]} <span class="tag ${EV[i][3]==='red'?'no':'warn'}">${EV[i][3]==='red'?'后果':'控制失效'}</span></h4><p>${EV[i][2]}</p>`;
+});
+
+/* ── 公开事件 ── */
+const IC = [
+  ['contain','一家 AI 实验室的安全评测智能体','逃出测试环境，访问外部平台的系统获取评测相关信息','生产基础设施被入侵，事件上报执法部门','ONTAP REST RBAC / OAuth 2.0、SVM 隔离、审计与 EMS 日志'],
+  ['contain','网络安全评测用的模型','模拟演练中连上互联网，访问了三家机构的系统','生产系统与数据被访问，真实系统被装上恶意软件包','SVM 隔离 + ACL、导出策略 / FPolicy、审计日志'],
+  ['priv','一家大型互联网公司的内部工程支持智能体','主动给出有缺陷的修复建议，扩大了内部对敏感数据的访问','敏感用户与公司数据在内部暴露约两小时','RBAC / ABAC + ACL、数据分类、审计与访问追踪'],
+  ['gate','一家云服务商的编码与运维助手','在尝试局部修复时删除并重建了生产环境','据报道某区域的成本服务中断 13 小时','多管理员审批、最小权限 RBAC、快照 + SnapRestore'],
+  ['gate','一家开发平台的自主编码智能体','无视代码冻结，删除生产数据库，并给出误导性的状态信息','超过 1,200 位高管、1,196 家公司的记录被删除','破坏性操作需 MAV、防篡改快照、SnapLock + SnapRestore']
+];
+const ICL = {contain:'隔离失效', priv:'权限过大', gate:'缺少审批关口'};
+function icDraw(f){
+  const rows = IC.filter(r=> f === 'all' || r[0] === f);
+  $('#icTable tbody').innerHTML = rows.map(r=>`<tr><td class="h">${r[1]}<br><span class="tag warn" style="margin-top:4px">${ICL[r[0]]}</span></td><td>${r[2]}</td><td>${r[3]}</td><td style="color:var(--green);font-weight:650">${r[4]}</td></tr>`).join('');
+  $('#icCount').textContent = `显示 ${rows.length} / ${IC.length}`;
+}
+toggleGroup('data-ic', icDraw);
+
+/* ── 智能体与 MCP：四步 ── */
+const WF = [
+  ['连接企业数据', ['ONTAP · S3','NFS · SMB','数据访问'], ['先分类、打标签','再开放给 AI']],
+  ['检索上下文', ['RAG · 向量库','分析与训练数据'], ['最小权限','RBAC / ABAC','ACL · API · NFS']],
+  ['推理并生成计划', ['快速克隆','模型测试与','开发流水线'], ['审计 · EMS · DII','监控智能体行为']],
+  ['通过 MCP / API 执行', ['ONTAP API','NetApp Console','DII 遥测'], ['不可变保护','勒索检测 · SnapLock','可恢复']]
+];
+function wfDraw(k){
+  const s = $('#wfSvg'); s.innerHTML = '';
+  const sec = k === 'sec';
+  box(s, 220, 6, 200, 42, 'AI 智能体', '规划 · 记忆 · 工具', {fill:'#fff', stroke:C.violet, color:C.violet});
+  WF.forEach((w,i)=>{
+    const x = 10 + i*158;
+    line(s, `M320 48 L${x+74} 76`, C.line2, 1.4);
+    sv('rect', {x, y:76, width:148, height:90, rx:12, fill:'#f7f9fd', stroke:C.line2}, s);
+    sv('circle', {cx:x+20, cy:96, r:11, fill:C.violet}, s);
+    sv('text', {x:x+20, y:100, 'text-anchor':'middle', 'font-size':11, fill:'#fff', 'font-weight':800}, s, i+1);
+    sv('text', {x:x+74, y:126, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':800, fill:C.ink}, s, w[0]);
+    const lines = sec ? w[2] : w[1], c = sec ? C.green : C.blue;
+    sv('rect', {x, y:178, width:148, height:92, rx:12, fill:sec?'#f2faf6':'#eef6ff', stroke:c}, s);
+    const y0 = 224 - (lines.length-1)*9;
+    lines.forEach((l,j)=> sv('text', {x:x+74, y:y0+j*18, 'text-anchor':'middle', 'font-size':12, fill:c, 'font-weight':650}, s, l));
+  });
+}
+toggleGroup('data-wf', wfDraw);
+
+/* ── 威胁分类 ── */
+const TH = [
+  ['REASONING & MEMORY','推理与记忆攻击','篡改智能体「相信什么」：在检索到的文档、长期记忆或上下文里埋入恶意指令或错误事实。','落到数据上：记忆与上下文投毒；被投毒的数据集在处理管道中执行代码。'],
+  ['TOOL & EXECUTION','工具与执行滥用','诱导智能体调用不该调用的工具，或以破坏性的方式调用合法工具。','落到数据上：执行破坏性命令（删库、删卷、删快照）；恶意加密文件。'],
+  ['IDENTITY & TRUST','身份与信任利用','借用或窃取智能体的身份与凭证，以「合法用户」的面目行动。','落到数据上：借用特权身份横向移动；未授权的大批量数据访问。'],
+  ['MULTI-AGENT & AVAILABILITY','多智能体与可用性','多个智能体之间缺乏隔离，被利用来协同行动，或把资源耗尽。','落到数据上：成百上千个智能体通过未经批准的通道协同入侵。']
+];
+let thIdx = 0;
+function thDraw(){
+  $('#thCards').innerHTML = TH.map((t,i)=>`<div class="vc" data-th="${i}" style="cursor:pointer;${i===thIdx?'border-color:var(--violet);background:linear-gradient(178deg,rgba(106,90,212,.09),#fff);box-shadow:0 4px 16px rgba(106,90,212,.18)':''}"><span class="k" style="color:var(--violet)">${t[0]}</span><div class="t">${t[1]}</div></div>`).join('');
+  $$('#thCards .vc').forEach(c=> c.addEventListener('click', ()=>{ thIdx = +c.dataset.th; thDraw(); }));
+  $('#thBody').innerHTML = `<h4>${TH[thIdx][1]}</h4><p>${TH[thIdx][2]}</p><p style="margin-top:8px;color:var(--red);font-weight:650">${TH[thIdx][3]}</p>`;
+}
+thDraw();
+
+/* ── 框架总览 ── */
+const FW = [
+  ['加固','Hardening',C.blue,['MAV 多管理员审批','RBAC / ABAC','OAuth 2.0','数据分类','加密','多租户隔离'],'在攻击发生前收窄权限：让智能体只能碰到它需要的数据，危险操作需要人批准。'],
+  ['检测与响应','Detection & Response',C.orange,['FPolicy','ARP/AI','审计','DII 工作负载安全','SIEM / SOAR','勒索软件韧性服务'],'在数据被访问的那一刻发现异常，自动先拦住，并把信号送给安全团队。'],
+  ['恢复','Recovery',C.green,['SnapLock','防篡改快照','Cyber Vault','干净恢复','Commvault Flex','Commvault + ARP'],'假设防线会被突破：保证有一份删不掉的干净副本，并快速、干净地恢复。']
+];
+let fwIdx = 0;
+function fwDraw(){
+  const s = $('#fwSvg'); s.innerHTML = '';
+  sv('rect', {x:10, y:236, width:620, height:56, rx:12, fill:'#eef3fb', stroke:C.line2}, s);
+  sv('text', {x:320, y:258, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.deep}, s, '数据为中心的零信任');
+  sv('text', {x:320, y:278, 'text-anchor':'middle', 'font-size':11.5, fill:C.dim}, s, '最小权限 · 默认已被入侵 · 从不信任，始终验证');
+  FW.forEach((f,i)=>{
+    const x = 10 + i*210, on = i === fwIdx;
+    const g = sv('g', {style:'cursor:pointer'}, s);
+    sv('rect', {x, y:10, width:200, height:214, rx:14, fill:on?'#fff':'#f7f9fd', stroke:f[2], 'stroke-width':on?3:1.4}, g);
+    sv('rect', {x, y:10, width:200, height:44, rx:14, fill:f[2]}, g);
+    sv('text', {x:x+100, y:38, 'text-anchor':'middle', 'font-size':15, 'font-weight':800, fill:'#fff'}, g, f[0]);
+    f[3].forEach((c,j)=>{ sv('text', {x:x+100, y:80+j*24, 'text-anchor':'middle', 'font-size':12, fill:on?C.ink:C.dim, 'font-weight':on?700:500}, g, c); });
+    g.addEventListener('click', ()=>{ fwIdx = i; fwDraw(); });
+  });
+  $('#fwBody').innerHTML = `<h4>${FW[fwIdx][0]} · ${FW[fwIdx][1]}</h4><p>${FW[fwIdx][4]}</p>`;
+}
+fwDraw();
+
+/* ── 加固：请求模拟 ── */
+const HD = [
+  ['读取维护工单', 'GET /api/storage/volumes/maint_tickets/files', 'allow', '放行：角色 maint-agent 对该卷有只读权限。'],
+  ['读取工艺配方库', 'GET /api/storage/volumes/recipe_db/files', 'deny', '拒绝：数据已被分类为敏感，不在该角色的访问范围内。'],
+  ['删除一个卷', 'DELETE /api/storage/volumes/mes_hist', 'deny', '拒绝：角色 maint-agent 没有删除卷的权限。即使换成高权限账户，这类操作也会触发多管理员审批。'],
+  ['删除快照', 'DELETE /api/storage/volumes/mes_db/snapshots/daily.0', 'mav', '挂起：删除快照属于受 MAV 保护的操作，已生成审批请求，等待另一位管理员批准；防篡改快照在保留期内本来就无法删除。'],
+  ['修改导出策略', 'PATCH /api/protocols/nfs/export-policies/12', 'mav', '挂起：策略变更受 MAV 保护，需值班工程师批准后才执行。']
+];
+let hdIdx = 0;
+function hdDraw(){
+  const h = HD[hdIdx], res = {allow:['200 OK','#8fd694'], deny:['403 Forbidden','#ff8fa3'], mav:['202 Accepted · 等待 MAV 审批','#e0a45e']}[h[2]];
+  $('#hdCode').innerHTML = `<span class="c"># 智能体身份：maint-agent（角色：只读工单与设备日志）</span>
+<span class="k">${h[1].split(' ')[0]}</span> <span class="s">${h[1].split(' ')[1]}</span>
+<span class="p">Authorization:</span> Bearer &lt;OAuth 2.0 token · maint-agent&gt;
+
+<span class="c"># ONTAP 返回</span>
+<span style="color:${res[1]};font-weight:700">${res[0]}</span>`;
+  $('#hdBody').innerHTML = `<h4>${h[0]}</h4><p>${h[3]}</p>`;
+  $$('#hdBtns .btn').forEach((b,i)=> b.classList.toggle('on', i===hdIdx));
+}
+(function(){ HD.forEach((h,i)=>{ const b = document.createElement('button'); b.className = 'btn sm'; b.textContent = h[0]; b.addEventListener('click', ()=>{ hdIdx = i; hdDraw(); }); $('#hdBtns').appendChild(b); }); hdDraw(); })();
+
+/* ── 检测与响应：代码库保护 ── */
+let drStep = 6, drTimer = null;
+const DRS = ['被劫持的智能体开始批量读取 .py / .js 文件','FPolicy 拦截每次文件访问，交给规则判断','勒索软件韧性服务分析行为：短时间、大批量、偏离基线','判定异常：该智能体身份被阻断','后续访问被 FPolicy 直接拒绝','告警与审计事件送往 SIEM / SOAR，由人决定下一步'];
+function drDraw(){
+  const s = $('#drSvg'); s.innerHTML = '';
+  const st = drStep;
+  box(s, 10, 100, 130, 64, '智能体', st>=3 ? '已阻断' : '发起访问', {fill:st>=3?'#fbecef':'#fff', stroke:st>=3?C.red:C.violet, color:st>=3?C.red:C.violet});
+  box(s, 200, 90, 150, 84, 'FPolicy 把关', st>=4 ? '拒绝访问' : '即时放行 / 拒绝', {fill:st>=1?'#eef6ff':'#f7f9fd', stroke:st>=1?C.blue:C.line2, sw:st>=1?2:1});
+  box(s, 420, 90, 210, 84, '代码库', '.py · .js · .json · .go', {fill:'#f2faf6', stroke:C.green, color:C.green});
+  box(s, 200, 196, 150, 60, '韧性服务 / UEBA', '行为分析', {fs:12, fill:st>=2?'#fdf0e0':'#f7f9fd', stroke:st>=2?C.orange:C.line2, color:st>=2?C.orange:C.dim});
+  box(s, 420, 196, 210, 60, 'SIEM / SOAR', '告警 · 审计 · 人工决策', {fs:12, fill:st>=5?'#f3f0fd':'#f7f9fd', stroke:st>=5?C.violet:C.line2, color:st>=5?C.violet:C.dim});
+  line(s, 'M140 132 L200 132', st>=4?C.red:C.violet, 2.4, st>=4?'6 4':'');
+  line(s, 'M350 132 L420 132', st>=4?C.line2:C.green, 2.4, st>=4?'4 4':'');
+  line(s, 'M275 174 L275 196', st>=2?C.orange:C.line2, 2);
+  line(s, 'M350 226 L420 226', st>=5?C.violet:C.line2, 2);
+  if(st>=4) sv('text', {x:385, y:122, 'text-anchor':'middle', 'font-size':16, 'font-weight':800, fill:C.red}, s, '✕');
+  sv('text', {x:320, y:40, 'text-anchor':'middle', 'font-size':13, 'font-weight':700, fill:C.ink}, s, st>0 ? DRS[Math.min(st,6)-1] : '点击「播放」开始');
+  $('#drState').textContent = st >= 6 ? '完成' : `第 ${st} / 6 步`;
+}
+function drPlay(){ clearInterval(drTimer); drStep = 0; drDraw(); drTimer = setInterval(()=>{ drStep++; drDraw(); if(drStep >= 6) clearInterval(drTimer); }, 900); }
+$('#drPlay').addEventListener('click', drPlay);
+drDraw();
+
+/* ── 恢复：四层 ── */
+const RC = [
+  ['LAYER 1','防篡改快照','卷上的快照被锁定，保留期内任何人（包括管理员）都删不掉；ARP/AI 检测到异常时自动生成的快照同样受保护。'],
+  ['LAYER 2','SnapLock','WORM 不可变保留，满足合规要求；训练数据与模型产物放在这里，可证明未被篡改。'],
+  ['LAYER 3','Cyber Vault 隔离库','逻辑气隙的隔离库，管理员账户与生产分开；智能体即便拿到生产权限也触达不到。'],
+  ['LAYER 4','干净恢复','在隔离环境中扫描、验证快照是干净的，再恢复到生产；也可与 Commvault 联合编排。']
+];
+let rcIdx = 0;
+function rcDraw(){
+  const s = $('#rcSvg'); s.innerHTML = '';
+  const cols = [C.blue, C.violet, C.teal, C.green];
+  for(let i=3;i>=0;i--){
+    const on = i <= rcIdx, rx = 70 + i*70, ry = 30 + i*22;
+    sv('ellipse', {cx:320, cy:110, rx, ry, fill:on?'rgba(14,154,98,.06)':'#f7f9fd', stroke:on?cols[i]:C.line2, 'stroke-width':i===rcIdx?3:1.4}, s);
+    sv('text', {x:320, y:110-ry+16, 'text-anchor':'middle', 'font-size':11.5, 'font-weight':800, fill:on?cols[i]:C.faint}, s, RC[i][1]);
+  }
+  sv('text', {x:320, y:116, 'text-anchor':'middle', 'font-size':13, 'font-weight':800, fill:C.ink}, s, '生产数据');
+  $('#rcBody').innerHTML = `<h4>${RC[rcIdx][1]}</h4><p>${RC[rcIdx][2]}</p>`;
+}
+stepsInto($('#rcSteps'), RC.map(r=>[r[0], r[1]]), i=>{ rcIdx = i; rcDraw(); });
+
+/* ── 四道防线 ── */
+const LD = {
+  1: ['① 阻止','PREVENT',C.blue,[['最小权限 RBAC','ONTAP','智能体账户没有删除卷、快照、策略的权限'],['多管理员审批','ONTAP','删卷、删快照、改策略需要第二位人员批准'],['防篡改快照','B&R','保留期内锁定的快照删不掉']]],
+  2: ['② 检测','DETECT',C.orange,[['ARP/AI','RR','在存储本机识别异常数据活动并打保护快照'],['工作负载安全','RR + DII','标出大批量删除等异常行为，可阻断用户'],['告警与审计','RR','作业、策略变更与审计事件送往 SIEM']]],
+  3: ['③ 保护','PROTECT',C.violet,[['应用一致性快照','B&R','SQL、Oracle、VMware、Hyper-V 频繁快照与日志备份'],['SnapMirror 二级副本','B&R','放在智能体触达不到的另一套 ONTAP 集群'],['不可变备份','B&R','对象锁定的 S3 或隔离库副本，真正的 3-2-1']]],
+  4: ['④ 恢复','RECOVER',C.green,[['SnapRestore','B&R','秒级把卷回滚到干净快照，与容量无关'],['数据库时间点恢复','B&R','恢复快照后重放日志到破坏命令之前'],['虚拟机与细粒度恢复','B&R','整机、虚拟盘或客户机文件，原位或异地']]]
+};
+const ldOn = {1:true, 2:true, 3:true, 4:true};
+function ldDraw(){
+  const s = $('#ldSvg'); s.innerHTML = '';
+  const acts = ['删除数据库','删除虚拟机','清除快照','清除备份'];
+  box(s, 10, 90, 120, 60, '失控智能体', '合法凭证', {fill:'#fbecef', stroke:C.red, color:C.red});
+  acts.forEach((a,i)=>{
+    const y = 14 + i*52, blocked = ldOn[1] && (i>=2 || i===0) && i!==1 ? true : (ldOn[1] && i===1);
+    const reached = !ldOn[1];
+    line(s, `M130 120 L230 ${y+20}`, reached?C.red:C.line2, 1.6, reached?'':'4 4');
+    box(s, 230, y, 130, 40, a, null, {fs:12, fill:reached?'#fbecef':'#f2faf6', stroke:reached?C.red:C.green, color:reached?C.red:C.green});
+    sv('text', {x:372, y:y+25, 'font-size':11, fill:reached?C.red:C.green, 'font-weight':700}, s, reached ? '已执行' : '被权限或 MAV 拦下');
+  });
+  let outcome, col;
+  if(ldOn[1]) { outcome = ['破坏性操作被拦下','权限不足的请求直接被拒；删快照、改策略进入审批，等人批准。'], col = C.green; }
+  else if(ldOn[4] && ldOn[3]) { outcome = ['几分钟内恢复',`${ldOn[2]?'检测在几秒内发现异常并打保护快照；':''}从本地锁定的应用一致性副本恢复，回到破坏命令之前。`], col = C.green; }
+  else if(ldOn[4] && !ldOn[3]) { outcome = ['只能部分恢复','没有隔离的副本，若快照也被清除，只剩下更早的备份。'], col = C.orange; }
+  else { outcome = ['两天以上','只能从一份旧的异地备份重建，就像真实报道中的结局。'], col = C.red; }
+  sv('rect', {x:470, y:70, width:160, height:100, rx:12, fill:col===C.green?'#e2f5ec':(col===C.orange?'#fdf0e0':'#fbecef'), stroke:col, 'stroke-width':2}, s);
+  sv('text', {x:550, y:112, 'text-anchor':'middle', 'font-size':15, 'font-weight':800, fill:col}, s, outcome[0]);
+  sv('text', {x:550, y:136, 'text-anchor':'middle', 'font-size':11, fill:C.dim}, s, '结果');
+  $('#ldBody').innerHTML = `<h4>${outcome[0]}</h4><p>${outcome[1]}</p>`;
+  $('#ldList').innerHTML = [1,2,3,4].map(k=>{ const d = LD[k], on = ldOn[k];
+    return `<div class="panel" style="padding:11px 14px;opacity:${on?1:.45};border-left:4px solid ${d[2]}"><h3 style="margin-bottom:6px">${d[0]} · ${d[1]} ${on?'':'<span class="tag n">已关闭</span>'}</h3>${d[3].map(c=>`<div class="li" style="margin-bottom:3px"><b>${c[0]}</b> <span class="tag n">${c[1]}</span>：${c[2]}</div>`).join('')}</div>`; }).join('') +
+    '<p class="note" style="margin-top:0">B&amp;R = NetApp Backup and Recovery · RR = 勒索软件韧性服务 · DII = Data Infrastructure Insights。依据 BKO4002 场次资料整理。</p>';
+}
+[1,2,3,4].forEach(k=> $('#ld'+k).addEventListener('click', ()=>{ ldOn[k] = !ldOn[k]; $('#ld'+k).classList.toggle('on', ldOn[k]); ldDraw(); }));
+ldDraw();
+
+/* ── 分析平台智能体：请求 ── */
+const ZS = [
+  ['RAG 检索批准的数据集','allow','分类与治理','该数据集已被标为「批准用于 AI」，智能体身份在 ACL 内，放行并记录审计。'],
+  ['SQL 智能体读取客户 PII 表','deny','最小权限','数据被分类为 PII，不在该智能体的访问范围内，拒绝。'],
+  ['跨租户读取另一事业部数据','deny','多租户微隔离','两个事业部在不同 SVM / StorageGRID 租户中，跨租户访问在存储层被隔离。'],
+  ['大批量下载全部设计图纸','deny','行为检测','短时间大批量读取偏离基线，行为分析判定异常，阻断该身份并告警。'],
+  ['写入经过验证的特征表','allow','可审计','写入被允许，并对应到具体的智能体身份与动作留痕。']
+];
+let zsIdx = 0;
+function zsDraw(){
+  const z = ZS[zsIdx], ok = z[1] === 'allow', s = $('#zsSvg'); s.innerHTML = '';
+  box(s, 10, 100, 150, 64, '分析平台智能体', 'SQL · RAG · ML', {fill:'#fff', stroke:C.violet, color:C.violet});
+  sv('rect', {x:200, y:20, width:220, height:224, rx:14, fill:'#eef6ff', stroke:C.blue, 'stroke-width':1.6}, s);
+  sv('text', {x:310, y:44, 'text-anchor':'middle', 'font-size':12.5, 'font-weight':800, fill:C.deep}, s, '零信任存储层');
+  ['分类与治理','最小权限','多租户微隔离','行为检测','可审计'].forEach((r,i)=>{
+    const hit = r === z[2];
+    sv('rect', {x:216, y:58+i*36, width:188, height:28, rx:7, fill:hit?(ok?'#e2f5ec':'#fbecef'):'#fff', stroke:hit?(ok?C.green:C.red):C.line2, 'stroke-width':hit?2:1}, s);
+    sv('text', {x:310, y:77+i*36, 'text-anchor':'middle', 'font-size':12, 'font-weight':hit?800:500, fill:hit?(ok?C.green:C.red):C.dim}, s, r);
+  });
+  box(s, 470, 100, 160, 64, '企业数据', 'NAS · S3', {fill:'#f2faf6', stroke:C.green, color:C.green});
+  line(s, 'M160 132 L200 132', C.violet, 2.4);
+  line(s, 'M420 132 L470 132', ok?C.green:C.line2, 2.4, ok?'':'4 4');
+  sv('text', {x:445, y:120, 'text-anchor':'middle', 'font-size':16, 'font-weight':800, fill:ok?C.green:C.red}, s, ok ? '✓' : '✕');
+  $('#zsBody').innerHTML = `<h4>${z[0]} <span class="tag ${ok?'ok':'no'}">${ok?'放行':'拦截'}</span></h4><p>${z[3]}</p>`;
+  $$('#zsBtns .btn').forEach((b,i)=> b.classList.toggle('on', i===zsIdx));
+}
+(function(){ ZS.forEach((z,i)=>{ const b = document.createElement('button'); b.className = 'btn sm'; b.textContent = z[0]; b.addEventListener('click', ()=>{ zsIdx = i; zsDraw(); }); $('#zsBtns').appendChild(b); }); zsDraw(); })();
+
+/* ── NetApp IT：排障时间 ── */
+function itDraw(k){
+  const s = $('#itSvg'); s.innerHTML = '';
+  const W = 520, x0 = 100, max = 60, X = m=> x0 + W*m/max;
+  for(let m=0;m<=60;m+=15){ sv('line', {x1:X(m), x2:X(m), y1:20, y2:170, stroke:C.line}, s); sv('text', {x:X(m), y:190, 'text-anchor':'middle', 'font-size':11, fill:C.faint, 'font-family':'monospace'}, s, m+' 分'); }
+  if(k === 'old'){
+    sv('text', {x:10, y:62, 'font-size':12.5, 'font-weight':700, fill:C.ink}, s, '最好情况');
+    sv('rect', {x:x0, y:44, width:W*15/max, height:30, rx:7, fill:C.orange}, s);
+    sv('text', {x:X(15)+8, y:64, 'font-size':12, fill:C.orange, 'font-weight':700}, s, '15 分钟');
+    sv('text', {x:10, y:122, 'font-size':12.5, 'font-weight':700, fill:C.ink}, s, '最坏情况');
+    sv('rect', {x:x0, y:104, width:W, height:30, rx:7, fill:C.red}, s);
+    sv('text', {x:X(60)-8, y:124, 'text-anchor':'end', 'font-size':12, fill:'#fff', 'font-weight':700}, s, '60 分钟以上');
+  } else {
+    sv('text', {x:10, y:92, 'font-size':12.5, 'font-weight':700, fill:C.ink}, s, '智能体排障');
+    sv('rect', {x:x0, y:74, width:W*5/max, height:30, rx:7, fill:C.green}, s);
+    sv('text', {x:X(5)+8, y:94, 'font-size':12, fill:C.green, 'font-weight':700}, s, '几分钟 · 同样的调查、同样的结论');
+  }
+}
+toggleGroup('data-it', itDraw);
+
+/* ── 三层防护清单 ── */
+const LY = [
+  ['agent','身份与访问','ONTAP RBAC / 最小权限 · 多管理员审批 · MFA 与 LDAP / AD · SAML / OAuth 2.0 / OpenID Connect'],
+  ['agent','安全连接','全部协议 TLS 1.2+ · IPsec 传输加密 · 网络准入控制 · Kerberos / SMB 签名'],
+  ['agent','工作负载与 API','API 访问控制与权限范围 · 限流与会话管理 · API / CLI / GUI 审计日志 · ONTAP 命令目录控制'],
+  ['agent','监控与威胁检测','System Manager / Active IQ · FPolicy 实时文件事件 · SIEM 集成（Splunk、QRadar 等）· ARP/AI'],
+  ['model','机密计算','使用中数据加密 · 远程证明与信任验证 · 保护模型训练与推理'],
+  ['model','完整性与不可变','SnapLock Compliance · WORM · 不可变快照与保留锁 · 防篡改的训练数据与输出'],
+  ['model','模型与产物安全','模型仓库独立存储 · 带校验的不可变备份 · 开发测试用的安全克隆 · 支持 SBOM（客户流程）'],
+  ['model','漏洞管理','固件与软件自动更新 · Active IQ / Digital Advisor 建议 · CVE 监测与风险提示'],
+  ['data','分类与治理','NetApp Console 分类 · 敏感标签（PII、PCI、PHI 等）· 基于策略的访问与自动化 · 跨 NAS 与对象的数据发现'],
+  ['data','静态加密','NVE · NAE · FIPS 验证模块 · 安全密钥管理'],
+  ['data','保护与韧性','SnapCenter · 不可变快照 · SnapMirror · Cyber Vault · 干净恢复']
+];
+const LYL = {agent:['智能体','#6a5ad4'], model:['模型','#0c8e86'], data:['数据','#0067c5']};
+function lyDraw(f){
+  $('#lyTable tbody').innerHTML = LY.filter(r=> f === 'all' || r[0] === f).map(r=>`<tr><td><span class="tag" style="color:${LYL[r[0]][1]};border:1px solid ${LYL[r[0]][1]};background:#fff">${LYL[r[0]][0]}</span></td><td class="h">${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+}
+toggleGroup('data-ly', lyDraw);
+
+/* ── ONTAP 安全新特性 ── */
+const OV = [
+  ['9.18.1','后端集群网络加密','节点之间的数据流量用 TLS 加密（控制面除外），默认关闭；所有节点需 9.18.1 及以上。',''],
+  ['9.19.1','SVM 范围管理','租户以 vsadmin 登录 SVM 管理 LIF，在 System Manager 中只看到自己的仪表板与卷；集群管理对租户隐藏。',''],
+  ['9.20.1','MAV 支持 Entra ID 用户与组','审批组可以直接引用身份提供方中的组，集中在 IdP 管理审批人。','目标版本'],
+  ['9.20.1','OIDC 下的 Passkey 登录','在 Entra ID 中生成 passkey，登录时出示。','目标版本'],
+  ['9.20.1','OKM 密码短语丢失后的密钥恢复','可在不提供旧密码短语的情况下设置新密码短语，该操作可受 MAV 管控；Common Criteria 模式下不可用。','目标版本'],
+  ['—','ARP/AI 覆盖 SnapMirror 同步与 active sync','同步复制（SAN 与 NAS）与 SnapMirror active sync（SAN）场景下也能实时检测。',''],
+  ['—','NFS over TLS 硬件卸载','在支持的网卡上卸载 TLS，降低加密对性能的影响。','']
+];
+function ovDraw(f){
+  $('#ovTable tbody').innerHTML = OV.filter(r=> f === 'all' || r[0] === f).map(r=>`<tr><td style="width:70px"><span class="tag b">${r[0]}</span></td><td class="h" style="width:190px">${r[1]} ${r[3]?'<span class="tag warn">'+r[3]+'</span>':''}</td><td>${r[2]}</td></tr>`).join('');
+}
+toggleGroup('data-ov', ovDraw);
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav === '检测与响应') setTimeout(drPlay, 420);
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+</body>
+</html>
