@@ -2,6 +2,7 @@
    新记录加在最前面。bay 为两位编号（对应首页 #bayXX）；
    kind：new = 新增展位，update = 内容更新。text 面向客户，只写内容变化。 */
 window.DEMOBAY_CHANGELOG = [
+  { date: '2026-11-03', bay: '21', kind: 'update', text: '讲解视频按新版页面重做：换用新配音，补并行客户端、RDMA / GDS、小文件聚合、纠删码容错与产品组合段落，时长约 7 分钟' },
   { date: '2026-11-03', bay: '21', kind: 'update', text: '按技术白皮书补充规格：纠删码 N+M 容量与容错交互、各幕关键能力卡片；重画并行客户端、RDMA / GDS 与小文件聚合图示；新增「产品组合」选型一幕' },
   { date: '2026-11-03', bay: '02', kind: 'update', text: '新增「KV Cache 卸载」一幕：vLLM、LMCache、SGLang 三种框架接入 Novus 的配置与验证情况；首发范围表同步更新' },
   { date: '2026-11-03', bay: '04', kind: 'update', text: '新增「临界点」一幕：按并发、显存与存储带宽估算 KV Cache 卸载何时开始划算，附普通 NFS over TCP 实测数据' },
