@@ -2,6 +2,7 @@
    新记录加在最前面。bay 为两位编号（对应首页 #bayXX）；
    kind：new = 新增展位，update = 内容更新。text 面向客户，只写内容变化。 */
 window.DEMOBAY_CHANGELOG = [
+  { date: '2026-11-03', bay: '04', kind: 'update', text: '新增「临界点」一幕：按并发、显存与存储带宽估算 KV Cache 卸载何时开始划算，附普通 NFS over TCP 实测数据' },
   { date: '2026-10-29', bay: '21', kind: 'new', text: '新增软件定义存储分类与 MagnaScale Ultra L 20 幕交互演示，含容量预算、EC 故障示例、PoC 清单与 6 分 15 秒讲解视频' },
   { date: '2026-10-28', bay: '02', kind: 'update', text: '新增「拟收购 PEAK:AIO」一幕：收购前后形态对照、与 Novus 的关系与交易状态' },
   { date: '2026-10-27', bay: '01', kind: 'update', text: '新增第 15 幕决策上下文（Decision Fabric），讲解视频同步补充' },

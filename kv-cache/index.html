@@ -342,7 +342,32 @@ table.res td.num{font-variant-numeric:tabular-nums; font-weight:700}
 .cards.bkMetric .card.cost .k{color:var(--orange)}
 .cards.bkMetric .card .t{font-size:20px}
 
+/* ===== 幕 · 卸载临界点计算器（NetApp 社区实测标定） ===== */
+.thGrid{display:grid; grid-template-columns:1.12fr .88fr; gap:16px}
+.thGrid .panel{padding:14px 18px}
+.thGrid .sliderRow{margin:6px 0}
+.thGrid .sliderRow label{width:118px}
+.thGrid .sliderRow .val{width:88px}
+.thStats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px}
+.thStats .stat{min-width:0; padding:10px 12px}
+.thStats .stat .v{font-size:21px}
+.thStats .stat .l{line-height:1.5}
+.thVerdict{margin-top:10px; padding:11px 14px; border-radius:12px; border:1px solid var(--line); background:var(--panel2)}
+.thVerdict .z{display:inline-block; padding:2px 10px; border-radius:10px; font-size:12px; font-weight:800; margin-right:8px}
+.thVerdict .z.z1{background:rgba(214,54,90,.12); color:var(--red)}
+.thVerdict .z.z2{background:rgba(217,123,22,.14); color:var(--dram)}
+.thVerdict .z.z3{background:rgba(15,157,99,.12); color:var(--green)}
+.thVerdict .nums{display:flex; gap:18px; margin-top:7px; font-size:12.5px; color:var(--dim); flex-wrap:wrap}
+.thVerdict .nums b{font-size:16px; color:var(--txt); font-variant-numeric:tabular-nums}
+.thVerdict .why{font-size:12.5px; color:var(--dim); line-height:1.65; margin-top:6px}
+.thZones{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:12px}
+.thZones .panel{padding:11px 14px}
+.thZones .k{font-size:11px; font-weight:800; letter-spacing:.5px}
+.thZones .t{font-weight:800; font-size:13.5px; margin:3px 0}
+.thZones .d{font-size:12px; color:var(--dim); line-height:1.6}
+
 @media (max-width:1100px){
+  .thGrid,.thZones{grid-template-columns:1fr}
   .grid2,.chatWrap,.bkGrid{grid-template-columns:1fr}
   .cards{grid-template-columns:repeat(2,1fr)}
   .scnGrid{grid-template-columns:repeat(2,1fr)}
@@ -763,6 +788,62 @@ var _hmt = _hmt || [];
   <div class="note">资料来源：NetApp INSIGHT 2026 场次 BKO1025《Boost LLM throughput 157% with shared KV cache》（2026-09-29）；测试记录见 NetApp 社区博文 "KV cache offloading with vLLM, LMCache and ONTAP pNFS"。本幕数字为观测值，与第 1–4 幕的示意模型不可直接比较。</div>
 </section>
 
+<!-- ═══════ 幕 · 卸载临界点计算器 ═══════ -->
+<section class="scene" id="sc5t">
+  <h1>什么时候值得卸载：<span class="hl">算出你的临界点</span></h1>
+  <div class="sub">卸载并不是越早上越好。显存装得下全部会话时，存储层用不上，还要付写入开销；上下文变长、显存开始淘汰之后，从存储读回才比重算划算。填入并发、显存与带宽，估算临界点落在哪里。</div>
+  <div class="thGrid">
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>开启卸载后，平均首 token 时间降低多少（按上下文长度）</div>
+      <svg viewBox="0 0 660 330" id="thSvg" style="width:100%; max-height:330px"></svg>
+      <div class="cvLg">
+        <span><span class="sw" style="background:#0067c5"></span>估算曲线（随右侧参数变化）</span>
+        <span><span class="sw" style="background:#fff; border:2px solid #d97b16; border-radius:50%"></span>社区实测点（默认配置）</span>
+        <span><span class="sw" style="background:rgba(214,54,90,.16)"></span>变慢</span>
+        <span><span class="sw" style="background:rgba(217,123,22,.16)"></span>收益有限</span>
+        <span><span class="sw" style="background:rgba(15,157,99,.14)"></span>值得部署（≥ 30%）</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="dt"><span class="bar"></span>你的环境 <button class="gdsBtn" id="thReset" style="margin-left:auto">恢复实测配置</button></div>
+      <div class="sliderRow"><label>并发会话数</label><input type="range" id="thU" min="1" max="64" step="1" value="8"><div class="val" id="thUV"></div></div>
+      <div class="sliderRow"><label>可用于 KV 的显存</label><input type="range" id="thM" min="4" max="120" step="1" value="19"><div class="val" id="thMV"></div></div>
+      <div class="sliderRow"><label>存储读带宽</label><input type="range" id="thB" min="0" max="9" step="1" value="2"><div class="val" id="thBV"></div></div>
+      <div class="sliderRow"><label>GPU 预填充速度</label><input type="range" id="thG" min="0" max="6" step="1" value="2"><div class="val" id="thGV"></div></div>
+      <div class="sliderRow"><label>业务上下文长度</label><input type="range" id="thN" min="2" max="64" step="1" value="24"><div class="val" id="thNV"></div></div>
+      <div class="segRow" style="margin:2px 0 0">
+        <span class="lb">典型负载：</span>
+        <button class="gdsBtn" data-thw="3">简单问答 1–4K</button>
+        <button class="gdsBtn" data-thw="12">RAG 4–30K</button>
+        <button class="gdsBtn" data-thw="40">编程助手 20K+</button>
+        <button class="gdsBtn" data-thw="56">智能体 30K+</button>
+      </div>
+      <div class="thStats">
+        <div class="stat"><div class="v kpi" id="thN1" style="color:var(--dram)">—</div><div class="l">显存开始装不下<br>存储层开始被用到</div></div>
+        <div class="stat"><div class="v kpi" id="thN0" style="color:var(--cyan)">—</div><div class="l">盈亏点<br>卸载开始变快</div></div>
+        <div class="stat"><div class="v kpi" id="thN2" style="color:var(--green)">—</div><div class="l">值得部署起点<br>TTFT 降低 ≥ 30%</div></div>
+      </div>
+      <div class="thVerdict">
+        <div><span class="z" id="thZ"></span><b id="thZT" style="font-size:13.5px"></b></div>
+        <div class="nums">
+          <span>不卸载 <b id="thTb">—</b></span>
+          <span>卸载 <b id="thTo">—</b></span>
+          <span>变化 <b id="thTd">—</b></span>
+          <span>每会话 KV <b id="thS">—</b></span>
+        </div>
+        <div class="why" id="thWhy"></div>
+      </div>
+    </div>
+  </div>
+  <div class="thZones">
+    <div class="panel"><div class="k" style="color:var(--dram)">规则一 · 容量</div><div class="t">并发 × 上下文 × 每 token KV ＞ 空闲显存</div><div class="d">超过这条线，显存才开始淘汰，存储层才有机会命中。并发翻倍，这个门槛减半。</div></div>
+    <div class="panel"><div class="k" style="color:var(--cyan)">规则二 · 带宽</div><div class="t">读回时间 = KV 体积 ÷ 存储带宽</div><div class="d">读回要比重算快才划算。带宽翻倍，读回时间减半，临界点向更短的上下文移动。</div></div>
+    <div class="panel"><div class="k" style="color:var(--violet)">规则三 · 平均值</div><div class="t">命中率 × 读回耗时 + 未命中率 × 重算耗时</div><div class="d">平均 TTFT 按命中与未命中加权。实测中 20K 以上误差在 3–10%，更短的上下文受内存层影响偏差较大。</div></div>
+    <div class="panel"><div class="k" style="color:var(--teal)">自测四步</div><div class="t">先测服务能力，再按 65% 负载跑</div><div class="d">从日志的 prompt_tokens 取中位数与 P90；负载超过服务能力时，缓存收益会被排队时间淹没；同时观察外部缓存命中率。</div></div>
+  </div>
+  <div class="note">※ 估算模型按 NetApp 社区实测标定：单卡 A100-40GB、Qwen3-8B（每 token KV 144 KB）、vLLM 0.28 + LMCache、AFF A400（与其他负载共用），NFSv4.1 over TCP，nconnect=16，未启用 pNFS 与 RDMA，单客户端实测读带宽 3.55 GB/s。曲线为方向性估算，非性能承诺；超出 28K 的部分为外推，更换模型或 GPU 后应以自身实测为准。资料来源：NetApp 社区博文 "What KV cache offload to ordinary NFS is actually worth"（讨论帖 468427）。</div>
+</section>
+
 <!-- ═══════ 幕7 · 框架组合与 CMX 展望 ═══════ -->
 <section class="scene" id="sc5v">
   <h1>已验证的框架组合，与 <span class="hl">G3.5 上下文内存层</span></h1>
@@ -822,7 +903,7 @@ var _hmt = _hmt || [];
     <span class="flowNode" style="border-color:var(--net); color:var(--net)">AFX 池 · 归档/共享</span>
   </div>
   <div class="quote">「 <span class="hl">让算力回归计算，让存储承载记忆</span> 」</div>
-  <div class="note" style="text-align:center; margin-top:14px">除「NetApp 实测」一幕外，本页性能数字均为示意值，用于演示机制；可在源码 MODELS / CAPS 中替换为实测数据。<br>
+  <div class="note" style="text-align:center; margin-top:14px">除「NetApp 实测」「临界点」两幕外，本页性能数字均为示意值，用于演示机制；可在源码 MODELS / CAPS 中替换为实测数据。<br>
   注：本演示聚焦 <b>AFX 存储</b>承载的 KV Cache 分层数据路径；<b>NetApp AIDE</b>（AI Data Engine）为 AFX 之上的数据服务层，不在本演示范围内。</div>
 </section>
 
@@ -998,8 +1079,8 @@ const fmtTok = kb => kb>=1024 ? (kb/1024).toFixed(2)+' MB' : kb>=100 ? kb.toFixe
 const sleep = ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ═══════════ 导航 ═══════════ */
-const SCENES = ['sc0','sc1','sc2','sc2s','sc3','sc4','sc5f','sc5m','sc5n','sc5v','sc5','sc6'];
-const NAMES  = ['① 智能体','② 显存墙','③ 分层','④ 共享层','⑤ 命中','⑥ TTFT','⑦ 业界研究','⑧ 指标','⑨ 实测','⑩ 展望','⑪ 总结','⑫ 术语'];
+const SCENES = ['sc0','sc1','sc2','sc2s','sc3','sc4','sc5f','sc5m','sc5n','sc5t','sc5v','sc5','sc6'];
+const NAMES  = ['① 智能体','② 显存墙','③ 分层','④ 共享层','⑤ 命中','⑥ TTFT','⑦ 业界研究','⑧ 指标','⑨ 实测','⑩ 临界点','⑪ 展望','⑫ 总结','⑬ 术语'];
 let cur = 0;
 const tabsEl = $('tabs'), dotsEl = $('dots');
 SCENES.forEach((_,i)=>{
@@ -1495,6 +1576,91 @@ document.querySelectorAll('[data-cvm]').forEach(x=>x.onclick=()=>{
   document.querySelectorAll('[data-cvm]').forEach(y=>y.classList.toggle('on',y===x)); cvM=x.dataset.cvm; cvDraw(); });
 $('cvX').oninput=cvDraw;
 
+/* ═══════════ 幕 · 卸载临界点计算器（按社区实测标定的估算模型） ═══════════
+   重算  R(n) = (0.088n + 0.0015n²) / GPU速度        n 为上下文（K tokens）
+   显存命中率 g = 0.95（装得下）或 0.95·r⁻⁸（r = 并发×每会话 KV ÷ 显存，LRU 轮转淘汰）
+   不卸载 = g·显存命中耗时 + (1−g)·R
+   卸载   = g·显存命中耗时 + (1−g)·(KV÷带宽 + 少量计算) + 写入开销
+   参数由 8K/16K/24K/28K 四个实测点拟合，基线误差 ≤ 7%，卸载侧 ≤ 12%（8K 处高估变慢幅度） */
+const TH_BW=[1,2,3.55,5,8,12,16,25,40,50], TH_GS=[0.5,0.75,1,1.5,2,3,4];
+const TH_DEF={U:8,M:19,B:2,G:2,N:24};
+const TH_MEAS=[[8,-8.9],[16,13.9],[24,59.2],[28,57.9]];
+const thKV=n=>n*1024*144*1024/1e9;                        // 每会话 KV（GB）：Qwen3-8B 144 KB/token
+function thCalc(n,p){
+  const S=thKV(n), r=p.U*S/p.M, g=r<=1?0.95:0.95*Math.pow(r,-8);
+  const t0=0.0185625*n/p.gs, R=(0.088*n+0.0015*n*n)/p.gs;
+  const hit=S/p.bw+0.006*n/p.gs, wr=0.029*S*3.55/p.bw;
+  const base=g*t0+(1-g)*R, off=g*t0+(1-g)*hit+wr;
+  return {S,r,g,R,hit,base,off,gain:1-off/base};
+}
+function thParams(){
+  return {U:+$('thU').value, M:+$('thM').value, bw:TH_BW[+$('thB').value], gs:TH_GS[+$('thG').value], N:+$('thN').value};
+}
+function thDraw(){
+  const p=thParams(), svg=$('thSvg'); svg.innerHTML='';
+  const isDef=p.U===TH_DEF.U&&p.M===TH_DEF.M&&+$('thB').value===TH_DEF.B&&+$('thG').value===TH_DEF.G;
+  $('thUV').textContent=p.U+' 个';
+  $('thMV').textContent=p.M+' GB';
+  $('thBV').textContent=p.bw+' GB/s';
+  $('thGV').textContent=p.gs+'× A100';
+  $('thNV').textContent=p.N+'K';
+  const L=50,R=640,T=16,B=286, X0=2,X1=64, Y0=-60,Y1=100;
+  const px=n=>L+(R-L)*(n-X0)/(X1-X0), py=v=>B-(B-T)*(Math.max(Y0,Math.min(Y1,v))-Y0)/(Y1-Y0);
+  const pts=[]; let n1=null,n0=null,n2=null;
+  for(let n=X0;n<=X1+1e-9;n+=0.25){
+    const c=thCalc(n,p), v=c.gain*100; pts.push([n,v]);
+    if(n1===null&&c.r>1) n1=n;
+    if(n1!==null&&n0===null&&v>0) n0=n;
+    if(n2===null&&v>=30) n2=n;
+  }
+  // 背景：按区段着色
+  for(let i=0;i<pts.length-1;i++){
+    const v=pts[i][1], col=v<0?'rgba(214,54,90,.10)':v<30?'rgba(217,123,22,.11)':'rgba(15,157,99,.09)';
+    sv('rect',{x:px(pts[i][0]),y:T,width:px(pts[i+1][0])-px(pts[i][0])+.6,height:B-T,fill:col},svg);
+  }
+  for(let v=Y0;v<=Y1;v+=20){
+    sv('line',{x1:L,x2:R,y1:py(v),y2:py(v),stroke:v===0?'#8b94b3':'#d9e0ef','stroke-width':v===0?1.4:1},svg);
+    sv('text',{x:L-8,y:py(v)+4,'text-anchor':'end','font-size':11,fill:'#8b94b3'},svg,(v>0?'+':'')+v+'%');
+  }
+  sv('line',{x1:L,x2:R,y1:py(30),y2:py(30),stroke:'#0f9d63','stroke-width':1.2,'stroke-dasharray':'5 4'},svg);
+  sv('text',{x:R-4,y:py(30)-5,'text-anchor':'end','font-size':10.5,fill:'#0f9d63','font-weight':700},svg,'值得部署线 30%');
+  [2,8,16,24,32,40,48,56,64].forEach(n=>sv('text',{x:px(n),y:B+17,'text-anchor':'middle','font-size':11,fill:'#8b94b3'},svg,n+'K'));
+  sv('text',{x:R,y:B+35,'text-anchor':'end','font-size':11,fill:'#5b6788'},svg,'上下文长度（tokens）· 纵轴为 TTFT 降低幅度，负值表示变慢');
+  sv('line',{x1:px(28),x2:px(28),y1:T,y2:B,stroke:'#8b94b3','stroke-width':1,'stroke-dasharray':'2 4'},svg);
+  sv('text',{x:px(28)+6,y:T+14,'font-size':10.5,fill:'#8b94b3'},svg,'28K 以上为外推');
+  if(n1!==null){
+    sv('line',{x1:px(n1),x2:px(n1),y1:T,y2:B,stroke:'#d97b16','stroke-width':1.4,'stroke-dasharray':'4 3'},svg);
+    sv('text',{x:px(n1)+5,y:B-8,'font-size':10.5,fill:'#d97b16','font-weight':700},svg,'显存装满 '+n1.toFixed(0)+'K');
+  }
+  sv('polyline',{points:pts.map(([n,v])=>px(n)+','+py(v)).join(' '),fill:'none',stroke:'#0067c5','stroke-width':2.8,'stroke-linejoin':'round'},svg);
+  TH_MEAS.forEach(([n,v])=>{
+    sv('circle',{cx:px(n),cy:py(v),r:5.5,fill:'#fff',stroke:'#d97b16','stroke-width':2.4,opacity:isDef?1:.3},svg);
+    if(isDef) sv('text',{x:n===24?px(n)-8:px(n)+8,y:py(v)+(v<0?14:-7),'text-anchor':n===24?'end':'start','font-size':10.5,fill:'#d97b16','font-weight':700},svg,(v<0?'变慢 ':'降低 ')+Math.abs(v)+'%');
+  });
+  const cur=thCalc(p.N,p), gv=cur.gain*100;
+  sv('line',{x1:px(p.N),x2:px(p.N),y1:T,y2:B,stroke:'#182342','stroke-width':1.2,opacity:.55},svg);
+  sv('circle',{cx:px(p.N),cy:py(gv),r:7,fill:'#0067c5',stroke:'#fff','stroke-width':2.5},svg);
+  const fK=n=>n===null?'> 64K':n.toFixed(0)+'K';
+  $('thN1').textContent=fK(n1); $('thN0').textContent=fK(n0); $('thN2').textContent=fK(n2);
+  const z=gv<0?['z1','变慢：这个上下文长度不建议开启卸载']:gv<30?['z2','收益有限：上线前先按自身负载实测']:['z3','值得部署：大部分请求改为从存储读回'];
+  $('thZ').className='z '+z[0]; $('thZ').textContent=p.N+'K';
+  $('thZT').textContent=z[1];
+  $('thTb').textContent=fmtS(cur.base); $('thTo').textContent=fmtS(cur.off);
+  $('thTd').textContent=(gv>=0?'降低 ':'变慢 ')+Math.abs(gv).toFixed(0)+'%';
+  $('thTd').style.color=gv<0?'var(--red)':gv<30?'var(--dram)':'var(--green)';
+  $('thS').textContent=cur.S.toFixed(2)+' GB';
+  const tot=(p.U*cur.S).toFixed(1);
+  let why;
+  if(cur.r<=1) why=`${p.U} 个会话共需 ${tot} GB KV，${p.M} GB 显存装得下，请求基本由显存前缀缓存命中，存储层几乎用不上；卸载仍要持续写入，这部分开销让 TTFT 略有上升。`;
+  else if(cur.hit>=cur.R) why=`活跃 KV ${tot} GB 已超出显存，但从存储读回一次要 ${fmtS(cur.hit)}，比重算的 ${fmtS(cur.R)} 还慢。提高存储带宽，或改用更长上下文的业务再评估。`;
+  else if(gv<30) why=`活跃 KV ${tot} GB 刚超出 ${p.M} GB 显存，仍有约 ${Math.round(cur.g*100)}% 的请求由显存命中；读回（${fmtS(cur.hit)}）虽快于重算（${fmtS(cur.R)}），收益被写入开销抵消一部分。`;
+  else why=`活跃 KV ${tot} GB 远超 ${p.M} GB 显存，显存命中率降到约 ${Math.round(cur.g*100)}%；读回一次 ${fmtS(cur.hit)}，重算一次 ${fmtS(cur.R)}，未命中的请求改从存储读回。`;
+  $('thWhy').textContent=why;
+}
+['thU','thM','thB','thG','thN'].forEach(id=>$(id).oninput=thDraw);
+document.querySelectorAll('[data-thw]').forEach(b=>b.onclick=()=>{ $('thN').value=b.dataset.thw; thDraw(); });
+$('thReset').onclick=()=>{ $('thU').value=TH_DEF.U; $('thM').value=TH_DEF.M; $('thB').value=TH_DEF.B; $('thG').value=TH_DEF.G; $('thN').value=TH_DEF.N; thDraw(); };
+
 /* ═══════════ 幕7 · 已验证组合（讲者材料第 15 页） ═══════════ */
 const VF=[
   ['vLLM','原生卸载连接器','文件系统',['Novus|NetApp Novus（pNFS v4.2）','ONTAP|ONTAP（pNFS v4.1 / RDMA）'],'rec'],
@@ -1637,7 +1803,7 @@ switchModel('gqa70b');
 setGDS(true);
 show(0);
 setTimeout(s4update,50);
-msDraw('cpu'); cvDraw(); vfDraw('all'); agReset(); shDraw(true);
+msDraw('cpu'); cvDraw(); thDraw(); vfDraw('all'); agReset(); shDraw(true);
 </script>
 </body>
 </html>
