@@ -294,7 +294,7 @@ var _hmt = _hmt || [];
         <div class="chip" data-jump="4">架构原理</div>
         <div class="chip" data-jump="9">扩展与韧性</div>
         <div class="chip" data-jump="12">接入与安全</div>
-        <div class="chip" data-jump="14">交付与选型</div>
+        <div class="chip" data-jump="15">交付与选型</div>
       </div>
       <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 4 分钟讲解视频</button></div>
       <div class="an" style="--d:.56s;margin-top:30px">
@@ -338,16 +338,16 @@ var _hmt = _hmt || [];
           <div class="go">进入 →</div>
         </div>
         <div class="dc" style="--ac:#6a5ad4" data-jump="12">
-          <div class="hd"><span class="nm">接入与安全</span><span class="ct">2 幕</span></div>
-          <ul><li>标准 NFS 客户端、RDMA 与 GPUDirect Storage</li><li>多租户隔离层次与加密现状</li></ul>
+          <div class="hd"><span class="nm">接入与安全</span><span class="ct">3 幕</span></div>
+          <ul><li>标准 NFS 客户端、RDMA 与 GPUDirect Storage</li><li>推理 KV Cache 卸载的框架接入</li><li>多租户隔离层次与加密现状</li></ul>
           <div class="go">进入 →</div>
         </div>
-        <div class="dc" style="--ac:#0c8e86" data-jump="14">
+        <div class="dc" style="--ac:#0c8e86" data-jump="15">
           <div class="hd"><span class="nm">交付与选型</span><span class="ct">5 幕</span></div>
           <ul><li>适用负载与产品组合中的位置</li><li>首发范围、后续规划与交付形态</li><li>拟收购 PEAK:AIO 与同类方案对照</li></ul>
           <div class="go">进入 →</div>
         </div>
-        <div class="dc" style="--ac:#123a7a" data-jump="19">
+        <div class="dc" style="--ac:#123a7a" data-jump="20">
           <div class="hd"><span class="nm">总结</span><span class="ct">1 幕</span></div>
           <ul><li>四点价值与评估时需要确认的事项</li><li>参考资料与信息时点</li></ul>
           <div class="go">进入 →</div>
@@ -921,11 +921,59 @@ var _hmt = _hmt || [];
     </div>
   </section>
 
+  <!-- ══════════════════ 幕 · KV Cache 卸载 ══════════════════ -->
+  <section class="scene" data-sec="接入与安全" data-nav="KV Cache 卸载">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>接入与安全 · 02</span></div>
+        <h1>推理 KV Cache 卸载：<span class="g">挂载一个目录即可接入</span></h1>
+        <p class="lead">推理引擎把显存放不下的 KV Cache 写到共享层，再次命中时直接读回，省去重新预填充。Novus 与 ONTAP 一样走 pNFS，此前在 ONTAP pNFS 上验证过的卸载方法同样适用：推理框架指向挂载目录，不需要修改引擎。切换框架查看配置要点。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-kvf="vllm" data-toggle-group="kvf">vLLM 原生卸载连接器</button>
+            <button class="btn" data-kvf="lmc" data-toggle-group="kvf">LMCache 多进程模式</button>
+            <button class="btn" data-kvf="sgl" data-toggle-group="kvf">SGLang HiCache</button>
+            <span class="hint" style="margin-left:auto" id="kvfState"></span>
+          </div>
+          <svg viewBox="0 0 640 250" id="kvfSvg" style="max-height:250px"></svg>
+          <div class="code" id="kvfCode" style="margin-top:10px"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>三层 KV Cache 结构</h3>
+            <div class="li"><b>热层 · GPU 显存</b>：正在解码的会话。</div>
+            <div class="li"><b>第二层 · CPU 内存</b>：示例配置每台服务器 100 GB，显存溢出后先落在这里。</div>
+            <div class="li"><b>第三层 · Novus pNFS</b>：所有 GPU 服务器共享；任一节点生成的 KV 块，其他节点都能读回，请求可路由到任意节点而不必重算。</div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>框架验证情况</h3>
+            <div class="li ok"><b>vLLM 原生卸载连接器</b>：文件系统后端，已列入 Novus 验证组合。</div>
+            <div class="li ok"><b>LMCache 多进程模式</b>：nixl_store_dynamic（GDS）与 fs_native 两种后端已在 Novus 上验证。</div>
+            <div class="li warn"><b>SGLang HiCache</b>：NIXL 后端已在 ONTAP pNFS 上测试，Novus 提供配置示例。</div>
+            <div class="li"><b>横向对比</b>：在 ONTAP pNFS 上的同一基准中，vLLM 原生卸载连接器整体吞吐最高。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g3 an" style="--d:.3s;margin-top:13px">
+        <div class="vc"><span class="k">接入方式</span><div class="t">标准协议，无专有客户端</div><div class="d">KV Cache 以文件形式写入 pNFS 挂载目录，沿用内核 NFS 客户端与 GPUDirect Storage，不需要额外的缓存代理。</div></div>
+        <div class="vc"><span class="k">初步测试</span><div class="t">正式结果待发布</div><div class="d">NetApp 实验室的初步测试中，三层结构相对仅 GPU + CPU 内存的两层基线，平均 TTFT 下降明显，预填充吞吐接近翻倍 ①。</div></div>
+        <div class="vc"><span class="k">何时值得</span><div class="t">先估算临界点</div><div class="d">显存装得下全部会话时，卸载只增加写入开销；上下文越长、并发越高，收益越大。可用 KV Cache 演示第 10 幕「临界点」按自身参数估算。</div></div>
+      </div>
+      <p class="note an" style="--d:.34s">① 初步测试观测到平均 TTFT 降低约 20 倍、预填充吞吐提升接近 2 倍，测试仍在进行，模型与负载条件未公布，非性能承诺。首发范围表中的「外部缓存集成」与本幕的文件系统挂载方式是两回事，前者仍属后续规划。命令为示意，参数以各框架版本文档为准。依据 NetApp 社区博文 "KV cache offloading – 20x reduction in TTFT with NetApp Novus"（讨论帖 468497）、"KVCache offloading with SGLang HiCache and NetApp pNFS"（讨论帖 468496）及 INSIGHT 2026 场次 BKO1025 资料整理。</p>
+    </div>
+  </section>
+
   <!-- ══════════════════ 幕 11 · 多租户与安全 ══════════════════ -->
   <section class="scene" data-sec="接入与安全" data-nav="多租户与安全">
     <div class="wrap">
       <div class="an">
-        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>接入与安全 · 02</span></div>
+        <div class="secmark" style="--ac:#6a5ad4"><i></i><span>接入与安全 · 03</span></div>
         <h1>一套部署，<span class="g">多个租户</span>相互隔离</h1>
         <p class="lead">面向算力服务的场景，Novus 从命名空间、网络、节点池到身份与密钥提供逐层隔离。切换两种隔离强度，看资源如何划分。</p>
       </div>
@@ -1045,7 +1093,8 @@ var _hmt = _hmt || [];
             <tr data-s="plan"><td class="h">传输中加密</td><td><span class="tag warn">后续规划</span></td><td>高优先级路线图项</td></tr>
             <tr data-s="plan"><td class="h">统一管理与控制平面</td><td><span class="tag warn">后续规划</span></td><td>首发时 ONTAP 与 Data Director 分别管理，统一管理在开发中</td></tr>
             <tr data-s="plan"><td class="h">分层与纠删码</td><td><span class="tag warn">后续规划</span></td><td>数据分层、StorageGRID 分层集成、纠删码</td></tr>
-            <tr data-s="plan"><td class="h">推理 KV cache 外部缓存</td><td><span class="tag warn">后续规划</span></td><td>KV cache 类负载可承载，性能测试进行中；外部缓存集成属后续范围</td></tr>
+            <tr data-s="ok"><td class="h">推理 KV Cache 卸载</td><td><span class="tag ok">已验证</span></td><td>通过标准 pNFS 挂载接入 vLLM 原生卸载连接器、LMCache 多进程模式；SGLang HiCache 提供配置示例；性能测试进行中（见「KV Cache 卸载」一幕）</td></tr>
+            <tr data-s="plan"><td class="h">推理 KV cache 外部缓存集成</td><td><span class="tag warn">后续规划</span></td><td>不同于上一行的文件系统挂载方式；具体形态与时间以 NetApp 正式发布为准</td></tr>
             <tr data-s="plan"><td class="h">NVIDIA Cloud Partner 认证</td><td><span class="tag warn">计划中</span></td><td>与 NVIDIA 共同推进，目标 Q4 CY26 – Q1 CY27；AFF A90 本身已获 NCP 认证，本次认证对象是 Data Director 元数据服务器</td></tr>
             <tr data-s="no"><td class="h">InfiniBand</td><td><span class="tag no">不支持</span></td><td>仅以太网；InfiniBand 环境可考虑 NetApp E-Series + Lustre 方案</td></tr>
             <tr data-s="no"><td class="h">现有 ONTAP 系统加入或升级</td><td><span class="tag no">不支持</span></td><td>现有 AFF / AFX 不能加入 Novus 集群，也不能升级为 Novus；数据可通过工具复制</td></tr>
@@ -1223,6 +1272,7 @@ var _hmt = _hmt || [];
           <div class="li">NetApp Novus 技术问答与产品说明，2026 年 10 月</div>
           <div class="li">NetApp 官方博客《Novus: AI factory storage for GPU clouds at zettabyte scale》，Arindam Banerjee，2026-09-29</div>
           <div class="li">NetApp 新闻稿：拟收购 PEAK:AIO，2026-09-25</div>
+          <div class="li">NetApp 社区博文：Novus 的 KV Cache 卸载（讨论帖 468497）、SGLang HiCache 与 pNFS（讨论帖 468496）</div>
           <div class="li">行业媒体与分析机构报道：StorageReview、Blocks &amp; Files、NAND Research、Futurum、Computer Weekly；pNFS Lattice 项目资料（Linux 基金会）</div>
           <div class="li">NetApp Novus Overview 技术简报（Field Roadmap Webcast），2026-09-22</div>
           <div class="li">RFC 8435 · pNFS Flexible File Layout；RFC 8881 · NFSv4.1；RFC 7862 · NFSv4.2</div>
@@ -1671,6 +1721,52 @@ function drawPeak(k){
   $('#peakSvg').innerHTML = h;
 }
 toggleGroup('data-peak', drawPeak);
+
+/* ── KV Cache 卸载：三种框架的接入示意 ── */
+const KVF = {
+  vllm:{ eng:'vLLM', conn:'OffloadingConnector', back:'fs 后端', state:'已列入 Novus 验证组合',
+    note:'分层规格 TieringOffloadingSpec：CPU 内存为第二层，Novus 挂载目录为第三层。',
+    code:'vllm serve Qwen/Qwen3-8B --kv-transfer-config \'{\n  "kv_connector": "OffloadingConnector",  "kv_role": "kv_both",\n  "kv_connector_extra_config": {\n    "spec_name": "TieringOffloadingSpec",\n    "cpu_bytes_to_use": 100000000000,          # CPU 内存层 100 GB\n    "secondary_tiers": [{ "type": "fs", "root_dir": "/mnt/novus" }] }}\'' },
+  lmc:{ eng:'vLLM', conn:'LMCacheMPConnector', back:'LMCache 服务 · fs_native / nixl_store_dynamic', state:'两种后端已在 Novus 验证',
+    note:'LMCache 作为独立服务运行，vLLM 通过连接器接入。',
+    code:'lmcache server --l1-size-gb 100 --chunk-size 256 \\\n  --l2-adapter \'{ "type": "fs_native", "base_path": "/mnt/novus" }\'\n# 或：{ "type": "nixl_store_dynamic", "backend": "GDS", ... }\n\nvllm serve Qwen/Qwen3-8B --kv-transfer-config \'{\n  "kv_connector": "LMCacheMPConnector",  "kv_role": "kv_both", ... }\'' },
+  sgl:{ eng:'SGLang', conn:'HiCache', back:'NIXL 后端 · GDS_MT', state:'ONTAP 已测 · Novus 提供配置',
+    note:'HiCache 内置于 SGLang，通过 NIXL 后端把第三层指向挂载目录。',
+    code:'SGLANG_HICACHE_NIXL_BACKEND_STORAGE_DIR=/mnt/novus \\\npython3 -m sglang.launch_server --model-path Qwen/Qwen3-8B \\\n  --page-size 256 --enable-hierarchical-cache \\\n  --hicache-size 100 --hicache-write-policy write_through \\\n  --hicache-storage-backend nixl \\\n  --hicache-storage-backend-extra-config @nixl_backend_config.toml' }
+};
+function drawKvf(k){
+  const f = KVF[k];
+  let h = '<defs><marker id="kvA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0067c5"/></marker></defs>';
+  [30,340].forEach((x,i)=>{
+    h += '<rect x="'+x+'" y="8" width="270" height="128" rx="12" fill="#fff" stroke="#c9d4e6"/>'
+       + '<text x="'+(x+14)+'" y="27" font-size="11" font-weight="750" fill="#123a7a">GPU 服务器 '+(i+1)+'</text>'
+       + '<text x="'+(x+256)+'" y="27" text-anchor="end" font-size="10" fill="#5c6a8a">'+f.eng+'</text>'
+       + '<rect x="'+(x+14)+'" y="36" width="242" height="26" rx="7" fill="#f1eefc" stroke="#a99fe6"/>'
+       + '<text x="'+(x+135)+'" y="53" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a3db0">'+f.conn+'</text>'
+       + '<rect x="'+(x+14)+'" y="70" width="116" height="54" rx="8" fill="#fdecef" stroke="#e79aab"/>'
+       + '<text x="'+(x+72)+'" y="92" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b02a4b">GPU 显存</text>'
+       + '<text x="'+(x+72)+'" y="110" text-anchor="middle" font-size="9.5" fill="#b02a4b">热层</text>'
+       + '<rect x="'+(x+140)+'" y="70" width="116" height="54" rx="8" fill="#fdf3e4" stroke="#e8b46a"/>'
+       + '<text x="'+(x+198)+'" y="92" text-anchor="middle" font-size="10.5" font-weight="700" fill="#a35f08">CPU 内存</text>'
+       + '<text x="'+(x+198)+'" y="110" text-anchor="middle" font-size="9.5" fill="#a35f08">第二层 · 100 GB</text>';
+  });
+  h += '<line x1="165" y1="140" x2="165" y2="172" stroke="#0067c5" stroke-width="2" marker-end="url(#kvA)"/>'
+     + '<text x="173" y="160" font-size="10" fill="#0067c5">写入 KV 块</text>'
+     + '<line x1="475" y1="172" x2="475" y2="140" stroke="#0067c5" stroke-width="2" marker-end="url(#kvA)"/>'
+     + '<text x="483" y="160" font-size="10" fill="#0067c5">读回，免重算</text>'
+     + '<rect x="30" y="176" width="580" height="66" rx="12" fill="#e8f3ff" stroke="#7fb0e6"/>'
+     + '<text x="46" y="196" font-size="11.5" font-weight="750" fill="#123a7a">NetApp Novus · 第三层（共享）</text>'
+     + '<text x="46" y="213" font-size="10" fill="#5c6a8a">pNFS 挂载 /mnt/novus · '+f.back+'</text>';
+  ['#d33a5c','#d5820f','#0e9a62','#6a5ad4','#0067c5'].forEach((c,i)=>{
+    h += '<rect x="'+(360+i*48)+'" y="190" width="40" height="22" rx="5" fill="'+c+'" opacity=".85"/>'
+       + '<text x="'+(380+i*48)+'" y="205" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">KV'+(i+1)+'</text>';
+  });
+  h += '<text x="46" y="232" font-size="10" fill="#5c6a8a">'+f.note+'</text>';
+  $('#kvfSvg').innerHTML = h;
+  $('#kvfCode').textContent = f.code;
+  $('#kvfState').textContent = f.state;
+}
+toggleGroup('data-kvf', drawKvf);
 
 /* ── 独立扩展 ── */
 function scaleCalc(){
