@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">联想 TS4300 带库配置工具界面示意图</title>
+  <desc id="desc">带库配置面板，按容量与驱动器需求评估模块数与槽位。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef7ff"/>
+      <stop offset="1" stop-color="#f8fbff"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0672ce"/>
+      <stop offset="1" stop-color="#00a7b5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#365b84" flood-opacity=".14"/>
+    </filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#78a9d3" stroke-opacity=".11"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <rect width="800" height="450" fill="url(#grid)"/>
+  <circle cx="715" cy="72" r="118" fill="#0d76cc" opacity=".055"/>
+  <g filter="url(#shadow)">
+    <rect x="65" y="48" width="670" height="354" rx="16" fill="#fff" stroke="#cddff0"/>
+  </g>
+  <path d="M65 98V64a16 16 0 0 1 16-16h638a16 16 0 0 1 16 16v34Z" fill="#f9fbfe"/>
+  <path d="M65 98H735" stroke="#dbe7f2"/>
+  <circle cx="91" cy="73" r="5" fill="#0672ce"/>
+  <text x="106" y="78" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#17304c">TS4300 Tape Library Planner</text>
+  <rect x="637" y="63" width="70" height="21" rx="10.5" fill="#e8f5ef"/>
+  <circle cx="653" cy="73.5" r="3.5" fill="#169b73"/>
+  <text x="662" y="77" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" font-weight="650" fill="#397064">VALID</text>
+
+  <g transform="translate(94 122)">
+    <text x="0" y="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" font-weight="700" fill="#637a93">LIBRARY STACK</text>
+    <rect x="0" y="26" width="262" height="50" rx="8" fill="#f4f8fc" stroke="#d7e4f0"/>
+    <text x="14" y="46" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#72869d">BASE 3U</text>
+    <rect x="14" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="29" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="44" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="59" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="74" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="89" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="104" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="119" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="134" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="149" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="164" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="179" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="194" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="209" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="224" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="239" y="54" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="0" y="84" width="262" height="50" rx="8" fill="#f4f8fc" stroke="#d7e4f0"/>
+    <text x="14" y="104" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#72869d">EXP 3U · 1</text>
+    <rect x="14" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="29" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="44" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="59" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="74" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="89" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="104" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="119" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="134" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="149" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="164" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="179" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="194" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="209" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="224" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="239" y="112" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="0" y="142" width="262" height="50" rx="8" fill="#f4f8fc" stroke="#d7e4f0"/>
+    <text x="14" y="162" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#72869d">EXP 3U · 2</text>
+    <rect x="14" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="29" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="44" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="59" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="74" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="89" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="104" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="119" y="170" width="11" height="12" rx="2" fill="#0672ce"/>
+    <rect x="134" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+    <rect x="149" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+    <rect x="164" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+    <rect x="179" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+    <rect x="194" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+    <rect x="209" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+    <rect x="224" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+    <rect x="239" y="170" width="11" height="12" rx="2" fill="#e6eef7"/>
+  </g>
+
+  <g transform="translate(386 134)">
+    <rect width="320" height="72" rx="12" fill="#f6f9fd" stroke="#d7e4f0"/>
+    <text x="20" y="26" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" font-weight="700" fill="#637a93">NATIVE CAPACITY · LTO-9</text>
+    <text x="20" y="58" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="28" font-weight="750" fill="#132f4d">720</text>
+    <text x="84" y="57" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" fill="#58728f">TB</text>
+    <text x="300" y="57" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#0672ce">40 槽 · 4 驱动器</text>
+  </g>
+  <g transform="translate(386 222)" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12" fill="#17304c">
+    <rect y="0" width="320" height="24" rx="6" fill="#f4f8fc"/><circle cx="14" cy="12" r="3.5" fill="#0672ce"/><text x="26" y="16">模块数 3 / 上限 7</text>
+    <rect y="30" width="320" height="24" rx="6" fill="#f4f8fc"/><circle cx="14" cy="42" r="3.5" fill="#0672ce"/><text x="26" y="46">驱动器 4 / 上限 21</text>
+    <rect y="60" width="320" height="24" rx="6" fill="#f4f8fc"/><circle cx="14" cy="72" r="3.5" fill="#0672ce"/><text x="26" y="76">槽位许可 40</text>
+    <rect y="90" width="320" height="24" rx="6" fill="#e8f5ef"/><circle cx="14" cy="102" r="3.5" fill="#169b73"/><text x="26" y="106">配置校验通过</text>
+  </g>
+</svg>

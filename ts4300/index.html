@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>联想 TS4300 带库配置评估与生成工具</title>
+<style>
+:root{
+  --blue:#0f62fe; --blue-d:#0353e9; --blue-l:#edf5ff;
+  --bg:#f4f6f9; --layer:#fff; --border:#e3e8ef;
+  --txt:#161616; --txt2:#525252; --txt3:#8d8d8d;
+  --ok:#24a148; --ok-bg:#defbe6; --err:#da1e28; --err-bg:#fff1f1;
+  --amber:#b28600; --amber-bg:#fdf6dd;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg); color:var(--txt); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+/* ---------- Header ---------- */
+.app-header{
+  background:#161616; color:#fff; padding:14px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+  background:var(--blue); color:#fff; font-weight:700; font-size:12px;
+  padding:5px 10px; letter-spacing:.5px; border-radius:3px;
+}
+.app-header h1{font-size:16px;font-weight:500;letter-spacing:.2px}
+.ver{font-size:12px;color:#a8a8a8}
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex; gap:0; background:#fff; border-bottom:1px solid var(--border);
+  padding:0 28px; position:sticky; top:53px; z-index:99;
+}
+.tab{
+  background:none; border:none; border-bottom:2px solid transparent;
+  padding:14px 20px; font-size:14px; color:var(--txt2); cursor:pointer;
+  font-family:inherit; transition:.15s; font-weight:400;
+}
+.tab:hover{background:#f7f9fc;color:var(--txt)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+/* ---------- Layout ---------- */
+main{padding:24px 28px 60px;max-width:1400px;margin:0 auto}
+.credit{margin-top:28px;text-align:center;font-size:12px;color:var(--txt3)}
+.panel{display:none;animation:fade .2s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.card{
+  background:var(--layer); border:1px solid var(--border); border-radius:6px;
+  margin-bottom:20px; overflow:hidden;
+}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 20px; border-bottom:1px solid var(--border); background:#fafbfd;
+}
+.card-head h2{font-size:14px;font-weight:600;letter-spacing:.2px;display:flex;align-items:center;gap:9px}
+.card-head h2::before{
+  content:''; width:3px; height:15px; background:var(--blue); border-radius:2px;
+}
+.card-body{padding:20px}
+.badge{
+  font-size:11px;padding:3px 9px;border-radius:20px;background:var(--blue-l);
+  color:var(--blue);font-weight:600;letter-spacing:.3px;
+}
+.badge.gray{background:#f0f0f0;color:var(--txt2)}
+/* ---------- Fields ---------- */
+.field-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;
+}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > span{font-size:12px;color:var(--txt2);font-weight:500;letter-spacing:.2px}
+.field input,.field select{
+  font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid #c6c6c6;
+  border-radius:3px;background:#fff;color:var(--txt);transition:.15s;width:100%;
+}
+.field input:focus,.field select:focus{
+  outline:2px solid var(--blue);outline-offset:-2px;border-color:var(--blue);
+}
+.field input:disabled,.field select:disabled{background:#f4f4f4;color:var(--txt3);cursor:not-allowed}
+/* 只读自动计算字段 */
+.field input[readonly]{
+  background:#eef4ff; color:var(--blue); font-weight:700; cursor:default;
+  border-color:#c9d9f7;
+}
+.field input[readonly]:focus{outline:none;}
+.field input[readonly]::-webkit-outer-spin-button,
+.field input[readonly]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.field input[readonly]{-moz-appearance:textfield;appearance:textfield}
+.field .hint{font-size:11px;color:var(--txt3);line-height:1.4}
+/* ---------- Result strip ---------- */
+.results{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px;background:var(--border);border:1px solid var(--border);
+  border-radius:4px;overflow:hidden;margin-top:20px;
+}
+.res-item{background:#fff;padding:14px 16px}
+.res-label{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px}
+.res-value{font-size:19px;font-weight:600;font-family:var(--mono);color:var(--txt);line-height:1.2}
+.res-value small{font-size:12px;font-weight:400;color:var(--txt2);margin-left:2px;font-family:inherit}
+.res-item.hl{background:var(--blue-l)}
+.res-item.hl .res-value{color:var(--blue)}
+/* ---------- Status ---------- */
+.status{
+  margin-top:18px;padding:13px 16px;border-radius:4px;font-size:13px;
+  display:flex;align-items:flex-start;gap:10px;border-left:3px solid;
+}
+.status.ok{background:var(--ok-bg);border-color:var(--ok);color:#0e6027}
+.status.err{background:var(--err-bg);border-color:var(--err);color:#a2191f}
+.status .ico{font-weight:700;font-size:15px;line-height:1.3}
+.status ul{margin:6px 0 0 16px}
+.status li{font-size:12.5px;line-height:1.7}
+/* ---------- Table ---------- */
+.tbl-wrap{overflow-x:auto}
+table.bom{width:100%;border-collapse:collapse;font-size:13px}
+table.bom th{
+  background:#f0f4f8;text-align:left;padding:11px 14px;font-weight:600;
+  font-size:12px;color:var(--txt2);letter-spacing:.3px;border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+table.bom td{padding:11px 14px;border-bottom:1px solid #f0f2f5;vertical-align:middle}
+table.bom tbody tr:hover{background:#fafcff}
+table.bom tbody tr:last-child td{border-bottom:none}
+.cat-cell{font-weight:600;white-space:nowrap}
+.pn{font-family:var(--mono);font-size:12.5px;color:var(--blue);font-weight:600;white-space:nowrap}
+.pn.na{color:var(--txt3);font-weight:400}
+.desc{color:var(--txt2);font-size:12.5px}
+.num{font-family:var(--mono);text-align:center;white-space:nowrap}
+.num.total{font-weight:700;color:var(--txt);font-size:13.5px}
+.note{font-size:11.5px;color:var(--txt3);max-width:280px;line-height:1.5}
+.chip{
+  display:inline-block;padding:2px 8px;border-radius:3px;font-size:11.5px;
+  font-family:var(--mono);font-weight:600;background:var(--blue-l);color:var(--blue);
+}
+/* ---------- Reference ---------- */
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.ref-card{border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.ref-card h3{
+  font-size:12px;font-weight:600;padding:10px 14px;background:#f0f4f8;
+  color:var(--txt2);letter-spacing:.4px;text-transform:uppercase;
+}
+.ref-list{list-style:none}
+.ref-list li{
+  display:flex;justify-content:space-between;gap:12px;padding:9px 14px;
+  border-bottom:1px solid #f4f6f9;font-size:12.5px;
+}
+.ref-list li:last-child{border-bottom:none}
+.ref-list .k{color:var(--txt2)}
+.ref-list .v{font-family:var(--mono);color:var(--blue);font-weight:600;white-space:nowrap;text-align:right}
+/* ---------- Responsive ---------- */
+@media (max-width:720px){
+  .app-header{padding:12px 16px}
+  .app-header h1{font-size:13px}
+  .tabs{padding:0 8px;overflow-x:auto}
+  .tab{padding:12px 14px;font-size:13px;white-space:nowrap}
+  main{padding:16px 12px 40px}
+  .card-body{padding:16px}
+  .res-value{font-size:17px}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="logo">TS4300</span>
+    <h1>联想 TS4300 带库配置评估与生成工具</h1>
+  </div>
+  <span class="ver">v2.1</span>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="eval">① 单台配置评估</button>
+  <button class="tab" data-tab="gen">② 配置清单生成</button>
+  <button class="tab" data-tab="data">③ 产品数据参考</button>
+</nav>
+
+<main>
+
+  <!-- ============ 面板一：单台配置评估 ============ -->
+  <section class="panel active" id="panel-eval">
+
+    <div class="card">
+      <div class="card-head">
+        <h2>磁带容量评估</h2>
+        <span class="badge">单台 TS4300 · 机架空间 ≤ 42U</span>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <label class="field">
+            <span>备份容量 (TB)</span>
+            <input type="number" id="e-backup" value="200" min="1" step="1">
+          </label>
+          <label class="field">
+            <span>驱动器规格</span>
+            <select id="e-drive">
+              <option value="8">LTO8</option>
+              <option value="9">LTO9</option>
+              <option value="10" selected>LTO10</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>磁带双副本</span>
+            <select id="e-dup">
+              <option value="YES" selected>YES</option>
+              <option value="NO">NO</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>清洗带数量 (盘)</span>
+            <input type="number" id="e-clean" value="3" min="0" step="1">
+          </label>
+        </div>
+
+        <div class="results">
+          <div class="res-item">
+            <span class="res-label">磁带可用容量</span>
+            <span class="res-value" id="r-usable">—</span>
+          </div>
+          <div class="res-item">
+            <span class="res-label">磁带物理容量</span>
+            <span class="res-value" id="r-physical">—</span>
+          </div>
+          <div class="res-item">
+            <span class="res-label">磁带数量</span>
+            <span class="res-value" id="r-tape">—</span>
+          </div>
+          <div class="res-item">
+            <span class="res-label">双副本磁带</span>
+            <span class="res-value" id="r-copy">—</span>
+          </div>
+          <div class="res-item hl">
+            <span class="res-label">磁带总数量</span>
+            <span class="res-value" id="r-total">—</span>
+          </div>
+          <div class="res-item hl">
+            <span class="res-label">带库插槽数量</span>
+            <span class="res-value" id="r-slots">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>带库配置评估</h2>
+        <span class="badge gray">驱动器 / 柜体 / 吞吐量</span>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <label class="field">
+            <span>全高驱动器数量 (FH)</span>
+            <input type="number" id="e-fh" value="1" min="0" max="14" step="1">
+          </label>
+          <label class="field">
+            <span>半高驱动器数量 (HH)</span>
+            <input type="number" id="e-hh" value="0" min="0" max="42" step="1">
+            <span class="hint" id="e-hh-hint">LTO10 仅支持全高（FH）驱动器</span>
+          </label>
+          <label class="field">
+            <span>I/O 站插槽数量</span>
+            <input type="number" id="e-io" value="5" min="0" step="5">
+          </label>
+          <label class="field">
+            <span>扩展柜数量（自动计算）</span>
+            <input type="number" id="e-exp" value="0" readonly tabindex="-1">
+            <span class="hint">由「驱动器槽位」与「磁带插槽」需求取较大值决定</span>
+          </label>
+        </div>
+
+        <div class="results">
+          <div class="res-item">
+            <span class="res-label">基本柜数量</span>
+            <span class="res-value" id="r-base">—</span>
+          </div>
+          <div class="res-item hl">
+            <span class="res-label">扩展柜数量（自动）</span>
+            <span class="res-value" id="r-exp">—</span>
+          </div>
+          <div class="res-item">
+            <span class="res-label">机架空间</span>
+            <span class="res-value" id="r-rack">—</span>
+          </div>
+          <div class="res-item">
+            <span class="res-label">FH 单驱吞吐</span>
+            <span class="res-value" id="r-fhtp">—</span>
+          </div>
+          <div class="res-item">
+            <span class="res-label">HH 单驱吞吐</span>
+            <span class="res-value" id="r-hhtp">—</span>
+          </div>
+          <div class="res-item hl">
+            <span class="res-label">总吞吐量</span>
+            <span class="res-value" id="r-total-tp">—</span>
+          </div>
+        </div>
+
+        <div id="eval-status"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ 面板二：配置清单生成 ============ -->
+  <section class="panel" id="panel-gen">
+
+    <div class="card">
+      <div class="card-head">
+        <h2>带库需求参数表</h2>
+        <span class="badge gray">型号 TS4300</span>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <label class="field">
+            <span>数量（台）</span>
+            <input type="number" id="g-qty" value="4" min="1" step="1">
+          </label>
+          <label class="field">
+            <span>接口</span>
+            <select id="g-iface">
+              <option value="FC" selected>FC</option>
+              <option value="SAS">SAS</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>LTO 代次（驱动器）</span>
+            <select id="g-lto">
+              <option value="LTO8">LTO8</option>
+              <option value="LTO9" selected>LTO9</option>
+              <option value="LTO10">LTO10</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>FH 驱动器数量 / 台</span>
+            <input type="number" id="g-fh" value="1" min="0" step="1">
+            <span class="hint">全高驱动器，每个占用 2U</span>
+          </label>
+          <label class="field">
+            <span>HH 驱动器数量 / 台</span>
+            <input type="number" id="g-hh" value="1" min="0" step="1">
+            <span class="hint" id="g-hh-hint">半高驱动器，每个占用 1U</span>
+          </label>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+        <div class="field-grid">
+          <label class="field">
+            <span>数据磁带 LTO</span>
+            <select id="g-dlto">
+              <option value="LTO8">LTO8</option>
+              <option value="LTO9">LTO9</option>
+              <option value="LTO10" selected>LTO10</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>WORM</span>
+            <select id="g-worm">
+              <option value="支持">支持</option>
+              <option value="不支持" selected>不支持</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>数据磁带数量</span>
+            <input type="number" id="g-dcount" value="30" min="0" step="1">
+          </label>
+          <label class="field">
+            <span>清洗带数量</span>
+            <input type="number" id="g-ccount" value="5" min="0" step="1">
+          </label>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+        <div class="field-grid">
+          <label class="field">
+            <span>带库插槽数量</span>
+            <input type="number" id="g-slots" value="70" min="1" step="1">
+          </label>
+          <label class="field">
+            <span>路径冗余</span>
+            <select id="g-pf">
+              <option value="冗余" selected>冗余</option>
+              <option value="非冗余">非冗余</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>加密</span>
+            <select id="g-enc">
+              <option value="加密">加密</option>
+              <option value="非加密" selected>非加密</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>电源模块配置模式</span>
+            <select id="g-power">
+              <option value="最佳数量" selected>最佳数量</option>
+              <option value="最大数量">最大数量</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>TS4300 带库设备配置清单</h2>
+        <span class="badge" id="g-code-badge">—</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="bom">
+          <thead>
+            <tr>
+              <th style="width:130px">类别</th>
+              <th style="width:130px">编号</th>
+              <th>部件描述</th>
+              <th style="width:90px;text-align:center">单台数量</th>
+              <th style="width:90px;text-align:center">数量合计</th>
+              <th style="width:280px">备注</th>
+            </tr>
+          </thead>
+          <tbody id="g-bom"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="gen-status"></div>
+
+  </section>
+
+  <!-- ============ 面板三：产品数据参考 ============ -->
+  <section class="panel" id="panel-data">
+    <div class="card">
+      <div class="card-head">
+        <h2>内部产品数据参考</h2>
+        <span class="badge gray">只读</span>
+      </div>
+      <div class="card-body">
+        <div class="ref-grid" id="ref-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="credit">Developed by chenhui.wu</footer>
+
+</main>
+
+<script>
+/* ============================================================
+   数据字典
+   ============================================================ */
+const LTO_SPEC = {
+  8:  { usable: 11.6, physical: 12, fhTp: 360, hhTp: 300, code: 8, label: 'LTO8',  hasHH: true  },
+  9:  { usable: 17.4, physical: 18, fhTp: 400, hhTp: 300, code: 9, label: 'LTO9',  hasHH: true  },
+  10: { usable: 29,   physical: 30, fhTp: 400, hhTp: 0,   code: 7, label: 'LTO10', hasHH: false }
+};
+
+/* 驱动器物理尺寸 */
+const U_PER_FH = 2;
+const U_PER_HH = 1;
+const U_PER_CABINET = 3;
+
+/* 基本柜 */
+const BASE_UNIT = {
+  117: { pn:'4HT7A93160', desc:'联想 TS4300 Base Unit with Expert Care' },
+  118: { pn:'4T27A87237', desc:'联想 TS4300 LTO8*1FH-FC (+Rack) 含1个电源模块' },
+  119: { pn:'4T27A87230', desc:'联想 TS4300 LTO9*1FH-FC (+Rack) 含1个电源模块' },
+  218: { pn:'4T27A87227', desc:'联想 TS4300 LTO8*1HH-FC (+Rack) 含1个电源模块' },
+  219: { pn:'4T27A87229', desc:'联想 TS4300 LTO9*1HH-FC (+Rack) 含1个电源模块' },
+  227: { pn:'4T27A87231', desc:'联想 TS4300 LTO7*1HH-SAS (+Rack) 含1个电源模块' },
+  228: { pn:'4T27A87232', desc:'联想 TS4300 LTO8*1HH-SAS (+Rack) 含1个电源模块' },
+  229: { pn:'4T27A87234', desc:'联想 TS4300 LTO9*1HH-SAS (+Rack) 含1个电源模块' }
+};
+
+/* 独立驱动器 */
+const DRIVE_UNIT = {
+  117: { pn:'4HT7A93162', desc:'LTO 10 FH Fibre Channel Drive' },
+  118: { pn:'4ZP7A71407', desc:'LTO 8 FH Fibre Channel Drive' },
+  119: { pn:'4T27A87582', desc:'LTO 9 FH Fibre Channel Drive' },
+  218: { pn:'4ZP7A71408', desc:'LTO 8 HH Fibre Channel Drive' },
+  219: { pn:'4T27A87236', desc:'LTO 9 HH Fibre Channel Drive' },
+  228: { pn:'4ZP7A71409', desc:'LTO 8 HH SAS Drive' },
+  229: { pn:'4T27A87235', desc:'LTO 9 HH SAS Drive' }
+};
+
+const EXP_UNIT_RACK = { pn:'4ZP7A71411', desc:'联想 TS4300 3U Tape Library-Expansion Unit (with Rack)' };
+const EXP_UNIT_SVC  = { pn:'4HT7A93161', desc:'联想 TS4300 Expansion Unit with Expert Care' };
+
+/* 数据磁带 */
+const MEDIA = {
+  70: { pn:'4TP7B08988', desc:'LTO10 Tape Media (30T)' },
+  80: { pn:'4ZP7A12491', desc:'LTO8 Tape Media' },
+  90: { pn:'4HV7A75016', desc:'LTO9 Tape Media' },
+  81: { pn:'4HV7A60676', desc:'LTO8 WORM Tape Media' },
+  91: { pn:'4HV7A75017', desc:'LTO9 WORM Tape Media' }
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const fmt = n => (n === null || n === undefined || isNaN(n)) ? '—' : String(n);
+const ceil = n => Math.ceil(n - 1e-9);
+
+/* ============================================================
+   面板一：驱动器规格联动
+   ============================================================ */
+function syncDriveConstraints() {
+  const driveK = parseInt($('e-drive').value, 10);
+  const spec = LTO_SPEC[driveK];
+  const hhInput = $('e-hh');
+  const hhHint  = $('e-hh-hint');
+
+  if (spec && !spec.hasHH) {
+    hhInput.value = 0;
+    hhInput.disabled = true;
+    hhInput.style.background = '#f4f4f4';
+    hhHint.textContent = 'LTO10 仅支持全高（FH）驱动器，HH 已锁定为 0';
+    hhHint.style.color = 'var(--amber)';
+  } else {
+    hhInput.disabled = false;
+    hhInput.style.background = '#fff';
+    hhHint.textContent = 'FH 与 HH 均可选';
+    hhHint.style.color = 'var(--txt3)';
+  }
+}
+
+/* ============================================================
+   面板二：LTO 代次联动（LTO10 不支持 HH）
+   ============================================================ */
+function syncGenConstraints() {
+  const ltoKey = $('g-lto').value;
+  const hhInput = $('g-hh');
+  const hhHint  = $('g-hh-hint');
+
+  if (ltoKey === 'LTO10') {
+    hhInput.value = 0;
+    hhInput.disabled = true;
+    hhInput.style.background = '#f4f4f4';
+    hhHint.textContent = 'LTO10 仅支持全高（FH）驱动器，HH 已锁定为 0';
+    hhHint.style.color = 'var(--amber)';
+  } else {
+    hhInput.disabled = false;
+    hhInput.style.background = '#fff';
+    hhHint.textContent = '半高驱动器，每个占用 1U';
+    hhHint.style.color = 'var(--txt3)';
+  }
+}
+
+/* ============================================================
+   面板一：单台配置评估
+   ============================================================ */
+function calcEval() {
+  const backup  = parseInt($('e-backup').value, 10);
+  const driveK  = parseInt($('e-drive').value, 10);
+  const dup     = $('e-dup').value;
+  const cleanR  = parseInt($('e-clean').value, 10);
+  const fhR     = parseInt($('e-fh').value, 10);
+  const hhR     = parseInt($('e-hh').value, 10);
+  const ioR     = parseInt($('e-io').value, 10);
+
+  const spec = LTO_SPEC[driveK] || LTO_SPEC[10];
+
+  const fhN    = isNaN(fhR)    ? 0 : fhR;
+  const hhN    = isNaN(hhR)    ? 0 : hhR;
+  const ioN    = isNaN(ioR)    ? 0 : ioR;
+  const cleanN = isNaN(cleanR) ? 0 : cleanR;
+
+  /* ---------- 磁带评估 ---------- */
+  const usable   = spec.usable;
+  const physical = spec.physical;
+  const tapeQty  = (backup > 0 && usable) ? ceil(backup / usable) : 0;
+  const copyQty  = dup === 'YES' ? tapeQty : 0;
+  const totalTape = tapeQty + copyQty;
+  const slotTotal = totalTape + cleanN;
+
+  /* ---------- 扩展柜自动计算（按物理槽位）----------
+     每个柜体（基本柜 / 扩展柜）提供 3U 驱动器空间：
+       · 1 个 FH 驱动器 = 2U，且每个柜体最多装 1 个 FH
+         （因为 2 个 FH = 4U > 3U，装不进同一个柜体）
+       · 1 个 HH 驱动器 = 1U，每柜最多装 3 个
+       · 装了 FH 的柜体还剩 1U，可再放 1 个 HH（2U + 1U = 3U）
+     因此：
+       · FH 数量决定基础柜数（每个 FH 各占一个柜体）
+       · 每个装了 FH 的柜体还能再容纳 1 个 HH
+       · 剩余 HH 每 3 个占一个柜体
+     所需驱动器柜数 = FH + ceil(max(0, HH - FH) / 3)
+     扩展柜数（按驱动器）= 所需驱动器柜数 - 1（基本柜提供第一个柜体）
+  --------------------------------------------------- */
+  const remainingHH = Math.max(0, hhN - fhN);
+  const cabByDrive  = fhN + ceil(remainingHH / U_PER_CABINET);
+  const expByDrive  = Math.max(0, cabByDrive - 1);
+
+  const expBySlot   = Math.max(0, ceil(slotTotal / 40) - 1);
+  const exp         = Math.max(expByDrive, expBySlot);
+
+  /* 回写到只读输入框 */
+  $('e-exp').value = exp;
+
+  /* ---------- 带库评估 ---------- */
+  const baseUnits = 1;
+  const totalCabinets = baseUnits + exp;
+  const rackSpace = U_PER_CABINET * totalCabinets;
+  const fhTp = spec.fhTp;
+  const hhTp = spec.hhTp;
+  const totalTp = fhN * fhTp + hhN * hhTp;
+
+  /* ---------- 渲染结果 ---------- */
+  $('r-usable').innerHTML   = fmt(usable) + ' <small>TB</small>';
+  $('r-physical').innerHTML = fmt(physical) + ' <small>TB</small>';
+  $('r-tape').textContent   = tapeQty + ' 盘';
+  $('r-copy').textContent   = copyQty + ' 盘';
+  $('r-total').textContent  = totalTape + ' 盘';
+  $('r-slots').textContent  = slotTotal + ' 盘';
+
+  $('r-base').textContent   = baseUnits + ' 台';
+  $('r-exp').textContent    = exp + ' 台';
+  $('r-rack').innerHTML     = rackSpace + ' <small>U</small>';
+  $('r-fhtp').innerHTML     = fhTp + ' <small>MB/s</small>';
+  $('r-hhtp').innerHTML     = (spec.hasHH ? hhTp : '—') + (spec.hasHH ? ' <small>MB/s</small>' : '');
+  $('r-total-tp').innerHTML = totalTp + ' <small>MB/s</small>';
+
+  /* ---------- 校验 ---------- */
+  const errors = [];
+
+  if (!Number.isInteger(backup) || backup <= 0)
+    errors.push('备份容量需为正整数');
+  if (![8, 9, 10].includes(driveK))
+    errors.push('驱动器规格无效，仅支持 LTO8 / LTO9 / LTO10');
+  if (!['YES', 'NO'].includes(dup))
+    errors.push('磁带双副本输入错误（仅 YES / NO）');
+  if (!Number.isInteger(cleanR) || cleanR < 0)
+    errors.push('清洗带数量需为非负整数');
+  if (!Number.isInteger(fhR) || fhR < 0 || fhR > 14)
+    errors.push('全高驱动器数量超出上限（0 ~ 14）');
+  if (!Number.isInteger(hhR) || hhR < 0 || hhR > 42)
+    errors.push('半高驱动器数量超出上限（0 ~ 42）');
+  if (spec && !spec.hasHH && hhN > 0)
+    errors.push('LTO10 仅支持全高（FH）驱动器，半高（HH）数量必须为 0');
+  if ((fhN * 2 + hhN) > 42)
+    errors.push('驱动器数量超出上限（FH×2 + HH 不得超过 42）');
+  if (exp > 13)
+    errors.push('扩展柜数量超出上限（自动计算 ' + exp + ' 台，最多 13 台 / 42U）');
+  if (!Number.isInteger(ioR) || ioR < 0 || ioR % 5 !== 0 || ioR > (baseUnits + exp) * 5)
+    errors.push('I/O 站插槽需为 5 的倍数，且不超过 5 × 柜体数量（当前 ' + (baseUnits + exp) + ' 台柜体）');
+  if (slotTotal + ioN > 560)
+    errors.push('超出插槽上限（总插槽数 ' + slotTotal + ' + I/O 插槽 ' + ioN + ' 不得超过 560）');
+
+  /* ---------- 状态提示 ---------- */
+  const box = $('eval-status');
+  if (errors.length === 0) {
+    /* 组装驱动器槽位说明 */
+    let drvInfo;
+    if (fhN === 0) {
+      drvInfo = hhN + ' HH 按每柜 3 个计算，共需柜体 ' + cabByDrive + ' 台';
+    } else if (hhN <= fhN) {
+      drvInfo = fhN + ' FH 各占 1 个柜体' +
+        (hhN > 0 ? '（每柜剩余 1U 可再容纳 1 个 HH，' + hhN + ' HH 全部填入 FH 柜体）' : '') +
+        '，共需柜体 ' + cabByDrive + ' 台';
+    } else {
+      drvInfo = fhN + ' FH 各占 1 个柜体（可同时容纳 ' + fhN + ' 个 HH），' +
+        '剩余 ' + remainingHH + ' 个 HH 需 ' + ceil(remainingHH / U_PER_CABINET) + ' 个额外柜体，' +
+        '共需柜体 ' + cabByDrive + ' 台';
+    }
+
+    const hhInfo = spec.hasHH
+      ? 'HH 单驱吞吐 ' + spec.hhTp + ' MB/s'
+      : 'HH 不适用（' + spec.label + ' 无半高驱动器）';
+
+    box.innerHTML =
+      '<div class="status ok"><span class="ico">✓</span><div><strong>配置有效</strong>' +
+      '<div style="font-size:12.5px;margin-top:4px;opacity:.9">' +
+        '驱动器槽位：' + drvInfo + '（含基本柜），' +
+        '按驱动器需求扩展柜 <strong>' + expByDrive + ' 台</strong>。<br>' +
+        '插槽需求：' + slotTotal + ' 盘，每柜 40 插槽 → 按插槽需求扩展柜 <strong>' + expBySlot + ' 台</strong>。<br>' +
+        '取较大值 → 扩展柜合计 <strong>' + exp + ' 台</strong>（柜体合计 ' + totalCabinets + ' 台），' +
+        '机架空间 <strong>' + rackSpace + 'U</strong>（≤ 42U）。<br>' +
+        '总插槽占用 ' + slotTotal + '（含 I/O 站 ' + ioN + '），未超过 560 上限。<br>' +
+        '吞吐量：FH 单驱 ' + spec.fhTp + ' MB/s，' + hhInfo + '。' +
+      '</div></div></div>';
+  } else {
+    box.innerHTML =
+      '<div class="status err"><span class="ico">!</span><div><strong>配置需要完善</strong>' +
+      '<ul>' + errors.map(e => '<li>' + e + '</li>').join('') + '</ul></div></div>';
+  }
+}
+
+/* ============================================================
+   面板二：配置清单生成
+   ============================================================ */
+function calcGen() {
+  const qty     = parseInt($('g-qty').value, 10) || 1;
+  const iface   = $('g-iface').value;
+  const ltoKey  = $('g-lto').value;
+  const fhN     = parseInt($('g-fh').value, 10) || 0;
+  const hhN     = parseInt($('g-hh').value, 10) || 0;
+  const dLtoKey = $('g-dlto').value;
+  const worm    = $('g-worm').value;
+  const dCount  = parseInt($('g-dcount').value, 10) || 0;
+  const cCount  = parseInt($('g-ccount').value, 10) || 0;
+  const slots   = parseInt($('g-slots').value, 10) || 0;
+  const pf      = $('g-pf').value;
+  const power   = $('g-power').value;
+
+  /* LTO10 不支持 HH：强制清零 */
+  const ltoNum = parseInt(ltoKey.replace('LTO', ''), 10);
+  const ltoSpec = LTO_SPEC[ltoNum];
+  const hhN_effective = ltoSpec.hasHH ? hhN : 0;
+  const driveN = fhN + hhN_effective;
+
+  /* --- 基本柜高度：优先取 FH（FH>0 时），否则取 HH --- */
+  const height = fhN > 0 ? 'FH' : 'HH';
+  const hCode = height === 'FH' ? 1 : 2;
+  const iCode = iface === 'FC' ? 1 : 2;
+  const lCode = ltoSpec.code;
+  const code  = hCode * 100 + iCode * 10 + lCode;
+
+  const baseUnit = BASE_UNIT[code] || null;
+
+  /* --- 扩展柜数量（按物理槽位，修正后）----------
+     每个柜体（基本柜 / 扩展柜）提供 3U 驱动器空间：
+       · 1 个 FH 驱动器 = 2U，且每个柜体最多装 1 个 FH
+       · 1 个 HH 驱动器 = 1U，每柜最多装 3 个
+       · 装了 FH 的柜体还剩 1U，可再放 1 个 HH
+     所需驱动器柜数 = FH + ceil(max(0, HH - FH) / 3)
+     扩展柜数（按驱动器）= 所需驱动器柜数 - 1（基本柜提供第一个柜体）
+  ------------------------------------------------- */
+  const remainingHH = Math.max(0, hhN_effective - fhN);
+  const cabByDrive  = fhN + ceil(remainingHH / U_PER_CABINET);
+  const expByDrive  = Math.max(0, cabByDrive - 1);
+
+  const expBySlot   = Math.max(0, ceil(slots / 40) - 1);
+  const expCount    = Math.max(expByDrive, expBySlot);
+
+  /* 扩展柜型号：LTO10 用带专家服务版本，其余用带机架版本 */
+  const expUnit = (lCode === 7) ? EXP_UNIT_SVC : EXP_UNIT_RACK;
+
+  /* --- 独立驱动器数量（基本柜已含 1 个） --- */
+  const extraFH = height === 'FH' ? Math.max(0, fhN - 1) : fhN;
+  const extraHH = height === 'HH' ? Math.max(0, hhN_effective - 1) : hhN_effective;
+
+  /* 独立驱动器型号 */
+  const fhDriveCode = 1 * 100 + iCode * 10 + lCode;
+  const hhDriveCode = 2 * 100 + iCode * 10 + lCode;
+  const fhDriveUnit = DRIVE_UNIT[fhDriveCode] || null;
+  const hhDriveUnit = DRIVE_UNIT[hhDriveCode] || null;
+
+  /* --- 数据磁带编码 --- */
+  const dLtoNum = parseInt(dLtoKey.replace('LTO', ''), 10);
+  const mCode = LTO_SPEC[dLtoNum].code * 10 + (worm === '支持' ? 1 : 0);
+  const media = MEDIA[mCode] || null;
+
+  /* --- 电源数量（关联柜体数） --- */
+  const totalCabinetsBest = 1 + expByDrive;
+  const totalCabinetsMax  = 1 + expCount;
+  const powerQty = (power === '最佳数量' ? totalCabinetsBest : totalCabinetsMax) * 2 - 1;
+  const cordQty = Math.max(1, Math.round((powerQty + 1) / 2));
+
+  /* --- 路径冗余功能（仅 FH 支持） --- */
+  const pfQty = (fhN > 0 && pf === '冗余') ? 1 : 0;
+
+  /* --- 安装服务 --- */
+  const installQty = 1 + expCount;
+
+  /* --- 电源备注 --- */
+  let powerNote;
+  if (power === '最佳数量') {
+    powerNote = '最佳数量：按驱动器需求柜数 ' + totalCabinetsBest + ' ×2 -1 = ' + powerQty;
+  } else {
+    powerNote = '最大数量：按实际柜数 ' + totalCabinetsMax + ' ×2 -1 = ' + powerQty;
+  }
+
+  /* --- 构建 BOM --- */
+  const rows = [];
+
+  rows.push({
+    cat: '基本柜',
+    pn: baseUnit ? baseUnit.pn : null,
+    desc: baseUnit ? baseUnit.desc : '当前接口 / LTO / 高度组合无对应基本柜产品',
+    unit: 1,
+    total: qty * 1,
+    note: height === 'FH' ? '含 1 个 FH 驱动器' : '含 1 个 HH 驱动器'
+  });
+
+  rows.push({
+    cat: '扩展柜',
+    pn: expCount > 0 ? expUnit.pn : null,
+    desc: expCount > 0 ? expUnit.desc : '当前配置无需扩展柜',
+    unit: expCount,
+    total: qty * expCount,
+    note: expCount > 0
+      ? ('按驱动器槽位 ' + expByDrive + ' / 按插槽需求 ' + expBySlot + ' 取最大值')
+      : ''
+  });
+
+  if (extraFH > 0) {
+    rows.push({
+      cat: 'FH 驱动器',
+      pn: fhDriveUnit ? fhDriveUnit.pn : null,
+      desc: fhDriveUnit ? fhDriveUnit.desc : '无对应 FH 驱动器产品',
+      unit: extraFH,
+      total: qty * extraFH,
+      note: '全高驱动器（2U/个），基本柜已含 1 个'
+    });
+  }
+
+  if (extraHH > 0) {
+    rows.push({
+      cat: 'HH 驱动器',
+      pn: hhDriveUnit ? hhDriveUnit.pn : null,
+      desc: hhDriveUnit ? hhDriveUnit.desc : '无对应 HH 驱动器产品',
+      unit: extraHH,
+      total: qty * extraHH,
+      note: '半高驱动器（1U/个），基本柜已含 1 个'
+    });
+  }
+
+  rows.push({
+    cat: '附加电源',
+    pn: '4ZP7A71400',
+    desc: 'Additional Power Supply',
+    unit: powerQty,
+    total: qty * powerQty,
+    note: powerNote
+  });
+
+  rows.push({
+    cat: '电源线',
+    pn: '4HT7A93226',
+    desc: '2.8 m Power Cord, 250 V, 10 A, China',
+    unit: cordQty,
+    total: qty * cordQty,
+    note: ''
+  });
+
+  rows.push({
+    cat: '路径冗余功能',
+    pn: pfQty > 0 ? '4HV7A90190' : null,
+    desc: pfQty > 0 ? 'Path Failover' : '当前配置无需路径冗余功能',
+    unit: pfQty,
+    total: qty * pfQty,
+    note: '仅全高（FH）驱动器支持'
+  });
+
+  rows.push({
+    cat: '安装服务',
+    pn: '95Y4886',
+    desc: 'Tape Installation for 1 unit（联想工程师现场部署）',
+    unit: installQty,
+    total: qty * installQty,
+    note: '基本柜 1 台 + 扩展柜 ' + expCount + ' 台'
+  });
+
+  rows.push({
+    cat: '数据磁带',
+    pn: media ? media.pn : null,
+    desc: media ? media.desc : '当前 LTO / WORM 组合无对应磁带产品',
+    unit: dCount,
+    total: dCount,
+    note: '磁带数量与带库设备数量无关，仅按需求数量计算'
+  });
+
+  rows.push({
+    cat: '清洗磁带',
+    pn: '4ZP7A60022',
+    desc: 'LTO Cleaning Cartridge',
+    unit: cCount,
+    total: cCount,
+    note: ''
+  });
+
+  /* --- 渲染 --- */
+  $('g-code-badge').textContent = '配置编码：' + code;
+
+  $('g-bom').innerHTML = rows.map(r => {
+    const pnCls = r.pn ? 'pn' : 'pn na';
+    const pnTxt = r.pn || 'N/A';
+    const dim = (r.unit === 0) ? ' style="opacity:.45"' : '';
+    return '<tr' + dim + '>' +
+      '<td class="cat-cell">' + r.cat + '</td>' +
+      '<td><span class="' + pnCls + '">' + pnTxt + '</span></td>' +
+      '<td class="desc">' + r.desc + '</td>' +
+      '<td class="num">' + r.unit + '</td>' +
+      '<td class="num total">' + r.total + '</td>' +
+      '<td class="note">' + (r.note || '') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  /* --- 状态提示 --- */
+  const warnings = [];
+  if (driveN === 0) warnings.push('至少需要指定 1 个驱动器（FH 或 HH）');
+  if (!baseUnit) warnings.push('当前「' + height + ' + ' + iface + ' + ' + ltoKey + '」组合没有对应的基本柜产品编码（' + code + '）');
+  if (extraFH > 0 && !fhDriveUnit) warnings.push('FH 驱动器无对应产品（编码 ' + fhDriveCode + '）');
+  if (extraHH > 0 && !hhDriveUnit) warnings.push('HH 驱动器无对应产品（编码 ' + hhDriveCode + '）');
+  if (!media) warnings.push('当前「' + dLtoKey + ' + ' + worm + '」组合没有对应的数据磁带产品');
+  if (ltoKey === 'LTO10' && hhN > 0)
+    warnings.push('LTO10 不支持半高（HH）驱动器，HH 数量已按 0 处理');
+
+  const box = $('gen-status');
+  if (warnings.length === 0) {
+    /* 组装驱动器槽位说明 */
+    let drvInfo;
+    if (fhN === 0) {
+      drvInfo = hhN_effective + ' HH 按每柜 3 个计算，共需柜体 ' + cabByDrive + ' 台';
+    } else if (hhN_effective <= fhN) {
+      drvInfo = fhN + ' FH 各占 1 个柜体' +
+        (hhN_effective > 0 ? '（每柜剩余 1U 可再容纳 1 个 HH，' + hhN_effective + ' HH 全部填入 FH 柜体）' : '') +
+        '，共需柜体 ' + cabByDrive + ' 台';
+    } else {
+      drvInfo = fhN + ' FH 各占 1 个柜体（可同时容纳 ' + fhN + ' 个 HH），' +
+        '剩余 ' + remainingHH + ' 个 HH 需 ' + ceil(remainingHH / U_PER_CABINET) + ' 个额外柜体，' +
+        '共需柜体 ' + cabByDrive + ' 台';
+    }
+
+    box.innerHTML =
+      '<div class="status ok"><span class="ico">✓</span><div><strong>配置清单生成完成</strong>' +
+      '<div style="font-size:12.5px;margin-top:4px;opacity:.9">' +
+        qty + ' 台 TS4300，每台含 ' + fhN + ' 个 FH + ' + hhN_effective + ' 个 HH 驱动器（共 ' + driveN + ' 个）。<br>' +
+        '驱动器槽位：' + drvInfo + '（含基本柜），' +
+        '按驱动器需求扩展柜 <strong>' + expByDrive + ' 台</strong>。<br>' +
+        '插槽需求：' + slots + ' 盘，每柜 40 插槽 → 按插槽需求扩展柜 <strong>' + expBySlot + ' 台</strong>。<br>' +
+        '取较大值 → 扩展柜合计 <strong>' + expCount + ' 台</strong>（柜体合计 ' + (1 + expCount) + ' 台）。<br>' +
+        '共需追加：FH 驱动器 ' + qty * extraFH + ' 个、HH 驱动器 ' + qty * extraHH + ' 个、扩展柜 ' + qty * expCount + ' 台。' +
+      '</div></div></div>';
+  } else {
+    box.innerHTML =
+      '<div class="status err"><span class="ico">!</span><div><strong>配置存在以下问题</strong>' +
+      '<ul>' + warnings.map(w => '<li>' + w + '</li>').join('') + '</ul></div></div>';
+  }
+}
+
+/* ============================================================
+   面板三：产品数据参考
+   ============================================================ */
+function renderReference() {
+  const groups = [
+    {
+      title: '基本柜（含 1 个驱动器）',
+      items: Object.entries(BASE_UNIT).map(([k, v]) => ({ k: k + ' · ' + v.desc.split(' ')[0], v: v.pn }))
+    },
+    {
+      title: '独立驱动器',
+      items: Object.entries(DRIVE_UNIT).map(([k, v]) => ({ k: v.desc, v: v.pn }))
+    },
+    {
+      title: '扩展柜',
+      items: [
+        { k: '联想 TS4300 3U Expansion Unit (with Rack)', v: EXP_UNIT_RACK.pn },
+        { k: '联想 TS4300 Expansion Unit with Expert Care', v: EXP_UNIT_SVC.pn }
+      ]
+    },
+    {
+      title: '磁带介质',
+      items: Object.entries(MEDIA).map(([k, v]) => ({ k: v.desc, v: v.pn }))
+    },
+    {
+      title: '其他配件',
+      items: [
+        { k: 'Additional Power Supply', v: '4ZP7A71400' },
+        { k: '2.8 m Power Cord, 250 V, 10 A, China', v: '4HT7A93226' },
+        { k: 'LTO Cleaning Cartridge', v: '4ZP7A60022' },
+        { k: 'Path Failover', v: '4HV7A90190' },
+        { k: 'LTO Library Managed Encryption-TS4300', v: '4HV7B11299' },
+        { k: '25 meter OM3 fiber cable', v: '4HT7A96367' },
+        { k: '4m Mini-SAS HD/Mini-SAS 1x Cable', v: '4T27A87583' },
+        { k: 'Rack Mount Kit', v: '4ZP7A71410' },
+        { k: 'Tape Installation for 1 unit', v: '95Y4886' }
+      ]
+    },
+    {
+      title: '服务项',
+      items: [
+        { k: '联想 Archive EE-1yr Service', v: '4ZP7A60033' },
+        { k: '联想 Archive EE-3yr Service', v: '4ZP7A60046' },
+        { k: '联想 Scale 100TB-3yr Service', v: '4ZP7A60045' },
+        { k: '联想 Protect 5T-1yr Service', v: '4ZP7A60035' },
+        { k: '联想 Protect 5T-3yr Service', v: '4ZP7A60048' },
+        { k: '联想 Protect 5T-5yr Service', v: '4ZP7A60059' }
+      ]
+    }
+  ];
+
+  $('ref-grid').innerHTML = groups.map(g =>
+    '<div class="ref-card"><h3>' + g.title + '</h3><ul class="ref-list">' +
+    g.items.map(it => '<li><span class="k">' + it.k + '</span><span class="v">' + it.v + '</span></li>').join('') +
+    '</ul></div>'
+  ).join('');
+}
+
+/* ============================================================
+   事件绑定 & 初始化
+   ============================================================ */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* 面板一：e-drive 变更时先同步约束 */
+$('e-drive').addEventListener('input', () => {
+  syncDriveConstraints();
+  calcEval();
+});
+
+['e-backup', 'e-dup', 'e-clean', 'e-fh', 'e-hh', 'e-io']
+  .forEach(id => $(id).addEventListener('input', calcEval));
+
+/* 面板二：g-lto 变更时同步约束 */
+$('g-lto').addEventListener('input', () => {
+  syncGenConstraints();
+  calcGen();
+});
+
+['g-qty', 'g-iface', 'g-fh', 'g-hh',
+ 'g-dlto', 'g-worm', 'g-dcount', 'g-ccount',
+ 'g-slots', 'g-pf', 'g-enc', 'g-power']
+  .forEach(id => $(id).addEventListener('input', calcGen));
+
+/* 初始化 */
+renderReference();
+syncDriveConstraints();
+syncGenConstraints();
+calcEval();
+calcGen();
+</script>
+</body>
+</html>

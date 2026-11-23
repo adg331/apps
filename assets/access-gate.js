@@ -58,7 +58,7 @@
     gate.innerHTML = `
       <div class="access-gate__aurora" aria-hidden="true"></div>
       <canvas class="access-gate__fx" aria-hidden="true"></canvas>
-      <div class="access-gate__brand"><span class="access-gate__led" aria-hidden="true"></span>NETAPP / DEMO BAY</div>
+      <div class="access-gate__brand"><span class="access-gate__led" aria-hidden="true"></span>TECH DEMO &amp; TOOL PORTAL</div>
       <div class="access-gate__stage">
         <div class="access-gate__tilt">
           <div class="access-gate__glow" aria-hidden="true"></div>

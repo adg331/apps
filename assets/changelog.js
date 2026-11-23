@@ -1,7 +1,12 @@
 /* 更新记录：首页「更新记录」弹层与卡片角标的唯一数据源。
-   新记录加在最前面。bay 为两位编号（对应首页 #bayXX）；
-   kind：new = 新增展位，update = 内容更新。text 面向客户，只写内容变化。 */
+   新记录加在最前面。bay 为两位编号（对应首页 #bayXX）；内部工具改用 tool 字段（对应 #toolXX）；
+   kind：new = 新增展位，update = 内容更新。text 面向客户，只写内容变化。
+   改完同步把 index.html 里 changelog.js?v= 改成新值（当天日期；同一天再改加 .2、.3），否则浏览器会沿用旧缓存、弹层看不到新记录。 */
 window.DEMOBAY_CHANGELOG = [
+  { date: '2026-11-23', tool: '01', kind: 'update', text: '升级为 2026 年 11 月实测数据：新增 16 TB NL-SAS 硬盘与 ADP（高级磁盘分区）容量查询' },
+  { date: '2026-11-23', tool: '03', kind: 'new',    text: '联想 TS4300 带库配置工具 v2.1：单台配置与磁带容量评估、按需求参数表生成配置清单' },
+  { date: '2026-11-23', tool: '02', kind: 'new',    text: '光纤交换机配置工具 v1.0 试用版：按型号、速率与端口数选型，自动生成物料清单并导出 Excel / PDF' },
+  { date: '2026-11-06', bay: '22', kind: 'new',    text: '19 幕交互演示与 5 分钟讲解视频' },
   { date: '2026-11-04', bay: '02', kind: 'update', text: 'PEAK:AIO 收购已于 11 月 2 日完成：交易状态、与 Novus 的关系、交付时间线与参考资料同步更新' },
   { date: '2026-11-04', bay: '02', kind: 'update', text: 'Novus 正式 GA：交付时间线标注 2026 年 11 月 GA 与首批客户部署，补充官方产品文档链接' },
   { date: '2026-11-04', bay: '02', kind: 'update', text: '讲解视频换用新配音重新制作，约 5 分钟' },

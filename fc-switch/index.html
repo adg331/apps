@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>光纤交换机配置工具 —— 参数化自动选型</title>
+<style>
+
+
+
+
+
+
+
+
+
+  :root{
+    --navy:#0B2E52; --navy2:#14375C; --blue:#1f4e79; --lblue:#EEF3F8;
+    --red:#E2231A; --red-d:#C51C12; --red-bg:#FDECEA;
+    --input:#fff; --yellow:#FFF7E0; --yellowbd:#eed98f; --grey:#F5F7FA;
+    --border:#dce3ec; --ink:#1c2733; --muted:#62748a;
+    --redft:#b3261e; --grnbg:#E7F4EC; --grnft:#1a7f4b;
+    --shadow:0 10px 30px rgba(11,46,82,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#eef1f5;color:var(--ink);
+       font-family:"Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",Arial,sans-serif;
+       font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1480px;margin:0 auto;padding:26px 22px 70px}
+
+  /* ===== 顶部品牌栏 ===== */
+  h1{font-size:22px;color:#fff;margin:0;letter-spacing:1px;font-weight:700}
+  .sub{color:rgba(225,235,246,.78);font-size:12.5px;margin-top:7px;max-width:860px;letter-spacing:.2px}
+  .header{position:relative;background:linear-gradient(120deg,#08223f 0%,#0B2E52 52%,#123f6e 100%);
+          padding:28px 30px;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;
+          align-items:center;gap:18px;flex-wrap:wrap;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+  .header::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:3px;
+          background:linear-gradient(90deg,var(--red) 0%,#ff5a4d 38%,transparent 70%)}
+  .header .btns{display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1}
+  button{font-family:inherit;font-size:12.5px;padding:9px 18px;border:1px solid rgba(255,255,255,.32);
+         border-radius:8px;background:rgba(255,255,255,.10);color:#fff;cursor:pointer;transition:.18s;letter-spacing:.3px}
+  button:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  button.primary{background:linear-gradient(135deg,#f0352b,var(--red) 55%,var(--red-d));
+         border:1px solid #ff6a5f;color:#fff;font-weight:600;
+         box-shadow:0 6px 16px rgba(226,35,26,.32)}
+  button.primary:hover{background:linear-gradient(135deg,#ff463b,#d61f14)}
+  .export-wrap{position:relative;display:inline-block;z-index:20}
+  .export-menu{position:absolute;right:0;top:calc(100%+8px);min-width:220px;background:#fff;border:1px solid var(--border);
+        border-radius:10px;box-shadow:0 10px 28px rgba(11,46,82,.2);padding:6px;display:none;flex-direction:column;gap:4px}
+  .export-menu.show{display:flex}
+  .export-menu button{background:#fff;color:var(--navy);border:none;text-align:left;padding:10px 13px;border-radius:8px;
+        font-weight:600;letter-spacing:.3px}
+  .export-menu button:hover{background:#eef2f8;color:var(--red);transform:none}
+
+  /* ===== 主面板 ===== */
+  .panel{background:#fbfcfe;border:1px solid var(--border);border-top:none;padding:22px 22px;
+         border-radius:0 0 16px 16px;box-shadow:var(--shadow);counter-reset:sec}
+  .card{border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;
+        background:#fff;box-shadow:0 3px 12px rgba(11,46,82,.06)}
+  .card h2{margin:0;font-size:14.5px;padding:14px 18px 13px;background:#fff;color:var(--navy);
+           font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:12px;
+           border-bottom:1px solid #eef2f6;counter-increment:sec}
+  .card h2::before{content:counter(sec,upper-alpha);width:30px;height:30px;flex:none;
+          display:inline-flex;align-items:center;justify-content:center;border-radius:8px;
+          background:linear-gradient(135deg,#1a4470,#0B2E52);color:#fff;font-size:15px;font-weight:800;
+          font-family:Georgia,serif;letter-spacing:0;box-shadow:0 2px 6px rgba(11,46,82,.3)}
+  .card h2.noNum{counter-increment:none}
+  .card h2.noNum::before{content:none}
+  .card h2::after{content:none}
+  .card .body{padding:18px 20px}
+  .topgrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}
+  @media(max-width:1020px){.topgrid{grid-template-columns:1fr}
+    table.inputs > tbody{flex-direction:column}
+    table.inputs tr{flex-basis:100%!important;border-radius:12px!important;margin-bottom:2px}
+  }
+
+  /* ===== 输入表（三行横带层次，DOM 顺序与分组一致，不改结构） ===== */
+  table.inputs{display:block;counter-reset:field}
+  table.inputs > tbody{display:flex;flex-wrap:wrap;row-gap:18px;align-items:stretch}
+  table.inputs td{padding:0;border-bottom:none;vertical-align:top}
+  table.inputs tr{display:flex;flex-direction:column;gap:9px;box-sizing:border-box;flex-basis:25%;
+         padding:14px 18px;border-top:1px solid #e2e9f1;border-bottom:1px solid #e2e9f1}
+  table.inputs td.lbl{width:auto;text-align:left;font-weight:700;color:var(--navy);font-size:12.5px;letter-spacing:.3px;
+         display:flex;align-items:center;gap:8px;counter-increment:field}
+  table.inputs td.lbl::before{content:counter(field,decimal-leading-zero);min-width:22px;height:22px;flex:none;
+         display:inline-flex;align-items:center;justify-content:center;border-radius:6px;
+         background:linear-gradient(135deg,#1f4e79,#2f6fb0);color:#fff;font-size:11px;font-weight:700;
+         font-family:Consolas,Monaco,monospace;box-shadow:0 1px 4px rgba(31,78,121,.3)}
+  /* 序号徽章随所在横带配色：行1蓝 / 行2红 / 行3金棕 */
+  table.inputs tr:nth-child(5) td.lbl::before,table.inputs tr:nth-child(6) td.lbl::before,
+  table.inputs tr:nth-child(7) td.lbl::before,table.inputs tr:nth-child(8) td.lbl::before{
+         background:linear-gradient(135deg,#c8191f,#e2231a);box-shadow:0 1px 4px rgba(226,35,26,.3)}
+  table.inputs tr:nth-child(9) td.lbl::before,table.inputs tr:nth-child(10) td.lbl::before,
+  table.inputs tr:nth-child(11) td.lbl::before,table.inputs tr:nth-child(12) td.lbl::before{
+         background:linear-gradient(135deg,#b9792a,#d99a3d);box-shadow:0 1px 4px rgba(217,154,61,.35)}
+  table.inputs td.lbl::after{content:none}
+  table.inputs td.val{width:auto}
+  table.inputs td.hint{display:none}
+  /* 行1 基础选型：浅蓝横带 + 深蓝首条 */
+  table.inputs tr:nth-child(1),table.inputs tr:nth-child(2),table.inputs tr:nth-child(3),table.inputs tr:nth-child(4){background:#eaf1f9}
+  table.inputs tr:nth-child(1){border-left:4px solid var(--navy);border-radius:12px 0 0 12px}
+  table.inputs tr:nth-child(4){border-right:1px solid #e2e9f1;border-radius:0 12px 12px 0}
+  /* 行2 服务升级：浅灰横带 + 红色首条 */
+  table.inputs tr:nth-child(5),table.inputs tr:nth-child(6),table.inputs tr:nth-child(7),table.inputs tr:nth-child(8){background:#f4f6f8}
+  table.inputs tr:nth-child(5){border-left:4px solid var(--red);border-radius:12px 0 0 12px}
+  table.inputs tr:nth-child(8){border-right:1px solid #e2e9f1;border-radius:0 12px 12px 0}
+  /* 行3 选配项：浅暖横带 + 金棕首条 */
+  table.inputs tr:nth-child(9),table.inputs tr:nth-child(10),table.inputs tr:nth-child(11),table.inputs tr:nth-child(12){background:#fbf6ee}
+  table.inputs tr:nth-child(9){border-left:4px solid #d99a3d;border-radius:12px}
+  select{width:100%;padding:8px 32px 8px 12px;border:1px solid var(--border);border-radius:9px;background:var(--input)
+         url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2362748a' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+         no-repeat right 12px center;font-family:inherit;font-size:12.5px;color:var(--ink);cursor:pointer;
+         transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;min-height:36px}
+  select:hover{border-color:#b9c9da}
+  select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(226,35,26,.15)}
+  select:disabled{background:#eef1f5;color:#9aa7b4;cursor:not-allowed}
+  .hint.warn{color:#c2680a;font-weight:500}
+  /* 组合双下拉：组容器宽度与单步一致，组内两个下拉各占一半 */
+  .dual{display:flex;gap:8px}
+  .dual-item{flex:1;min-width:0}
+  /* 其他部件：整行多行 */
+  tr.group-full{flex-basis:100%!important}
+  .part-list{display:flex;flex-direction:column;gap:8px}
+  .part-row{display:flex;gap:8px;align-items:center}
+  .part-sel{flex:1 1 auto;max-width:500px;min-width:0}
+  .part-qty{flex:0 0 150px}
+  .part-del{flex:none;width:36px;height:36px;padding:0;border:1px solid var(--border);background:#fff;color:var(--red);border-radius:9px;cursor:pointer;font-size:14px;line-height:1}
+  .part-del:hover{background:var(--red-bg)}
+  .part-add{flex:none;background:#fff;border:1px dashed var(--blue);color:var(--navy);border-radius:9px;padding:8px 14px;font-weight:600;letter-spacing:.3px;white-space:nowrap}
+  .part-add:hover{background:var(--lblue)}
+  .dual select{width:100%}
+
+  /* ===== 校验表 ===== */
+  table.checks{width:100%;border-collapse:collapse}
+  table.checks td{padding:9px 10px;border-bottom:1px solid #f0f4f8}
+  table.checks tr:last-child td{border-bottom:none}
+  table.checks td.cl{width:110px;color:var(--navy);font-weight:700}
+  .ok{color:var(--grnft);font-weight:700}
+  .bad{color:var(--redft);font-weight:700}
+  table.checks td.ok{display:inline-flex;align-items:center;justify-content:center;background:var(--grnbg);color:var(--grnft);
+        padding:3px 14px;border-radius:20px;font-size:12px;white-space:nowrap}
+  table.checks td.bad{display:inline-flex;align-items:center;justify-content:center;background:var(--red-bg);color:var(--redft);
+        padding:3px 14px;border-radius:20px;font-size:12px;white-space:nowrap}
+
+  /* ===== 汇总横幅 ===== */
+  .summary{background:#fff;border:1px solid var(--border);border-left:5px solid var(--red);
+           border-radius:12px;padding:16px 18px;font-size:13px;color:#14395c;font-weight:600;
+           line-height:1.85;position:relative;box-shadow:0 2px 10px rgba(226,35,26,.05)}
+  .summary .tag{display:inline-block;background:linear-gradient(135deg,#f0352b,var(--red));color:#fff;
+                font-size:11px;padding:3px 12px;border-radius:6px;margin-right:12px;font-weight:600;
+                vertical-align:2px;letter-spacing:.5px;box-shadow:0 2px 6px rgba(226,35,26,.3)}
+
+  /* ===== BOM 表 ===== */
+  table.bom{width:100%;border-collapse:collapse;font-size:12px}
+  table.bom th{background:linear-gradient(90deg,#0B2E52,#14375C);color:#fff;padding:10px 8px;text-align:center;
+               font-weight:600;white-space:nowrap;letter-spacing:.3px}
+  table.bom td{border:1px solid #e6ecf2;padding:8px 9px;vertical-align:top}
+  table.bom td.c{text-align:center;white-space:nowrap}
+  table.bom tbody tr:nth-child(even) td{background:#f7fafd}
+  table.bom tbody tr:hover td{background:#eef4fb}
+  table.bom td.pn{font-family:Consolas,Monaco,monospace;color:var(--red-d);font-size:11.5px;font-weight:700}
+  table.bom td.desc{min-width:260px}
+  table.bom td.note{color:var(--muted);min-width:220px;font-size:11px}
+  table.bom td.chk.bad{background:var(--red-bg);color:var(--redft);font-weight:700;text-align:center;border-radius:6px}
+  table.bom td.chk.ok{color:var(--grnft);text-align:center;font-weight:700}
+  table.bom tr.total td{background:var(--navy)!important;color:#fff;font-weight:700;text-align:center;
+        border-color:#0B2E52;font-size:12.5px}
+
+  /* ===== 使用说明 ===== */
+  details.notes{border:1px solid var(--border);border-radius:14px;background:#fff;margin-top:4px}
+  details.notes summary{cursor:pointer;padding:14px 18px;background:var(--grey);font-weight:700;color:var(--navy);
+        border-radius:14px;list-style:none;transition:background .15s;letter-spacing:.3px;
+        display:flex;align-items:center;gap:12px;counter-increment:sec}
+  details.notes summary::before{content:counter(sec,upper-alpha);width:30px;height:30px;flex:none;
+        display:inline-flex;align-items:center;justify-content:center;border-radius:8px;
+        background:linear-gradient(135deg,#1a4470,#0B2E52);color:#fff;font-size:15px;font-weight:800;
+        font-family:Georgia,serif;letter-spacing:0;box-shadow:0 2px 6px rgba(11,46,82,.3)}
+  details.notes summary::after{content:none}
+  details.notes summary:hover{background:#e9eef4}
+  details.notes[open] summary::after{transform:rotate(90deg)}
+  details.notes[open] summary{border-radius:14px 14px 0 0;border-bottom:1px solid var(--border)}
+  details.notes .nbody{padding:10px 20px 18px;max-height:560px;overflow-y:auto}
+  details.notes .note{border-bottom:1px dashed #d8e0ea;padding:11px 0;display:flex;gap:16px;align-items:flex-start}
+  details.notes .note b{width:150px;flex:none;color:var(--red-d);padding-top:1px}
+  details.notes .note span{color:#41546b;flex:1}
+  .foot{margin-top:18px;color:#8494a6;font-size:11px;text-align:center;line-height:1.7}
+
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;
+         padding:11px 24px;border-radius:24px;font-size:12.5px;opacity:0;pointer-events:none;transition:.3s;
+         z-index:99;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+  .toast.show{opacity:1}
+  /* ===== 配置核对 ===== */
+  .check-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .check-file{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;max-width:330px;background:#fff}
+  .check-hint{color:var(--muted);font-size:12px}
+  .check-result{margin-top:14px}
+  .check-pass{padding:14px 16px;background:var(--grnbg);border-left:4px solid var(--grnft);border-radius:8px;color:var(--grnft);font-weight:700;font-size:13.5px;line-height:1.7}
+  .check-fail{padding:14px 16px;background:var(--red-bg);border-left:4px solid var(--redft);border-radius:8px;color:var(--redft);font-weight:700;margin-bottom:12px;line-height:1.7}
+  table.checkdiff{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+  table.checkdiff th{background:linear-gradient(90deg,#0B2E52,#14375C);color:#fff;padding:9px 10px;text-align:left;font-weight:600}
+  table.checkdiff td{border:1px solid #dce3ec;padding:8px 10px;vertical-align:top}
+  table.checkdiff tr:nth-child(even) td{background:#F7F9FB}
+  .check-tag{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .tag-extra{background:#FFF3D6;color:#8a6d1a}
+  .tag-miss{background:#FDECEA;color:#b3261e}
+  .tag-qty{background:#FDECEA;color:#b3261e}
+  .tag-fc{background:#E8EEF7;color:#1f4e79}
+
+  @media print{ body{background:#fff} .header .btns,details.notes{display:none}
+    .panel{box-shadow:none;border:none;padding:0} .card{box-shadow:none;break-inside:avoid} button{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <h1>光纤交换机配置工具 —— 参数化自动选型</h1>
+      <div class="sub">按顺序选择【型号】→【端口速率】→【激活端口数】，其余按需下拉；下方自动列出且仅列出本单实际需要的物料。</div>
+    </div>
+    <div class="btns">
+      <button onclick="copySummary()">复制汇总描述</button>
+      <button onclick="resetAll()">重置</button>
+      <span class="export-wrap">
+        <button class="primary" onclick="toggleExportMenu(event)">导出 PDF / EXCEL ▾</button>
+        <div class="export-menu" id="exportMenu">
+          <button onclick="exportPDF()">导出 PDF（打印另存）</button>
+          <button onclick="exportExcel()">导出 Excel（.xls）</button>
+        </div>
+      </span>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="topgrid">
+      <div class="card">
+        <h2>配置输入</h2>
+        <div class="body">
+          <table class="inputs" id="inputTable"></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="noNum">配置校验</h2>
+        <div class="body">
+          <table class="checks" id="checkTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>配置汇总描述</h2>
+      <div class="body"><div class="summary"><span class="tag">汇总</span><span id="summaryText"></span></div></div>
+    </div>
+
+    <div class="card">
+      <h2>自动生成的完整配置清单（仅列出本单实际需要的物料）</h2>
+      <div class="body" style="padding:0;overflow-x:auto">
+        <table class="bom" id="bomTable"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>配置核对</h2>
+      <div class="body">
+        <div class="check-row">
+          <input type="file" id="checkFile" accept=".xls,.xlsx" class="check-file">
+          <button class="primary" onclick="runCheck()">开始核对</button>
+          <span class="check-hint">上传本地 Excel（.xls / .xlsx），按物料编号与数量合计逐项比对，含 X7 / X8 全部物料</span>
+        </div>
+        <div id="checkResult" class="check-result"></div>
+      </div>
+    </div>
+
+    <details class="notes" id="notesBox">
+      <summary>使用说明与选型规则（依据产品指导 PDF）—— 点击展开</summary>
+      <div class="nbody" id="notesBody"></div>
+    </details>
+    <div class="foot">内部辅助工具，具体配置以系统配置为准！<br>Developed by jinlong.tian</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script id="cfgData" type="application/json">{"rules":[{"key":"DB610S|16G","model":"DB610S","rate":"16G","type":"固定","hostPN":"7D8PA000WW","hostDesc":"DB610S 24端口/激活8口/含8x16G SWL/单电源/导轨/终身FW升级至EoS/3年5*9NBD","basePorts":8,"podPN":"01KP846","podDesc":"DB610S 8口POD 含8x16G SWL SFP+","perUnit":8,"maxUnits":2,"maxPorts":24,"powerCablePN":"39Y7937","powerCableQty":1,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"单电源无冗余；不含电源线","entHostPN":"7D8PA001WW","entHostDesc":"DB610S 24端口/激活24口/含24x16G SWL/含ENT Bundle/单电源/导轨/终身FW升级至EoS/3年5*9NBD","baseFW":"终身","baseSvc":"3年5*9NBD","baseEnt":0},{"key":"DB610S|32G","model":"DB610S","rate":"32G","type":"固定","hostPN":"7D8PA002WW","hostDesc":"DB610S 24端口/激活8口/含8x32G SWL/单电源/导轨/终身FW升级至EoS/3年5*9NBD","basePorts":8,"podPN":"4M27A64094","podDesc":"DB610S 8口POD 含8x32G SWL SFP+","perUnit":8,"maxUnits":2,"maxPorts":24,"powerCablePN":"39Y7937","powerCableQty":1,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"单电源无冗余；16G/32G可混插","entHostPN":"7D8PA003WW","entHostDesc":"DB610S 24端口/激活24口/含24x32G SWL/含ENT Bundle/单电源/导轨/终身FW升级至EoS/3年5*9NBD","baseFW":"终身","baseSvc":"3年5*9NBD","baseEnt":0},{"key":"DB630S|32G","model":"DB630S","rate":"32G","type":"固定","hostPN":"7D1SA004WW","hostDesc":"DB630S 128端口/激活48口/含48x32G SWL/双电源/导轨/1年FW/3年5*9NBD","basePorts":48,"podPN":"4M27A37147","podDesc":"DB630S 24口POD 含24x32G SWL SFP+","perUnit":24,"maxUnits":2,"maxPorts":128,"powerCablePN":"39Y7937","powerCableQty":2,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"选128口时自动加配4M27A37148(QSFP+ 32端口许可含8x128G SWL)；企业版7S0C0019WW需加购","entHostPN":"7D1SA005WW","entHostDesc":"DB630S 128端口/激活96口/含96x32G SWL/含ENT Bundle/双电源/导轨/1年FW/3年5*9NBD","baseFW":1,"baseSvc":"3年5*9NBD","baseEnt":0},{"key":"DB710S|32G","model":"DB710S","rate":"32G","type":"固定","hostPN":"7DHNA001WW","hostDesc":"DB710S 24端口/激活8口/含8x32G SWL/单电源/导轨/终身FW升级至EoS/3年5*9NBD","basePorts":8,"podPN":"4XF7A94634","podDesc":"DB710S 8口POD 含8x32G SWL SFP","perUnit":8,"maxUnits":2,"maxPorts":24,"powerCablePN":"39Y7937","powerCableQty":1,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"单电源无冗余；含企业版","entHostPN":"","entHostDesc":"","baseFW":"终身","baseSvc":"3年5*9NBD","baseEnt":1},{"key":"DB710S|64G","model":"DB710S","rate":"64G","type":"固定","hostPN":"7DHNA000WW","hostDesc":"DB710S 24端口/激活8口/含8x64G SWL/单电源/导轨/终身FW升级至EoS/3年5*9NBD","basePorts":8,"podPN":"4XF7A94635","podDesc":"DB710S 8口POD 含8x64G SWL SFP","perUnit":8,"maxUnits":2,"maxPorts":24,"powerCablePN":"39Y7937","powerCableQty":1,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"单电源无冗余；含企业版","entHostPN":"","entHostDesc":"","baseFW":"终身","baseSvc":"3年5*9NBD","baseEnt":1},{"key":"DB720S|32G","model":"DB720S","rate":"32G","type":"固定","hostPN":"7D5JA000WW","hostDesc":"DB720S 64端口/激活24口/含24x32G SWL/双电源/导轨/3年FW/3年5*9NBD","basePorts":24,"podPN":"4M27A65819","podDesc":"DB720S 8口POD 含8x32G SWL SFP+","perUnit":8,"maxUnits":4,"maxPorts":64,"powerCablePN":"39Y7937","powerCableQty":2,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"双电源；含全企业软件","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"DB720S|64G","model":"DB720S","rate":"64G","type":"固定","hostPN":"7D5JA001WW","hostDesc":"DB720S 64端口/激活24口/含24x64G SWL/双电源/导轨/3年FW/3年5*9NBD","basePorts":24,"podPN":"4M27A65820","podDesc":"DB720S 8口POD 含8x64G SWL SFP+","perUnit":8,"maxUnits":4,"maxPorts":64,"powerCablePN":"39Y7937","powerCableQty":2,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"SFP-DD许可4M27A65821(16口)另选，配SN-LC线缆","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"DB730S|64G","model":"DB730S","rate":"64G","type":"固定","hostPN":"7D9JA000WW","hostDesc":"DB730S 128端口/激活48口/含48x64G SWL/双电源/导轨/3年FW/3年5*9NBD","basePorts":48,"podPN":"4M27A65429","podDesc":"DB730S 24口POD 含24x64G SWL SFP+","perUnit":24,"maxUnits":2,"maxPorts":128,"powerCablePN":"39Y7937","powerCableQty":2,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"SFP-DD按2端口计；含企业版+IR","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"DB820S|64G","model":"DB820S","rate":"64G","type":"固定","hostPN":"7DMAA002WW","hostDesc":"DB820S 56端口/激活24口/含24x64G SWL/企业版/双电源/导轨/3年FW/3年5*9NBD","basePorts":24,"podPN":"4XF7B07567","podDesc":"DB820S 8口POD 含8x64G SWL SFP","perUnit":8,"maxUnits":4,"maxPorts":56,"powerCablePN":"39Y7937","powerCableQty":2,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"不支持16G；许可含纸质件勿遗失","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"DB820S|128G","model":"DB820S","rate":"128G","type":"固定","hostPN":"7DMAA003WW","hostDesc":"DB820S 56端口/激活24口/含24x128G SWL/企业版/双电源/导轨/3年FW/3年5*9NBD","basePorts":24,"podPN":"4XF7B07568","podDesc":"DB820S 8口POD 含8x128G SWL SFP","perUnit":8,"maxUnits":4,"maxPorts":56,"powerCablePN":"39Y7937","powerCableQty":2,"fanPN":"","fanQty":"","psuPN":"","psuQty":"","chassisPN":"","chassisDesc":"","remark":"不支持16G；许可含纸质件勿遗失","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X7-4|32G","model":"X7-4","rate":"32G","type":"导向器","hostPN":"7DB4CTO1WW","hostDesc":"X7-4基础单元/4槽/含ENT+IR许可/导轨/理线架/3年硬件+FW/不含刀片风扇电源线缆","basePorts":0,"podPN":"BR95","podDesc":"FC32 48端口刀片 含32G SWL收发器","perUnit":48,"maxUnits":4,"maxPorts":192,"powerCablePN":"6252","powerCableQty":2,"fanPN":"AVGY","fanQty":2,"psuPN":"BBCU","psuQty":2,"chassisPN":"BR9A","chassisDesc":"X7-4 FC Director刀框 4槽 8U 3年保修","remark":"刀片全端口激活含光模块","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X7-4|64G","model":"X7-4","rate":"64G","type":"导向器","hostPN":"7DB4CTO1WW","hostDesc":"X7-4基础单元/4槽/含ENT+IR许可/导轨/理线架/3年硬件+FW/不含刀片风扇电源线缆","basePorts":0,"podPN":"BR97","podDesc":"FC64 48端口刀片 含64G SWL收发器","perUnit":48,"maxUnits":4,"maxPorts":256,"powerCablePN":"6252","powerCableQty":2,"fanPN":"AVGY","fanQty":2,"psuPN":"BBCU","psuQty":2,"chassisPN":"BR9A","chassisDesc":"X7-4 FC Director刀框 4槽 8U 3年保修","remark":"64G可混插BVHH 64口SFP-DD刀片(4块=256口)；电源/风扇气流须同向(NPI配NPI)","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X7-8|32G","model":"X7-8","rate":"32G","type":"导向器","hostPN":"7DB4CTO2WW","hostDesc":"X7-8基础单元/8槽/含ENT+IR许可/导轨/理线架/3年硬件+FW/不含刀片风扇电源线缆","basePorts":0,"podPN":"BR95","podDesc":"FC32 48端口刀片 含32G SWL收发器","perUnit":48,"maxUnits":8,"maxPorts":384,"powerCablePN":"6252","powerCableQty":4,"fanPN":"AVGY","fanQty":3,"psuPN":"BBCU","psuQty":4,"chassisPN":"BR99","chassisDesc":"X7-8 FC Director刀框 8槽 14U 3年保修","remark":"刀片全端口激活含光模块","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X7-8|64G","model":"X7-8","rate":"64G","type":"导向器","hostPN":"7DB4CTO2WW","hostDesc":"X7-8基础单元/8槽/含ENT+IR许可/导轨/理线架/3年硬件+FW/不含刀片风扇电源线缆","basePorts":0,"podPN":"BR97","podDesc":"FC64 48端口刀片 含64G SWL收发器","perUnit":48,"maxUnits":8,"maxPorts":512,"powerCablePN":"6252","powerCableQty":4,"fanPN":"AVGY","fanQty":3,"psuPN":"BBCU","psuQty":4,"chassisPN":"BR99","chassisDesc":"X7-8 FC Director刀框 8槽 14U 3年保修","remark":"64G可混插BVHH 64口SFP-DD刀片(8块=512口)；电源4个(2+2)/风扇3个(5+1)","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X8-4|64G","model":"X8-4","rate":"64G","type":"导向器","hostPN":"7DMBCTO1WW","hostDesc":"X8-4基础单元/4槽/9U/含2块CP控制处理刀片+2块CR128-4核心路由刀片/导轨套件/3年5*9NBD(FOS10.X)/不含端口刀片风扇电源线缆","basePorts":0,"podPN":"CBUQ","podDesc":"第8代FC128-48刀片 含48x64G SFP+ SWL","perUnit":48,"maxUnits":4,"maxPorts":192,"powerCablePN":"6252","powerCableQty":4,"fanPN":"CBUK","fanQty":3,"psuPN":"CBUM","psuQty":4,"chassisPN":"CB96","chassisDesc":"X8-4 FC Director刀框/机箱 4槽 9U 含导轨套件(特性码CB96)","remark":"电源必须4个(2+2)；风扇3个(2+1)；电源/风扇气流须同向(NPI配NPI)","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X8-4|128G","model":"X8-4","rate":"128G","type":"导向器","hostPN":"7DMBCTO1WW","hostDesc":"X8-4基础单元/4槽/9U/含2块CP控制处理刀片+2块CR128-4核心路由刀片/导轨套件/3年5*9NBD(FOS10.X)/不含端口刀片风扇电源线缆","basePorts":0,"podPN":"CBUP","podDesc":"第8代FC128-48刀片 含48x128G SFP+ SWL","perUnit":48,"maxUnits":4,"maxPorts":192,"powerCablePN":"6252","powerCableQty":4,"fanPN":"CBUK","fanQty":3,"psuPN":"CBUM","psuQty":4,"chassisPN":"CB96","chassisDesc":"X8-4 FC Director刀框/机箱 4槽 9U 含导轨套件(特性码CB96)","remark":"电源必须4个(2+2)；风扇3个(2+1)；电源/风扇气流须同向(NPI配NPI)","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X8-8|64G","model":"X8-8","rate":"64G","type":"导向器","hostPN":"7DMBCTO2WW","hostDesc":"X8-8基础单元/8槽/14U/含2块CP控制处理刀片+2块CR128-8核心路由刀片/导轨套件/3年5*9NBD(FOS10.X)/不含端口刀片风扇电源线缆","basePorts":0,"podPN":"CBUQ","podDesc":"第8代FC128-48刀片 含48x64G SFP+ SWL","perUnit":48,"maxUnits":8,"maxPorts":384,"powerCablePN":"6252","powerCableQty":6,"fanPN":"CBU6","fanQty":3,"psuPN":"CBUM","psuQty":6,"chassisPN":"CB97","chassisDesc":"X8-8 FC Director刀框/机箱 8槽 14U 含导轨套件(特性码CB97)","remark":"电源必须6个(3+3)；风扇3个(2+1)；电源/风扇气流须同向(NPI配NPI)","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1},{"key":"X8-8|128G","model":"X8-8","rate":"128G","type":"导向器","hostPN":"7DMBCTO2WW","hostDesc":"X8-8基础单元/8槽/14U/含2块CP控制处理刀片+2块CR128-8核心路由刀片/导轨套件/3年5*9NBD(FOS10.X)/不含端口刀片风扇电源线缆","basePorts":0,"podPN":"CBUP","podDesc":"第8代FC128-48刀片 含48x128G SFP+ SWL","perUnit":48,"maxUnits":8,"maxPorts":384,"powerCablePN":"6252","powerCableQty":6,"fanPN":"CBU6","fanQty":3,"psuPN":"CBUM","psuQty":6,"chassisPN":"CB97","chassisDesc":"X8-8 FC Director刀框/机箱 8槽 14U 含导轨套件(特性码CB97)","remark":"电源必须6个(3+3)；风扇3个(2+1)；电源/风扇气流须同向(NPI配NPI)","entHostPN":"","entHostDesc":"","baseFW":3,"baseSvc":"3年5*9NBD","baseEnt":1}],"models":["DB610S","DB630S","DB710S","DB720S","DB730S","DB820S","X7-4","X7-8","X8-4","X8-8"],"rates":{"DB610S":["16G","32G"],"DB630S":["32G"],"DB710S":["32G","64G"],"DB720S":["32G","64G"],"DB730S":["64G"],"DB820S":["64G","128G"],"X7-4":["32G","64G"],"X7-8":["32G","64G"],"X8-4":["64G","128G"],"X8-8":["64G","128G"]},"portChoices":{"DB610S|16G":[8,16,24],"DB610S|32G":[8,16,24],"DB630S|32G":[48,72,96,128],"DB710S|32G":[8,16,24],"DB710S|64G":[8,16,24],"DB720S|32G":[24,32,40,48,56],"DB720S|64G":[24,32,40,48,56,64],"DB730S|64G":[48,72,96,128],"DB820S|64G":[24,32,40,48,56],"DB820S|128G":[24,32,40,48,56],"X7-4|32G":[48,96,144,192],"X7-4|64G":[48,64,96,112,128,144,160,176,192,208,224,240,256],"X7-8|32G":[48,96,144,192,240,288,336,384],"X7-8|64G":[48,64,96,112,128,144,160,176,192,208,224,240,256,272,288,304,320,336,352,368,384,400,416,432,448,464,480,496,512],"X8-4|64G":[48,96,144,192],"X8-4|128G":[48,96,144,192],"X8-8|64G":[48,96,144,192,240,288,336,384],"X8-8|128G":[48,96,144,192,240,288,336,384]},"baseFW":{"DB610S":"终身","DB630S":1,"DB710S":"终身","DB720S":3,"DB730S":3,"DB820S":3,"X7-4":3,"X7-8":3,"X8-4":3,"X8-8":3},"baseSvc":{"DB610S":"3年5*9NBD","DB630S":"3年5*9NBD","DB710S":"3年5*9NBD","DB720S":"3年5*9NBD","DB730S":"3年5*9NBD","DB820S":"3年5*9NBD","X7-4":"3年5*9NBD","X7-8":"3年5*9NBD","X8-4":"3年5*9NBD","X8-8":"3年5*9NBD"},"baseEnt":{"DB610S":0,"DB630S":0,"DB710S":1,"DB720S":1,"DB730S":1,"DB820S":1,"X7-4":1,"X7-8":1,"X8-4":1,"X8-8":1},"entHost":{"DB610S|16G":{"pn":"7D8PA001WW","desc":"DB610S 24端口/激活24口/含24x16G SWL/含ENT Bundle/单电源/导轨/终身FW升级至EoS/3年5*9NBD"},"DB610S|32G":{"pn":"7D8PA003WW","desc":"DB610S 24端口/激活24口/含24x32G SWL/含ENT Bundle/单电源/导轨/终身FW升级至EoS/3年5*9NBD"},"DB630S|32G":{"pn":"7D1SA005WW","desc":"DB630S 128端口/激活96口/含96x32G SWL/含ENT Bundle/双电源/导轨/1年FW/3年5*9NBD"}},"service":{"DB610S":[["71Y0988","3年7*24升级"],["71Y0989","4年7*24升级"],["71Y0990","5年7*24升级"],["71Y9168","4年5*9 NBD"],["71Y9169","5年5*9 NBD"]],"DB630S":[["71Y9184","3年7*24(不含FW)"],["71Y9185","4年7*24(不含FW)"],["71Y9186","5年7*24(不含FW)"],["71Y9189","4年5*9(不含FW)"],["71Y9190","5年5*9(不含FW)"]],"DB710S":[["80Y0031","3年7*24现场"],["80Y0033","4年7*24现场"],["80Y0035","5年7*24现场"],["80Y0032","4年5*9现场"],["80Y0034","5年5*9现场"]],"DB720S":[["71Y5511","3年7*24(不含FW)"],["71Y5512","4年7*24(不含FW)"],["71Y5513","5年7*24(不含FW)"],["71Y5514","4年5*9(不含FW)"],["71Y5515","5年5*9(不含FW)"]],"DB730S":[["74Y1201","3年7*24x4现场"],["74Y1196","4年7*24x4现场"],["74Y1198","5年7*24x4现场"],["74Y1195","4年5*9现场"],["74Y1197","5年5*9现场"]],"DB820S":[["80Y0246","3年7*24x4现场"],["80Y0248","4年7*24x4现场"],["80Y0250","5年7*24x4现场"],["80Y0247","4年5*9现场"],["80Y0249","5年5*9现场"]],"X7-4":[["74Y1167","3年7*24x4现场"],["74Y1168","4年7*24x4现场"],["74Y1169","5年7*24x4现场"],["74Y1170","4年5*9现场"],["74Y1171","5年5*9现场"]],"X7-8":[["74Y1172","3年7*24x4现场"],["74Y1173","4年7*24x4现场"],["74Y1174","5年7*24x4现场"],["74Y1175","4年5*9现场"],["74Y1176","5年5*9现场"]],"X8-4":[["80Y0232","3年7*24x4现场"],["80Y0234","4年7*24x4现场"],["80Y0236","5年7*24x4现场"],["80Y0233","4年5*9现场"],["80Y0235","5年5*9现场"]],"X8-8":[["80Y0237","3年7*24现场"],["80Y0239","4年7*24现场"],["80Y0241","5年7*24现场"],["80Y0238","4年5*9现场"],["80Y0240","5年5*9现场"]]},"fw":{"DB610S":[],"DB710S":[],"DB630S":[["71Y9206","1年FW升级"],["71Y9207","2年FW升级"],["71Y9208","4年FW升级"]],"DB720S":[["71Y5516","1年FW升级"],["71Y5517","2年FW升级"]],"DB730S":[["74Y1199","1年FW升级"],["74Y1200","2年FW升级"]],"DB820S":[["80Y0251","1年FW升级"],["80Y0252","2年FW升级"]],"X7-4":[["74Y1177","1年FW升级"],["74Y1178","2年FW升级"]],"X7-8":[["74Y1179","1年FW升级"],["74Y1180","2年FW升级"]],"X8-4":[["80Y0242","1年FW升级"],["80Y0243","2年FW升级"]],"X8-8":[["80Y0244","1年FW升级"],["80Y0245","2年FW升级"]]},"sannav":[{"pn":"7S0C0010WW","label":"SANnav Base版 1年 600端口","desc":"SANnav Base版 1年 600端口"},{"pn":"7S0C0013WW","label":"SANnav Base版 3年 600端口","desc":"SANnav Base版 3年 600端口"},{"pn":"7S0C001KWW","label":"SANnav Base版 5年 600端口","desc":"SANnav Base版 5年 600端口"},{"pn":"7S0C0011WW","label":"SANnav Enterprise版 1年 15K端口","desc":"SANnav Enterprise版 1年 15K端口"},{"pn":"7S0C0014WW","label":"SANnav Enterprise版 3年 15K端口","desc":"SANnav Enterprise版 3年 15K端口"},{"pn":"7S0C001LWW","label":"SANnav Enterprise版 5年 15K端口","desc":"SANnav Enterprise版 5年 15K端口"},{"pn":"7S0C0012WW","label":"SANnav Global View 1年","desc":"SANnav Global View 1年"},{"pn":"7S0C0015WW","label":"SANnav Global View 3年","desc":"SANnav Global View 3年"},{"pn":"4M27A65416","label":"32G SWL短波模块","desc":"Brocade Secure 32Gb SWL SFP+ Transceiver"},{"pn":"4M27A65417","label":"32G SWL短波模块8PACK(8只)","desc":"Brocade Secure 32Gb SWL SFP+ Transceiver 8-pack"},{"pn":"4M27A65418","label":"32G LWL长波模块(10km)","desc":"Brocade Secure 32-Gb LWL SFP+ Transceiver (10 km)"},{"pn":"4M27A65419","label":"32G LWL长波模块8PACK(10km/8只)","desc":"Brocade Secure 32-Gb LWL SFP+ Transceiver (10 km) 8-pack"},{"pn":"4M27A65424","label":"32G ELWL超长波模块(25km)","desc":"Brocade Secure 32-Gb ELWL SFP+ Transceiver (25 km)"},{"pn":"4M27A65425","label":"64G SWL短波模块","desc":"Brocade Secure 64Gb SWL SFP+ Transceiver"},{"pn":"4M27A65426","label":"64G SWL短波模块8PACK(8只)","desc":"Brocade Secure 64Gb SWL SFP+ Transceiver 8-pack"},{"pn":"4M27A65433","label":"64G LWL长波模块(10km)","desc":"SFP+,LWL,64G,10KM,1PK SECURE (64Gb 长波模块, 10KM)"},{"pn":"4M27A65434","label":"64G LWL长波模块8PACK(10km/8只)","desc":"SFP+,LWL,64G,10KM,8PK SECURE (64Gb 长波模块, 10KM, 8个)"},{"pn":"4M27A65432","label":"64G ELWL超长波模块(25km)","desc":"SFP+,ELWL,64G,25KM,1-PK SECURE (64Gb 长波模块, 25KM)"},{"pn":"4M27A65422","label":"128G QSFP+ SWL模块(4x 32Gb)","desc":"Brocade Secure 128Gb (4x 32Gb/s) SWL QSFP+"},{"pn":"7S0C0018WW","label":"DB630S Integrated Routing 许可","desc":"Lenovo DB630S Integrated Routing"},{"pn":"7S0C001AWW","label":"DB630S IR 支持扩展 2年","desc":"Lenovo DB630S Integrated Routing Support Extension, 2-Years"},{"pn":"7S0C001BWW","label":"DB630S IR 支持扩展 4年","desc":"Lenovo DB630S Integrated Routing Support Extension, 4-Years"},{"pn":"BR8Y","label":"X7 ICL POD套件(4x32G SWL QSFP+)","desc":"X7 ICL POD Kit (license + 4x32G SWL QSFP+ transceivers)"},{"pn":"BR8Z","label":"X7 ICL POD套件(第7代SWL QSFP+)","desc":"X7 ICL POD Kit (license + 7th Gen SWL QSFP+ transceivers)"},{"pn":"CBUE","label":"X8-4 ICL刀片(2块/8端口/4x第8代100m OSFP)","desc":"X8-4 UltraScale ICL刀片2块/8端口/4个第8代100m OSFP模块(X8-4 ICL Blade, 2 blades, 8 ports, 4x Gen8 100m OSFP)"},{"pn":"CBUD","label":"X8-4 ICL刀片(2块/8端口/4x第8代2km OSFP)","desc":"X8-4 UltraScale ICL刀片2块/8端口/4个第8代2km OSFP模块(X8-4 ICL Blade, 2 blades, 8 ports, 4x Gen8 2km OSFP)"},{"pn":"CBUC","label":"X8-8 ICL刀片(2块/16端口/8x第8代100m OSFP)","desc":"X8-8 UltraScale ICL刀片2块/16端口/8个第8代100m OSFP模块(X8-8 ICL Blade, 2 blades, 16 ports, 8x Gen8 100m OSFP)"},{"pn":"CBUB","label":"X8-8 ICL刀片(2块/16端口/8x第8代2km OSFP)","desc":"X8-8 UltraScale ICL刀片2块/16端口/8个第8代2km OSFP模块(X8-8 ICL Blade, 2 blades, 16 ports, 8x Gen8 2km OSFP)"},{"pn":"BR98","label":"X7刀片 FC64 48端口(含32G SWL收发器)","desc":"Brocade FC64 48 端口刀片，带 32G SWL 收发器"},{"pn":"BR95","label":"X7刀片 FC32 48端口(含32G SWL收发器)","desc":"Brocade FC32 48 端口刀片，带 32G SWL 收发器"},{"pn":"BR96","label":"X7刀片 FC64 48端口(含32G LWL收发器)","desc":"Brocade FC64 48 端口刀片，带 32G LWL 收发器"},{"pn":"BR97","label":"X7刀片 FC64 48端口(含64G SWL收发器)","desc":"Brocade FC64 48 端口刀片，带 64G SWL 收发器"},{"pn":"BRE7","label":"X7刀片 FC64 48端口(含48x64G LWL SFP+)","desc":"Brocade FC64 48 端口刀片，带 48 个 64G LWL SFP+ 安全光学器件"},{"pn":"BVHH","label":"X7刀片 FC64-64(32x64G SWL SFP-DD)","desc":"X7 端口刀片，FC64-64（32x64G SWL SFP-DD）"},{"pn":"B5Z7","label":"X7刀片 SX6 FC-IP扩展(16x32G SWL SFP/1年)","desc":"Lenovo SX6 FC-IP SAN 扩展刀片 + 16/32Gb SWL SFP，1 年"},{"pn":"B5Z8","label":"X7刀片 SX6 FC-IP扩展(16x32G LWL SFP/1/10/40GbE/1年)","desc":"Lenovo SX6 FC-IP SAN 扩展刀片 + 16 X 32Gb LWL SFP，1/10/40GBE，1 年"},{"pn":"BPA9","label":"SN-SN SFP-DD光纤线(3m)","desc":"Lenovo 3m SN-SN SFP-DD OM4 FC Cable"},{"pn":"BPAA","label":"SN-SN SFP-DD光纤线(5m)","desc":"Lenovo 5m SN-SN SFP-DD OM4 FC Cable"},{"pn":"BPAB","label":"SN-SN SFP-DD光纤线(10m)","desc":"Lenovo 10m SN-SN SFP-DD OM4 FC Cable"},{"pn":"BPAC","label":"SN-SN SFP-DD光纤线(15m)","desc":"Lenovo 15m SN-SN SFP-DD OM4 FC Cable"},{"pn":"BPAD","label":"SN-SN SFP-DD光纤线(25m)","desc":"Lenovo 25m SN-SN SFP-DD OM4 FC Cable"},{"pn":"BPAE","label":"SN-SN SFP-DD光纤线(30m)","desc":"Lenovo 30m SN-SN SFP-DD OM4 FC Cable"},{"pn":"4X97A81895","label":"SN-SN SFP-DD光纤线(3m) DB720/730","desc":"Lenovo 3m SN-SN SFP-DD OM4 FC Cable"},{"pn":"4X97A81896","label":"SN-SN SFP-DD光纤线(5m) DB720/730","desc":"Lenovo 5m SN-SN SFP-DD OM4 FC Cable"},{"pn":"4X97A81898","label":"SN-SN SFP-DD光纤线(10m) DB720/730","desc":"Lenovo 10m SN-SN SFP-DD OM4 FC Cable"},{"pn":"4X97A81899","label":"SN-SN SFP-DD光纤线(15m) DB720/730","desc":"Lenovo 15m SN-SN SFP-DD OM4 FC Cable"},{"pn":"4X97A81901","label":"SN-SN SFP-DD光纤线(25m) DB720/730","desc":"Lenovo 25m SN-SN SFP-DD OM4 FC Cable"},{"pn":"4X97A81902","label":"SN-SN SFP-DD光纤线(30m) DB720/730","desc":"Lenovo 30m SN-SN SFP-DD OM4 FC Cable"},{"pn":"CBUQ","label":"X8刀片 FC128-48(含48x64G SWL SFP+)","desc":"第8代FC128-48刀片 含48x64G SFP+ SWL"},{"pn":"CBUP","label":"X8刀片 FC128-48(含48x128G SWL SFP+)","desc":"第8代FC128-48刀片 含48x128G SFP+ SWL"},{"pn":"CBUN","label":"X8刀片 FC128-48(含48x128G LWL SFP+)","desc":"第8代FC128-48刀片 含48x128G SFP+ LWL"},{"pn":"CBUA","label":"X8 ICL刀片模块(4x第8代100m OSFP)","desc":"X8 ICL 刀片模块，4 个第 8 代 100 米 OSFP 收发器"},{"pn":"CBU9","label":"X8 ICL刀片模块(4x第8代2km OSFP)","desc":"X8 ICL 刀片模块，4 个第 8 代 2 千米 OSFP 收发器"}],"partDesc":{"4M27A65418":"Brocade Secure 32-Gb LWL SFP+ Transceiver (10 km)","4M27A65424":"Brocade Secure 32-Gb ELWL SFP+ Transceiver (25 km)","4M27A65433":"SFP+,LWL,64G,10KM,1PK SECURE (64Gb 长波模块, 10KM)","4M27A65432":"SFP+,ELWL,64G,25KM,1-PK SECURE (64Gb 长波模块, 25KM)","4M27A65419":"Brocade Secure 32-Gb LWL SFP+ Transceiver (10 km) 8-pack","4M27A65434":"SFP+,LWL,64G,10KM,8PK SECURE (64Gb 长波模块, 10KM, 8个)","BR8Y":"X7 ICL POD Kit (license + 4x32G SWL QSFP+ transceivers)","BR8Z":"X7 ICL POD Kit (license + 7th Gen SWL QSFP+ transceivers)","CBUE":"X8-4 UltraScale ICL刀片2块/8端口/4个第8代100m OSFP模块(X8-4 ICL Blade, 2 blades, 8 ports, 4x Gen8 100m OSFP)","CBUD":"X8-4 UltraScale ICL刀片2块/8端口/4个第8代2km OSFP模块(X8-4 ICL Blade, 2 blades, 8 ports, 4x Gen8 2km OSFP)","CBUC":"X8-8 UltraScale ICL刀片2块/16端口/8个第8代100m OSFP模块(X8-8 ICL Blade, 2 blades, 16 ports, 8x Gen8 100m OSFP)","CBUB":"X8-8 UltraScale ICL刀片2块/16端口/8个第8代2km OSFP模块(X8-8 ICL Blade, 2 blades, 16 ports, 8x Gen8 2km OSFP)","BR95":"Brocade FC32 48 端口刀片，带 32G SWL 收发器","BR97":"Brocade FC64 48 端口刀片，带 64G SWL 收发器"},"cables":[{"len":"3m","pn":"4Z57A10847","desc":"Lenovo 3 米 LC-LC OM4 MMF 电缆"},{"len":"5m","pn":"4Z57A10848","desc":"Lenovo 5m LC-LC OM4 MMF Cable"},{"len":"10m","pn":"4Z57A10849","desc":"Lenovo 10m LC-LC OM4 MMF Cable"},{"len":"15m","pn":"4Z57A10850","desc":"Lenovo 15m LC-LC OM4 MMF Cable"},{"len":"25m","pn":"4Z57A10851","desc":"Lenovo 25m LC-LC OM4 MMF Cable"},{"len":"30m","pn":"4Z57A10852","desc":"Lenovo 30m LC-LC OM4 MMF Cable"}],"sfddCables":[{"len":"1m","pn":"4X97A81905","desc":"Lenovo 1M SN-LC SFP-DD OM4 FC Cable"},{"len":"3m","pn":"4X97A81907","desc":"Lenovo 3M SN-LC SFP-DD OM4 FC Cable"},{"len":"5m","pn":"4X97A81908","desc":"Lenovo 5M SN-LC SFP-DD OM4 FC Cable"},{"len":"10m","pn":"4X97A81910","desc":"Lenovo 10M SN-LC SFP-DD OM4 FC Cable"},{"len":"15m","pn":"4X97A81911","desc":"Lenovo 15M SN-LC SFP-DD OM4 FC Cable"},{"len":"25m","pn":"4X97A81913","desc":"Lenovo 25M SN-LC SFP-DD OM4 FC Cable"},{"len":"30m","pn":"4X97A81914","desc":"Lenovo 30M SN-LC SFP-DD OM4 FC Cable"}],"iclMax":{"X7-4":2,"X7-8":4},"x7Slots":{"X7-4":4,"X7-8":8},"x7Combo":{"X7-4|48":{"a":1,"b":0},"X7-4|64":{"a":0,"b":1},"X7-4|96":{"a":2,"b":0},"X7-4|112":{"a":1,"b":1},"X7-4|128":{"a":0,"b":2},"X7-4|144":{"a":3,"b":0},"X7-4|160":{"a":2,"b":1},"X7-4|176":{"a":1,"b":2},"X7-4|192":{"a":4,"b":0},"X7-4|208":{"a":3,"b":1},"X7-4|224":{"a":2,"b":2},"X7-4|240":{"a":1,"b":3},"X7-4|256":{"a":0,"b":4},"X7-8|48":{"a":1,"b":0},"X7-8|64":{"a":0,"b":1},"X7-8|96":{"a":2,"b":0},"X7-8|112":{"a":1,"b":1},"X7-8|128":{"a":0,"b":2},"X7-8|144":{"a":3,"b":0},"X7-8|160":{"a":2,"b":1},"X7-8|176":{"a":1,"b":2},"X7-8|192":{"a":4,"b":0},"X7-8|208":{"a":3,"b":1},"X7-8|224":{"a":2,"b":2},"X7-8|240":{"a":5,"b":0},"X7-8|256":{"a":4,"b":1},"X7-8|272":{"a":3,"b":2},"X7-8|288":{"a":6,"b":0},"X7-8|304":{"a":5,"b":1},"X7-8|320":{"a":4,"b":2},"X7-8|336":{"a":7,"b":0},"X7-8|352":{"a":6,"b":1},"X7-8|368":{"a":5,"b":2},"X7-8|384":{"a":8,"b":0},"X7-8|400":{"a":7,"b":1},"X7-8|416":{"a":6,"b":2},"X7-8|432":{"a":5,"b":3},"X7-8|448":{"a":4,"b":4},"X7-8|464":{"a":3,"b":5},"X7-8|480":{"a":2,"b":6},"X7-8|496":{"a":1,"b":7},"X7-8|512":{"a":0,"b":8}},"pnDict":{"00FM412":"Lenovo 1m MPO-4xLC OM3 MMF Breakout Cable","00FM413":"Lenovo 3m MPO-4xLC OM3 MMF Breakout Cable","00FM414":"Lenovo 5m MPO-4xLC OM3 MMF Breakout Cable","00MY760":"Lenovo B65xx Mid-mount Rack Kit","00MY807":"Lenovo B6505 Redundant Power Supply","00WF806":"Lenovo B6510 12-port license w/ 12x 16G SWL SFP+","00WF810":"Lenovo B6505 12-port license w/ 12x 16G SWL SFP+","01KP846":"Lenovo DB610S 8-Port SW POD License (with 8x 16 Gbps SWL SFP+ transceivers)","3873BR3":"Lenovo B6510, 24 ports licensed, 24x 16Gb SWL SFPs, 2 PS, Rail Kit, 3 Yr FW","3873ER1":"Lenovo B6505, 12 ports licensed, 12x 16Gb SWL SFPs, 1 PS, Rail Kit, 1Yr FW","3873IR1":"Lenovo B6510, 24 ports licensed, 24x 16Gb SWL SFPs, 2 PS, Rail Kit, 1Yr FW","39Y7937":"1.5m, 10A/100-250V, C13 to IEC 320-C14 Rack Power Cable","4M27A37147":"DB630 24-Port SW License with 24x 32 Gbps SWL SFP+ Transceivers","4M27A37148":"DB630 QSFP+ 32-Port SW License with 8x 128 Gbps (4x 32 Gbps) SWL v2 Transceivers","4M27A64094":"Lenovo DB610S 8-Port SW POD License (with 8x 32 Gbps SWL SFP+ transceivers)","4M27A65418":"32G LWL长波模块(10km)","4M27A65419":"32G LWL长波模块8PACK(10km/8只)","4M27A65416":"Brocade Secure 32Gb SWL SFP+ Transceiver","4M27A65417":"Brocade Secure 32Gb SWL SFP+ Transceiver 8-pack","4M27A65425":"Brocade Secure 64Gb SWL SFP+ Transceiver","4M27A65426":"Brocade Secure 64Gb SWL SFP+ Transceiver 8-pack","4M27A65422":"Brocade Secure 128Gb (4x 32Gb/s) SWL QSFP+","4M27A65429":"DB730S 24-Port SW License with 24x 64G SWL SFP+ transceivers","4M27A65430":"DB730S 32-Port SW License with 16x 64G SWL SFP-DD transceivers","4M27A65432":"64G ELWL超长波模块(25km)","4M27A65433":"64G LWL长波模块(10km)","4M27A65434":"64G LWL长波模块8PACK(10km/8只)","4M27A65819":"DB720S 8-Port SW License with 8x 32 Gbps SWL SFP+ Transceivers","4M27A65820":"DB720S 8-Port SW License with 8x 64 Gbps SWL SFP+ transceivers","4M27A65821":"DB720S 16-Port SW License with 8x 64 Gbps SWL SFP-DD transceivers","4X97A81905":"Lenovo 1M SN-LC SFP-DD OM4 FC Cable","4X97A81907":"Lenovo 3M SN-LC SFP-DD OM4 FC Cable","4X97A81908":"Lenovo 5M SN-LC SFP-DD OM4 FC Cable","4X97A81910":"Lenovo 10M SN-LC SFP-DD OM4 FC Cable","4X97A81911":"Lenovo 15M SN-LC SFP-DD OM4 FC Cable","4X97A81913":"Lenovo 25M SN-LC SFP-DD OM4 FC Cable","4X97A81914":"Lenovo 30M SN-LC SFP-DD OM4 FC Cable","4XF7A94634":"DB710S 8 POD SW License (8x32G SWL SFP)","4XF7A94635":"DB710S 8 POD SW License (8x64G SWL SFP)","4XF7B07567":"DB820S 8口POD 含8x64G SWL SFP","4XF7B07568":"DB820S 8口POD 含8x128G SWL SFP","4Z57A10847":"Lenovo 3 米 LC-LC OM4 MMF 电缆","4Z57A10848":"Lenovo 5m LC-LC OM4 MMF Cable","4Z57A10849":"Lenovo 10m LC-LC OM4 MMF Cable","4Z57A10850":"Lenovo 15m LC-LC OM4 MMF Cable","4Z57A10851":"Lenovo 25m LC-LC OM4 MMF Cable","4Z57A10852":"Lenovo 30m LC-LC OM4 MMF Cable","6252":"2.5 米，16A/100-250V，C19 到 C20 跳线","6415H11":"Lenovo DB620S SAN Switch, 激活24端口，含24x 32Gb 短波光模块, 双电源, 上架套件, 含1年固件升级, 3年 5*9*NBD 硬件维保","6415H2A":"Lenovo DB620S SAN Switch, 激活48端口，含48x 32Gb 短波光模块, 含ENT Bundle许可，双电源, 上架套件, 含1年固件升级, 3年 5*9*NBD 硬件维保","6415J1A":"Lenovo DB620S SAN Switch, 激活24端口，含24x 16Gb 短波光模块, 双电源, 上架套件, 含1年固件升级, 3年 5*9*NBD 硬件维保","6559F1A":"Lenovo ThinkSystem DB610S, ENT Bundle, 24 ports licensed, 24x 16Gb SWL SFPs, 1 PS, Rail Kit, 1Yr FW","6559F2A":"Lenovo ThinkSystem DB610S, 8 ports licensed, 8x 16Gb SWL SFPs, 1 PS, Rail Kit, 1Yr FW","6559F3A":"Lenovo ThinkSystem DB610S, 8 ports licensed, No SFPs, 1 PS, Rail Kit, 1Yr FW","6559F4A":"Lenovo ThinkSystem DB610S, 8 ports licensed, 8x32Gb SFPs, 1 PS, Rail Kit, 1Yr FW, 3Yr 5*9","71Y0988":"ThinkSystem DB610S Upgrade to 3Yr 7*24","71Y0989":"ThinkSystem DB610S Upgrade to 4Yr 7*24","71Y0990":"ThinkSystem DB610S Upgrade to 5Yr 7*24","71Y5511":"（不含FW升级服务）DB720s Upgrade to 3Yr 7*24 onsite","71Y5512":"（不含FW升级服务）DB720s Upgrade to 4Yr 7*24 onsite","71Y5513":"（不含FW升级服务）DB720s Upgrade to 5Yr 7*24 onsite","71Y5514":"（不含FW升级服务）DB720s Upgrade to 4Yr 5*9 NBD onsite","71Y5515":"（不含FW升级服务）DB720s Upgrade to 5Yr 5*9 NBD onsite","71Y5516":"DB720S 1年FW升级","71Y5517":"DB720S 2年FW升级","71Y9168":"ThinkSystem DB610S Upgrade to 4Yr 5*9 NBD","71Y9169":"ThinkSystem DB610S Upgrade to 5Yr 5*9 NBD","71Y9184":"ThinkSystem DB630S Upgrade to 3Yr 7*24（不含FW升级）","71Y9185":"ThinkSystem DB630S Upgrade to 4Yr 7*24（不含FW升级）","71Y9186":"ThinkSystem DB630S Upgrade to 5Yr 7*24（不含FW升级）","71Y9189":"ThinkSystem DB630S Upgrade to 4Yr 5*9 NBD（不含FW升级）","71Y9190":"ThinkSystem DB630S Upgrade to 5Yr 5*9 NBD（不含FW升级）","71Y9206":"DB630S 1年FW升级","71Y9207":"DB630S 2年FW升级","71Y9208":"DB630S 4年FW升级","74Y1167":" Lenovo X7-4 三年 7*24*4 硬件现场服务","74Y1168":" Lenovo X7-4 四年 7*24*4 硬件现场服务","74Y1169":" Lenovo X7-4 五年 7*24*4 硬件现场服务","74Y1170":"Lenovo X7-4 四年 5*9*下一工作日 硬件现场服务","74Y1171":" Lenovo X7-4 五年 5*9*下一工作日 硬件现场服务","74Y1172":"Lenovo X7-8 三年 7*24*4 硬件现场服务","74Y1173":"Lenovo X7-8 四年 7*24*4 硬件现场服务","74Y1174":"Lenovo X7-8 五年 7*24*4 硬件现场服务","74Y1175":"4年5*9现场","74Y1176":"5年5*9现场","74Y1177":"X7-4 1年博科FW 升级支持","74Y1178":"X7-4 2年博科FW 升级支持","74Y1179":"1年FW升级","74Y1180":"X7-8 2年博科FW 升级支持","74Y1195":"（不含FW升级服务）DB730S 四年 5x9x下一工作日 硬件现场服务","74Y1196":"（不含FW升级服务）DB730S 四年 7x24x4 硬件现场服务","74Y1197":"（不含FW升级服务）DB730S 五年 5x9x下一工作日 硬件现场服务","74Y1198":"（不含FW升级服务）DB730S 五年 7x24x4 硬件现场服务","74Y1199":"DB730S 1年博科FW 升级支持","74Y1200":"DB730S 2年FW升级","74Y1201":"DB730S 3年7*24x4现场","7D1SA004WW":"Lenovo DB630S SAN Switch, 128端口，激活48端口，含48x 32Gb 短波光模块, 双电源, 上架套件, 含1年固件升级, 3年 5*9*NBD 硬件维保","7D1SA005WW":"Lenovo DB630S SAN Switch, 128端口，激活96端口，含96x 32Gb 短波光模块, 含ENT Bundle许可，双电源, 上架套件, 含1年固件升级, 3年 5*9*NBD 硬件维保","7D5JA000WW":"Lenovo DB720S SAN Switch, 64端口，激活24端口, 含24x 32Gb 短波光模块, 双电源, 上架套件, 含3年固件升级, 3年 5*9*NBD 硬件维保","7D5JA001WW":"Lenovo DB720S SAN Switch, 64端口，激活24端口, 含24x 64Gb 短波光模块, 双电源, 上架套件, 含3年固件升级, 3年 5*9*NBD 硬件维保","7D8PA000WW":"Lenovo DB610S SAN Switch ，24端口，激活8 端口 含8x 16Gb 短波光模块；单电源； 上架套件； 含终生固件支持至博科EoS； 3年 5*9*NBD 硬件维保","7D8PA001WW":"Lenovo DB610S SAN Switch ，24端口，激活24 端口 含24x 16Gb 短波光模块； 含ENT Bundle 许可；单电源； 上架套件； 含终生固件支持至博科EoS； 3年 5*9*NBD 硬件维保","7D8PA002WW":"Lenovo DB610S SAN Switch ，24端口，激活8 端口 含8x 32Gb 短波光模块；单电源； 上架套件； 含终生固件支持至博科EoS； 3年 5*9*NBD 硬件维保","7D8PA003WW":"Lenovo DB610S SAN Switch ，24端口，激活24 端口 含24x 32Gb 短波光模块； 含ENT Bundle 许可；单电源； 上架套件； 含终生固件支持至博科EoS； 3年 5*9*NBD 硬件维保","7D9JA000WW":"Lenovo DB730S SAN Switch, 128端口，激活48端口，含48x 64Gb 短波光模块, 双电源, 上架套件, 含3年固件升级, 3年 5*9*NBD 硬件维保","7DB4A000WW":"X7-4 主机， 4个槽位，含Enterprise Bundle SW 激活，含上架套件，含理线架，默认含3年硬件维保和3年博科固件及L3支持， 含一个FC32-64主机端口刀片，不含风扇电源，不含主机端口刀片，不含线缆 2x X6/X7 100V-120V AC, 200V – 240V AC 交流电源模块，NPI(端口端出风，非端口端进风) 2x X6/X7 风扇模块，NPI(端…","7DB4A001WW":"X7-8 主机，8个槽位，含Enterprise Bundle SW 激活，含上架套件，含理线架，含3年博科固件及L3支持， 含一个FC32-64主机端口刀片，不含风扇电源，不含主机端口刀片，不含线缆 4x X6/X7 100V-120V AC, 200V – 240V AC 交流电源模块，NPI(端口端出风，非端口端进风) 3x X6/X7 风扇模块，NPI(端口端出风，非端口端进…","7DB4CTO1WW":"X7-4 主机， 4个槽位，含Enterprise Bundle SW 激活，含上架套件，含理线架，默认含3年硬件维保和3年博科固件及L3支持， 不含主机端口刀片，不含风扇、电源及线缆","7DB4CTO2WW":"X7-8 主机，8个槽位，含Enterprise Bundle SW 激活，含上架套件，含理线架，默认含3年硬件维保和3年博科固件及L3支持， 不含主机端口刀片，不含风扇、电源及线缆","7DHNA000WW":"Lenovo DB710S SAN Switch，24端口，激活8 端口 含8x 64Gb 短波光模块；单电源； 上架套件； 含终生固件支持至博科EoS； 3年 5*9*NBD 硬件维保","7DHNA001WW":"Lenovo DB710S SAN Switch ，24端口，激活8 端口 含8x 32Gb 短波光模块；单电源； 上架套件； 含终生固件支持至博科EoS； 3年 5*9*NBD 硬件维保","7DMAA002WW":"DB820S 56端口/激活24口/含24x64G SWL/企业版/双电源/导轨/3年FW/3年5*9NBD","7DMAA003WW":"DB820S 56端口/激活24口/含24x128G SWL/企业版/双电源/导轨/3年FW/3年5*9NBD","7DMBCTO1WW":"X8-4基础单元/4槽/9U/含2块CP控制处理刀片+2块CR128-4核心路由刀片/导轨套件/3年5*9NBD(FOS10.X)/不含端口刀片风扇电源线缆","7DMBCTO2WW":"X8-8基础单元/8槽/14U/含2块CP控制处理刀片+2块CR128-8核心路由刀片/导轨套件/3年5*9NBD(FOS10.X)/不含端口刀片风扇电源线缆","7S0C0001WW":"Lenovo B300/6505 S/W, ISL Trunking","7S0C0002WW":"Lenovo B300/6505 S/W, Fabric Vision","7S0C0003WW":"Lenovo B300/6505 S/W, Extended Fabric","7S0C0004WW":"Lenovo B300/6505 S/W, Enterprise Bundle (TRK, FV, EF)*","7S0C0006WW":"Lenovo B6510 S/W, Extended Fabric","7S0C0007WW":"Lenovo B6510 S/W, ISL Trunking","7S0C0008WW":"Lenovo B6510 S/W, Fabric Vision","7S0C0009WW":"Lenovo B6510 S/W, Integrated Routing","7S0C000AWW":"Lenovo B6510 S/W, Integrated 10G FC License","7S0C000BWW":"Lenovo B6510 S/W, Enterprise Bundle (TRK, FV, EF)*","7S0C000CWW":"Lenovo DB610S Enterprise Bundle (TRK, FV, EF)","7S0C000DWW":"Lenovo DB610S POD LICENSE, 8 PORT ON-DEMAND, no SFPs","7S0C000EWW":"Lenovo DB620S 12-Port License (No Transceivers)","7S0C000FWW":"Lenovo DB620S QSFP+ Port License (No Transceivers)","7S0C0010WW":"SANnav Base版 1年 600端口","7S0C0011WW":"SANnav Enterprise版 1年 15K端口","7S0C0012WW":"SANnav Global View 1年","7S0C0013WW":"SANnav Base版 3年 600端口","7S0C0014WW":"SANnav Enterprise版 3年 15K端口","7S0C0015WW":"SANnav Global View 3年","7S0C0016WW":"DB630S 24-Port SW License (No Transceivers)","7S0C0017WW":"DB630S QSFP+ 32-Port SW License (No Transceivers)","7S0C0018WW":"Lenovo DB630S Integrated Routing","7S0C0019WW":"Lenovo DB630S Enterprise Bundle (TRK, FV, EF)","7S0C001AWW":"Lenovo DB630S Integrated Routing Support Extension, 2-Years","7S0C001BWW":"Lenovo DB630S Integrated Routing Support Extension, 4-Years","7S0C001KWW":"SANnav Base版 5年 600端口","7S0C001LWW":"SANnav Enterprise版 5年 15K端口","80Y0031":"DB710s Upgrade to 3Yr 7*24 onsite，","80Y0032":"DB710s Upgrade to 4Yr 5*9 NBD onsite","80Y0033":"DB710s Upgrade to 4Yr 7*24 onsite","80Y0034":"DB710s Upgrade to 5Yr 5*9 NBD onsite","80Y0035":"DB710s Upgrade to 5Yr 7*24 onsite","80Y0232":"3年7*24x4现场","80Y0233":"4年5*9现场","80Y0234":"4年7*24x4现场","80Y0235":"5年5*9现场","80Y0236":"5年7*24x4现场","80Y0237":"3年7*24现场","80Y0238":"4年5*9现场","80Y0239":"4年7*24现场","80Y0240":"5年5*9现场","80Y0241":"5年7*24现场","80Y0242":"1年FW升级","80Y0243":"2年FW升级","80Y0244":"1年FW升级","80Y0245":"2年FW升级","80Y0246":"3年7*24x4现场","80Y0247":"4年5*9现场","80Y0248":"4年7*24x4现场","80Y0249":"5年5*9现场","80Y0250":"5年7*24x4现场","80Y0251":"1年FW升级","80Y0252":"2年FW升级","<br>B2PE":"Lenovo 15 米 LC-LC OM4 MMF 电缆","AVGY":"FC SAN Director 风扇托盘（非端口侧进气口）","B2PA":"Lenovo 1 米 LC-LC OM4 MMF 电缆","B2PB":"Lenovo 3 米 LC-LC OM4 MMF 电缆","B2PC":"Lenovo 5 米 LC-LC OM4 MMF 电缆","B2PD":"Lenovo 10 米 LC-LC OM4 MMF 电缆","B2PF":"Lenovo 25 米 LC-LC OM4 MMF 电缆","B2PG":"Lenovo 30 米 LC-LC OM4 MMF 电缆","B5Z7":"Lenovo SX6 FC-IP SAN 扩展刀片 + 16/32Gb SWL SFP，1 年","B5Z8":"Lenovo SX6 FC-IP SAN 扩展刀片 + 16 X 32Gb LWL SFP，1/10/40GBE，1 年","BBCU":"FC SAN Director PSU（非端口侧进气口）","BPAF":"Lenovo 1M SN-LC SFP-DD OM4 FC Cable","BPAG":"Lenovo 3M SN-LC SFP-DD OM4 FC Cable","BPAH":"Lenovo 5M SN-LC SFP-DD OM4 FC Cable","BPAJ":"Lenovo 10M SN-LC SFP-DD OM4 FC Cable","4X97A81895":"Lenovo 3m SN-SN SFP-DD OM4 FC Cable","4X97A81896":"Lenovo 5m SN-SN SFP-DD OM4 FC Cable","4X97A81898":"Lenovo 10m SN-SN SFP-DD OM4 FC Cable","4X97A81899":"Lenovo 15m SN-SN SFP-DD OM4 FC Cable","4X97A81901":"Lenovo 25m SN-SN SFP-DD OM4 FC Cable","4X97A81902":"Lenovo 30m SN-SN SFP-DD OM4 FC Cable","BPA9":"Lenovo 3m SN-SN SFP-DD OM4 FC Cable","BPAA":"Lenovo 5m SN-SN SFP-DD OM4 FC Cable","BPAB":"Lenovo 10m SN-SN SFP-DD OM4 FC Cable","BPAC":"Lenovo 15m SN-SN SFP-DD OM4 FC Cable","BPAD":"Lenovo 25m SN-SN SFP-DD OM4 FC Cable","BPAE":"Lenovo 30m SN-SN SFP-DD OM4 FC Cable","BPAK":"Lenovo 15M SN-LC SFP-DD OM4 FC Cable","BPAL":"Lenovo 25M SN-LC SFP-DD OM4 FC Cable","BPAM":"Lenovo 30M SN-LC SFP-DD OM4 FC Cable","BR8Y":"X7 ICL POD 套件（许可证 + 4x32G SWL QSFP+ 收发器）","BR8Z":"X7 ICL POD 套件（许可证 + 第 7 代 SWL QSFP+ 收发器）","BR90":"FC SAN Director 风扇托盘（非端口侧排气/端口侧进气）","BR93":"FC SAN Director PSU（非端口侧排气/端口侧进气）","BR95":"Brocade FC32 48 端口刀片，带 32G SWL 收发器","BR96":"Brocade FC64 48 端口刀片，带 32G LWL 收发器","BR97":"Brocade FC64 48 端口刀片，带 64G SWL 收发器","BR98":"Brocade FC64 48 端口刀片，带 32G SWL 收发器","BR99":"Lenovo ThinkSystem X7-8 FC Director，8 个刀片插槽，导轨套件，14U，3 年保修/权利","BR9A":"Lenovo ThinkSystem X7-4 FC Director，4 个刀片插槽，导轨套件，8U，3 年保修/权利","BRE7":"Brocade FC64 48 端口刀片，带 48 个 64G LWL SFP+ 安全光学器件","BVHH":"X7 端口刀片，FC64-64（32x64G SWL SFP-DD）","CB96":"X8-4 FC Director刀框/机箱 4槽 9U 含导轨套件(特性码CB96)","CB97":"X8-8 FC Director刀框/机箱 8槽 14U 含导轨套件(特性码CB97)","CBU6":"FC SAN Director 风扇模块","CBUB":"X8-8 ICL刀片(2块/16端口/8x第8代2km OSFP)","CBUC":"X8-8 ICL刀片(2块/16端口/8x第8代100m OSFP)","CBUD":"X8-4 ICL刀片(2块/8端口/4x第8代2km OSFP)","CBUE":"X8-4 ICL刀片(2块/8端口/4x第8代100m OSFP)","CBUK":"FC SAN Director 风扇模块","CBUM":"FC SAN Director 电源模块","CBUP":"第8代FC128-48刀片 含48x128G SFP+ SWL","CBUQ":"第8代FC128-48刀片 含48x64G SFP+ SWL","CBUN":"第8代FC128-48刀片 含48x128G SFP+ LWL","CBUA":"X8 ICL 刀片模块，4 个第 8 代 100 米 OSFP 收发器","CBU9":"X8 ICL 刀片模块，4 个第 8 代 2 千米 OSFP 收发器"},"x7DdBlade":{"pn":"BVHH","desc":"X7 FC64-64 端口刀片 含32x64G SWL SFP-DD(64端口)","ports":64},"notes":[["一、怎么用","在【配置生成】上部依次选型号 → 端口速率 → 目标端口数（均为下拉）；再按需选光纤线、维保、FW、其他部件。下方清单会自动生成，且只显示本单真正需要的物料行，没有预置的空条目。绿色/白色区域为公式计算，请勿手工填写。"],["二、下拉说明","型号（10 款在售）；速率随型号联动；端口数随【型号+速率】联动（仅列实际可达值，DB630S 含 128 口、DB720S 含 64 口、DB730S 含 128 口；X7 选 64G 时列出 48口刀片与 64口SFP-DD刀片在槽位内的全部组合，如 48+64=112、4x64=256、8x64=512）；光纤线只显示长度（5m/10m/15m/25m/30m/不配置），不含 PN 与描述；光纤线数量下拉 1~目标端口数（选“不配置”时自动清空）；维保服务升级默认「不需要」，可选服务级别；固件FW升级默认「不需要」，除 DB610S/DB710S 置灰外，可选年限（1年/2年/4年）；FW升级数量下拉 1~10（仅当已选择固件升级年限时才可选，未选 FW 升级时该格为空并置灰；每套份数，合计=份数×套数）；【企业版功能许可】随型号联动：基础单元已含企业版的型号下拉只显示“已包含”，DB610S/DB630S 显示“不需要 / 加购企业版许可”；配置套数下拉 1~10；【其他部件】下拉在原 SANnav 网管软件基础上新增 32G/64G 的 LWL 长波模块(10km)与 ELWL 超长波模块(25km)，以及长波 8PACK（4M27A65419 32G LWL 8只装 / 4M27A65434 64G LWL 8只装），并新增短波 SWL 模块（32G 4M27A65416 / 64G 4M27A65425，及 32G 8只装 4M27A65417 / 64G 8只装 4M27A65426）与 128G QSFP+ SWL 模块（4M27A65422，仅 DB630S；DB820S 不支持 32G，其下拉已屏蔽全部 32G 光模块），以及 X7 ICL POD 套件（BR8Y 32G / BR8Z 第7代）与 X8 ICL 刀片（X8-4：CBUE 100m / CBUD 2km；X8-8：CBUC 100m / CBUB 2km），只显示名称不含 PN，选中后清单会带出对应 PN 与部件描述；【部件数量】为份数（光模块单只/8PACK 每行上限 32，8PACK 按“包”计；其余部件每套 1~10），X7 ICL POD 数量下拉按型号上限限制（X7-4 仅 1~2 / X7-8 仅 1~4，默认 1），X8 ICL 刀片（CBUE/CBUD/CBUC/CBUB）每 PN 已是 2 块卡一组，数量上限均为 1、默认 1（X8-4=2块/8端口/4模块、X8-8=2块/16端口/8模块），未选其他部件时始终为空并置灰。PN 全部由系统自动带出到清单。SANnav 网管软件数量不随配置套数放大（选几套算几套），并在汇总描述末尾以「/x套SANnav 类型 年限 端口数」标注，多条用「+」连接；其他部件中额外选配的光模块（SWL/LWL/ELWL 单只及 8PACK、128G QSFP+ SWL）会在汇总描述的光纤线缆之前单列：8PACK 按每包 8 只展开，多类型用「+」连接（如 额外配置8只32G SWL短波模块+2只64G ELWL超长波模块）；SANnav、IR 许可、ICL、刀片不计入本段。汇总描述末尾的 FW 服务年限 = 基础包 FW 年限 + 已选升级年限 × FW升级数量（B10，空按1）；终身 FW 型号显示“终身FW升级至EoS”。未选维保升级时，描述仍写入基础单元自带的维保服务；未选 FW 升级时，描述仍写入基础包 FW 服务；基础主机自带 Ent Bundle 许可的型号，描述中也会写明。X7/X8 导向器在“激活端口”之后另写明刀片配置（几块 48 端口 xxG 刀片、X7 64G 混插时另列 64 端口 xxG SFP-DD 刀片，不含特性码），随后按刀片先后顺序描述光模块（先 SFP+ 模块、再 SFP-DD 模块），选了 ICL 时在模块之后写明 ICL 套数与规格。"],["三、自动推导逻辑","固定交换机：主机标配端口不足时用 POD 补齐，POD 数 = 向上取整((目标端口 - 主机基础端口) / 每POD端口)。导向器：端口全部来自刀片，刀片数 = 向上取整(目标端口 / 每刀片端口)。X7 选 64G 时支持 48口刀片(BR97) 与 64口SFP-DD刀片(BVHH) 混插：工具按槽位上限枚举全部可达端口数组合，同一端口数优先用 48 口刀片，剩余端口由 SFP-DD 刀片补齐（例：112口=1xBR97+1xBVHH，160口=2xBR97+1xBVHH，256口=4xBVHH）；清单会分别列出两类刀片行。POD/刀片数受槽位上限约束，超出会在校验区标红。"],["四、端口上限","DB610S 16/32G 上限24；DB630S 32G 上限128（48口主机+2个24口POD=96个32G端口，再加1个QSFP+ 32端口许可=128；8x128G等效32x32G）；DB710S 32/64G 上限24；DB720S 32G 上限56（24口主机+4个8口POD=56，32G不支持SFP-DD包）；DB720S 64G 上限64（24口主机+3个8口POD=48个SFP+端口，再加1个SFP-DD包提供8个DD端口/16个连接=64）；DB730S 64G 上限128（48口主机+2个24口POD=96，再加1个SFP-DD 32端口许可=128）；DB820S 64/128G 上限56（不支持16G）；X7-4 32G 上限192、64G 上限256（4槽，48口/64口SFP-DD刀片混插，4块BVHH=256口）；X7-8 32G 上限384、64G 上限512（8槽，8块BVHH=512口）；X8-4 上限192、X8-8 上限384。端口下拉已按可达值过滤。"],["五、单电源注意","DB610S、DB710S 为单电源无冗余；其余固定交换机为双冗余电源。所有主机出厂均不含电源线（DB610S/710S 各1根，其余各2根），已自动计入清单。"],["六、POD 含光模块","本工具中所有 POD 许可与端口刀片均含对应光模块，主机也含基础端口光模块，因此不要重复选购单独 SFP。BOM 中标注停产的单独 SFP/许可已剔除。"],["七、企业版许可","DB610S 激活8口基础主机（7D8PA000WW/002WW）不含企业版，需加购 7S0C000CWW；DB630S 48口基础主机（7D1SA004WW）不含企业版，需加购 7S0C0019WW。DB710S/720S/730S/820S 及 X7/X8 主机已标配企业版，其【企业版功能许可】下拉会自动显示“已包含”（不可改选，无需加购）；仅 DB610S/DB630S 的下拉为“不需要 / 加购企业版许可”，选“加购企业版许可”即可自动带入对应型号的 PN。**特别注意**：若同时把端口选到满配（DB610S=24口 / DB630S≥96口）并选“加购企业版许可”，系统会自动改用本身已含 ENT 的满配主机（DB610S→7D8PA001WW/003WW，DB630S→7D1SA005WW），此时 24口POD 数量归零、企业版许可不再单列；若 DB630S 选128口，QSFP+ 32端口许可仍会自动保留。"],["八、SFP-DD/QSFP+ 端口包与专用线缆","DB720S 选64口(仅64G)自动计入 SFP-DD 许可 4M27A65821（8个SFP-DD=16个64G连接）；DB730S 选128口计入 4M27A65430（16个SFP-DD=32个64G连接）；DB630S 选128口计入 QSFP+ 许可 4M27A37148。线缆拆分按【光纤线数量 B7】优先分配 SFP-DD 专用 SN-LC 线：DB720S 最多 16 根、DB730S 最多 32 根；B7 总数超过该上限的部分才用普通 LC-LC 线。例：DB720S 64口配 B7=20 → 16 根 SN-LC + 4 根 LC-LC；B7=10 → 10 根 SN-LC、无 LC-LC。B7 留空时默认=线缆总和（基础端口 + 其他部件已选刀片的光纤端口）。其他部件选了 X7 刀片时，只要已选光纤线长度，线缆数量会自动带为总和，【光纤线数量】的可调上限也同步变为线缆总和；SWL 端口刀片按刀片端口计入 LC-LC 普通线，LWL 长波刀片（BR96/BRE7/B5Z8）不计入线缆数量（长波需单模线，另行采购），BVHH 等 SFP-DD 刀片端口计入 SN-LC 专用线，SX6 FC-IP 扩展刀片（B5Z7/B5Z8）为 IP 接口不计光纤线。X7 64G 混插 BVHH 刀片时，每块刀片 64 个 64G 端口最多配 64 根 SN-LC 专用线（例：112口=1xBR97+1xBVHH → 最多64根SN-LC，超出部分走LC-LC）；汇总描述会标注 SN-LC 根数。SN-LC 线长度随 B6 自动带出。DB720S 32G 不支持 SFP-DD 包，上限 56 口。X7-4/X7-8/X8-4/X8-8 的 LC-LC 光纤线取 B2P 系列 PN：3m=B2PB（固定机型 3m=4Z57A10847）、5m=B2PC、10m=B2PD、15m=B2PE、25m=B2PF、30m=B2PG；固定交换机仍用 4Z57 系列。X7-4/X7-8 的 SFP-DD 专用 SN-LC 线取 BPA 系列：3m=BPAG、5m=BPAH、10m=BPAJ、15m=BPAK、25m=BPAL、30m=BPAM（固定机型仍用 4X97 系列）。X7-4/X7-8 另可在【其他部件】加选 SN-SN SFP-DD 光纤线（BPA9 3m / BPAA 5m / BPAB 10m / BPAC 15m / BPAD 25m / BPAE 30m），数量按所选份数，汇总描述写在 Ent Bundle 许可之前（如 2根10m SN-SN SFP-DD光纤线+1根25m…），数量上限=已配 SFP-DD 端口数（64×BVHH刀片数）。DB720S/DB730S 也可在【其他部件】加选 SN-SN 线（4X97A81895 3m / 4X97A81896 5m / 4X97A81898 10m / 4X97A81899 15m / 4X97A81901 25m / 4X97A81902 30m），数量上限分别 16 / 32，汇总同样写在 Ent Bundle 许可之前。"],["八、导向器必配项","X7/X8 导向器基础单元不含端口刀片、风扇、电源、线缆，工具已自动带出：X7-4 需2电源(1+1)+2风扇(3+1)，X7-8 需4电源(2+2)+3风扇(5+1)，X8-4 需4电源(2+2)+3风扇组件(2+1/共6风扇)，X8-8 需6电源(3+3)+3风扇组件(2+1/共12风扇)。X7/X8 均单配刀框：X7-4→BR9A、X7-8→BR99、X8-4→CB96、X8-8→CB97；X8 基础单元 PN 为 7DMBCTO1WW/7DMBCTO2WW（含2块CP控制处理刀片+2块CR核心路由刀片+导轨套件，不含端口刀片/风扇/电源线缆）。X7 端口刀片按速率自动选：32G 用 BR95（FC32 48端口刀片，含32G SWL收发器）；64G 默认 BR97，并可按目标端口数自动搭配 BVHH（FC64-64 刀片，32x64G SWL SFP-DD = 64端口，需 FOS 9.2+，不支持 FICON）。X8 端口刀片按速率自动选：64G=CBUQ、128G=CBUP（第8代FC128-48 含48x SFP+ SWL）。"],["九、气流方向强约束","导向器电源与风扇必须同向：NPI（非端口侧进风，空气从非端口侧流向端口侧）配 NPI、NPE（非端口侧排风，空气从端口侧流向非端口侧，多见于电信部署）配 NPE，混用整单无效。本工具默认带出 NPI 型号：X7 风扇AVGY+电源BBCU；X8-4 风扇CBUK+电源CBUM；X8-8 风扇CBU6+电源CBUM。清单电源与风扇行已分别标明所属型号（X8-4/X8-8）与进气方式。汇总描述中 X7/X8 不再写「冗余电源」，改为按实际配置写「X个风扇模块(NPI)、X个电源模块(NPI)」（若规则换成 NPE 型号如 BR90/BR93、CBUJ/CBUG/CBUL，则自动显示 NPE）。如需 NPE，请在采购时把 X7 风扇换 BR90、电源换 BR93；X8-4 风扇换 CBUJ；X8-8 风扇换 CBUG；X8 电源统一换 CBUL（3000W NPE）。"],["十、X7/X8 ICL 扩展","导向器间互联需 ICL：① X7 在【其他部件】选“X7 ICL POD套件(BR8Y 32G / BR8Z 第7代)”，【部件数量】下拉按型号上限限制——X7-4 仅 1~2、X7-8 仅 1~4（默认 1），每套含许可证+4xSWL QSFP+ 收发器。② X8 在【其他部件】选“X8-4 ICL刀片(CBUE 100m / CBUD 2km)”或“X8-8 ICL刀片(CBUC 100m / CBUB 2km)”——每个 PN 本身就是 2 块 ICL 卡一组：【部件数量】下拉上限均为 1（默认 1），不可选 2 及以上。CBUD/CBUE = 2 块卡 / 8 个 ICL 端口 / 4 个第8代 OSFP 模块；CBUC/CBUB = 2 块卡 / 16 个 ICL 端口 / 8 个第8代 OSFP 模块（端口数是模块数的 2 倍，每模块提供 2 个端口）。ICL 不占用端口刀片槽位。X8 另有 ICL 刀片模块 CBUA（4x 第8代100m OSFP）/CBU9（4x 第8代2km OSFP），数量上限：X8-4 仅 1、X8-8 仅 2。X8 端口刀片 CBUQ（含64G SWL）/CBUP（含128G SWL）/CBUN（含128G LWL）可在【其他部件】手动补充，占端口刀片槽位，数量受剩余槽位限制（X8-4 共4槽 / X8-8 共8槽，自动刀片已占用的槽位需扣除），汇总描述会同步写明刀片块数、模块数与累计端口数；SWL 刀片叠加光纤线数量、LWL 刀片不计线缆。"],["十一、数据来源","PN/描述/上限来自《Fabric BOM.xlsx - 常用PN清单》；端口/POD/刀片/电源风扇规则来自 DB610S/630S/710S/720S/730S/820S 与 X7/X8 产品指导 PDF。已剔除停产/售罄型号（DB620S、B6505/6510、X6、DB400D/DB800D）及停产 PN。BOM 无价格字段，本表为选型 BOM 非报价单。"]]}</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('cfgData').textContent);
+const RULE = {};
+D.rules.forEach(r=>RULE[r.key]=r);
+
+// ---- 输入项分组（对应 B3:B14；组合步内并列两个下拉，业务字段键名不变）----
+const GROUPS = [
+  {label:'交换机型号', keys:[{k:'b3'}]},
+  {label:'端口速率', keys:[{k:'b4'}]},
+  {label:'激活端口数', keys:[{k:'b5'}]},
+  {label:'光纤线缆', keys:[{k:'b6'},{k:'b7'}]},
+  {label:'企业版功能许可', keys:[{k:'b11'}]},
+  {label:'固件FW升级', keys:[{k:'b9'},{k:'b10'}]},
+  {label:'维保服务升级', keys:[{k:'b8'}]},
+  {label:'配置套数', keys:[{k:'b12'}]},
+  {label:'其他部件', multi:true},
+];
+const S = {b3:'',b4:'',b5:'',b6:'不配置',b7:'',b8:'不需要',b9:'不需要',b10:'',b11:'不需要',b12:'1',b13:'不配置',b14:''};
+// 维保选项文案归一化：7*24 → 7*24H服务；5*9 → 5*9NBD服务
+const svcLabel=raw=>{ if(!raw)return ''; const y=(String(raw).match(/^(\d+年)/)||[])[1]||'';
+  if(/7\*24/.test(raw)) return y+'7*24H服务';
+  if(/5\*9/.test(raw)) return y+'5*9NBD服务';
+  return raw; };
+// 其他部件：支持多行（部件 + 数量），初始一行
+const PARTS=[{sel:'不配置',qty:''}];
+const num = v => (v===''||v===undefined||v===null)?0:Number(v);
+const starts = (s,p)=> String(s).slice(0,p.length)===p;
+
+// ---- 下拉候选 ----
+function options(k){
+  const m=S.b3, rate=S.b4, rule=RULE[m+'|'+rate];
+  switch(k){
+    case 'b3': return D.models.slice();
+    case 'b4': return (D.rates[m]||[]).slice();
+    case 'b5': return (D.portChoices[m+'|'+rate]||[]).map(String);
+    case 'b6': return D.cables.map(c=>c.len).concat(['不配置']);
+    case 'b7': { const mx=Math.max(1,compute().cableMax); return [''].concat(Array.from({length:mx},(_,i)=>String(i+1))); }
+    case 'b8': return ['不需要'].concat((D.service[m]||[]).map(x=>svcLabel(x[1])));
+    case 'b9': return (S.b3==='DB610S'||S.b3==='DB710S')?[]:['不需要'].concat((D.fw[m]||[]).map(x=>String(x[1]).split('FW')[0]));
+    case 'b10': return Array.from({length:10},(_,i)=>String(i+1));
+    case 'b11': return rule && rule.baseEnt===1 ? ['已包含'] : ['不需要','加购企业版许可'];
+    case 'b12': return Array.from({length:10},(_,i)=>String(i+1));
+    case 'b13': return partSelOpts();
+    case 'b14': return partQtyOpts(PARTS[0]?PARTS[0].sel:'',0);
+  }
+  return [];
+}
+// 其他部件按类别生成对应备注 / 选型提示
+function partNote(pn,label){
+  const sannav=['7S0C0010WW','7S0C0011WW','7S0C0012WW','7S0C0013WW','7S0C0014WW','7S0C0015WW','7S0C001KWW','7S0C001LWW'];
+  const lwlSingle=['4M27A65418','4M27A65424','4M27A65433','4M27A65432'];
+  const lwlPack=['4M27A65419','4M27A65434'];
+  const ir=['7S0C0018WW','7S0C001AWW','7S0C001BWW'];
+  const x7icl=['BR8Y','BR8Z'];
+  const x8icl=['CBUE','CBUD','CBUC','CBUB'];
+  const swlSfp=['4M27A65416','4M27A65425'];
+  const swlPack=['4M27A65417','4M27A65426'];
+  const swlQsfp=['4M27A65422'];
+  const x7Blade32=['BR98','BR95','BR96'], x7Blade64=['BR97','BRE7','BVHH'], x7Ipp=['B5Z7','B5Z8'], x8Blade=['CBUQ','CBUP','CBUN'], x8Misc=['CBUA','CBU9'], snSnCable=['BPA9','BPAA','BPAB','BPAC','BPAD','BPAE'], dbSnSn=['4X97A81895','4X97A81896','4X97A81898','4X97A81899','4X97A81901','4X97A81902'];
+  if(sannav.includes(pn)) return /Global View/.test(label)?'SANnav Global View 跨域视图许可':'SANnav 网管软件，按管理端口数选 Base（600端口）/ Enterprise（15K端口）';
+  if(lwlSingle.includes(pn)) return '长波光模块，按速率(32G/64G)与距离选 LWL 10km / ELWL 25km';
+  if(lwlPack.includes(pn)) return '长波光模块 8 只装（按包计），按速率与距离选';
+  if(swlSfp.includes(pn)) return '短波光模块 SFP+，用于本端设备端口与对端 HBA/存储短距互联，按端口速率选配';
+  if(swlPack.includes(pn)) return '短波光模块 8 只装（按包计），用于批量端口配置，按端口速率选配';
+  if(swlQsfp.includes(pn)) return '128G QSFP+ 短波模块，用于 DB630S 的 8 个 QSFP+ 端口做 128G/4x32G 高速互联';
+  if(x7Blade32.includes(pn)) return 'X7 端口刀片 48 端口（占 1 个槽位）；BR98 为 FC64 刀片含 32G SWL，BR95 为 FC32 刀片含 32G SWL，BR96 为 FC64 刀片含 32G LWL（10km）';
+  if(x7Blade64.includes(pn)) return 'X7 端口刀片 48/64 端口（占 1 个槽位）；BR97 含 64G SWL，BRE7 含 48x64G LWL，BVHH 为 32x64G SWL SFP-DD（需 FOS 9.2+，不支持 FICON）';
+  if(['BPA9','BPAA','BPAB','BPAC','BPAD','BPAE'].includes(pn)) return 'SN-SN SFP-DD 光纤线（两端均为 SFP-DD 接口），按长度选；份数可在数量框调整';
+  if(pn==='CBUA'||pn==='CBU9') return 'X8 ICL 刀片模块（100m/2km OSFP）；数量按机型限制：X8-4 仅 1、X8-8 仅 2';
+  if(x8Blade.includes(pn)) return 'X8 第8代FC128-48端口刀片（48端口，占1个槽位）；CBUQ 含64G SWL，CBUP 含128G SWL，CBUN 含128G LWL';
+  if(x7Ipp.includes(pn)) return 'X7 SX6 FC-IP SAN 扩展刀片（16x32G SFP，1 年支持）；B5Z7 短距 SWL，B5Z8 长距 LWL 并含 1/10/40GbE 接口';
+  if(ir.includes(pn)) return 'DB630S Integrated Routing 路由许可；2年/4年选项为支持服务扩展';
+  if(x7icl.includes(pn)) return 'X7 ICL POD 套件（许可+4x QSFP+ 收发器）；数量上限：X7-4 1~2、X7-8 1~4';
+  if(x8icl.includes(pn)) return 'X8 ICL 刀片（每 PN 为 2 块卡一组）；X8-4=2块/8端口/4模块，X8-8=2块/16端口/8模块；数量上限 1';
+  return '份数可在数量框调整';
+}
+// 其他部件候选（多行复用）
+function partSelOpts(){
+  const m=S.b3;
+  const x7Icl=['BR8Y','BR8Z'], x84Icl=['CBUE','CBUD'], x88Icl=['CBUC','CBUB'], db630Ir=['7S0C0018WW','7S0C001AWW','7S0C001BWW'], qsfp128=['4M27A65422'], x7Blade=['BR98','BR95','BR96','BR97','BRE7','BVHH','B5Z7','B5Z8'], x8Blade=['CBUQ','CBUP','CBUN'], x8Misc=['CBUA','CBU9'], snSnCable=['BPA9','BPAA','BPAB','BPAC','BPAD','BPAE'], dbSnSn=['4X97A81895','4X97A81896','4X97A81898','4X97A81899','4X97A81901','4X97A81902'];
+  const mod32=['4M27A65416','4M27A65417','4M27A65418','4M27A65419','4M27A65424']; // 32G 光模块（DB820S 不支持32G，需屏蔽）
+  const list=D.sannav.filter(x=>{
+    if(mod32.includes(x.pn)) return !(m==='DB820S'||m==='X8-4'||m==='X8-8');
+    if(x7Icl.includes(x.pn)) return m==='X7-4'||m==='X7-8';
+    if(x7Blade.includes(x.pn)) return m==='X7-4'||m==='X7-8';
+    if(x8Blade.includes(x.pn)) return m==='X8-4'||m==='X8-8';
+    if(x8Misc.includes(x.pn)) return m==='X8-4'||m==='X8-8';
+    if(snSnCable.includes(x.pn)) return m==='X7-4'||m==='X7-8';
+    if(dbSnSn.includes(x.pn)) return m==='DB720S'||m==='DB730S';
+    if(x84Icl.includes(x.pn)) return m==='X8-4';
+    if(x88Icl.includes(x.pn)) return m==='X8-8';
+    if(db630Ir.includes(x.pn)) return m==='DB630S';
+    if(qsfp128.includes(x.pn)) return m==='DB630S';
+    return true;
+  });
+  return ['不配置'].concat(list.map(x=>x.label));
+}
+// X7 / X8 端口刀片类 PN（占用端口刀片槽位）
+const X7_BLADE_PNS=['BR98','BR96','BRE7','BVHH','B5Z7','B5Z8','BR95','BR97'];
+const X8_BLADE_PNS=['CBUQ','CBUP','CBUN'];
+const isX7Blade=sel=>{
+  const it=D.sannav.find(x=>x.label===sel);
+  return !!it && X7_BLADE_PNS.includes(it.pn);
+};
+const isX8Blade=sel=>{
+  const it=D.sannav.find(x=>x.label===sel);
+  return !!it && X8_BLADE_PNS.includes(it.pn);
+};
+const isPortBlade=sel=>isX7Blade(sel)||isX8Blade(sel);
+// X7 刀片元数据：ports=每块端口数, mod=每块模块数, modDesc=模块描述, brief=刀片简称, extra=附加说明
+const BLADE_INFO={
+  'BR98':{brief:'FC64-48端口刀片',ports:48,mod:48,modDesc:'32G SWL光模块',cable:1},
+  'BR95':{brief:'FC32-48端口刀片',ports:48,mod:48,modDesc:'32G SWL光模块',cable:1},
+  'BR97':{brief:'FC64-48端口刀片',ports:48,mod:48,modDesc:'64G SWL光模块',cable:1},
+  'BR96':{brief:'FC64-48端口刀片',ports:48,mod:48,modDesc:'32G LWL光模块',cable:0,lwl:1},
+  'BRE7':{brief:'FC64-48端口刀片',ports:48,mod:48,modDesc:'64G LWL光模块',cable:0,lwl:1},
+  'BVHH':{brief:'FC64-64端口刀片',ports:64,mod:32,modDesc:'64G SWL SFP-DD光模块',extra:p=>'(提供'+(64*p)+'个端口)',cable:1,dd:1},
+  'B5Z7':{brief:'SX6 FC-IP扩展刀片',ports:16,mod:16,modDesc:'32G SWL光模块',cable:0},
+  'B5Z8':{brief:'SX6 FC-IP扩展刀片',ports:16,mod:16,modDesc:'32G LWL光模块',extra:()=>'并含1/10/40GbE接口',cable:0,lwl:1},
+  'CBUQ':{brief:'FC128-48端口刀片',ports:48,mod:48,modDesc:'64G SWL光模块',cable:1},
+  'CBUP':{brief:'FC128-48端口刀片',ports:48,mod:48,modDesc:'128G SWL光模块',cable:1},
+  'CBUN':{brief:'FC128-48端口刀片',ports:48,mod:48,modDesc:'128G LWL光模块',cable:0,lwl:1}
+};
+const bladeInfoOf=sel=>{const it=D.sannav.find(x=>x.label===sel);return it?BLADE_INFO[it.pn]:null;};
+const MODULE_INFO={
+  '4M27A65416':{name:'32G SWL短波模块',pack:0,order:1},
+  '4M27A65417':{name:'32G SWL短波模块',pack:1,order:1},
+  '4M27A65418':{name:'32G LWL长波模块',pack:0,order:2},
+  '4M27A65419':{name:'32G LWL长波模块',pack:1,order:2},
+  '4M27A65424':{name:'32G ELWL超长波模块',pack:0,order:3},
+  '4M27A65425':{name:'64G SWL短波模块',pack:0,order:4},
+  '4M27A65426':{name:'64G SWL短波模块',pack:1,order:4},
+  '4M27A65433':{name:'64G LWL长波模块',pack:0,order:5},
+  '4M27A65434':{name:'64G LWL长波模块',pack:1,order:5},
+  '4M27A65432':{name:'64G ELWL超长波模块',pack:0,order:6},
+  '4M27A65422':{name:'128G QSFP+ SWL模块',pack:0,order:7}
+};
+const isModulePN=pn=>pn in MODULE_INFO;
+const X7_CABLES=[
+ {len:'3m',pn:'B2PB',desc:'Lenovo 3 米 LC-LC OM4 MMF 电缆'},
+ {len:'5m',pn:'B2PC',desc:'Lenovo 5 米 LC-LC OM4 MMF 电缆'},
+ {len:'10m',pn:'B2PD',desc:'Lenovo 10 米 LC-LC OM4 MMF 电缆'},
+ {len:'15m',pn:'B2PE',desc:'Lenovo 15 米 LC-LC OM4 MMF 电缆'},
+ {len:'25m',pn:'B2PF',desc:'Lenovo 25 米 LC-LC OM4 MMF 电缆'},
+ {len:'30m',pn:'B2PG',desc:'Lenovo 30 米 LC-LC OM4 MMF 电缆'}
+];
+const isXModel=m=>m==='X7-4'||m==='X7-8'||m==='X8-4'||m==='X8-8';
+const X7_SFDD_CABLES=[
+ {len:'3m',pn:'BPAG',desc:'Lenovo 3M SN-LC SFP-DD OM4 FC Cable'},
+ {len:'5m',pn:'BPAH',desc:'Lenovo 5M SN-LC SFP-DD OM4 FC Cable'},
+ {len:'10m',pn:'BPAJ',desc:'Lenovo 10M SN-LC SFP-DD OM4 FC Cable'},
+ {len:'15m',pn:'BPAK',desc:'Lenovo 15M SN-LC SFP-DD OM4 FC Cable'},
+ {len:'25m',pn:'BPAL',desc:'Lenovo 25M SN-LC SFP-DD OM4 FC Cable'},
+ {len:'30m',pn:'BPAM',desc:'Lenovo 30M SN-LC SFP-DD OM4 FC Cable'}
+];
+const AIRFLOW={
+  'AVGY':'NPI','CBUK':'NPI','CBU6':'NPI','BBCU':'NPI','CBUM':'NPI',
+  'BR90':'NPE','CBUJ':'NPE','CBUG':'NPE','BR93':'NPE','CBUL':'NPE'
+};
+const airflowOf=pn=>AIRFLOW[pn]||'NPI';
+const SANNAV_PNS=new Set(['7S0C0010WW','7S0C0013WW','7S0C001KWW','7S0C0011WW','7S0C0014WW','7S0C001LWW','7S0C0012WW','7S0C0015WW']);
+// 当前端口选择已占用的 X7 槽位数（自动刀片）
+function x7UsedSlots(){
+  const m=S.b3;
+  if(m!=='X7-4'&&m!=='X7-8') return 0;
+  const port=num(S.b5)||0;
+  if(!port) return 0;
+  if(S.b4==='64G'){ const c=D.x7Combo[m+'|'+S.b5]; return c?(c.a+c.b):0; }
+  return Math.ceil(port/48);
+}
+// 其他行已选的刀片数量合计（不含当前行）
+function x7PartsBladeQty(idx){
+  return PARTS.reduce((s,r,i)=> (i!==idx && rowSelected(r) && isX7Blade(r.sel)) ? s+(r.qty===''?1:num(r.qty)) : s, 0);
+}
+// 端口刀片槽位总量（X7-4/X8-4=4，X7-8/X8-8=8）
+function bladeSlotTotal(m){
+  if(D.x7Slots&&m in D.x7Slots) return D.x7Slots[m];
+  if(m==='X8-4') return 4;
+  if(m==='X8-8') return 8;
+  return 0;
+}
+// 当前端口选择已占用的槽位数（X8 的端口全部来自自动刀片，等于 POD 数）
+function autoSlotsUsed(){
+  const m=S.b3;
+  if(m!=='X7-4'&&m!=='X7-8'&&m!=='X8-4'&&m!=='X8-8') return 0;
+  const port=num(S.b5)||0;
+  if(!port) return 0;
+  if(m==='X7-4'||m==='X7-8'){ if(S.b4==='64G'){ const c=D.x7Combo[m+'|'+S.b5]; return c?(c.a+c.b):0; } return Math.ceil(port/48); }
+  return Math.ceil(port/48);
+}
+// 剩余可用槽位（已扣自动刀片与其他行手选刀片）
+function x7FreeSlots(idx){
+  const m=S.b3;
+  return Math.max(0,bladeSlotTotal(m)-autoSlotsUsed()-x7PartsBladeQty(idx));
+}
+function partQtyOpts(sel,idx){
+  if(sel.includes('ICL POD')){
+    if(S.b3==='X7-4') return ['1','2'];
+    if(S.b3==='X7-8') return ['1','2','3','4'];
+  }
+  const it0=D.sannav.find(y=>y.label===sel);
+  if(it0&&(it0.pn==='CBUA'||it0.pn==='CBU9')) return S.b3==='X8-4'?['1']:['1','2'];
+  if(it0&&['BPA9','BPAA','BPAB','BPAC','BPAD','BPAE'].includes(it0.pn)){
+    const mx=Math.max(1,compute().ddPorts); return Array.from({length:mx},(_,i)=>String(i+1));
+  }
+  if(it0&&['4X97A81895','4X97A81896','4X97A81898','4X97A81899','4X97A81901','4X97A81902'].includes(it0.pn)){
+    const mx=S.b3==='DB730S'?32:16; return Array.from({length:mx},(_,i)=>String(i+1));
+  }
+  if(it0&&isModulePN(it0.pn)) return Array.from({length:32},(_,i)=>String(i+1));
+  if(sel.includes('X8-4 ICL')||sel.includes('X8-8 ICL')) return ['1'];
+  if(isPortBlade(sel)){
+    const free=x7FreeSlots(idx);
+    if(free<1) return ['1'];
+    return Array.from({length:free},(_,i)=>String(i+1));
+  }
+  return Array.from({length:10},(_,i)=>String(i+1));
+}
+function disabled(k){
+  if(k==='b4') return !S.b3;
+  if(k==='b5') return !S.b3||!S.b4;
+  if(k==='b6') return !S.b3;
+  if(k==='b7') return !S.b3||S.b6===''||S.b6==='不配置';
+  if(k==='b8') return !S.b3;
+  if(k==='b9') return !S.b3||S.b3==='DB610S'||S.b3==='DB710S';
+  if(k==='b10') return !fwSelected();
+  if(k==='b11') return !S.b3||!S.b4;
+  if(k==='b14') return !partSelected();
+  return false;
+}
+const fwSelected = ()=> S.b9!=='' && S.b9!=='不需要' && !starts(S.b9,'标配');
+const rowSelected = row=> row && row.sel!=='' && row.sel!=='不配置';
+const partSelected = ()=> PARTS.some(rowSelected);
+const entDefault = ()=> S.b3==='' ? '不需要' : (D.baseEnt[S.b3]===1?'已包含':'不需要');
+
+// ---- 上游变更 → 复位下游（等价 VBA Worksheet_Change）----
+function onChange(k){
+  if(k==='b3'){
+    ['b4','b5','b6','b7','b10','b12'].forEach(x=>S[x]='');
+    S.b6='不配置'; S.b12='1'; S.b8='不需要'; S.b9='不需要'; S.b11=entDefault();
+    PARTS.length=0; PARTS.push({sel:'不配置',qty:''});
+  } else if(k==='b4'){ S.b5=''; S.b7=''; }
+  else if(k==='b5'){ S.b7=''; }
+  else if(k==='b6'){ if(S.b6==='不配置') S.b7=''; }
+  else if(k==='b9'){ if(fwSelected()){ if(S.b10==='') S.b10='1'; } else S.b10=''; }
+  else if(k==='b10'){ if(!fwSelected()) S.b10=''; }
+  render();
+}
+
+// ---- 其他部件多行：加行 / 删行 / 行内联动 ----
+function syncCableQty(){ if(S.b6&&S.b6!=='不配置'){ const r=compute(); S.b7=String(r.cableMax); } }
+function addPartRow(){ PARTS.push({sel:'不配置',qty:''}); syncCableQty(); render(); }
+function delPartRow(i){ PARTS.splice(i,1); syncCableQty(); render(); }
+function onPartSel(i){
+  const row=PARTS[i];
+  if(rowSelected(row)){ if(row.qty==='') row.qty='1'; } else row.qty='';
+  syncCableQty(); render();
+}
+function onPartQty(i){
+  const row=PARTS[i];
+  if(!rowSelected(row)) row.qty='';
+  syncCableQty(); render();
+}
+
+// ---- 核心推导 ----
+function compute(){
+  const m=S.b3, rate=S.b4, port=num(S.b5), rule=RULE[m+'|'+rate];
+  const has = !!rule;
+  const isX7 = m==='X7-4'||m==='X7-8';
+  const isX = m.startsWith('X');
+  const x764 = isX7 && rate==='64G';
+  const R = f => rule?rule[f]:'';
+
+  // J3：满配端口 + 加购企业版 + 存在含ENT主机
+  const entT = m==='DB630S'?96:num(R('maxPorts'));
+  const J3 = (has && R('entHostPN')!=='' && port>=entT && starts(S.b11,'加购'))?1:0;
+  // J4：物理端口总数
+  const J4 = !has?0:(m==='DB630S'?128:(isX?(S.b5===''?num(R('maxPorts')):port):num(R('maxPorts'))));
+
+  // J12/J13：X7 64G 刀片拆分
+  let J12=0,J13=0;
+  if(x764){ const c=D.x7Combo[m+'|'+S.b5]; if(c){J12=c.a;J13=c.b;} }
+  // J5：POD / 48口刀片数量
+  let J5=0;
+  if(J3===1) J5=0;
+  else if(!has) J5=0;
+  else if(x764) J5=J12;
+  else if((m==='DB630S'&&port>=128)||(m==='DB730S'&&port>=128)) J5=2;
+  else if(m==='DB720S'&&rate==='64G'&&port>=64) J5=3;
+  else if(S.b5===''||R('type')!=='固定') J5=Math.ceil(port/num(R('perUnit')));
+  else J5 = port<=num(R('basePorts'))?0:Math.ceil((port-num(R('basePorts')))/num(R('perUnit')));
+
+  // J7：QSFP+/SFP-DD 端口包
+  const J7 = ((m==='DB630S'&&port>=128)||(m==='DB720S'&&rate==='64G'&&port>=64)||(m==='DB730S'&&port>=128))?1:0;
+
+  // J6：FW 描述片段
+  let J6='';
+  if(has){
+    const bfw=R('baseFW');
+    if(bfw==='终身') J6='，终身FW升级至EoS';
+    else if(S.b9===''||S.b9==='不需要'||starts(S.b9,'标配')) J6='，含'+bfw+'年FW升级';
+    else J6='，含'+(num(bfw)+parseInt(S.b9,10)*(S.b10===''?1:num(S.b10)))+'年FW升级';
+  }
+  // J8：维保描述片段
+  const J8 = !has?'':((S.b8===''||S.b8==='不需要')?'，原厂'+R('baseSvc')+'服务':'，原厂'+svcLabel(S.b8));
+  const J9 = has?num(R('baseEnt')):0;
+  const J11 = m==='X7-4'?2:(m==='X7-8'?4:1);
+
+  // J14：刀片配置片段（去特性码）；刀片按「FCxx-端口数」命名
+  let J14='';
+  if(has&&isX){
+    let t;
+    if(x764){
+      t=(J12>0?J12+'块FC64-48端口刀片':'')+(J13>0?(J12>0?'＋':'')+J13+'块FC64-64端口刀片':'');
+    } else t=J5+'块'+(isX7?'FC32-48端口刀片':'FC128-48端口刀片');
+    J14='配'+t+'，';
+  }
+  // J15：ICL 片段
+  const J15 = has? PARTS.filter(rowSelected).filter(r=>r.sel.includes('ICL'))
+    .map(r=>'，含'+(r.qty===''?1:num(r.qty))+'套'+r.sel).join('') : '';
+
+  // 其他部件中手选刀片的槽位分配：按行顺序占用剩余槽位，超出部分置 0（不计入清单）
+  const x7SlotTotal = bladeSlotTotal(m);
+  const autoSlots = (isX7?(J5+J13):J5);
+  const bladeFreeBase = isX? Math.max(0,x7SlotTotal-autoSlots) : 0;
+  let bladeLeft=bladeFreeBase, rawBladeQty=0;
+  const bladeAlloc=PARTS.map(row=>{
+    let q=row.qty===''?1:num(row.qty);
+    if(rowSelected(row)&&isPortBlade(row.sel)){
+      rawBladeQty+=q;
+      if(isX){ if(bladeLeft<=0) return 0; q=Math.min(q,bladeLeft); bladeLeft-=q; }
+    }
+    return q;
+  });
+
+  // J16：其他部件中手选的 X7 刀片片段（模块数与端口数按「数量×每块」计算）
+  let J16='', extraPorts=0, extraCable=0, extraDd=0, extraLwl=0;
+  if(has&&isX){
+    PARTS.forEach((r,i)=>{
+      if(!rowSelected(r)||!isPortBlade(r.sel)) return;
+      const q=bladeAlloc[i]!==undefined?bladeAlloc[i]:0;
+      if(q<=0) return;
+      const info=bladeInfoOf(r.sel);
+      if(!info) return;
+      extraPorts+=q*info.ports;
+      if(info.cable){ extraCable+=q*info.ports; if(info.dd) extraDd+=q*info.ports; if(info.lwl) extraLwl+=q*info.ports; }
+      J16+='，'+q+'块'+info.brief+'，含'+(q*info.mod)+'个'+info.modDesc+(info.extra?' '+info.extra(q):'');
+    });
+  }
+  // 线缆总和 = 基础端口 + 手选刀片光纤端口；光纤线数量上限即此值
+  // J19：其他部件中选配的 SN-SN SFP-DD 光纤线（汇总在 Ent Bundle 许可之前）
+  const J19=PARTS.filter(rowSelected)
+    .filter(r=>/^SN-SN SFP-DD光纤线/.test(r.sel))
+    .map(r=>{
+      const len=(r.sel.match(/\((\d+m)\)/)||[])[1]||'';
+      return (r.qty===''?1:num(r.qty))+'根'+len+' SN-SN SFP-DD光纤线';
+    }).join('+');
+  // J17：其他部件中额外选配的光模块（8PACK 按 8 只展开），汇总在光纤线缆之前
+  const modAgg={};
+  PARTS.forEach(row=>{
+    if(!rowSelected(row)) return;
+    const x=D.sannav.find(y=>y.label===row.sel);
+    if(!x||!MODULE_INFO[x.pn]) return;
+    const mi=MODULE_INFO[x.pn];
+    const q=(row.qty===''?1:num(row.qty))*(mi.pack?8:1);
+    modAgg[x.pn]=(modAgg[x.pn]||0)+q;
+  });
+  const J17=Object.keys(modAgg).sort((a,b)=>MODULE_INFO[a].order-MODULE_INFO[b].order)
+    .map(pn=>modAgg[pn]+'只'+MODULE_INFO[pn].name).join('+');
+  const basePortCnt = num(S.b5)||0;
+  const cableMax = Math.max(basePortCnt, basePortCnt+extraCable);
+  const effCable = S.b7===''?cableMax:Math.min(num(S.b7),cableMax);
+  // J10：SFP-DD 专用线数（含 X7 BVHH 手选刀片端口）
+  let J10=0;
+  if(isX7) J10 = Math.min(effCable, 64*J13+extraDd);
+  else if(J7===0) J10=0;
+  else if(m==='DB720S') J10=Math.min(effCable,16);
+  else if(m==='DB730S') J10=Math.min(effCable,32);
+  // ---- 汇总描述 ----
+  let summary='';
+  if(!has) summary='请先在上方完成选型';
+  else{
+    const basePortNum=num(S.b5)||0;
+    const dispTotal=isX?(basePortNum+extraPorts):J4;
+    const dispActive=isX?(basePortNum+extraPorts):basePortNum;
+    let t=(S.b12===''?1:num(S.b12))+'套'+m+'光纤交换机，每套配置：'+dispTotal+'个端口，激活'+dispActive+'个端口，';
+    t+=J14;
+    if(x764&&J13>0){
+      t+=(J12>0?'含'+(48*J12)+'个'+rate+' SFP+ SWL光模块，另含':'含')+(32*J13)+'个'+rate+' SFP-DD SWL光模块(提供'+(64*J13)+'个端口)';
+    } else t+='含'+S.b5+'个'+rate+'多模SWL光模块';
+    t+=J16;
+    t+=J15;
+    if(J17) t+='，额外配置'+J17;
+    if(S.b6!==''&&S.b6!=='不配置') t+='，'+effCable+'根'+S.b6+' 光纤线缆'+(J10>0?'(其中'+J10+'根SFP-DD专用SN-LC)':'');
+    if(J19) t+='，'+J19;
+    if(J9===1||J3===1||((m==='DB610S'||m==='DB630S')&&starts(S.b11,'加购'))) t+='，Ent Bundle许可';
+    if(isXModel(m)){
+      // X7/X8：按实际风扇与电源数量、气流方向描述
+      const fd=R('fanQty'), pd=R('psuQty');
+      t+='，'+fd+'个风扇模块('+airflowOf(R('fanPN'))+')';
+      t+='，'+pd+'个电源模块('+airflowOf(R('psuPN'))+')';
+    } else t+='，'+(num(R('powerCableQty'))===1?'单电源':'冗余电源');
+    t+='，含导轨';
+  // J18：SANnav 后缀（不随套数放大，数量=所选份数；含年限/端口数）
+  const J18=PARTS.filter(rowSelected).filter(r=>starts(r.sel,'SANnav'))
+    .map(r=>(r.qty===''?1:num(r.qty))+'套'+r.sel).join('+');
+    t+=J6+J8;
+    if(J18) t+='。/'+J18;
+    t+='。';
+    summary=t;
+  }
+
+  // ---- 候选物料行 ----
+  const pdesc=(pn,fb)=>D.pnDict[pn]||fb||'';
+  const cab=(len,arr)=>arr.find(c=>c.len===len)||null;
+  const svcFind=()=> (D.service[m]||[]).find(x=>svcLabel(x[1])===S.b8)||null;
+  const fwFind=()=> (D.fw[m]||[]).find(x=>String(x[1]).split('FW')[0]===String(S.b9).split('FW')[0])||null;
+  const C=[];
+  const add=(cat,pn,desc,qty,note,chk)=>C.push({cat,pn:pn||'',desc:desc||'',qty:qty===''?0:num(qty),note:note||'',chk:chk||''});
+
+  // 1 主机
+  if(has) add('主机 / 基础单元', J3===1?R('entHostPN'):R('hostPN'), J3===1?R('entHostDesc'):R('hostDesc'), 1,
+    J3===1?('满配端口主机；激活 '+entT+' 端口；含 ENT Bundle 许可'):('含 '+R('basePorts')+' 端口；'+R('remark')), 'OK');
+  else add('主机 / 基础单元','','','','','');
+  // 2 刀框
+  if(has&&R('type')==='导向器'&&R('chassisPN')) add('刀框（导向器）',R('chassisPN'),R('chassisDesc'),1,'导向器需单配刀框/机箱','OK');
+  else add('刀框（导向器）','','','','','');
+  // 3 POD / 48口刀片
+  if(has&&J5>0) add('端口激活许可(POD) / 端口刀片',R('podPN'),R('podDesc'),J5,'每单元 '+R('perUnit')+' 端口；上限 '+R('maxUnits')+' 个', J5>num(R('maxUnits'))?'超上限':'OK');
+  else add('端口激活许可(POD) / 端口刀片','','','','','');
+  // 4 SFP-DD 刀片
+  if(J13>0) add('端口刀片(64口 SFP-DD)',D.x7DdBlade.pn,D.x7DdBlade.desc,J13,'每刀片32x SFP-DD提供64个64G端口；配SN-LC专用线；需FOS 9.2+，不支持FICON','OK');
+  else add('端口刀片(64口 SFP-DD)','','','','','');
+  // 5 QSFP+/SFP-DD 端口包
+  if(J7>0){
+    const pn = m==='DB630S'?'4M27A37148':(m==='DB720S'?'4M27A65821':'4M27A65430');
+    const ds = m==='DB630S'?'DB630S QSFP+ 32-Port SW License with 8x 128 Gbps (4x 32 Gbps) SWL v2 Transceivers'
+             :(m==='DB720S'?'DB720S 16-Port SW License with 8x 64 Gbps SWL SFP-DD transceivers':'DB730S 32-Port SW License with 16x 64G SWL SFP-DD transceivers');
+    const nt = m==='DB720S'?'8个SFP-DD端口=16个64G连接；选64口时必配，线缆需SN接口'
+             :(m==='DB630S'?'8x128G QSFP+ = 32x32G等效端口；选128口时必配':'16xSFP-DD=32个64G连接；选128口时必配，线缆需SN接口');
+    add('QSFP+/SFP-DD 端口激活许可',pn,ds,J7,nt,'OK');
+  } else add('QSFP+/SFP-DD 端口激活许可','','','','','');
+  // 6 LC-LC 光纤线
+  const lcQty=Math.max(0,effCable-J10);
+  if(S.b6&&S.b6!=='不配置'&&lcQty>0){
+    const c=cab(S.b6,isXModel(m)?X7_CABLES:D.cables);
+    add('光纤线(LC-LC)',c?c.pn:'',c?c.desc:'',lcQty,
+      J10>0?'线缆总数优先分配'+J10+'根SFP-DD专用SN-LC线(含X7 BVHH刀片)，本行为超出部分；可在B7改总数':'数量默认=目标端口数，可在B7改','OK');
+  } else add('光纤线(LC-LC)','','','','','');
+  // 7 SFP-DD 光纤线
+  if(S.b6&&S.b6!=='不配置'&&J10>0){
+    const c=cab(S.b6,(m==='X7-4'||m==='X7-8')?X7_SFDD_CABLES:D.sfddCables);
+    add('光纤线(SFP-DD SN-LC)',c?c.pn:'',c?c.desc:'',J10,'SFP-DD端口专用SN-LC线；按B7总数优先分配，X7 BVHH每刀片最多64根、DB720S最多16根、DB730S最多32根，超出部分走LC-LC普通线','OK');
+  } else add('光纤线(SFP-DD SN-LC)','','','','','');
+  // 8 电源线
+  if(has) add('电源线',R('powerCablePN'),pdesc(R('powerCablePN'),'Rack Power Cable'),R('powerCableQty'),'每台随主机标配电源线','OK');
+  else add('电源线','','','','','');
+  // 9 风扇
+  if(has&&R('type')==='导向器'&&R('fanPN')){
+    const fd = m==='X8-4'?'X8-4 风扇组合件(NPI非端口侧进风)':m==='X8-8'?'X8-8 风扇组合件(NPI非端口侧进风)'
+             :m==='X7-4'?'X7-4 风扇模块(NPI非端口侧进风)':m==='X7-8'?'X7-8 风扇模块(NPI非端口侧进风)':pdesc(R('fanPN'),'FC SAN Director 风扇模块');
+    add('风扇模块（导向器）',R('fanPN'),fd,R('fanQty'),'气流方向须与电源一致：默认NPI(非端口侧进风)；若改NPE(非端口侧排风)，X7用BR90/BR93、X8-4风扇换CBUJ、X8-8风扇换CBUG，电源同步换NPE型号','OK');
+  } else add('风扇模块（导向器）','','','','','');
+  // 10 电源模块
+  if(has&&R('type')==='导向器'&&R('psuPN')){
+    const pd = (m==='X8-4')?'X8-4 3000W电源模块(NPI非端口侧进风)':(m==='X8-8'?'X8-8 3000W电源模块(NPI非端口侧进风)':pdesc(R('psuPN'),'FC SAN Director 电源模块'));
+    add('电源模块（导向器）',R('psuPN'),pd,R('psuQty'),'气流须与风扇一致(NPI配NPI/NPE配NPE，NPE电源PN=CBUL)','OK');
+  } else add('电源模块（导向器）','','','','','');
+  // 11 企业版许可
+  let entPN='';
+  if(J3!==1 && S.b11!=='' && !starts(S.b11,'不需')) entPN = m==='DB610S'?'7S0C000CWW':(m==='DB630S'?'7S0C0019WW':'');
+  if(entPN){
+    const nt = J3===1?'已含在满配主机内，无需单购'
+      :(m==='DB610S'?'激活8口主机不含ENT，需加购 7S0C000CWW；若选满24口建议改选7D8PA001/003WW'
+      :(m==='DB630S'?'48口主机不含ENT，需加购 7S0C0019WW；若选满96口建议改选7D1SA005WW':'该型号已标配企业版，无需加购'));
+    add('企业版功能许可',entPN,pdesc(entPN,'Enterprise Bundle (TRK,FV,EF)'),1,nt,'—');
+  } else add('企业版功能许可','','','','','');
+  // 12 维保服务
+  if(S.b8&&S.b8!=='不需要'){
+    const x=svcFind();
+    add('维保服务升级',x?x[0]:'', x?(m+' '+svcLabel(x[1])):'', 1,'可选升级服务','—');
+  } else add('维保服务升级','','','','','');
+  // 13 FW 升级
+  if(fwSelected()){
+    const x=fwFind();
+    add('固件FW升级',x?x[0]:'', x?(m+' '+x[1]):'', S.b10===''?1:num(S.b10),'可选升级；份数 '+(S.b10===''?1:S.b10)+' × 套数 '+S.b12,'—');
+  } else add('固件FW升级','','','','','');
+  // 14 其他部件（支持多行）
+  PARTS.forEach((row,i)=>{
+    if(rowSelected(row)){
+      const x=D.sannav.find(y=>y.label===row.sel)||null;
+      const q=bladeAlloc[i]!==undefined?bladeAlloc[i]:(row.qty===''?1:num(row.qty));
+      if(q<=0) return; // 剩余槽位不足，该行不计入
+      add('其他部件(SANnav/模块/ICL)',x?x.pn:'', x?x.desc:'', q,
+        x?partNote(x.pn,x.label):'','—');
+    }
+  });
+
+  const rows=C.filter(x=>x.pn!=='');
+  const sets=num(S.b12)||1;
+  const total=rows.reduce((a,r)=>{ if(!r.qty) return a; return a+(SANNAV_PNS.has(r.pn)?r.qty:sets*r.qty); },0);
+
+  // ---- 校验 ----
+  const c1 = (!S.b3||!S.b4)?'请先选择':(has?'OK':'不匹配，请重选速率');
+  const c2 = !has?'先选型号':(S.b5===''?'待选':(port<=num(R('maxPorts'))?'OK':'超出端口上限 '+R('maxPorts')));
+  const c3 = !has?'先选型号':(isX?((autoSlots+rawBladeQty)<=x7SlotTotal?'OK':'超出刀片槽位上限 '+x7SlotTotal+'（当前 '+(autoSlots+rawBladeQty)+'）'):((J5+J13)<=num(R('maxUnits'))?'OK':'超出单元上限 '+R('maxUnits')));
+  const c4 = !has?'请完整选择型号与速率':((c1==='OK'&&c2==='OK'&&c3==='OK')?'配置有效':'配置需调整，请查看上方校验');
+  return {summary,rows,total,checks:[c1,c2,c3,c4],J10,cableMax,extraCable,ddPorts:64*J13+extraDd};
+}
+
+// ---- 渲染 ----
+function render(){
+  // 输入表
+  document.getElementById('inputTable').innerHTML = GROUPS.map(g=>{
+    if(g.multi){
+      const rowsHtml=PARTS.map((row,i)=>{
+        const selOs=partSelOpts().map(o=>`<option value="${String(o).replace(/"/g,'&quot;')}" ${String(o)===String(row.sel)?'selected':''}>${String(o)}</option>`).join('');
+        const qtyList=partQtyOpts(row.sel,i);
+        if(rowSelected(row)&&row.qty!==''&&!qtyList.includes(row.qty)) row.qty=qtyList[qtyList.length-1]||'';
+        const qtyOs=qtyList.map(o=>`<option value="${String(o).replace(/"/g,'&quot;')}" ${String(o)===String(row.qty)?'selected':''}>${String(o)}</option>`).join('');
+        const qtyDis=!rowSelected(row);
+        const del=PARTS.length>1?`<button type="button" class="part-del" onclick="delPartRow(${i})" title="删除本行">✕</button>`:'';
+        const addBtn=(i===PARTS.length-1)?`<button type="button" class="part-add" onclick="addPartRow()">＋ 添加一行</button>`:'';
+        return `<div class="part-row"><div class="dual-item part-sel"><select data-pf="sel" data-pidx="${i}"><option value="">— 请选择 —</option>${selOs}</select></div><div class="dual-item part-qty"><select data-pf="qty" data-pidx="${i}" ${qtyDis?'disabled':''}><option value="">— 请选择 —</option>${qtyOs}</select></div>${del}${addBtn}</div>`;
+      }).join('');
+      return `<tr class="group-full"><td class="lbl">${g.label}</td><td class="val"><div class="part-list">${rowsHtml}</div></td></tr>`;
+    }
+    const cells=g.keys.map(it=>{
+      const opts=options(it.k), dis=disabled(it.k);
+      let val=S[it.k];
+      if(it.k==='b7'&&val===''&&S.b6!==''&&S.b6!=='不配置') val=String(compute().cableMax); // 已选线缆长度时，数量默认=线缆总和(基础端口+刀片端口)；否则留空
+      const os=opts.map(o=>`<option value="${String(o).replace(/"/g,'&quot;')}" ${String(o)===String(val)?'selected':''}>${String(o)}</option>`).join('');
+      return `<div class="dual-item"><select data-k="${it.k}" ${dis?'disabled':''}><option value="">— 请选择 —</option>${os}</select></div>`;
+    }).join('');
+    return `<tr><td class="lbl">${g.label}</td><td class="val"><div class="dual">${cells}</div></td></tr>`;
+  }).join('');
+  document.querySelectorAll('#inputTable select[data-k]').forEach(sel=>{
+    sel.addEventListener('change',e=>{ S[e.target.dataset.k]=e.target.value; onChange(e.target.dataset.k); });
+  });
+  document.querySelectorAll('#inputTable select[data-pidx]').forEach(sel=>{
+    sel.addEventListener('change',e=>{
+      const i=Number(e.target.dataset.pidx), f=e.target.dataset.pf;
+      PARTS[i][f]=e.target.value;
+      if(f==='sel') onPartSel(i); else onPartQty(i);
+    });
+  });
+
+  const r=compute();
+  document.getElementById('summaryText').textContent=r.summary;
+
+  const cl=['型号/速率匹配','端口数≤上限','扩容单元≤上限','总体结论'];
+  document.getElementById('checkTable').innerHTML=r.checks.map((v,i)=>{
+    const cls=v==='OK'||v==='配置有效'?'ok':(i===3||v.startsWith('请先')||v.startsWith('请完整')||v.startsWith('待选')?'':(v==='OK'?'':'bad'));
+    const ok=(v==='OK'||v==='配置有效');
+    const cc=ok?'ok':(v.startsWith('请先')||v.startsWith('请完整')||v==='待选'?'':'bad');
+    return `<tr><td class="cl">${cl[i]}</td><td class="${cc}">${v}</td></tr>`;
+  }).join('');
+
+  const sets=num(S.b12)||1;
+  document.getElementById('bomTable').innerHTML =
+    `<thead><tr><th>序号</th><th>配置类别</th><th>部件号(PN)</th><th>部件描述 / 规格</th><th>单台数量</th><th>数量合计</th><th>备注 / 选型提示</th><th>校验</th></tr></thead><tbody>`+
+    r.rows.map((x,i)=>`<tr><td class="c">${i+1}</td><td>${x.cat}</td><td class="pn">${x.pn}</td><td class="desc">${x.desc}</td>`+
+      `<td class="c">${x.qty}</td><td class="c">${x.qty?(SANNAV_PNS.has(x.pn)?x.qty:sets*x.qty):''}</td><td class="note">${x.note}</td>`+
+      `<td class="chk ${x.chk==='超上限'?'bad':(x.chk==='OK'?'ok':'')}">${x.chk}</td></tr>`).join('')+
+    `<tr class="total"><td colspan="5">合计（数量合计 = 单台数量 × 配置套数；SANnav 按所选份数计，不乘套数）</td><td>${r.total}</td><td colspan="2"></td></tr></tbody>`;
+}
+
+function resetAll(){
+  Object.keys(S).forEach(k=>S[k]='');
+  S.b6='不配置'; S.b12='1'; S.b8='不需要'; S.b9='不需要'; S.b11='不需要'; S.b13='不配置';
+  PARTS.length=0; PARTS.push({sel:'不配置',qty:''});
+  render();
+}
+function copySummary(){
+  const t=document.getElementById('summaryText').textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast('已复制汇总描述')).catch(()=>fallbackCopy(t));
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();
+  try{document.execCommand('copy');toast('已复制汇总描述');}catch(e){toast('复制失败，请手动选择文本');}
+  document.body.removeChild(a);
+}
+function exportReady(){
+  const t=document.getElementById('summaryText').textContent.trim();
+  if(!t||t.indexOf('请先在上方完成选型')===0){toast('请先完成选型再导出');return false;}
+  return true;
+}
+function toggleExportMenu(e){
+  e.stopPropagation();
+  document.getElementById('exportMenu').classList.toggle('show');
+}
+document.addEventListener('click',()=>document.getElementById('exportMenu').classList.remove('show'));
+function buildExportTable(whiteHead){
+  const r=compute();
+  const sets=num(S.b12)||1;
+  const b='border:1px solid #8a99ab;padding:6px 8px;vertical-align:top;';
+  const hb=whiteHead
+    ? b+'background:#ffffff;color:#000;text-align:left;font-weight:700;'
+    : b+'background:#0B2E52;color:#fff;text-align:left;font-weight:700;';
+  const head='<th style="'+hb+'">序号</th><th style="'+hb+'">配置类别</th><th style="'+hb+'">部件号(PN)</th><th style="'+hb+'">部件描述 / 规格</th><th style="'+hb+'">单台数量</th><th style="'+hb+'">数量合计</th>';
+  const rows=r.rows.map((x,i)=>`<tr><td style="${b}text-align:left">${i+1}</td><td style="${b}">${x.cat}</td><td style="${b}text-align:left;">${x.pn}</td><td style="${b}">${x.desc}</td><td style="${b}">${x.qty}</td><td style="${b}">${x.qty?(SANNAV_PNS.has(x.pn)?x.qty:sets*x.qty):''}</td></tr>`).join('');
+  return '<table style="border-collapse:collapse;width:100%"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function exportPDF(){
+  if(!exportReady())return;
+  document.getElementById('exportMenu').classList.remove('show');
+  const summary=document.getElementById('summaryText').textContent;
+  const et=buildExportTable();
+  const st='<st'+'yle>', sc='</st'+'yle>', scrip='<scr'+'ipt>';
+  const w=window.open('','_blank');
+  if(!w){toast('浏览器拦截了弹出窗口，请允许弹窗后重试');return;}
+  w.document.write('<html><head><meta charset="utf-8"><title>光纤交换机配置清单</title>'+st+
+    'body{font-family:Arial,"Microsoft YaHei",sans-serif;color:#1a2b3c;margin:26px}'+
+    'h1{font-size:20px;color:#0B2E52;border-bottom:2px solid #E2231A;padding-bottom:8px;margin:0 0 6px}'+
+    '.sum{margin:14px 0;padding:12px 14px;background:#f4f7fb;border-left:4px solid #0B2E52;border-radius:6px;line-height:1.8;font-size:13.5px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px}'+
+    'th,td{border:1px solid #c9d4e0;padding:7px 9px;text-align:left;vertical-align:top}'+
+    'th{background:#0B2E52;color:#fff}'+sc+
+    '</head><body>'+
+    '<h1>光纤交换机配置清单</h1>'+
+    '<div class="sum">'+summary+'</div>'+
+    et+
+    scrip+'window.onload=function(){setTimeout(function(){window.print();},300);}'+
+    '</scr'+'ipt>'+
+    '</body></html>');
+  w.document.close();
+}
+function exportExcel(){
+  if(!exportReady())return;
+  document.getElementById('exportMenu').classList.remove('show');
+  const summary=document.getElementById('summaryText').textContent;
+  const et=buildExportTable(true);
+  const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:excel"><head><meta charset="utf-8"><style>table{border-collapse:collapse}th,td{border:1px solid #8a99ab}</style></head><body>'+
+    '<table style="border-collapse:collapse;width:100%" cellspacing="0" cellpadding="4">'+
+    '<tr><td colspan="6" style="border:1px solid #8a99ab;font-weight:bold;background:#0B2E52;color:#fff;padding:8px">'+summary+'</td></tr>'+
+    et+'</table></body></html>';
+  const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='光纤交换机配置清单.xls';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('已导出 Excel');
+}
+// ===== 配置核对：上传本地 Excel，按物料编号 + 数量合计逐项比对（含 X7/X8 全部物料）=====
+let _xlsxLoading=null;
+function loadXLSX(){
+  if(window.XLSX)return Promise.resolve();
+  if(_xlsxLoading)return _xlsxLoading;
+  _xlsxLoading=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload=()=>{_xlsxLoading=null;res();};
+    s.onerror=()=>{_xlsxLoading=null;rej(new Error('lib'));};
+    document.head.appendChild(s);
+  });
+  return _xlsxLoading;
+}
+async function runCheck(){
+  const box=document.getElementById('checkFile');
+  const f=box&&box.files[0];
+  const out=document.getElementById('checkResult');
+  if(!f){toast('请先选择要核对的 Excel 文件');return;}
+  let r;
+  try{r=compute();}catch(e){r=null;}
+  if(!r||!r.rows||!r.rows.length){toast('请先在上方生成一份配置清单再核对');return;}
+  const sets=num(S.b12)||1;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const sys={};
+  r.rows.forEach(x=>{
+    if(!x.pn)return;
+    const k=String(x.pn).trim().toUpperCase();
+    sys[k]={pn:x.pn,desc:x.desc||'',unit:x.qty||0,total:(SANNAV_PNS.has(x.pn)?(x.qty||0):sets*(x.qty||0))};
+  });
+  try{await loadXLSX();}
+  catch(e){toast('Excel 解析库加载失败，请联网后重试');return;}
+  let aoa;
+  try{
+    const buf=await f.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
+  }catch(e){toast('文件解析失败，请确认是 .xls / .xlsx 格式');return;}
+  // 动态定位「物料编号」列、「数量」列（按表头文字，兼容列序变化）；并识别「功能代码」子表头块
+  let matCol=-1,qtyCol=-1,nameCol=-1;
+  let fcHeadRow=-1,fcCol=-1,fcDescCol=-1,fcQtyCol=-1;
+  for(let i=0;i<Math.min(aoa.length,12);i++){
+    const row=aoa[i]||[];
+    for(let j=0;j<row.length;j++){
+      const t=String(row[j]).replace(/\s/g,'');
+      if(t.includes('物料编号')||t==='物料')matCol=j;
+      if(/数量/.test(t)&&!t.includes('单价')&&!t.includes('总价')&&!t.includes('端口')&&!t.includes('供货')&&qtyCol<0)qtyCol=j;
+      if(t.includes('产品名称')||(t.includes('名称')&&!t.includes('产品组')&&!t.includes('组别')&&!t.includes('物料')))nameCol=j;
+      if(t==='功能代码'||(t.includes('功能代码')&&!t.includes('描述')&&fcCol<0)){fcHeadRow=i;fcCol=j;}
+      if(t.includes('功能代码描述')||(t.includes('代码描述'))){fcDescCol=j;}
+    }
+  }
+  // 功能代码块数量列：在功能代码表头行内找「数量」
+  if(fcCol>=0){
+    const hr=aoa[fcHeadRow]||[];
+    for(let j=0;j<hr.length;j++){const t=String(hr[j]).replace(/\s/g,'');if(/数量/.test(t)&&!t.includes('单价')&&!t.includes('总价')&&!t.includes('供货'))fcQtyCol=j;}
+  }
+  if(matCol<0){toast('未找到「物料编号」列，请检查表格表头');return;}
+  const raw={};    // 主物料编号块：按 PN 累积所有出现行
+  const fc={};     // 功能代码块（单台数量口径）
+  aoa.forEach((row,ri)=>{
+    // —— 功能代码行：功能代码表头行之后、功能代码列有值 ——
+    if(fcCol>=0&&ri>fcHeadRow){
+      const code=String(row[fcCol]==null?'':row[fcCol]).trim();
+      if(code&&code!=='功能代码'){
+        let q=parseFloat(String(row[fcQtyCol>=0?fcQtyCol:5]==null?'':row[fcQtyCol>=0?fcQtyCol:5]).replace(/,/g,''));
+        if(!isNaN(q)){
+          const k=code.toUpperCase();
+          const d=fcDescCol>=0?String(row[fcDescCol]==null?'':row[fcDescCol]).trim():'';
+          if(!fc[k])fc[k]={qty:0,desc:''};
+          fc[k].qty+=q;if(!fc[k].desc&&d)fc[k].desc=d;
+        }
+      }
+    }
+    // —— 主物料行：物料编号列有值，且该行不是功能代码表头/功能代码行 ——
+    const pn=String(row[matCol]==null?'':row[matCol]).trim();
+    const fcHere=fcCol>=0?String(row[fcCol]==null?'':row[fcCol]).trim():'';
+    const looksCode=/^[A-Za-z0-9\-]{2,12}$/.test(fcHere);
+    if(pn&&pn!=='物料编号'&&pn!=='物料'&&ri!==fcHeadRow&&!looksCode){
+      let q=parseFloat(String(row[qtyCol>=0?qtyCol:6]==null?'':row[qtyCol>=0?qtyCol:6]).replace(/,/g,''));
+      if(!isNaN(q)){
+        const k=pn.toUpperCase();
+        let nd=nameCol>=0?String(row[nameCol]==null?'':row[nameCol]).trim():'';
+        if(!nd||nd==='名称：'||nd==='名称'){
+          for(let j=matCol+1;j<row.length;j++){const v=String(row[j]==null?'':row[j]).trim();if(v&&v!=='名称：'&&v.length>8&&!/^[\d.,]+$/.test(v)){nd=v;break;}}
+        }
+        if(!raw[k])raw[k]=[];
+        raw[k].push({q,desc:nd});
+      }
+    }
+  });
+  // 归一化：同一编码出现多行时取第二行（最后一行），按单台数量比对；单行按数量合计比对
+  const file={};
+  Object.keys(raw).forEach(k=>{
+    const rows=raw[k];
+    if(rows.length>=2){const last=rows[rows.length-1];file[k]={qty:last.q,desc:last.desc,dup:true};}
+    else{file[k]={qty:rows[0].q,desc:rows[0].desc,dup:false};}
+  });
+  if(!Object.keys(file).length&&!Object.keys(fc).length){toast('未识别到有效物料行，请检查文件');return;}
+  const extras=[],miss=[],misq=[],fcExtra=[],fcMisq=[];
+  // 检测到功能代码块时，整表（含主物料）均按单台数量比对；否则按数量合计比对
+  const fcMode=fcCol>=0;
+  Object.keys(file).forEach(k=>{
+    if(!sys[k])extras.push({pn:k,desc:file[k].desc,qty:file[k].qty});
+    else{
+      const sv=fcMode?sys[k].unit:sys[k].total;
+      if(sv!==file[k].qty)misq.push({pn:k,desc:sys[k].desc,file:file[k].qty,sysq:sv,unit:fcMode});
+    }
+  });
+  Object.keys(sys).forEach(k=>{if(!file[k]&&!fc[k])miss.push({pn:k,desc:sys[k].desc,qty:fcMode?sys[k].unit:sys[k].total,unit:fcMode});});
+  Object.keys(fc).forEach(k=>{
+    if(!sys[k])fcExtra.push({pn:k,desc:fc[k].desc,qty:fc[k].qty});
+    else if(sys[k].unit!==fc[k].qty)fcMisq.push({pn:k,desc:fc[k].desc||sys[k].desc,file:fc[k].qty,sysq:sys[k].unit});
+  });
+  const total=Object.keys(sys).length;
+  const allOk=!extras.length&&!miss.length&&!misq.length&&!fcExtra.length&&!fcMisq.length;
+  if(allOk){
+    const fcNote=Object.keys(fc).length?('，功能代码 '+Object.keys(fc).length+' 项（单台数量）一致'):'';
+    out.innerHTML='<div class="check-pass">✅ 核对通过：附件 '+Object.keys(file).length+' 项物料'+fcNote+'，与系统配置（共 '+total+' 项）的物料编号、数量完全一致。</div>';
+    return;
+  }
+  const parts=[];
+  if(extras.length)parts.push(extras.length+' 项附件多出');
+  if(miss.length)parts.push(miss.length+' 项附件缺失');
+  if(misq.length)parts.push(misq.length+' 项物料数量不符');
+  if(fcExtra.length)parts.push(fcExtra.length+' 项功能代码多出');
+  if(fcMisq.length)parts.push(fcMisq.length+' 项功能代码数量不符');
+
+  let html='<div class="check-fail">⚠️ 发现 '+parts.join('、')+'，请逐项核对。</div>';
+  html+='<table class="checkdiff"><thead><tr><th style="width:72px">类型</th><th style="width:150px">物料 / 代码</th><th>描述 / 规格</th><th style="width:90px">附件数量</th><th style="width:90px">系统数量</th></tr></thead><tbody>';
+  extras.forEach(x=>{html+='<tr><td><span class="check-tag tag-extra">附件多出</span></td><td>'+esc(x.pn)+'</td><td>'+esc(x.desc||'—')+'</td><td>'+x.qty+'</td><td>无此项</td></tr>';});
+  miss.forEach(x=>{const u=x.unit?'（单台）':'';html+='<tr><td><span class="check-tag tag-miss">附件缺失</span></td><td>'+esc(x.pn)+'</td><td>'+esc(x.desc)+'</td><td>无此项</td><td>'+x.qty+u+'</td></tr>';});
+  misq.forEach(x=>{const u=x.unit?'（单台）':'';html+='<tr><td><span class="check-tag tag-qty">数量不符</span></td><td>'+esc(x.pn)+'</td><td>'+esc(x.desc)+'</td><td>'+x.file+u+'</td><td>'+x.sysq+u+'</td></tr>';});
+  fcExtra.forEach(x=>{html+='<tr><td><span class="check-tag tag-fc">代码多出</span></td><td>'+esc(x.pn)+'</td><td>'+esc(x.desc||'—')+'</td><td>'+x.qty+'</td><td>无此项</td></tr>';});
+  fcMisq.forEach(x=>{html+='<tr><td><span class="check-tag tag-qty">代码数量不符</span></td><td>'+esc(x.pn)+'</td><td>'+esc(x.desc||'—')+'</td><td>'+x.file+'（单台）</td><td>'+x.sysq+'（单台）</td></tr>';});
+  html+='</tbody></table>';
+  out.innerHTML=html;
+}
+
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+}
+// 使用说明
+document.getElementById('notesBody').innerHTML=D.notes.map(n=>
+  `<div class="note"><b>${n[0]}</b><span>${n[1].replace(/\*\*/g,'')}</span></div>`).join('');
+
+render();
+</script>
+</body>
+</html>

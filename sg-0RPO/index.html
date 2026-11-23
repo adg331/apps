@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.classList.add("access-gate-pending")</script>
+<link rel="stylesheet" href="../assets/access-gate.css">
+<script defer src="../assets/access-gate.js"></script>
+<title>StorageGRID 零 RPO 多站点复制 · 交互演示</title>
+<style>
+:root{
+  --page:#f3f6fb; --panel:#ffffff; --panel2:#f5f8fd; --panel3:#eef3fb;
+  --line:#dce3ef; --line2:#c9d4e6;
+  --ink:#152341; --dim:#5c6a8a; --faint:#8d97b2;
+  --blue:#0067c5; --blue2:#2f6fe0; --deep:#123a7a;
+  --violet:#6a5ad4; --green:#0e9a62; --orange:#d5820f; --red:#d33a5c; --teal:#0c8e86;
+  --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+  --sh:0 1px 2px rgba(21,35,65,.05),0 8px 24px rgba(21,35,65,.06);
+  --sh2:0 2px 6px rgba(21,35,65,.07),0 18px 44px rgba(21,35,65,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, #dee9fb 0%, rgba(222,233,251,0) 60%),
+    radial-gradient(900px 520px at 8% 108%, #e6e2fa 0%, rgba(230,226,250,0) 58%),
+    var(--page);
+  color:var(--ink);line-height:1.6;font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+ul{list-style:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ══════════ 顶栏 ══════════ */
+header{
+  flex:none;height:58px;display:flex;align-items:center;gap:18px;padding:0 30px;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:16px;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(94deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.6px}
+nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nv{cursor:pointer;border:1px solid transparent;background:transparent;color:var(--dim);
+  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;transition:.18s;white-space:nowrap}
+.nv:hover{background:var(--panel3);color:var(--ink)}
+.nv.on{background:linear-gradient(94deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(0,103,197,.28)}
+
+/* ══════════ 舞台 · 幕式横滚 ══════════ */
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip}
+.track{display:flex;height:100%;will-change:transform;
+  transition:transform .62s cubic-bezier(.62,.02,.2,1)}
+.scene{flex:0 0 100%;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 40px 24px;scrollbar-width:thin}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfd9ea;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+.wrap{max-width:1380px;margin:0 auto}
+
+/* 入场动画 */
+.an{opacity:0;transform:translateY(16px)}
+.scene.live .an{animation:rise .58s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ══════════ 标题区 ══════════ */
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:1.2px;color:var(--blue);background:rgba(0,103,197,.08);
+  border:1px solid rgba(0,103,197,.2);padding:3px 11px;border-radius:99px;text-transform:uppercase}
+h1{font-size:26px;font-weight:800;letter-spacing:-.2px;line-height:1.24;margin-top:8px}
+h1 .g{background:linear-gradient(96deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);font-size:13.5px;margin-top:7px;max-width:1000px}
+.hr{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:13px 0}
+
+/* ══════════ 基础组件 ══════════ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px 18px;box-shadow:var(--sh)}
+.panel.tint{background:linear-gradient(178deg,var(--panel2),var(--panel))}
+.panel h3{font-size:14px;font-weight:750;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--violet))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g23{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}
+.g32{display:grid;grid-template-columns:.85fr 1.15fr;gap:13px}
+@media(max-width:1080px){.g2,.g3,.g4,.g23,.g32{grid-template-columns:1fr}}
+
+.li{position:relative;padding-left:19px;margin-bottom:7px;font-size:13px;color:var(--dim)}
+.li:last-child{margin-bottom:0}
+.li::before{content:'';position:absolute;left:3px;top:8.5px;width:6px;height:6px;border-radius:2px;
+  background:linear-gradient(135deg,var(--blue),var(--violet))}
+.li b{color:var(--ink);font-weight:700}
+.li.ok::before{background:var(--green)} .li.warn::before{background:var(--orange)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--sh)}
+.kpi b{display:block;font-family:var(--mono);font-size:25px;font-weight:800;color:var(--blue);line-height:1.15;letter-spacing:-.5px}
+.kpi span{display:block;font-size:11.8px;color:var(--dim);margin-top:3px}
+.kpi.v b{color:var(--violet)} .kpi.g b{color:var(--green)} .kpi.o b{color:var(--orange)} .kpi.t b{color:var(--teal)}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;border-radius:99px;
+  padding:2px 9px;letter-spacing:.3px;white-space:nowrap;vertical-align:middle}
+.tag.new{color:var(--violet);background:rgba(106,90,212,.1);border:1px solid rgba(106,90,212,.3)}
+.tag.ok{color:var(--green);background:rgba(14,154,98,.1);border:1px solid rgba(14,154,98,.3)}
+.tag.warn{color:var(--orange);background:rgba(213,130,15,.1);border:1px solid rgba(213,130,15,.3)}
+.tag.no{color:var(--red);background:rgba(211,58,92,.09);border:1px solid rgba(211,58,92,.28)}
+.tag.b{color:var(--blue);background:rgba(0,103,197,.09);border:1px solid rgba(0,103,197,.26)}
+.tag.n{color:var(--dim);background:var(--panel2);border:1px solid var(--line)}
+
+.btn{cursor:pointer;font:inherit;font-size:12.5px;font-weight:650;padding:7px 15px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--panel);color:var(--dim);transition:.18s}
+.btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.btn.on{background:linear-gradient(94deg,var(--blue),var(--blue2));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(0,103,197,.3)}
+.btn.dg{border-color:rgba(211,58,92,.4);color:var(--red)}
+.btn.dg:hover{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:11.5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.code{font-family:var(--mono);font-size:11.8px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:12px 14px;overflow-x:auto;line-height:1.75;white-space:pre;border:1px solid #1e3255}
+.code .c{color:#7f95bd} .code .k{color:#79b8ff} .code .s{color:#8fd694} .code .p{color:#e0a45e}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--panel2);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--dim)}
+
+table.dt{width:100%;border-collapse:collapse;font-size:12.6px}
+table.dt th,table.dt td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.dt thead th{background:var(--panel3);font-family:var(--mono);font-size:10.5px;letter-spacing:.7px;color:var(--dim);font-weight:700}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt td{color:var(--dim)}
+table.dt td.h{color:var(--ink);font-weight:700}
+table.dt tbody tr:hover{background:rgba(0,103,197,.035)}
+.tw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--panel);box-shadow:var(--sh)}
+
+.note{font-size:11.8px;color:var(--faint);margin-top:9px;padding-left:19px;position:relative}
+.note::before{content:'※';position:absolute;left:2px;color:var(--faint)}
+
+/* 值卡 */
+.vc{background:linear-gradient(178deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:13px;padding:13px 16px;transition:.22s;box-shadow:var(--sh)}
+.vc:hover{border-color:rgba(0,103,197,.45);transform:translateY(-3px);box-shadow:var(--sh2)}
+.vc .k{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:1px;display:block;margin-bottom:6px}
+.vc .t{font-size:14px;font-weight:750;margin-bottom:5px}
+.vc .d{font-size:12.4px;color:var(--dim);line-height:1.6}
+
+/* 领域卡（总览） */
+.dc{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px 19px;
+  cursor:pointer;transition:.24s;box-shadow:var(--sh);position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;left:0;top:0;height:3px;width:100%;background:var(--ac);opacity:.85}
+.dc:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--line2)}
+.dc .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.dc .nm{font-size:15px;font-weight:780}
+.dc .ct{font-family:var(--mono);font-size:10.5px;color:#fff;background:var(--ac);border-radius:99px;padding:2px 9px}
+.dc li{font-size:12.4px;color:var(--dim);padding-left:15px;position:relative;margin-bottom:6px}
+.dc li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:var(--ac);opacity:.7}
+.dc .go{margin-top:11px;font-size:11.5px;color:var(--blue);font-weight:650;opacity:0;transition:.24s}
+.dc:hover .go{opacity:1}
+
+/* 图表容器 */
+.viz{background:linear-gradient(178deg,#fbfcff,#f2f6fd);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;box-shadow:var(--sh)}
+.viz svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:11px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* 步骤条 */
+.steps{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.st{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:10px 12px;cursor:pointer;transition:.2s;position:relative}
+.st .n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.6px}
+.st .l{font-size:12.6px;font-weight:700;margin-top:2px}
+.st:hover{border-color:var(--blue2)}
+.st.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.07),rgba(0,103,197,.02));
+  box-shadow:0 3px 12px rgba(0,103,197,.14)}
+.st.on .n{color:var(--blue)}
+.stbody{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;min-height:92px;box-shadow:var(--sh)}
+.stbody h4{font-size:13.6px;font-weight:750;margin-bottom:7px}
+.stbody p{font-size:13px;color:var(--dim)}
+
+/* 底部控制条 */
+footer{
+  flex:none;height:56px;display:flex;align-items:center;gap:16px;padding:0 30px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:40;
+}
+.nb{cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);
+  color:var(--dim);display:grid;place-items:center;transition:.18s;font-size:15px;flex:none}
+.nb:hover:not(:disabled){border-color:var(--blue);color:var(--blue);background:var(--panel2)}
+.nb:disabled{opacity:.32;cursor:not-allowed}
+.dots{display:flex;gap:5px;flex:1;align-items:center;overflow-x:auto;scrollbar-width:none}
+.dots::-webkit-scrollbar{display:none}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.22s;flex:none}
+.dot:hover{background:var(--blue2);transform:scale(1.3)}
+.dot.on{width:26px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.dot.sec{background:#b9c6dd}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+.meta b{color:var(--ink);font-size:13px}
+.hint{font-size:11.5px;color:var(--faint);white-space:nowrap}
+@media(max-width:900px){.hint{display:none}}
+.pbar{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--violet));
+  transition:width .62s cubic-bezier(.62,.02,.2,1);z-index:50}
+
+/* 封面 */
+.cover{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px}
+.cover .big{font-size:clamp(40px,6.4vw,80px);font-weight:850;letter-spacing:-2px;line-height:1.02;
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:19px;font-weight:600;color:var(--ink);margin-top:6px}
+.cover .desc{font-size:14px;color:var(--dim);max-width:640px;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.chip{font-size:12.5px;font-weight:650;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:6px 15px;box-shadow:var(--sh);transition:.2s}
+.chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-2px)}
+
+/* 分节标识 */
+.secmark{display:flex;align-items:center;gap:11px;margin-bottom:4px}
+.secmark i{width:26px;height:2px;border-radius:2px;background:var(--ac,var(--blue))}
+.secmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:1.4px;color:var(--ac,var(--blue));text-transform:uppercase}
+
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--green);
+  background:rgba(14,154,98,.08);border:1px solid rgba(14,154,98,.25);border-radius:9px;padding:5px 11px}
+.flag.r{color:var(--red);background:rgba(211,58,92,.07);border-color:rgba(211,58,92,.25)}
+.flag.o{color:var(--orange);background:rgba(213,130,15,.08);border-color:rgba(213,130,15,.25)}
+
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.arrowx{font-size:20px;color:var(--faint)}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+
+/* ══════════ 本页组件 ══════════ */
+.flow{stroke-dasharray:7 6;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-13}}
+.dash{stroke-dasharray:5 5}
+.pulse{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+svg text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+
+.qi{display:flex;gap:10px;align-items:flex-start;padding:6px 11px;border:1px solid var(--line);border-radius:10px;
+  cursor:pointer;margin-bottom:5px;background:var(--panel);transition:.18s}
+.qi:last-child{margin-bottom:0}
+.qi:hover{border-color:var(--blue2)}
+.qi .n{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px;flex:none}
+.qi b{display:block;font-size:12.6px;font-weight:700;line-height:1.4}
+.qi em{display:block;font-style:normal;font-size:11.4px;color:var(--dim);line-height:1.45}
+.qi.done .n{color:var(--green)}
+.qi.on{border-color:var(--blue);background:linear-gradient(178deg,rgba(0,103,197,.08),rgba(0,103,197,.02));box-shadow:0 3px 12px rgba(0,103,197,.12)}
+.qi.on .n{color:var(--blue)}
+.log{font-family:var(--mono);font-size:11.3px;background:#101c33;color:#c6d6f0;border-radius:11px;
+  padding:10px 13px;line-height:1.7;border:1px solid #1e3255;height:150px;overflow:auto;white-space:pre-wrap}
+.log .ok{color:#8fd694} .log .warn{color:#e0a45e} .log .err{color:#ff8a9b} .log .dim{color:#7f95bd}
+
+.sel,.inp{font:inherit;font-size:12.6px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;
+  background:var(--panel);color:var(--ink);width:100%}
+.sel:focus,.inp:focus{outline:2px solid rgba(0,103,197,.25);border-color:var(--blue)}
+.fld label{display:block;font-size:11.8px;font-weight:700;color:var(--dim);margin-bottom:4px}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.rg{display:flex;align-items:center;gap:10px;font-size:12.4px;color:var(--dim)}
+.rg b{font-family:var(--mono);color:var(--ink);min-width:58px;text-align:right}
+
+tr.pick{cursor:pointer}
+tr.pick.on{background:rgba(0,103,197,.07)}
+tr.pick.on td.h{color:var(--blue)}
+.cbox{max-height:470px;overflow:auto}
+
+.vl{display:flex;gap:9px;font-size:12.6px;color:var(--dim);margin-bottom:7px;line-height:1.55}
+.vl:last-child{margin-bottom:0}
+.vl i{width:9px;height:9px;border-radius:99px;margin-top:6px;flex:none}
+.vl i.ok{background:var(--green)} .vl i.warn{background:var(--orange)} .vl i.no{background:var(--red)}
+.vhead{font-size:14px;font-weight:780;margin-bottom:10px}
+.col-on{background:rgba(0,103,197,.06)}
+th.col-on{color:var(--blue)!important}
+
+/* 封面 · 宽屏两栏，随视口放大 */
+.cover2{min-height:100%;max-width:min(2280px,100%);margin:0 auto;display:flex;flex-direction:column;justify-content:center;
+  gap:clamp(20px,5.5vh,84px);padding:clamp(6px,2vh,30px) clamp(0px,2.4vw,64px)}
+.cv-main{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:clamp(28px,4vw,88px);align-items:center;min-height:0}
+.cv-txt{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.cover2 .big{font-size:clamp(46px,5.4vw,150px);font-weight:850;letter-spacing:-.03em;line-height:1.02;margin-top:clamp(8px,1.4vh,18px);
+  background:linear-gradient(103deg,#0b2f6b 0%,var(--blue) 42%,var(--violet) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cover2 .sub{font-size:clamp(18px,1.45vw,40px);font-weight:650;color:var(--ink);margin-top:clamp(6px,1.2vh,16px)}
+.cover2 .desc{font-size:clamp(13.5px,.98vw,25px);line-height:1.8;color:var(--dim);max-width:44em;margin-top:clamp(8px,1.4vh,18px)}
+.cover2 .chips{justify-content:flex-start;margin-top:clamp(14px,2.6vh,34px)}
+.cover2 .chip{cursor:pointer;font-size:clamp(12.5px,.86vw,21px);padding:clamp(6px,.65vh,12px) clamp(14px,1.1vw,26px)}
+.cv-hint{margin-top:clamp(14px,2.6vh,30px)}
+.cv-art{display:flex;align-items:center;justify-content:center;min-height:0;height:100%}
+.cv-art svg{width:100%;height:auto;max-height:min(62vh,1000px)}
+.cover2 .hint{font-size:clamp(11.5px,.72vw,17px)}
+.cv-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(10px,1vw,18px)}
+.cv-kpis .kpi{padding:clamp(10px,1.4vh,18px) clamp(13px,1vw,20px)}
+.cv-kpis .kpi b{font-size:clamp(22px,1.75vw,48px)}
+.cv-kpis .kpi span{font-size:clamp(11.5px,.78vw,20px)}
+.cv-f{animation:cvF 9s ease-in-out infinite}
+.cv-ok{animation:cvOk 9s ease-in-out infinite}
+@keyframes cvF{0%,42%{opacity:0}50%,88%{opacity:1}96%,100%{opacity:0}}
+@keyframes cvOk{0%,42%{opacity:1}50%,88%{opacity:0}96%,100%{opacity:1}}
+path.flow.cv-ok{animation:flow .9s linear infinite,cvOk 9s ease-in-out infinite}
+path.cv-f.dash{animation:cvF 9s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.cv-f{animation:none;opacity:0}.cv-ok,path.flow.cv-ok{animation:none;opacity:1}}
+@media(max-width:1080px){
+  .cover2{justify-content:flex-start}
+  .cv-main{grid-template-columns:1fr}
+  .cv-txt{align-items:center;text-align:center}
+  .cover2 .chips{justify-content:center}
+  .cv-art svg{max-height:420px}
+  .cv-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* 讲解视频入口与弹层 */
+.vbtn{margin-top:clamp(14px,2.4vh,30px);font-size:clamp(14px,.9vw,20px);padding:clamp(10px,1.1vh,14px) clamp(22px,1.4vw,30px);display:inline-flex;align-items:center;gap:8px;box-shadow:var(--sh)}
+.vdlg{margin:auto;padding:0;border:0;background:transparent;width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:visible}
+.vdlg::backdrop{background:rgba(21,35,65,.78)}
+.vdlg video{display:block;width:100%;max-height:calc(100vh - 96px);aspect-ratio:16/9;background:#000;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.vdlg .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#fff;font-size:14px;font-weight:600}
+.vdlg .vbar .btn{flex:0 0 auto}
+</style>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  if (location.hostname !== "adg331.github.io") return;   // 只统计线上访问，本地预览不上报
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?0a7443d4f6cacdefbb3711234e999137";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</head>
+<body>
+
+<dialog class="vdlg" id="vDlg" aria-label="StorageGRID 零 RPO 讲解视频">
+  <div class="vbar"><span>StorageGRID 零 RPO 多站点复制 · 讲解视频</span><button class="btn" id="vClose" type="button">关闭 ✕</button></div>
+  <video id="vPlayer" src="./sg0-deep.mp4" controls playsinline preload="none"></video>
+</dialog>
+
+<div class="pbar" id="pbar" style="width:0"></div>
+
+<header>
+  <div class="brand"><b>StorageGRID 零 RPO</b><span>MULTI-SITE · ZERO RPO · ZERO RTO</span></div>
+  <nav id="nav"></nav>
+</header>
+
+<div class="stage">
+  <div class="track" id="track">
+
+  <!-- ══════════════════ 幕 0 · 封面 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="封面">
+    <div class="cover2">
+      <div class="cv-main">
+        <div class="cv-txt">
+          <div class="an" style="--d:.05s"><span class="eyebrow">NetApp StorageGRID · 多站点复制</span></div>
+          <div class="big an" style="--d:.14s">StorageGRID<br>零 RPO</div>
+          <div class="sub an" style="--d:.26s">对象存储的零数据丢失、零业务中断</div>
+          <p class="desc an" style="--d:.34s">质检影像、产线数据归档、PLM 文件和备份库都在往对象存储上走，这些数据一旦丢失就很难补回。StorageGRID 把多个站点组织成一套网格、一个命名空间：元数据跨站点仲裁确认，对象按 ILM 规则同步放置，任意一个站点整体失效，读写不中断、数据不丢失，也不需要执行切换流程。</p>
+          <div class="chips an" style="--d:.44s">
+            <div class="chip" data-jump="2">写入与故障演示</div>
+            <div class="chip" data-jump="3">实现原理</div>
+            <div class="chip" data-jump="8">部署形态</div>
+            <div class="chip" data-jump="12">关键配置</div>
+            <div class="chip" data-jump="14">故障场景</div>
+            <div class="chip" data-jump="17">方案自检</div>
+          </div>
+          <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 5 分钟讲解视频</button></div>
+          <div class="an cv-hint" style="--d:.56s">
+            <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
+          </div>
+        </div>
+        <div class="cv-art an" style="--d:.3s">
+          <svg viewBox="0 0 640 470" aria-label="三站点网格示意：站点 2 失效时读写继续">
+            <defs>
+              <marker id="cvG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0e9a62"/></marker>
+              <marker id="cvR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#d33a5c"/></marker>
+              <filter id="cvSh" x="-20%" y="-40%" width="140%" height="200%"><feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#152341" flood-opacity=".10"/></filter>
+            </defs>
+            <rect x="245" y="6" width="150" height="42" rx="11" fill="#fff" stroke="#c9d4e6" filter="url(#cvSh)"/>
+            <text x="320" y="25" text-anchor="middle" font-size="13" font-weight="780" fill="#152341">S3 客户端</text>
+            <text x="320" y="41" text-anchor="middle" font-size="10.5" fill="#5c6a8a">单一端点 · 单一命名空间</text>
+            <path d="M320 48 L320 74" stroke="#0e9a62" stroke-width="2.6" fill="none" class="flow" marker-end="url(#cvG)"/>
+            <rect x="170" y="76" width="300" height="42" rx="11" fill="#eaf2fd" stroke="#93b6e4" filter="url(#cvSh)"/>
+            <text x="320" y="95" text-anchor="middle" font-size="12.5" font-weight="780" fill="#123a7a">外部负载均衡 · 健康检查</text>
+            <text x="320" y="111" text-anchor="middle" font-size="10.5" fill="#5c6a8a" class="cv-ok">3 个站点全部在线</text>
+            <text x="320" y="111" text-anchor="middle" font-size="10.5" fill="#d33a5c" class="cv-f">站点 2 健康检查失败，已摘除</text>
+            <path d="M320 118 L320 134 M105 134 L535 134" stroke="#0067c5" stroke-width="2.4" fill="none"/>
+            <path d="M105 134 L105 164" stroke="#0e9a62" stroke-width="2.4" fill="none" class="flow" marker-end="url(#cvG)"/>
+            <path d="M535 134 L535 164" stroke="#0e9a62" stroke-width="2.4" fill="none" class="flow" marker-end="url(#cvG)"/>
+            <path d="M320 134 L320 164" stroke="#0e9a62" stroke-width="2.4" fill="none" class="flow cv-ok" marker-end="url(#cvG)"/>
+            <path d="M320 134 L320 164" stroke="#d33a5c" stroke-width="2.4" fill="none" class="dash cv-f" marker-end="url(#cvR)"/>
+            <path d="M190 252 L235 252 M405 252 L450 252" stroke="#0067c5" stroke-width="3" fill="none" class="flow cv-ok"/>
+            <path d="M105 338 Q320 402 535 338" stroke="#0067c5" stroke-width="3" fill="none" class="flow"/>
+            <g id="cvSites"></g>
+            <rect x="150" y="414" width="340" height="44" rx="12" fill="#fff" stroke="rgba(14,154,98,.45)" filter="url(#cvSh)"/>
+            <text x="320" y="442" text-anchor="middle" font-size="14.5" font-weight="800" fill="#0e9a62" class="cv-ok">三个站点同时读写 · RPO 0</text>
+            <text x="320" y="442" text-anchor="middle" font-size="14.5" font-weight="800" fill="#0e9a62" class="cv-f">站点 2 失效 · 读写继续 · RTO 0</text>
+          </svg>
+        </div>
+      </div>
+      <div class="cv-kpis an" style="--d:.5s">
+        <div class="kpi g"><b>RPO 0</b><span>元数据与对象同步一致</span></div>
+        <div class="kpi g"><b>RTO 0</b><span>无切换动作，自动绕开故障站点</span></div>
+        <div class="kpi"><b>1</b><span>命名空间 · 跨站点统一 S3 端点</span></div>
+        <div class="kpi v"><b>16</b><span>单网格最大站点数</span></div>
+        <div class="kpi v"><b>9</b><span>三站点的元数据副本数</span></div>
+        <div class="kpi t"><b>无需回切</b><span>故障恢复后自动重新同步</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 1 · 总览 ══════════════════ -->
+  <section class="scene" data-sec="开场" data-nav="总览">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>Overview</span></div>
+        <h1>一个网格、一个命名空间，<span class="g">站点失效时无需切换</span></h1>
+        <p class="lead">零 RPO 由一致性模型、ILM 同步放置和两级负载均衡共同保证。站点数量决定能达到的保护级别。点击卡片进入对应章节。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="kpis an" style="--d:.1s">
+        <div class="kpi g"><b>RPO 0</b><span>元数据与对象同步一致</span></div>
+        <div class="kpi g"><b>RTO 0</b><span>无切换动作，负载均衡自动绕开</span></div>
+        <div class="kpi"><b>1</b><span>命名空间 · 跨站点统一 S3 端点</span></div>
+        <div class="kpi v"><b>16</b><span>单网格最大站点数</span></div>
+        <div class="kpi v"><b>9</b><span>三站点的元数据副本数</span></div>
+        <div class="kpi t"><b>无需回切</b><span>故障恢复后自动重新同步</span></div>
+      </div>
+      <div class="g3 an" style="--d:.16s;margin-top:13px">
+        <div class="dc" style="--ac:var(--blue)" data-jump="2"><div class="hd"><span class="nm">写入与故障演示</span><span class="ct">01</span></div>
+          <ul><li>一次 PUT 的完整路径</li><li>站点整体失效后的请求路径</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--violet)" data-jump="3"><div class="hd"><span class="nm">实现原理</span><span class="ct">02</span></div>
+          <ul><li>元数据、数据、访问、入口四个面</li><li>一致性级别、仲裁数、ILM 摄取行为</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--teal)" data-jump="8"><div class="hd"><span class="nm">部署形态</span><span class="ct">03</span></div>
+          <ul><li>两站点、三站点、四地双网格</li><li>纠删码容量与负载均衡设计</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--orange)" data-jump="12"><div class="hd"><span class="nm">关键配置</span><span class="ct">04</span></div>
+          <ul><li>实施清单与核对表</li><li>最弱站点决定同步写入性能</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--red)" data-jump="14"><div class="hd"><span class="nm">故障场景</span><span class="ct">05</span></div>
+          <ul><li>按部署形态查询每种故障的结果</li><li>无影响 / 可缓解 / 有丢失风险</li></ul><div class="go">进入 →</div></div>
+        <div class="dc" style="--ac:var(--green)" data-jump="15"><div class="hd"><span class="nm">价值与自检</span><span class="ct">06</span></div>
+          <ul><li>没有切换，也就没有切换失败</li><li>按现场条件判断可达的保护级别</li></ul><div class="go">进入 →</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 2 · 写入与故障演示 ══════════════════ -->
+  <section class="scene" data-sec="现场演示" data-nav="写入与故障">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark"><i></i><span>Live demo · 01</span></div>
+        <h1>一次写入的完整路径，<span class="g">以及站点整体失效</span></h1>
+        <p class="lead">按顺序播放，观察元数据仲裁、对象同步放置、站点故障后请求路径的变化。右侧任意步骤可点击跳转。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" id="dNext" type="button">下一步 →</button>
+            <button class="btn" id="dPlay" type="button">▶ 自动播放</button>
+            <button class="btn" id="dReset" type="button">■ 重置</button>
+            <span class="hint" style="margin-left:auto" id="dStep">01 / 09</span>
+          </div>
+          <svg viewBox="0 0 760 470" style="max-height:500px">
+            <defs>
+              <marker id="ahG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0e9a62"/></marker>
+              <marker id="ahB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0067c5"/></marker>
+              <marker id="ahR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#d33a5c"/></marker>
+              <marker id="ahN" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#c9d4e6"/></marker>
+            </defs>
+            <rect x="290" y="6" width="180" height="42" rx="10" fill="#fff" stroke="#c9d4e6"/>
+            <text x="380" y="24" text-anchor="middle" font-size="12.5" font-weight="750" fill="#152341">S3 客户端</text>
+            <text x="380" y="40" text-anchor="middle" font-size="10.5" fill="#5c6a8a">PUT / GET · 单一端点</text>
+            <path id="dCli" d="M380 48 L380 78" stroke-width="2.6" fill="none"/>
+            <rect id="dLbBox" x="220" y="80" width="320" height="40" rx="10" fill="#eaf2fd" stroke="#93b6e4"/>
+            <text x="380" y="97" text-anchor="middle" font-size="12" font-weight="750" fill="#123a7a">外部负载均衡 · 健康检查</text>
+            <text id="dLbTxt" x="380" y="113" text-anchor="middle" font-size="10.5" fill="#5c6a8a">3 个站点全部在线</text>
+            <path id="dTrunk" d="M380 120 L380 140" stroke-width="2.4" fill="none"/>
+            <path id="dBar" d="M130 140 L630 140" stroke-width="2.4" fill="none"/>
+            <path id="dLA" d="M130 140 L130 172" stroke-width="2.4" fill="none"/>
+            <path id="dLB" d="M380 140 L380 172" stroke-width="2.4" fill="none"/>
+            <path id="dLC" d="M630 140 L630 172" stroke-width="2.4" fill="none"/>
+            <path id="dAB" d="M240 268 L270 268" stroke-width="3" fill="none"/>
+            <path id="dBC" d="M490 268 L520 268" stroke-width="3" fill="none"/>
+            <path id="dAC" d="M130 355 Q380 430 630 355" stroke-width="3" fill="none"/>
+            <g id="dSites"></g>
+            <text id="dLnk" x="380" y="414" text-anchor="middle" font-size="11.5" font-weight="650" fill="#5c6a8a">站点间网格互联 · 单一全局命名空间</text>
+            <rect id="dAckBox" x="190" y="426" width="380" height="36" rx="10" fill="#fff" stroke="#c9d4e6"/>
+            <text id="dAck" x="380" y="449" text-anchor="middle" font-size="13" font-weight="780" fill="#0e9a62"></text>
+          </svg>
+          <div class="lg">
+            <span><i style="background:#0067c5"></i>元数据副本 / 同步复制</span>
+            <span><i style="background:#0e9a62"></i>对象放置 / 有效请求路径</span>
+            <span><i style="background:#d33a5c"></i>故障</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s;padding:12px 14px">
+            <div id="dList"></div>
+          </div>
+          <div class="log an" style="--d:.24s" id="dLog"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 3 · 四个面 ══════════════════ -->
+  <section class="scene" data-sec="实现原理" data-nav="零 RPO 的前提">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--violet)"><i></i><span>How it works · 01</span></div>
+        <h1>零 RPO 的前提：<span class="g">元数据一致，对象可达</span></h1>
+        <p class="lead">故障发生的那一刻，元数据和对象内容都已同步且一致，对象在故障后仍然取得到，才谈得上 RPO=0。StorageGRID 用一致性模型管元数据，用 ILM 管对象放置，用负载均衡管访问路径。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <svg viewBox="0 0 640 360" style="max-height:440px" id="plSvg"></svg>
+          <p class="note">点击右侧四个面，左图高亮对应层次。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="an" style="--d:.18s">
+            <div class="steps" style="margin-bottom:10px">
+              <div class="st on" data-toggle-group="plane" data-v="0"><div class="n">01 · 元数据面</div><div class="l">跨站点仲裁写入</div></div>
+              <div class="st" data-toggle-group="plane" data-v="1"><div class="n">02 · 数据面</div><div class="l">ILM 同步放置</div></div>
+              <div class="st" data-toggle-group="plane" data-v="2"><div class="n">03 · 访问面</div><div class="l">命名空间自动取数</div></div>
+              <div class="st" data-toggle-group="plane" data-v="3"><div class="n">04 · 入口面</div><div class="l">两级负载均衡</div></div>
+            </div>
+            <div class="stbody" id="plBody" style="min-height:150px"></div>
+          </div>
+          <div class="g2 an" style="--d:.24s">
+            <div class="kpi g"><b>RPO 0</b><span>元数据面 + 数据面：返回成功时已在多站点持久化且一致</span></div>
+            <div class="kpi"><b>RTO 0</b><span>访问面 + 入口面：故障站点被自动绕开，无需切换</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 4 · 一致性级别 ══════════════════ -->
+  <section class="scene" data-sec="实现原理" data-nav="一致性级别">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--violet)"><i></i><span>How it works · 02 · Consistency</span></div>
+        <h1>桶一致性级别：<span class="g">在一致性与可用性之间选位置</span></h1>
+        <p class="lead">一致性在桶级别设置，可随时调整。只有跨站点强一致的两个级别满足零 RPO。点击表格中的级别查看行为。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g2">
+        <div class="tw an" style="--d:.12s">
+          <table class="dt" id="csTbl">
+            <thead><tr><th style="width:190px">一致性级别</th><th>跨站点强一致</th><th style="width:96px">零 RPO</th></tr></thead>
+            <tbody>
+              <tr class="pick" data-toggle-group="cs" data-v="0"><td class="h">All</td><td>所有节点立即收到</td><td><span class="tag ok">满足</span></td></tr>
+              <tr class="pick on" data-toggle-group="cs" data-v="1"><td class="h">Quorum Strong-global</td><td>跨站点仲裁确认</td><td><span class="tag ok">首选</span></td></tr>
+              <tr class="pick" data-toggle-group="cs" data-v="2"><td class="h">Legacy Strong-global</td><td>是（两站点采用）</td><td><span class="tag warn">部分</span></td></tr>
+              <tr class="pick" data-toggle-group="cs" data-v="3"><td class="h">Strong-site</td><td>否，仅站点内</td><td><span class="tag no">不满足</span></td></tr>
+              <tr class="pick" data-toggle-group="cs" data-v="4"><td class="h">Read-after-new-write</td><td>否，更新最终一致</td><td><span class="tag no">不满足</span></td></tr>
+              <tr class="pick" data-toggle-group="cs" data-v="5"><td class="h">Available</td><td>否，全部最终一致</td><td><span class="tag no">不满足</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="viz an" style="--d:.16s">
+            <svg viewBox="0 0 620 120" id="csSvg">
+              <defs><linearGradient id="csGr" x1="0" x2="1"><stop offset="0" stop-color="#0067c5"/><stop offset="1" stop-color="#0e9a62"/></linearGradient></defs>
+              <rect x="30" y="52" width="560" height="12" rx="6" fill="url(#csGr)" opacity=".85"/>
+              <text x="30" y="30" font-size="12" font-weight="750" fill="#0067c5">一致性最高</text>
+              <text x="590" y="30" text-anchor="end" font-size="12" font-weight="750" fill="#0e9a62">可用性最高</text>
+              <g id="csTicks"></g>
+              <g id="csMark"><path d="M0 0 L-9 -14 L9 -14 Z" fill="#152341"/></g>
+              <text id="csName" x="310" y="104" text-anchor="middle" font-size="13" font-weight="780" fill="#152341"></text>
+            </svg>
+          </div>
+          <div class="panel an" style="--d:.2s">
+            <h3 id="csH">行为</h3>
+            <div id="csBody"></div>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>运维提示</h3>
+            <div class="li">一致性是<b>桶级别</b>设置，可随时调整，不同业务的桶可以用不同级别。</div>
+            <div class="li warn">站点故障期间若必须优先恢复写入，可把桶临时降到 <b>read-after-new-write</b> 或更低，故障恢复后再调回。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 5 · 仲裁数 ══════════════════ -->
+  <section class="scene" data-sec="实现原理" data-nav="元数据仲裁">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--violet)"><i></i><span>How it works · 03 · Quorum</span></div>
+        <h1>元数据仲裁：<span class="g">丢掉一个站点，还够不够数</span></h1>
+        <p class="lead">每个站点保存 3 份元数据副本。Quorum Strong-global 要求写入被仲裁数的副本确认才返回成功。调整站点数、点击站点模拟失效，看仲裁是否仍满足。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="rg" style="margin-bottom:6px"><span style="white-space:nowrap">站点数</span><input type="range" id="qN" min="2" max="16" value="3"><b id="qNv">3</b></div>
+          <div class="btnrow" style="margin-bottom:6px">
+            <button class="btn sm" id="qFail1" type="button">模拟一个站点失效</button>
+            <button class="btn sm" id="qClr" type="button">清除故障</button>
+            <span class="hint" style="margin-left:auto">点击站点切换在线 / 失效</span>
+          </div>
+          <svg viewBox="0 0 640 250" id="qSvg" style="max-height:420px"></svg>
+          <div class="lg">
+            <span><i style="background:#0067c5"></i>可达的元数据副本</span>
+            <span><i style="background:#d33a5c"></i>失效站点</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="g3 an" style="--d:.16s">
+            <div class="kpi v"><b id="qTot">9</b><span>元数据副本总数</span></div>
+            <div class="kpi"><b id="qQ">5</b><span>仲裁数</span></div>
+            <div class="kpi g" id="qAk"><b id="qA">9</b><span>当前可达副本</span></div>
+          </div>
+          <div class="panel an" style="--d:.2s">
+            <h3>结果</h3>
+            <div id="qOut"></div>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>仲裁数怎么算</h3>
+            <div class="code" style="margin-bottom:9px">仲裁数 = 1 + (站点数 × 3) ÷ 2   <span class="c"># 取整</span>
+<span class="c"># 3 站点：</span>1 + 9 ÷ 2 = <span class="s">5</span>，任意单站点失效后剩 6 份 ≥ 5</div>
+            <div class="li">两站点采用 <b>Legacy Strong-global</b>，单站点故障时 GET / HEAD 不中断，部分写入类操作中断。</div>
+            <div class="li">第三站点可以只放<b>仅元数据节点</b>，凑齐仲裁而不必配齐对象容量。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 6 · ILM 摄取行为 ══════════════════ -->
+  <section class="scene" data-sec="实现原理" data-nav="ILM 摄取行为">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--violet)"><i></i><span>How it works · 04 · ILM ingest</span></div>
+        <h1>ILM 摄取行为：<span class="g">返回成功之前，对象放到了哪里</span></h1>
+        <p class="lead">同一个 PUT，三种摄取行为决定了返回 200 时对象是否已经按规则放到多个站点。切换行为与场景，对比正常和站点 2 不可达时的结果。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn" data-toggle-group="ilm" data-v="strict">Strict 严格</button>
+            <button class="btn on" data-toggle-group="ilm" data-v="balanced">Balanced 平衡</button>
+            <button class="btn" data-toggle-group="ilm" data-v="dual">Dual commit 双提交</button>
+            <span style="margin-left:auto" class="btnrow">
+              <button class="btn sm on" data-toggle-group="ilmf" data-v="0">正常</button>
+              <button class="btn sm dg" data-toggle-group="ilmf" data-v="1">站点 2 不可达</button>
+            </span>
+          </div>
+          <svg viewBox="0 0 700 380" id="ilSvg" style="max-height:520px"></svg>
+          <div class="lg">
+            <span><i style="background:#0e9a62"></i>按规则放置的对象</span>
+            <span><i style="background:#d5820f"></i>临时副本（尚未按规则放置）</span>
+            <span><i style="background:#c9d4e6"></i>排队待放置</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="ilH">Balanced 平衡</h3>
+            <div id="ilBody"></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>选型建议</h3>
+            <div class="li"><b>Strict</b> 放置绝对精确，代价是故障期间写入直接失败，需要应用具备重试能力。</div>
+            <div class="li ok"><b>Balanced</b> 在可用性与一致性之间取平衡，是多数部署的推荐配置；多站点零 RPO 参考架构采用 Balanced。</div>
+            <div class="li warn"><b>Dual commit</b> 先落两份再异步放置，不满足零 RPO。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 7 · 故障域层次 ══════════════════ -->
+  <section class="scene" data-sec="实现原理" data-nav="故障域层次">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--violet)"><i></i><span>How it works · 05 · Failure domains</span></div>
+        <h1>四层故障域，<span class="g">每一层都在本层内消化</span></h1>
+        <p class="lead">磁盘、节点、站点、网格逐层嵌套。下层故障不外溢到上层：单盘故障在节点内重建，单节点故障不影响站点，单站点故障不影响网格。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn on" data-toggle-group="fd" data-v="0">磁盘级</button>
+            <button class="btn" data-toggle-group="fd" data-v="1">节点级</button>
+            <button class="btn" data-toggle-group="fd" data-v="2">站点级</button>
+            <button class="btn" data-toggle-group="fd" data-v="3">网格级</button>
+          </div>
+          <svg viewBox="0 0 700 330" id="fdSvg" style="max-height:520px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="fdH">磁盘级</h3>
+            <div id="fdBody"></div>
+          </div>
+          <div class="g2 an" style="--d:.24s">
+            <div class="vc"><span class="k">本地重建</span><div class="t">不占站点间带宽</div><div class="d">节点内纠删码在本节点磁盘间重建，站点间链路只承担同步复制。</div></div>
+            <div class="vc"><span class="k">逐层兜底</span><div class="t">下层扛不住才上升</div><div class="d">站点内保护处理节点故障，跨站点放置只为整站点失效兜底。</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 8 · 两站点 vs 三站点 ══════════════════ -->
+  <section class="scene" data-sec="部署形态" data-nav="站点数量">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--teal)"><i></i><span>Deployment · 01</span></div>
+        <h1>站点数量决定保护级别：<span class="g">三站点起才是完整零 RPO</span></h1>
+        <p class="lead">两站点可用，但站点整体失效时部分写入会中断；三站点及以上做到任意单站点失效读写不中断。第三站点可以只放元数据节点。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn" data-toggle-group="dp" data-v="two">两站点</button>
+            <button class="btn on" data-toggle-group="dp" data-v="three">三站点</button>
+            <button class="btn" data-toggle-group="dp" data-v="md">三站点 · 第三站点仅元数据</button>
+          </div>
+          <svg viewBox="0 0 700 300" id="dpSvg" style="max-height:520px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3 id="dpH">三站点及以上</h3>
+            <div id="dpBody"></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对客户的意义</h3>
+            <div id="dpMean" style="font-size:13px;color:var(--dim)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 9 · 四地双网格 ══════════════════ -->
+  <section class="scene" data-sec="部署形态" data-nav="四地双网格">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--teal)"><i></i><span>Deployment · 02 · Dual grid</span></div>
+        <h1>四地双网格：<span class="g">网格内同步，网格间异步</span></h1>
+        <p class="lead">两套 StorageGRID 各 3 个站点：2 个存储站点加 1 个仅元数据站点，仅元数据站点放到对方区域。网格内零 RPO，网格之间用跨网格复制（CGR）再叠一层区域级冗余。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn on" data-toggle-group="mg" data-v="all">全部</button>
+            <button class="btn" data-toggle-group="mg" data-v="g1">网格 1</button>
+            <button class="btn" data-toggle-group="mg" data-v="g2">网格 2</button>
+            <button class="btn" data-toggle-group="mg" data-v="cgr">跨网格复制</button>
+          </div>
+          <svg viewBox="0 0 720 330" id="mgSvg" style="max-height:540px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>架构要点</h3>
+            <div class="li">每套网格 3 站点：<b>2 个存储站点 + 1 个仅元数据站点</b></div>
+            <div class="li">网格 1 的元数据站点在区域 2，网格 2 的元数据站点在区域 1</div>
+            <div class="li">网格内 <b>Balanced</b> ILM 同步跨两个存储站点做纠删码放置</div>
+            <div class="li">网格之间 <b>CGR 双向异步</b>复制桶、对象、版本与元数据</div>
+            <div class="li">合计每个对象 <b>4 份纠删码副本、18 份元数据副本</b></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>对客户的意义</h3>
+            <div class="li ok">用仅元数据节点凑齐第三站点，避免在四个地点各存一份对象的容量浪费。</div>
+            <div class="li ok">同城零 RPO，异地区域级容灾；任意单个地点失效，两套网格的业务都不中断。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 10 · 纠删码与副本 ══════════════════ -->
+  <section class="scene" data-sec="部署形态" data-nav="纠删码与副本">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--teal)"><i></i><span>Deployment · 03 · Erasure coding</span></div>
+        <h1>跨站点纠删码：<span class="g">同样扛住一个站点，容量少一半</span></h1>
+        <p class="lead">三副本意味着 3 倍裸容量。跨 3 个站点做纠删码，在同样的站点级容错下把开销降到 1.5 倍。选择保护方式、拖动数据量，估算裸容量。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn" data-toggle-group="ec" data-v="0">3 副本</button>
+            <button class="btn on" data-toggle-group="ec" data-v="1">EC 2+1</button>
+            <button class="btn" data-toggle-group="ec" data-v="2">EC 4+2</button>
+            <button class="btn" data-toggle-group="ec" data-v="3">EC 6+3</button>
+          </div>
+          <div class="rg" style="margin-bottom:6px"><span style="white-space:nowrap">有效数据量</span><input type="range" id="ecL" min="1" max="40" value="10"><b id="ecLv">1.0 PB</b></div>
+          <svg viewBox="0 0 700 300" id="ecSvg" style="max-height:440px"></svg>
+          <p class="note">示意估算：未计入元数据、预留空间与节点内纠删码开销；可用的纠删码方案以所用版本的官方文档为准。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="g2 an" style="--d:.16s">
+            <div class="kpi t"><b id="ecRaw">1.5 PB</b><span>所需裸容量（3 站点合计）</span></div>
+            <div class="kpi v"><b id="ecOv">1.5×</b><span>容量开销</span></div>
+          </div>
+          <div class="panel an" style="--d:.2s">
+            <h3>三个层次的纠删码</h3>
+            <div class="li"><b>节点内</b>：设备在节点内所有磁盘间做纠删码，多盘故障本地重建，不占站点间带宽。</div>
+            <div class="li"><b>站点内</b>：在站点内多个节点间做纠删码防节点故障，如 4+2 需至少 6 个节点。</div>
+            <div class="li"><b>跨站点</b>：在 3 个及以上站点间做纠删码，以低于副本的开销获得站点级容错。</div>
+            <div class="li ok"><b>可与副本混用</b>：不同桶、不同租户、不同对象走不同 ILM 规则。</div>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>适合的数据</h3>
+            <div style="font-size:13px;color:var(--dim)">大容量、长留存的质检影像、产线历史数据、备份副本与归档，是跨站点纠删码的主流对象。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 11 · 负载均衡 ══════════════════ -->
+  <section class="scene" data-sec="部署形态" data-nav="访问入口">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--teal)"><i></i><span>Deployment · 04 · Load balancing</span></div>
+        <h1>RTO=0 靠的是<span class="g">访问入口</span>，不是存储本身</h1>
+        <p class="lead">存储侧做了多站点复制、入口却只指向一个站点，站点故障时客户端照样连不上。切换入口方式，再注入站点 3 故障，看请求怎么走。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:8px">
+            <button class="btn on" data-toggle-group="lb" data-v="ext">外部负载均衡 + 健康检查</button>
+            <button class="btn" data-toggle-group="lb" data-v="gw">仅站点内 HA 组</button>
+            <button class="btn" data-toggle-group="lb" data-v="dns">DNS 轮询</button>
+            <span style="margin-left:auto" class="btnrow">
+              <button class="btn sm on" data-toggle-group="lbf" data-v="0">正常</button>
+              <button class="btn sm dg" data-toggle-group="lbf" data-v="1">站点 3 故障</button>
+            </span>
+          </div>
+          <svg viewBox="0 0 700 330" id="lbSvg" style="max-height:520px"></svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>结果</h3>
+            <div id="lbOut"></div>
+          </div>
+          <div class="panel tint an" style="--d:.24s">
+            <h3>设计要点</h3>
+            <div class="li">站点内：多个 Gateway 节点组成 <b>HA 组</b>，自动故障转移与回切。</div>
+            <div class="li">站点之上：外部负载均衡器分发到各站点 HA 组，<b>必须配置健康检查</b>。</div>
+            <div class="li">Gateway 默认只在本站点存储节点间均衡；可配置跨站点，但会把站点间时延加进客户端响应。</div>
+            <div class="li warn">DNS 轮询或直连存储节点也能用，但不具备自动摘除能力。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 12 · 配置清单 ══════════════════ -->
+  <section class="scene" data-sec="关键配置" data-nav="配置清单">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--orange)"><i></i><span>Configuration · 01</span></div>
+        <h1>要达成零 RPO，<span class="g">需要配置哪些东西</span></h1>
+        <p class="lead">可直接作为方案实施清单和现场核对表。选择部署形态，高亮对应的一列。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="btnrow an" style="--d:.1s;margin-bottom:10px">
+        <button class="btn" data-toggle-group="cf" data-v="1">两站点</button>
+        <button class="btn on" data-toggle-group="cf" data-v="2">三站点及以上</button>
+      </div>
+      <div class="tw an" style="--d:.14s">
+        <table class="dt" id="cfTbl">
+          <thead><tr><th style="width:150px">配置项</th><th>两站点</th><th>三站点及以上</th></tr></thead>
+          <tbody>
+            <tr><td class="h">桶一致性</td><td>Legacy Strong-global</td><td>Quorum Strong-global（12.0 新装默认）</td></tr>
+            <tr><td class="h">ILM 摄取行为</td><td>Balanced（推荐）或 Strict</td><td>Balanced（推荐）或 Strict</td></tr>
+            <tr><td class="h">对象放置</td><td>每站点 1 份副本，共 2 份</td><td>3 份副本，或跨 3 站点纠删码</td></tr>
+            <tr><td class="h">元数据副本</td><td>共 6 份（每站点 3 份）</td><td>共 9 份（每站点 3 份），仲裁数 5</td></tr>
+            <tr><td class="h">站点内负载均衡</td><td colspan="2">Gateway 节点组成 HA 组，每站点至少 2 个</td></tr>
+            <tr><td class="h">站点间负载均衡</td><td colspan="2">外部负载均衡器 + 健康检查，指向各站点 HA 组</td></tr>
+            <tr><td class="h">最小节点数</td><td colspan="2">每站点 1 个管理节点 + 3 个存储节点起步；单网格最多 220 个节点、16 个站点</td></tr>
+            <tr><td class="h">节点角色</td><td colspan="2">仅元数据、仅对象或二者合一；第三站点常用仅元数据节点</td></tr>
+            <tr><td class="h">交付形态</td><td colspan="2">纯软件、VMware 虚拟机、专用一体机，三种可混合</td></tr>
+            <tr><td class="h">跨网格复制</td><td colspan="2">仅异步；用于跨区域、突破 16 站点上限或扩展可用容量，RPO 取决于两侧性能与链路</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note an" style="--d:.2s">跨网格复制（CGR）为异步复制，不能替代网格内同步复制来达成零 RPO。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 13 · 最弱站点 ══════════════════ -->
+  <section class="scene" data-sec="关键配置" data-nav="性能规划">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--orange)"><i></i><span>Configuration · 02 · Performance</span></div>
+        <h1>同步写入的性能，<span class="g">由最弱的那个站点决定</span></h1>
+        <p class="lead">返回成功之前要等每个站点完成放置，所以吞吐最低、时延最高的站点决定整体写入表现。拖动各站点的处理能力与往返时延，看瓶颈落在哪里。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="g3" style="margin-bottom:6px" id="pfCtl"></div>
+          <svg viewBox="0 0 700 270" id="pfSvg" style="max-height:360px"></svg>
+          <p class="note">示意模型：整体写入吞吐取各站点处理能力的最小值，同步写入时延不低于到最远站点的往返时延；数值为相对值，不代表实际性能。</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="g2 an" style="--d:.16s">
+            <div class="kpi o"><b id="pfT">60</b><span>整体写入吞吐（相对值）</span></div>
+            <div class="kpi v"><b id="pfL">≥ 8 ms</b><span>同步写入附加时延</span></div>
+          </div>
+          <div class="panel an" style="--d:.2s">
+            <h3>站点性能由什么决定</h3>
+            <div class="li">节点数量、CPU 核数与主频、内存</div>
+            <div class="li">磁盘数量与类型</div>
+            <div class="li">站点间链路带宽与时延</div>
+          </div>
+          <div class="panel tint an" style="--d:.26s">
+            <h3>规划建议</h3>
+            <div class="li ok">三站点在节点数、CPU、内存、磁盘配置上<b>尽量对等</b>，避免一个站点拖累整体。</div>
+            <div class="li warn">站点间存在明显时延或带宽瓶颈时，先评估写入时延影响，或改用跨网格异步复制。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 14 · 故障场景查询 ══════════════════ -->
+  <section class="scene" data-sec="故障场景" data-nav="故障场景查询">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--red)"><i></i><span>Failure scenarios</span></div>
+        <h1>故障场景查询：<span class="g">每种故障的明确结果</span></h1>
+        <p class="lead">选择部署形态，按结果分级或关键字筛选。两站点与三站点最核心的差别在「单站点整体故障」这一行。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="btnrow an" style="--d:.1s;margin-bottom:10px">
+        <button class="btn" data-toggle-group="fs" data-v="two">两站点 · Legacy Strong-global</button>
+        <button class="btn on" data-toggle-group="fs" data-v="three">三站点及以上 · Quorum Strong-global</button>
+        <button class="btn" data-toggle-group="fs" data-v="multi">四地双网格</button>
+        <span style="width:14px"></span>
+        <button class="btn sm on" data-toggle-group="fsf" data-v="all">全部</button>
+        <button class="btn sm" data-toggle-group="fsf" data-v="yes">无影响</button>
+        <button class="btn sm" data-toggle-group="fsf" data-v="part">有影响可缓解</button>
+        <button class="btn sm" data-toggle-group="fsf" data-v="no">数据丢失风险</button>
+        <input class="inp" id="fsQ" placeholder="搜索场景关键字" style="width:180px;margin-left:auto">
+        <span class="meta" id="fsCnt"></span>
+      </div>
+      <div class="tw cbox an" style="--d:.14s">
+        <table class="dt">
+          <thead><tr><th style="width:300px">故障场景</th><th>结果</th></tr></thead>
+          <tbody id="fsBody"></tbody>
+        </table>
+      </div>
+      <p class="note an" style="--d:.2s">结果分级为便于沟通所做的归纳，具体以实际 ILM 规则与节点分布为准。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 15 · 客户价值 ══════════════════ -->
+  <section class="scene" data-sec="客户价值" data-nav="客户价值">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--green)"><i></i><span>Customer value · 01</span></div>
+        <h1>没有切换动作，<span class="g">也就没有切换失败</span></h1>
+        <p class="lead">从业务连续性、运维方式到资产利用率三个层面。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="panel an" style="--d:.1s">
+        <div class="split">
+          <div><div class="flag r" style="margin-bottom:9px">主备式容灾</div>
+            <div class="li warn">风险集中在切换那一刻：脚本、演练、人工判断</div>
+            <div class="li warn">故障恢复后要安排回切窗口、比对差异</div>
+            <div class="li warn">备用站点平时闲置，只为故障那一天付费</div></div>
+          <div class="arrowx" style="text-align:center">→</div>
+          <div><div class="flag" style="margin-bottom:9px">StorageGRID 多站点网格</div>
+            <div class="li ok">客户端继续访问同一个端点，取不到就自动从别的站点取</div>
+            <div class="li ok">中断期间的更新自动同步回恢复的站点，无需回切</div>
+            <div class="li ok">所有站点同时提供读写，投资同时贡献容量、性能与容灾</div></div>
+        </div>
+      </div>
+      <div class="g3 an" style="--d:.16s;margin-top:13px">
+        <div class="vc"><span class="k">连续性</span><div class="t">没有切换失败</div><div class="d">单一命名空间让站点故障对客户端透明，不存在需要执行的切换流程，也就没有切换失败。</div></div>
+        <div class="vc"><span class="k">运维</span><div class="t">不再需要回切窗口</div><div class="d">故障站点恢复后自动补齐更新，不停机、不排窗口、不人工比对，夜班和节假日不必待命回切。</div></div>
+        <div class="vc"><span class="k">资产</span><div class="t">容灾资源不闲置</div><div class="d">没有只做冷备的一整套设备，各站点同时承担读写。</div></div>
+        <div class="vc"><span class="k">分级</span><div class="t">按桶按租户定保护级别</div><div class="d">质量追溯、合规档案走强一致跨站点保护，日志与临时数据走低开销规则，不必为全部数据买单。</div></div>
+        <div class="vc"><span class="k">成本</span><div class="t">容量成本可控</div><div class="d">跨站点纠删码替代多副本；仅元数据节点凑齐仲裁站点，第三站点不必配齐对象容量。</div></div>
+        <div class="vc"><span class="k">演进</span><div class="t">扩容与更新不停机</div><div class="d">单网格可到 220 节点、16 站点，软件、虚拟机、一体机混合；新增站点、退役旧节点应用侧无感知。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 16 · 典型场景 ══════════════════ -->
+  <section class="scene" data-sec="客户价值" data-nav="典型场景">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--green)"><i></i><span>Customer value · 02 · Scenarios</span></div>
+        <h1>典型场景与<span class="g">对应能力</span></h1>
+        <p class="lead">按业务诉求对应到具体配置。后两行为具备同类访问模式的制造业工作流。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="tw an" style="--d:.12s">
+        <table class="dt">
+          <thead><tr><th style="width:210px">业务场景</th><th>诉求</th><th>对应能力</th></tr></thead>
+          <tbody>
+            <tr><td class="h">金融影像与电子档案</td><td>监管要求不可丢失，查询需实时</td><td>Quorum Strong-global + ILM 同步放置</td></tr>
+            <tr><td class="h">医疗影像 PACS 归档</td><td>数据量大、留存周期长、不能停</td><td>跨站点纠删码降低容量成本 + 站点故障读写不中断</td></tr>
+            <tr><td class="h">备份与勒索软件恢复库</td><td>备份写入不能因单站点故障失败</td><td>Balanced 摄取 + 多站点放置 + 对象锁定策略</td></tr>
+            <tr><td class="h">AI 训练数据湖</td><td>多地训练集群读取同一份数据</td><td>单一全局命名空间，就近站点读取</td></tr>
+            <tr><td class="h">视频监控与物联网归档</td><td>持续高并发写入，容量增长快</td><td>网格横向扩展至 220 节点，纠删码控制成本</td></tr>
+            <tr><td class="h">跨区域两地三中心</td><td>同城零 RPO，异地区域级容灾</td><td>网格内同步 + 跨网格 CGR 异步复制</td></tr>
+            <tr style="background:rgba(14,154,98,.04)"><td class="h">质检影像与批次追溯 <sup>※</sup></td><td>AOI / X 光图像持续写入，客诉追溯时要随时调得出</td><td>跨站点纠删码 + Quorum Strong-global，任一厂区机房失效不影响追溯查询</td></tr>
+            <tr style="background:rgba(14,154,98,.04)"><td class="h">多厂区共享研发与产线数据 <sup>※</sup></td><td>多个厂区读写同一份 PLM 附件、工艺文件与训练集</td><td>单一命名空间就近读取，站点故障时自动从其他厂区取数</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note an" style="--d:.18s">标 ※ 的两行由前述场景的访问模式类推，适用性需结合实际应用的读写方式与容量规模验证。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 17 · 方案自检 ══════════════════ -->
+  <section class="scene" data-sec="方案自检" data-nav="方案自检">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--blue)"><i></i><span>Fit check</span></div>
+        <h1>方案适配自检：<span class="g">现有条件能做到什么级别</span></h1>
+        <p class="lead">按现场条件选择，右侧即时给出可达的保护级别，以及需要提前确认的事项。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g32">
+        <div class="panel an" style="--d:.12s" id="fit">
+          <h3>现场条件</h3>
+          <div class="g2" style="gap:11px">
+            <div class="fld"><label>站点数量</label><select class="sel" id="f-site"><option value="1">单站点</option><option value="2">2 个站点</option><option value="3" selected>3 个及以上站点</option><option value="m">四地双网格</option></select></div>
+            <div class="fld"><label>第三站点能否只放元数据节点</label><select class="sel" id="f-md"><option value="yes" selected>可以，接受仅元数据站点</option><option value="no">不行，三地都要存对象</option></select></div>
+            <div class="fld"><label>桶一致性要求</label><select class="sel" id="f-cons"><option value="quorum" selected>跨站点读写强一致</option><option value="site">仅站点内强一致即可</option><option value="eventual">可接受最终一致</option></select></div>
+            <div class="fld"><label>ILM 摄取行为</label><select class="sel" id="f-ilm"><option value="balanced" selected>Balanced 平衡</option><option value="strict">Strict 严格</option><option value="dual">Dual commit 双提交</option></select></div>
+            <div class="fld"><label>站点间访问入口</label><select class="sel" id="f-lb"><option value="ext" selected>外部负载均衡器 + 健康检查</option><option value="gw">仅站点内 Gateway HA 组</option><option value="dns">DNS 轮询或客户端直连</option></select></div>
+            <div class="fld"><label>数据保护方式</label><select class="sel" id="f-prot"><option value="ec" selected>跨站点纠删码</option><option value="rep">多站点副本</option><option value="local">仅站点内保护</option></select></div>
+            <div class="fld"><label>站点间网络</label><select class="sel" id="f-net"><option value="ok" selected>带宽与时延满足同步复制</option><option value="weak">存在明显时延或带宽瓶颈</option></select></div>
+          </div>
+        </div>
+        <div class="panel tint an" style="--d:.18s" id="fitOut"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 18 · 价值总结 ══════════════════ -->
+  <section class="scene" data-sec="总结" data-nav="价值总结">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:var(--green)"><i></i><span>Summary</span></div>
+        <h1>三个站点、一个命名空间，<span class="g">站点失效不再是事件</span></h1>
+        <p class="lead">元数据仲裁保证一致，ILM 同步放置保证对象可达，外部负载均衡保证入口不断。三者配齐，才是完整的零 RPO 与零 RTO。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+      <div class="g4 an" style="--d:.12s">
+        <div class="vc"><span class="k">一致性</span><div class="t">Quorum Strong-global</div><div class="d">3 站点 9 份元数据副本、仲裁数 5，任意单站点失效仍可写入。</div></div>
+        <div class="vc"><span class="k">放置</span><div class="t">ILM Balanced</div><div class="d">返回成功前同步放置到多个站点，放置条件暂时不满足时自动退化并在恢复后纠正。</div></div>
+        <div class="vc"><span class="k">入口</span><div class="t">外部负载均衡 + 健康检查</div><div class="d">故障站点自动摘除，客户端始终访问同一个端点。</div></div>
+        <div class="vc"><span class="k">成本</span><div class="t">跨站点纠删码 + 仅元数据站点</div><div class="d">同等站点级容错下容量开销减半，第三站点不必配齐对象容量。</div></div>
+      </div>
+      <div class="g23" style="margin-top:13px">
+        <div class="panel an" style="--d:.18s">
+          <h3>落地顺序</h3>
+          <div class="steps" style="margin-bottom:0">
+            <div class="st" style="cursor:default"><div class="n">01</div><div class="l">按桶梳理数据分级，定哪些要零 RPO</div></div>
+            <div class="st" style="cursor:default"><div class="n">02</div><div class="l">定站点数与第三站点形态</div></div>
+            <div class="st" style="cursor:default"><div class="n">03</div><div class="l">配一致性、ILM 规则与纠删码方案</div></div>
+            <div class="st" style="cursor:default"><div class="n">04</div><div class="l">外部负载均衡与健康检查，做站点失效演练</div></div>
+          </div>
+        </div>
+        <div class="panel tint an" style="--d:.24s">
+          <h3>参考资料</h3>
+          <div class="li">NetApp 技术资料：Achieving zero RPO with StorageGRID · A Comprehensive Guide to Multi-Site Replication</div>
+          <div class="li">StorageGRID 官方文档：桶一致性、ILM 摄取行为、负载均衡与跨网格复制章节</div>
+          <p class="note">具体规格、一致性默认值与支持矩阵以对应版本的官方文档及硬件兼容性文档为准。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /track -->
+</div><!-- /stage -->
+
+<footer>
+  <button class="nb" id="prev" title="上一幕（←）">‹</button>
+  <button class="nb" id="next" title="下一幕（→）">›</button>
+  <div class="meta"><b id="cur">01</b> / <span id="tot">00</span> &nbsp;·&nbsp; <span id="secName">开场</span></div>
+  <div class="dots" id="dots"></div>
+  <span class="hint">滚轮 / <kbd>←</kbd> <kbd>→</kbd> 切换幕 · <kbd>Home</kbd> 封面 · 支持触屏滑动</span>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+/* ═══════════ 幕式横滚控制器 ═══════════ */
+const track  = $('#track');
+// 舞台只靠 transform 切幕；任何 scrollIntoView / 聚焦引起的横向滚动都立即复位
+const stageEl = $('.stage');
+stageEl.addEventListener('scroll', ()=>{ if(stageEl.scrollLeft) stageEl.scrollLeft = 0; });
+const scenes = $$('.scene');
+const N = scenes.length;
+let idx = 0, animating = false;
+
+// 顶部导航（按章节聚合）
+const nav = $('#nav'), dots = $('#dots');
+const secs = [];
+scenes.forEach((s,i)=>{
+  const sec = s.dataset.sec;
+  if(!secs.length || secs[secs.length-1].name !== sec) secs.push({name:sec, from:i, to:i});
+  else secs[secs.length-1].to = i;
+});
+secs.forEach(sc=>{
+  const b = document.createElement('button');
+  b.className = 'nv'; b.textContent = sc.name; b.dataset.from = sc.from; b.dataset.to = sc.to;
+  b.addEventListener('click', ()=> go(sc.from));
+  nav.appendChild(b);
+});
+scenes.forEach((s,i)=>{
+  const d = document.createElement('span');
+  d.className = 'dot'; d.title = (i+1)+'. '+(s.dataset.nav||'');
+  d.addEventListener('click', ()=> go(i));
+  dots.appendChild(d);
+});
+$('#tot').textContent = String(N).padStart(2,'0');
+
+function go(i, instant){
+  i = Math.max(0, Math.min(N-1, i));
+  if(i === idx && !instant) { paint(); return; }
+  idx = i;
+  if(instant) track.style.transition = 'none';
+  track.style.transform = 'translateX(' + (-idx*100) + '%)';
+  if(instant) { void track.offsetWidth; track.style.transition = ''; }
+  paint();
+}
+function paint(){
+  scenes.forEach((s,i)=>{
+    const live = i === idx;
+    if(live){ s.classList.remove('live'); void s.offsetWidth; s.classList.add('live'); s.scrollTop = 0; }
+    else s.classList.remove('live');
+  });
+  $$('.dot', dots).forEach((d,i)=>{
+    d.classList.toggle('on', i===idx);
+    d.classList.toggle('sec', i!==idx && scenes[i].dataset.sec === scenes[idx].dataset.sec);
+  });
+  $$('.nv', nav).forEach(b=>{
+    const on = idx >= +b.dataset.from && idx <= +b.dataset.to;
+    b.classList.toggle('on', on);
+    if(on) b.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+  });
+  $('#cur').textContent = String(idx+1).padStart(2,'0');
+  $('#secName').textContent = scenes[idx].dataset.nav || scenes[idx].dataset.sec;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = idx === N-1;
+  $('#pbar').style.width = (N<2?100:(idx/(N-1))*100) + '%';
+  onEnter(idx);
+}
+$('#prev').addEventListener('click', ()=> go(idx-1));
+$('#next').addEventListener('click', ()=> go(idx+1));
+$$('[data-jump]').forEach(el=> el.addEventListener('click', ()=> go(+el.dataset.jump)));
+
+document.addEventListener('keydown', e=>{
+  if(vDlg.open) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(idx+1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx-1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(N-1); }
+  else if(e.key === ' '){ e.preventDefault(); go(idx+1); }
+});
+// 触屏滑动
+let tx=0, ty=0, tracking=false;
+track.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; tracking=true; }, {passive:true});
+track.addEventListener('touchend', e=>{
+  if(!tracking) return; tracking=false;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6) go(idx + (dx<0?1:-1));
+}, {passive:true});
+
+/* ═══════════ 鼠标滚轮切幕 ═══════════
+   规则：当前幕内容未滚到边界时，滚轮正常滚动内容；
+   已在顶部继续上滚 → 上一幕；已在底部继续下滚 → 下一幕。
+   带冷却与惯性抑制，避免触控板一次滑动连跳多幕。 */
+let wheelLock = false, lastWheelTs = 0;
+const WHEEL_CD  = 620;   // 切幕后的冷却时间
+const GESTURE_GAP = 160; // 事件间隔超过此值视为"新的一次滚动动作"
+
+track.addEventListener('wheel', e=>{
+  if(vDlg.open) return;
+  const now = e.timeStamp || Date.now();
+  const gap = now - lastWheelTs;   // 与上一次滚轮事件的间隔
+  lastWheelTs = now;
+
+  function fire(dir){
+    const target = idx + dir;
+    if(target < 0 || target > N-1) return;
+    wheelLock = true;
+    go(target);
+    setTimeout(()=>{ wheelLock = false; }, WHEEL_CD);
+  }
+
+  // 横向滚动手势（触控板双指左右）直接切幕
+  if(Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.4){
+    if(Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if(!wheelLock) fire(e.deltaX > 0 ? 1 : -1);
+    return;
+  }
+
+  const dy = e.deltaY;
+  if(Math.abs(dy) < 2) return;
+
+  const sc = scenes[idx];
+  const canScroll = sc.scrollHeight - sc.clientHeight > 4;
+  const atTop     = sc.scrollTop <= 1;
+  const atBottom  = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+
+  // 幕内仍可滚动且未到对应边界 → 交给浏览器滚动内容
+  if(canScroll && ((dy < 0 && !atTop) || (dy > 0 && !atBottom))) return;
+
+  e.preventDefault();
+  if(wheelLock) return;
+
+  // 可滚动的幕：滚到边界的那一下不切幕，必须松手后再滚一次。
+  // 触控板惯性事件间隔很小，据此与用户新动作区分，避免"滑到底顺手翻页"。
+  if(canScroll && gap < GESTURE_GAP) return;
+
+  fire(dy > 0 ? 1 : -1);
+}, {passive:false});
+
+
+
+/* ═══════════ 幕内交互 ═══════════ */
+const NS = 'http://www.w3.org/2000/svg';
+function E(tag, a, p, txt){
+  const e = document.createElementNS(NS, tag);
+  for(const k in a) e.setAttribute(k, a[k]);
+  if(txt !== undefined) e.textContent = txt;
+  if(p) p.appendChild(e);
+  return e;
+}
+const C = {blue:'#0067c5', green:'#0e9a62', red:'#d33a5c', orange:'#d5820f', violet:'#6a5ad4', teal:'#0c8e86',
+  grey:'#c9d4e6', ink:'#152341', dim:'#5c6a8a', faint:'#8d97b2', tint:'#eaf2fd', tintS:'#93b6e4', soft:'#f5f8fd', line:'#dce3ef'};
+// 开关式按钮组：组内单选并回调 data-v
+function bindToggle(g, fn){
+  const bs = $$('[data-toggle-group="'+g+'"]');
+  bs.forEach(b=> b.addEventListener('click', ()=>{
+    bs.forEach(x=> x.classList.toggle('on', x===b));
+    fn(b.dataset.v);
+  }));
+}
+function T(p, x, y, txt, o){
+  o = o || {};
+  return E('text', {x, y, 'text-anchor':o.a||'middle', 'font-size':o.s||12, 'font-weight':o.w||400, fill:o.f||C.ink}, p, txt);
+}
+function R(p, x, y, w, h, o){
+  o = o || {};
+  const a = {x, y, width:w, height:h, rx:o.rx==null?10:o.rx, fill:o.fill||'#fff', stroke:o.stroke||C.grey, 'stroke-width':o.sw||1.3};
+  if(o.dash) a['stroke-dasharray'] = o.dash;
+  if(o.op != null) a.opacity = o.op;
+  return E('rect', a, p);
+}
+function L(p, d, col, o){
+  o = o || {};
+  const a = {d, stroke:col, 'stroke-width':o.sw||2.4, fill:'none'};
+  if(o.mk) a['marker-end'] = 'url(#'+o.mk+')';
+  if(o.op != null) a.opacity = o.op;
+  const e = E('path', a, p);
+  if(o.anim) e.classList.add('flow');
+  if(o.dash) e.classList.add('dash');
+  return e;
+}
+function vl(t, s){ return '<div class="vl"><i class="'+t+'"></i><span>'+s+'</span></div>'; }
+
+/* ── 幕 0 · 封面示意图 ── */
+(function(){
+  const g = $('#cvSites');
+  [20, 235, 450].forEach((x0, si)=>{
+    const f = si===1;
+    R(g, x0, 166, 170, 172, {rx:13, sw:1.5, stroke:'#93b6e4'});
+    T(g, x0+85, 189, '站点 '+(si+1), {s:13, w:800});
+    R(g, x0+16, 199, 138, 22, {rx:6, fill:'#eef3fb', stroke:C.line});
+    T(g, x0+85, 214, 'Gateway HA 组', {s:10.5, f:C.dim});
+    for(let j=0;j<3;j++){ E('circle', {cx:x0+49+j*36, cy:246, r:10, fill:C.blue}, g); T(g, x0+49+j*36, 249.5, 'MD', {s:8, w:700, f:'#fff'}); }
+    R(g, x0+40, 270, 90, 22, {rx:6, fill:C.green, stroke:'none'});
+    T(g, x0+85, 285, '对象', {s:11, w:700, f:'#fff'});
+    const st = T(g, x0+85, 320, '在线', {s:11.5, w:700, f:C.green});
+    if(f){
+      st.classList.add('cv-ok');
+      const o = E('g', {class:'cv-f'}, g);
+      R(o, x0, 166, 170, 172, {rx:13, fill:'rgba(211,58,92,.10)', stroke:C.red, sw:1.8});
+      R(o, x0+25, 232, 120, 30, {rx:8, fill:C.red, stroke:'none'});
+      T(o, x0+85, 252, '站点不可用', {s:12.5, w:800, f:'#fff'});
+      T(o, x0+85, 320, '恢复后自动重新同步', {s:11, w:700, f:C.red});
+    }
+  });
+})();
+
+/* ── 幕 2 · 写入与故障演示 ── */
+const STEPS = [
+  {t:'稳态：三站点单一命名空间', s:'三个站点同属一个网格，对外提供同一个 S3 端点', log:[['dim','grid  sites: 3   namespace: single global'],['dim','bucket consistency: quorum-strong-global'],['dim','ILM ingest behavior: balanced'],['ok','all sites  state: online']]},
+  {t:'客户端发起 PUT', s:'负载均衡按健康检查结果把请求分发到站点 1 的 HA 组', log:[['ok','LB  health check: site1 OK  site2 OK  site3 OK'],['ok','PUT /bucket/object  ->  site1 gateway HA group']]},
+  {t:'元数据跨站点仲裁', s:'每站点 3 份元数据副本，达到仲裁数才算写入成功', log:[['dim','metadata replicas  site1:3  site2:3  site3:3   total 9'],['dim','quorum = 1 + (3 sites x 3) / 2  ->  5 replicas'],['ok','metadata  quorum reached (5/9)  committed']]},
+  {t:'对象按 ILM 同步放置', s:'Balanced 在返回成功前把对象放置到三个站点', log:[['ok','ILM rule evaluated: 3 sites, EC / replica'],['ok','object placed  site1 OK  site2 OK  site3 OK']]},
+  {t:'返回成功 = RPO 0', s:'客户端收到 200 时，数据已在三个站点持久化', log:[['ok','HTTP 200 OK  returned to client'],['ok','RPO = 0   read-after-write consistent from any site']]},
+  {t:'站点 2 整体失效', s:'机房断电、网络隔离或站点整体不可用', log:[['err','site2  unreachable  (power / network / cluster)'],['warn','metadata replicas available: 6/9  (quorum 5 satisfied)']]},
+  {t:'负载均衡自动摘除', s:'健康检查失败，请求只发往站点 1 与站点 3', log:[['warn','LB  health check: site2 FAILED'],['ok','LB  site2 removed from pool'],['ok','client requests  ->  site1 / site3']]},
+  {t:'读写继续，无切换动作', s:'对象位置本身是元数据，取不到时自动从其他站点取', log:[['ok','GET  served from site1 / site3 replica or EC chunks'],['ok','PUT  metadata quorum still reachable  committed'],['ok','RTO = 0   no failover procedure executed']]},
+  {t:'站点 2 恢复，自动重同步', s:'网格自动补齐中断期间的更新，无需回切', log:[['warn','site2  back online'],['ok','auto resync  site1/site3  ->  site2  running'],['ok','metadata replicas: 9/9   ILM placements  compliant'],['ok','steady state restored   no failback required']]}
+];
+const D = {};
+['A','B','C'].forEach((k, si)=>{
+  const x0 = 20 + si*250, g = E('g', {}, $('#dSites'));
+  const s = D[k] = {md:[]};
+  s.box = R(g, x0, 172, 220, 183, {rx:12, sw:1.5});
+  T(g, x0+110, 193, '站点 '+(si+1)+' · 数据中心 '+'ABC'[si], {s:12.5, w:780});
+  R(g, x0+18, 202, 184, 22, {rx:6, fill:'#eef3fb', stroke:C.line});
+  T(g, x0+110, 217, 'Gateway HA 组（集成负载均衡）', {s:10.5, f:C.dim});
+  for(let j=0;j<3;j++){
+    const nx = x0 + 18 + j*64;
+    R(g, nx, 232, 56, 62, {rx:8, fill:C.soft, stroke:C.line});
+    T(g, nx+28, 249, 'SN-'+(j+1), {s:10.5, w:700});
+    s.md.push(E('circle', {cx:nx+28, cy:272, r:9}, g));
+    T(g, nx+28, 275.5, 'MD', {s:8, w:700, f:'#fff'});
+  }
+  s.obj = R(g, x0+60, 302, 100, 20, {rx:6, stroke:'none'});
+  T(g, x0+110, 316, '对象 ×1', {s:10.5, w:700, f:'#fff'});
+  s.st = T(g, x0+110, 343, 'state: online', {s:10.5, w:650});
+  s.st.setAttribute('font-family', 'SF Mono, Consolas, monospace');
+  s.fault = E('g', {opacity:0}, g);
+  R(s.fault, x0, 172, 220, 183, {rx:12, fill:'rgba(211,58,92,.08)', stroke:'none'});
+  R(s.fault, x0+50, 254, 120, 30, {rx:8, fill:C.red, stroke:'none'});
+  T(s.fault, x0+110, 274, '站点 '+(si+1)+' 不可用', {s:12.5, w:780, f:'#fff'});
+});
+function setP(p, col, anim, dash, op, mk){
+  p.setAttribute('stroke', col);
+  p.classList.toggle('flow', !!anim);
+  p.classList.toggle('dash', !!dash);
+  p.setAttribute('opacity', op==null ? 1 : op);
+  if(mk !== undefined) p.setAttribute('marker-end', mk ? 'url(#'+mk+')' : '');
+}
+let dCur = 0, dTimer = null;
+function dPaint(i){
+  const down = i>=5 && i<=7, re = i===8;
+  ['A','B','C'].forEach(k=>{
+    const s = D[k], isB = k==='B', dn = isB && down, rs = isB && re;
+    s.box.setAttribute('stroke', dn ? C.red : C.grey);
+    s.box.setAttribute('fill', dn ? '#fff7f9' : '#fff');
+    s.fault.setAttribute('opacity', dn ? 1 : 0);
+    s.st.textContent = dn ? 'state: offline' : (rs ? 'state: resyncing' : 'state: online');
+    s.st.setAttribute('fill', dn ? C.red : (rs ? C.blue : C.green));
+    s.md.forEach(c=>{
+      c.setAttribute('fill', dn ? C.grey : (i>=2 ? C.blue : C.grey));
+      c.classList.toggle('pulse', i===2 || rs);
+    });
+    s.obj.setAttribute('fill', dn ? C.grey : (rs ? C.blue : (i>=3 ? C.green : C.grey)));
+    s.obj.classList.toggle('pulse', i===3 || rs);
+  });
+  const act = i>=1;
+  setP($('#dCli'), act ? C.green : C.grey, act, false, 1, act ? 'ahG' : 'ahN');
+  setP($('#dTrunk'), act ? C.blue : C.grey, act);
+  setP($('#dBar'), act ? C.blue : C.grey);
+  const aLive = i===1 || i>=7, cLive = i>=7;
+  setP($('#dLA'), aLive ? C.green : (act ? C.blue : C.grey), aLive, false, 1, aLive ? 'ahG' : (act ? 'ahB' : 'ahN'));
+  setP($('#dLC'), cLive ? C.green : (act ? C.blue : C.grey), cLive, false, 1, cLive ? 'ahG' : (act ? 'ahB' : 'ahN'));
+  setP($('#dLB'), down ? C.red : (act ? C.blue : C.grey), false, down, down ? .7 : 1, down ? 'ahR' : (act ? 'ahB' : 'ahN'));
+  let lc = C.grey, la = false, lt = '站点间网格互联 · 单一全局命名空间';
+  if(i===2){ lc = C.blue; la = true; lt = '元数据同步复制 · 跨站点仲裁确认（5/9）'; }
+  else if(i===3 || i===4){ lc = C.green; la = true; lt = '对象同步放置 · ILM Balanced'; }
+  else if(down){ lt = '站点 2 链路中断 · 元数据仲裁仍可达（6/9 ≥ 5）'; }
+  else if(re){ lc = C.blue; la = true; lt = '自动重新同步 · 补齐中断期间的更新'; }
+  setP($('#dAB'), down ? C.red : lc, la && !down, down, down ? .55 : 1);
+  setP($('#dBC'), down ? C.red : lc, la && !down, down, down ? .55 : 1);
+  setP($('#dAC'), down ? C.green : lc, la || down);
+  $('#dLnk').textContent = lt;
+  $('#dLnk').setAttribute('fill', down ? C.red : C.dim);
+  $('#dLbTxt').textContent = down ? '站点 2 健康检查失败，已摘除' : '3 个站点全部在线';
+  $('#dLbTxt').setAttribute('fill', down ? C.red : C.dim);
+  const ack = $('#dAck'), box = $('#dAckBox');
+  let at = '', ac = C.green, bs = C.grey;
+  if(i===4){ at = '200 OK · 已在 3 站点持久化 · RPO = 0'; bs = 'rgba(14,154,98,.45)'; }
+  else if(i===5){ at = '站点 2 失效 · 已写入的数据零丢失'; ac = C.red; bs = 'rgba(211,58,92,.45)'; }
+  else if(down){ at = '读写继续 · RPO = 0 · RTO = 0'; bs = 'rgba(14,154,98,.45)'; }
+  else if(re){ at = '恢复稳态 · 元数据 9/9 · 无需回切'; ac = C.blue; bs = 'rgba(0,103,197,.45)'; }
+  ack.textContent = at; ack.setAttribute('fill', ac);
+  box.setAttribute('stroke', bs); box.setAttribute('opacity', at ? 1 : 0);
+}
+function dList(){
+  $('#dList').innerHTML = STEPS.map((s,i)=>
+    '<div class="qi'+(i===dCur?' on':(i<dCur?' done':''))+'" data-i="'+i+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span><span><b>'+s.t+'</b>'+(i===dCur?'<em>'+s.s+'</em>':'')+'</span></div>').join('');
+  $$('.qi', $('#dList')).forEach(el=> el.addEventListener('click', ()=>{ dStop(); dGo(+el.dataset.i); }));
+}
+function dLog(i){
+  const lg = $('#dLog'); lg.innerHTML = '';
+  for(let k=0;k<=i;k++) STEPS[k].log.forEach(([c,t])=>{
+    const d = document.createElement('div'); d.className = c; d.textContent = (k===i?'› ':'  ')+t; lg.appendChild(d);
+  });
+  lg.scrollTop = lg.scrollHeight;
+}
+function dGo(i){
+  dCur = Math.max(0, Math.min(STEPS.length-1, i));
+  dPaint(dCur); dList(); dLog(dCur);
+  $('#dStep').textContent = String(dCur+1).padStart(2,'0')+' / '+String(STEPS.length).padStart(2,'0');
+}
+function dStop(){ clearInterval(dTimer); dTimer = null; $('#dPlay').textContent = '▶ 自动播放'; }
+$('#dNext').addEventListener('click', ()=>{ dStop(); dGo(dCur>=STEPS.length-1 ? 0 : dCur+1); });
+$('#dReset').addEventListener('click', ()=>{ dStop(); dGo(0); });
+$('#dPlay').addEventListener('click', ()=>{
+  if(dTimer){ dStop(); return; }
+  if(dCur>=STEPS.length-1) dGo(0);
+  $('#dPlay').textContent = '❚❚ 暂停';
+  dTimer = setInterval(()=>{ if(dCur>=STEPS.length-1){ dStop(); return; } dGo(dCur+1); }, 2800);
+});
+dGo(0);
+
+/* ── 幕 3 · 四个面 ── */
+const PLANES = [
+  {n:'元数据面', s:'Quorum Strong-global', h:'跨站点仲裁写入',
+   p:'每个站点保存 3 份元数据副本。Quorum Strong-global 要求写入被跨站点的元数据副本仲裁数确认后才返回成功，保证任意客户端在任意站点都能读到最新写入。',
+   g:'保证：返回成功时，元数据已在多个站点一致。'},
+  {n:'数据面', s:'ILM Strict / Balanced', h:'ILM 同步放置对象',
+   p:'ILM 规则的 Strict 或 Balanced 摄取行为在返回成功之前，把对象按规则同步放到指定的多个站点，而不是先落一份再慢慢搬。',
+   g:'保证：返回成功时，对象已在多个站点持久化。'},
+  {n:'访问面', s:'单一全局命名空间', h:'命名空间自动取数',
+   p:'对象位置本身就是元数据，网格内每个节点都知道副本或纠删码分片在哪。本站点取不到时自动从远端站点取，不需要执行任何切换流程。',
+   g:'保证：站点故障后对象仍然取得到。'},
+  {n:'入口面', s:'HA 组 + 外部负载均衡', h:'两级负载均衡',
+   p:'站点内由 Gateway HA 组分担负载，站点之上由外部负载均衡器带健康检查分发到各站点 HA 组，故障站点自动被摘除。这是 RTO=0 的关键。',
+   g:'保证：客户端入口不随站点一起失效。'}
+];
+const plOrder = [3, 2, 0, 1];   // 自上而下：入口、访问、元数据、数据
+const plBands = {};
+(function(){
+  const svg = $('#plSvg');
+  plOrder.forEach((pi, r)=>{
+    const y = 8 + r*88, g = E('g', {}, svg);
+    plBands[pi] = {g, box: R(g, 8, y, 624, 76, {rx:12, sw:1.5})};
+    T(g, 24, y+33, PLANES[pi].n, {a:'start', s:15, w:800});
+    T(g, 24, y+54, PLANES[pi].s, {a:'start', s:11, f:C.dim});
+    if(pi===3){
+      R(g, 200, y+18, 140, 40, {fill:C.tint, stroke:C.tintS}); T(g, 270, y+43, '外部负载均衡', {s:12, w:700, f:'#123a7a'});
+      for(let j=0;j<3;j++){ R(g, 362+j*88, y+18, 78, 40, {fill:C.soft}); T(g, 401+j*88, y+43, 'HA 组 '+(j+1), {s:11.5}); }
+    } else if(pi===2){
+      R(g, 200, y+18, 416, 40, {fill:C.tint, stroke:C.tintS});
+      T(g, 408, y+43, 'S3 端点 · 单一全局命名空间 · 对象位置即元数据', {s:12, w:700, f:'#123a7a'});
+    } else if(pi===0){
+      for(let s=0;s<3;s++){
+        R(g, 200+s*142, y+16, 130, 44, {fill:C.soft});
+        for(let j=0;j<3;j++) E('circle', {cx:228+s*142+j*24, cy:y+38, r:8, fill:C.blue}, g);
+        T(g, 312+s*142, y+42, '站点'+(s+1), {s:10.5, f:C.dim});
+      }
+    } else {
+      for(let s=0;s<3;s++){
+        R(g, 200+s*142, y+16, 130, 44, {fill:C.soft});
+        R(g, 214+s*142, y+27, 56, 22, {rx:6, fill:C.green, stroke:'none'});
+        T(g, 242+s*142, y+42, '对象', {s:11, w:700, f:'#fff'});
+        T(g, 300+s*142, y+42, '站点'+(s+1), {s:10.5, f:C.dim});
+      }
+    }
+  });
+})();
+bindToggle('plane', v=>{
+  v = +v;
+  Object.keys(plBands).forEach(k=>{
+    const on = +k === v, b = plBands[k];
+    b.g.setAttribute('opacity', on ? 1 : .38);
+    b.box.setAttribute('stroke', on ? C.blue : C.grey);
+    b.box.setAttribute('fill', on ? '#f3f8ff' : '#fff');
+  });
+  const p = PLANES[v];
+  $('#plBody').innerHTML = '<h4>'+p.h+'</h4><p>'+p.p+'</p><p style="margin-top:8px;color:var(--green);font-weight:650">'+p.g+'</p>';
+});
+
+/* ── 幕 4 · 一致性级别 ── */
+const CS = [
+  {n:'All', d:'一致性最高。网格内所有节点必须立即收到数据，否则请求失败。可用性最低。', r:['ok','跨站点强一致，但任何节点不可达都会让请求失败，站点故障时可用性最差。']},
+  {n:'Quorum Strong-global', d:'全站点读写强一致；只要元数据副本仲裁数可达，允许多节点甚至整站点故障。12.0 及以上新装系统默认。', r:['ok','零 RPO 首选。三站点及以上部署采用。']},
+  {n:'Legacy Strong-global', d:'全站点读写强一致；由 11.9 及更早版本升级到 12.0 且未手动切换时的默认值。两站点部署采用此模型。', r:['warn','强一致，但站点故障时部分操作会中断，需临时降低一致性。']},
+  {n:'Strong-site', d:'仅保证站点内读写强一致，跨站点不保证。', r:['no','不满足零 RPO。']},
+  {n:'Read-after-new-write', d:'系统默认值。新对象读写一致，更新为最终一致。可用性高，适合大多数通用场景。', r:['no','不满足零 RPO；可作为站点故障期间恢复写入的临时降级手段。']},
+  {n:'Available', d:'新对象与更新均为最终一致。仅用于日志类、极少读取的桶，不支持 FabricPool 桶。', r:['no','不满足零 RPO。']}
+];
+(function(){
+  const g = $('#csTicks');
+  CS.forEach((c,i)=> E('circle', {cx:30+i*112, cy:58, r:5, fill:'#fff', stroke:C.ink, 'stroke-width':1.5}, g));
+})();
+bindToggle('cs', v=>{
+  v = +v; const c = CS[v];
+  $('#csMark').setAttribute('transform', 'translate('+(30+v*112)+',50)');
+  $('#csName').textContent = c.n;
+  $('#csH').textContent = c.n;
+  $('#csBody').innerHTML = '<div class="li">'+c.d+'</div>'+vl(c.r[0], c.r[1]);
+});
+
+/* ── 幕 5 · 元数据仲裁 ── */
+let qn = 3; const qdown = new Set();
+function qDraw(){
+  const svg = $('#qSvg'); svg.innerHTML = '';
+  const n = qn, cols = Math.min(n, 8), rows = Math.ceil(n/8), w = 70, h = 92, gap = 8;
+  const rowW = cols*w + (cols-1)*gap, x0 = (640-rowW)/2, y0 = rows===1 ? 60 : 14;
+  for(let i=0;i<n;i++){
+    const x = x0 + (i%8)*(w+gap), y = y0 + Math.floor(i/8)*106, dn = qdown.has(i);
+    const g = E('g', {style:'cursor:pointer'}, svg);
+    R(g, x, y, w, h, {rx:10, fill:dn?'#fff4f6':'#fff', stroke:dn?C.red:C.tintS, sw:1.5});
+    T(g, x+w/2, y+20, '站点 '+(i+1), {s:11.5, w:750});
+    for(let j=0;j<3;j++) E('circle', {cx:x+17+j*18, cy:y+46, r:7, fill:dn?'#ebc9d1':C.blue}, g);
+    T(g, x+w/2, y+76, dn?'失效':'在线', {s:11, w:700, f:dn?C.red:C.green});
+    g.addEventListener('click', ()=>{ qdown.has(i) ? qdown.delete(i) : qdown.add(i); qDraw(); });
+  }
+  const tot = 3*n, q = Math.floor(1 + tot/2), alive = n - qdown.size, a = 3*alive;
+  T(svg, 320, 238, n===2 ? 'Legacy Strong-global · 共 6 份元数据副本' : 'Quorum Strong-global · 仲裁数 '+q+' / '+tot, {s:12.5, w:700, f:C.dim});
+  $('#qNv').textContent = n;
+  $('#qTot').textContent = tot;
+  $('#qQ').textContent = n===2 ? '—' : q;
+  $('#qA').textContent = a;
+  let out = '';
+  if(alive===0) out = vl('no', '没有可用站点。若无法完整恢复至少一个站点，数据将丢失。');
+  else if(n===2){
+    out = qdown.size===0
+      ? vl('ok', '两个站点在线，读写正常。')+vl('warn', '两站点达不到完整零 RPO：超出整站点失效之外的复合故障很难保持零 RPO。')
+      : vl('warn', 'GET 与 HEAD 不中断；部分写入类操作中断，直到故障恢复。')+vl('warn', '可把桶一致性临时降到 read-after-new-write 恢复写入，恢复后中断期间的更新自动同步回去。');
+  } else {
+    let maxF = 0; while(3*(n-maxF-1) >= q) maxF++;
+    if(a >= q) out = vl('ok', qdown.size===0 ? '全部站点在线，读写正常。' : '可达副本 '+a+' ≥ 仲裁数 '+q+'：读写不中断，不丢数据，无需切换。');
+    else out = vl('no', '可达副本 '+a+' &lt; 仲裁数 '+q+'：操作中断，直到故障恢复；可降低桶一致性级别以继续操作。');
+    out += vl('ok', n+' 个站点时，最多可同时失效 '+maxF+' 个站点仍满足元数据仲裁。');
+    out += vl('warn', '对象能否读取还取决于 ILM 放置：剩余站点上需有副本或足够的纠删码分片。');
+  }
+  $('#qOut').innerHTML = out;
+  const ok = alive>0 && (n===2 ? qdown.size===0 : a>=q);
+  $('#qA').style.color = ok ? 'var(--green)' : (n===2 && alive>0 ? 'var(--orange)' : 'var(--red)');
+}
+$('#qN').addEventListener('input', e=>{
+  qn = +e.target.value;
+  [...qdown].forEach(i=>{ if(i>=qn) qdown.delete(i); });
+  qDraw();
+});
+$('#qFail1').addEventListener('click', ()=>{ qdown.clear(); qdown.add(1); qDraw(); });
+$('#qClr').addEventListener('click', ()=>{ qdown.clear(); qDraw(); });
+qDraw();
+
+/* ── 幕 6 · ILM 摄取行为 ── */
+const ILM = {
+  strict:{h:'Strict 严格', d:'立即按 ILM 规则同步放置对象后才返回成功；无法满足放置要求时请求失败，由客户端重试。', rpo:['ok','满足零 RPO'],
+    s:[{A:['ok'],B:['ok'],C:['ok'], ack:['200 OK · 已按规则放置到 3 个站点', C.green], r:['ok','返回成功时对象已在 3 个站点，RPO = 0。']},
+       {A:[],B:[],C:[], ack:['写入失败 · 放置要求无法满足，由客户端重试', C.red], r:['no','站点 2 不可达时规则无法满足，写入直接失败；已写入的数据不受影响。']}]},
+  balanced:{h:'Balanced 平衡', d:'立即按 ILM 规则同步放置；放置条件暂时无法满足时退化为双提交，问题解决后自动按规则重新放置。', rpo:['ok','满足零 RPO · 推荐配置'],
+    s:[{A:['ok'],B:['ok'],C:['ok'], ack:['200 OK · 已按规则放置到 3 个站点', C.green], r:['ok','正常时与 Strict 一样，返回成功时对象已在 3 个站点。']},
+       {A:['tmp'],B:['q'],C:['tmp'], ack:['200 OK · 临时双提交保护', C.green], q:'站点 2 恢复后自动按规则重新放置', r:['ok','写入不失败：先在可用站点各存一份临时副本，站点 2 恢复后自动补齐放置。']}]},
+  dual:{h:'Dual commit 双提交', d:'先在任意两个存储节点各存一份即返回成功，再排队按 ILM 异步放置。', rpo:['no','不满足零 RPO'],
+    s:[{A:['tmp','tmp'],B:['q'],C:['q'], ack:['200 OK · 尚未按 ILM 规则放置', C.orange], q:'排队异步放置到站点 2、站点 3', r:['no','返回成功时两份副本可能都在同一站点；该站点在异步放置完成前失效，这部分数据会丢失。']},
+       {A:['tmp','tmp'],B:['q'],C:['q'], ack:['200 OK · 尚未按 ILM 规则放置', C.orange], q:'排队异步放置，站点 2 恢复后继续', r:['no','写入成功但只在站点 1，站点 1 在放置完成前出问题即丢数据。']}]}
+};
+let ilB = 'balanced', ilF = 0;
+function ilDraw(){
+  const svg = $('#ilSvg'); svg.innerHTML = '';
+  const cfg = ILM[ilB], st = cfg.s[ilF];
+  const defs = E('defs', {}, svg);
+  [['ilG',C.green],['ilR',C.red],['ilN',C.grey],['ilO',C.orange]].forEach(([id,c])=>{
+    const m = E('marker', {id, viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:6, markerHeight:6, orient:'auto'}, defs);
+    E('path', {d:'M0 0L10 5L0 10z', fill:c}, m);
+  });
+  R(svg, 280, 8, 140, 40, {}); T(svg, 350, 33, 'S3 客户端 · PUT', {s:12.5, w:750});
+  L(svg, 'M350 48 L350 76', C.green, {mk:'ilG', anim:true});
+  R(svg, 220, 78, 260, 40, {fill:C.tint, stroke:C.tintS}); T(svg, 350, 103, '接收请求的存储节点 · 站点 1', {s:12, w:700, f:'#123a7a'});
+  const xs = [30, 260, 490], keys = ['A','B','C'];
+  keys.forEach((k, i)=>{
+    const x = xs[i], dn = ilF===1 && k==='B', toks = st[k];
+    const has = toks.length > 0, col = dn ? C.red : (toks.includes('ok') ? C.green : (toks.includes('tmp') ? C.orange : C.grey));
+    L(svg, 'M'+(i===1?350:350+(i-1)*60)+' 118 L'+(x+90)+' 168', col, {mk: dn?'ilR':(col===C.green?'ilG':(col===C.orange?'ilO':'ilN')), anim: has && !dn, dash: dn || !has});
+    R(svg, x, 170, 180, 120, {rx:12, fill:dn?'#fff7f9':'#fff', stroke:dn?C.red:C.grey, sw:1.5});
+    T(svg, x+90, 192, '站点 '+(i+1), {s:12.5, w:780});
+    if(dn){ R(svg, x+30, 214, 120, 28, {rx:8, fill:C.red, stroke:'none'}); T(svg, x+90, 233, '站点不可达', {s:12, w:750, f:'#fff'}); }
+    else if(!toks.length){ T(svg, x+90, 236, '—  未放置', {s:12, f:C.faint}); }
+    else toks.forEach((t, j)=>{
+      const tx = x + 90 - toks.length*34 + j*68 + 4;
+      if(t==='q'){ R(svg, tx, 216, 60, 30, {rx:7, fill:'#fff', stroke:C.grey, dash:'4 4'}); T(svg, tx+30, 235, '待放置', {s:11, f:C.faint}); }
+      else { R(svg, tx, 216, 60, 30, {rx:7, fill:t==='ok'?C.green:C.orange, stroke:'none'}); T(svg, tx+30, 235, t==='ok'?'对象':'临时副本', {s:11, w:700, f:'#fff'}); }
+    });
+    T(svg, x+90, 274, dn ? 'offline' : (toks.includes('ok') ? '按规则放置' : (toks.includes('tmp') ? '临时保护' : (toks.length ? '排队中' : ''))), {s:10.5, f:C.dim});
+  });
+  if(st.q){ R(svg, 200, 302, 300, 28, {rx:8, fill:'#fffaf2', stroke:'rgba(213,130,15,.5)', dash:'4 4'}); T(svg, 350, 321, 'ILM 队列：'+st.q, {s:11.5, w:650, f:C.orange}); }
+  R(svg, 160, 338, 380, 34, {rx:10, fill:'#fff', stroke:st.ack[1]}); T(svg, 350, 360, st.ack[0], {s:13, w:780, f:st.ack[1]});
+  $('#ilH').innerHTML = cfg.h + ' <span class="tag '+(cfg.rpo[0]==='ok'?'ok':'no')+'">'+cfg.rpo[1]+'</span>';
+  $('#ilBody').innerHTML = '<div class="li">'+cfg.d+'</div>' + vl(st.r[0], (ilF ? '站点 2 不可达：' : '正常时：') + st.r[1]);
+}
+bindToggle('ilm', v=>{ ilB = v; ilDraw(); });
+bindToggle('ilmf', v=>{ ilF = +v; ilDraw(); });
+
+/* ── 幕 7 · 故障域层次 ── */
+const FD = [
+  {h:'磁盘级', p:'单盘故障不影响节点运行。', r:'节点内部纠删码在本地重建，不占用站点间带宽。'},
+  {h:'节点级', p:'单节点故障不影响站点运行。', r:'站点内其他节点继续服务，站点内纠删码或其他站点的副本兜底。'},
+  {h:'站点级', p:'站点内故障不影响网格其他站点。', r:'三站点及以上：元数据仲裁仍满足，对象从其他站点读取，读写不中断。'},
+  {h:'网格级', p:'站点整体故障或网络隔离时，可达站点继续以网格身份提供服务。', r:'被隔离的站点操作中断但不丢数据；隔离解除后自动重新同步。'}
+];
+bindToggle('fd', v=>{
+  v = +v;
+  const svg = $('#fdSvg'); svg.innerHTML = '';
+  R(svg, 6, 6, 688, 318, {rx:16, fill:'#fbfcff', stroke:C.tintS, sw:1.5});
+  T(svg, 24, 30, '网格', {a:'start', s:13, w:800, f:'#123a7a'});
+  const xs = [26, 250, 474];
+  // 站点间链路
+  L(svg, 'M226 296 L250 296', v===3 ? C.grey : C.blue, {sw:3});
+  L(svg, 'M450 296 L474 296', v===3 ? C.red : C.blue, {sw:3, dash: v===3});
+  L(svg, 'M126 296 L126 306 L574 306 L574 296', v===3 ? C.grey : C.blue, {sw:2, op:.6});
+  xs.forEach((x, si)=>{
+    const siteF = (v===2 && si===0), iso = (v===3 && si===2);
+    R(svg, x, 44, 200, 244, {rx:13, fill: siteF ? '#fff4f6' : (iso ? '#f7f7f9' : '#fff'), stroke: siteF||iso ? C.red : C.grey, sw:1.5, dash: iso ? '6 5' : null});
+    T(svg, x+100, 66, '站点 '+(si+1), {s:12.5, w:780, f: siteF||iso ? C.red : C.ink});
+    for(let n=0;n<3;n++){
+      const nx = x + 14 + n*62, nodeF = (v===1 && si===0 && n===0) || siteF;
+      R(svg, nx, 82, 50, 168, {rx:9, fill: nodeF ? '#fde8ed' : C.soft, stroke: nodeF ? C.red : C.line, sw:1.3});
+      T(svg, nx+25, 100, 'SN-'+(n+1), {s:10.5, w:700});
+      for(let d=0;d<5;d++){
+        const diskF = v===0 && si===0 && n===0 && d===2;
+        R(svg, nx+8, 112+d*26, 34, 18, {rx:4, fill: diskF ? C.red : (nodeF ? '#f3c3ce' : '#dbe6f6'), stroke:'none'});
+      }
+    }
+    if(siteF || iso){
+      R(svg, x+30, 150, 140, 30, {rx:8, fill:C.red, stroke:'none'});
+      T(svg, x+100, 170, siteF ? '站点整体故障' : '网络隔离', {s:12.5, w:780, f:'#fff'});
+    }
+    T(svg, x+100, 272, siteF || iso ? '其余站点继续服务' : (v<=1 && si===0 ? (v===0 ? '节点内本地重建' : '站点内继续服务') : '正常'), {s:11, w:650, f: siteF||iso ? C.red : C.green});
+  });
+  const f = FD[v];
+  $('#fdH').textContent = f.h;
+  $('#fdBody').innerHTML = '<div class="li">'+f.p+'</div>'+vl('ok', f.r);
+});
+
+/* ── 幕 8 · 站点数量 ── */
+const DP = {
+  two:{h:'两站点：可用，但达不到完整零 RPO', li:['每个对象至少 2 份副本，全部元数据 6 份副本','一致性采用 Legacy Strong-global','单站点故障时 GET 与 HEAD 不中断，部分写入类操作会中断','可临时把桶一致性降到 read-after-new-write 恢复写入','故障恢复后，中断期间的更新自动同步回恢复的站点'],
+    m:'两站点适合预算受限、以读为主的场景。超出整站点失效之外的复合故障很难保持零 RPO，方案中需要如实说明。', sum:'共 6 份元数据 · 2 份对象 · Legacy Strong-global'},
+  three:{h:'三站点及以上：完整零 RPO 与零 RTO', li:['每个对象至少 3 份副本或 3 个纠删码分片，全部元数据 9 份副本','一致性采用 Quorum Strong-global','元数据仲裁数 = 1 + (站点数 × 3) ÷ 2，3 站点需至少 5 份副本可达','任意单站点整体失效：读写均不中断、无数据丢失','恢复后自动重新同步，无需人工回切'],
+    m:'这是达成零 RPO 的推荐最小架构。', sum:'共 9 份元数据 · 仲裁数 5 · 3 份对象副本或 3 个纠删码分片'},
+  md:{h:'三站点 · 第三站点仅放元数据节点', li:['第三站点只部署仅元数据节点，参与元数据仲裁','对象在两个存储站点之间同步放置','仍采用 Quorum Strong-global：9 份元数据、仲裁数 5','任一站点失效，元数据仍满足仲裁','四地双网格就是用这种站点形态组合起来的'],
+    m:'第三站点不必按完整存储站点投资，用较小的配置凑齐仲裁，避免在第三地重复存放对象。', sum:'共 9 份元数据 · 仲裁数 5 · 对象在站点 1、2'}
+};
+bindToggle('dp', v=>{
+  const cfg = DP[v], svg = $('#dpSvg'); svg.innerHTML = '';
+  const xs = v==='two' ? [110, 410] : [20, 260, 500];
+  // 同步复制链路
+  if(v==='two') L(svg, 'M290 130 L410 130', C.blue, {sw:3, anim:true});
+  else { L(svg, 'M200 130 L260 130', C.blue, {sw:3, anim:true}); L(svg, 'M440 130 L500 130', C.blue, {sw:3, anim:true}); L(svg, 'M110 230 Q350 274 590 230', C.blue, {sw:2.6, anim:true}); }
+  xs.forEach((x, i)=>{
+    const mdOnly = v==='md' && i===2;
+    R(svg, x, 40, 180, 190, {rx:13, fill: mdOnly ? '#f6f4fe' : '#fff', stroke: mdOnly ? C.violet : C.tintS, sw:1.5, dash: mdOnly ? '6 4' : null});
+    T(svg, x+90, 66, '站点 '+(i+1), {s:13, w:800});
+    T(svg, x+90, 86, mdOnly ? '仅元数据节点' : '存储节点', {s:11, f: mdOnly ? C.violet : C.dim});
+    for(let j=0;j<3;j++) E('circle', {cx:x+60+j*30, cy:118, r:10, fill:C.blue}, svg);
+    T(svg, x+90, 150, '元数据 ×3', {s:11.5, w:700, f:C.blue});
+    if(mdOnly){ R(svg, x+40, 166, 100, 30, {rx:7, fill:'#fff', stroke:C.grey, dash:'4 4'}); T(svg, x+90, 186, '不存对象', {s:11.5, f:C.faint}); }
+    else { R(svg, x+40, 166, 100, 30, {rx:7, fill:C.green, stroke:'none'}); T(svg, x+90, 186, v==='three' ? '对象 ×1 / 分片' : '对象 ×1', {s:11.5, w:700, f:'#fff'}); }
+  });
+  T(svg, 350, 24, '同步复制 · 单一命名空间', {s:11.5, w:650, f:C.dim});
+  R(svg, 140, 262, 420, 34, {rx:10, fill:C.tint, stroke:C.tintS});
+  T(svg, 350, 284, cfg.sum, {s:12.5, w:750, f:'#123a7a'});
+  $('#dpH').textContent = cfg.h;
+  $('#dpBody').innerHTML = cfg.li.map((s,i)=> '<div class="li'+(v==='two' && (i===2) ? ' warn' : '')+'">'+s+'</div>').join('');
+  $('#dpMean').textContent = cfg.m;
+});
+
+/* ── 幕 9 · 四地双网格 ── */
+(function(){
+  const svg = $('#mgSvg');
+  const defs = E('defs', {}, svg);
+  [['mgV',C.teal]].forEach(([id,c])=>{
+    const m = E('marker', {id, viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:6, markerHeight:6, orient:'auto-start-reverse'}, defs);
+    E('path', {d:'M0 0L10 5L0 10z', fill:c}, m);
+  });
+  R(svg, 8, 26, 344, 248, {rx:16, fill:'#fbfcff', stroke:C.line, sw:1.4});
+  R(svg, 368, 26, 344, 248, {rx:16, fill:'#fbfcff', stroke:C.line, sw:1.4});
+  T(svg, 24, 18, '区域 1', {a:'start', s:12.5, w:800, f:C.dim});
+  T(svg, 384, 18, '区域 2', {a:'start', s:12.5, w:800, f:C.dim});
+  const G = {g1:E('g', {class:'mg-g1'}, svg), g2:E('g', {class:'mg-g2'}, svg), cgr:E('g', {class:'mg-cgr'}, svg)};
+  function dc(g, x, y, name, sub, col){
+    R(g, x, y, 140, 92, {rx:12, fill:'#fff', stroke:col, sw:1.8});
+    T(g, x+70, y+26, name, {s:13.5, w:800});
+    T(g, x+70, y+46, sub, {s:11, f:col, w:700});
+    R(g, x+24, y+58, 92, 22, {rx:6, fill:col, stroke:'none'});
+    T(g, x+70, y+73, '纠删码 ×1', {s:10.5, w:700, f:'#fff'});
+  }
+  function md(g, x, y, sub, col){
+    R(g, x, y, 200, 58, {rx:12, fill:'#fff', stroke:col, sw:1.8, dash:'6 4'});
+    T(g, x+100, y+24, sub, {s:12, w:780, f:col});
+    for(let j=0;j<3;j++) E('circle', {cx:x+76+j*24, cy:y+41, r:7, fill:col}, g);
+  }
+  L(G.g1, 'M170 96 L190 96', C.blue, {sw:3, anim:true});
+  L(G.g1, 'M260 142 C 300 200, 380 214, 440 214', C.blue, {sw:2.4, anim:true});
+  L(G.g2, 'M530 96 L550 96', C.violet, {sw:3, anim:true});
+  L(G.g2, 'M460 142 C 420 200, 340 214, 280 214', C.violet, {sw:2.4, anim:true});
+  dc(G.g1, 30, 50, 'DC1', '网格 1 · 存储站点', C.blue);
+  dc(G.g1, 190, 50, 'DC2', '网格 1 · 存储站点', C.blue);
+  dc(G.g2, 390, 50, 'DC3', '网格 2 · 存储站点', C.violet);
+  dc(G.g2, 550, 50, 'DC4', '网格 2 · 存储站点', C.violet);
+  md(G.g2, 80, 190, '网格 2 · 仅元数据站点', C.violet);
+  md(G.g1, 440, 190, '网格 1 · 仅元数据站点', C.blue);
+  L(G.cgr, 'M180 296 L540 296', C.teal, {sw:3, mk:'mgV', anim:true});
+  G.cgr.lastChild.setAttribute('marker-start', 'url(#mgV)');
+  T(G.cgr, 360, 318, '跨网格复制 CGR · 双向异步 · 桶、对象、版本与元数据', {s:12, w:750, f:C.teal});
+  bindToggle('mg', v=>{
+    Object.keys(G).forEach(k=> G[k].setAttribute('opacity', v==='all' || v===k ? 1 : .15));
+  });
+})();
+
+/* ── 幕 10 · 纠删码与副本 ── */
+const EC = [
+  {n:'3 副本', ov:3, k:1, m:2, rep:true, d:'每站点 1 份完整副本'},
+  {n:'EC 2+1', ov:1.5, k:2, m:1, d:'每站点 1 个分片'},
+  {n:'EC 4+2', ov:1.5, k:4, m:2, d:'每站点 2 个分片'},
+  {n:'EC 6+3', ov:1.5, k:6, m:3, d:'每站点 3 个分片'}
+];
+let ecI = 1;
+function fmtPB(v){ return v < 1 ? Math.round(v*1000)+' TB' : (Math.round(v*100)/100)+' PB'; }
+function ecDraw(){
+  const Lg = +$('#ecL').value / 10, svg = $('#ecSvg'); svg.innerHTML = '';
+  $('#ecLv').textContent = fmtPB(Lg);
+  const maxW = 440;
+  T(svg, 10, 16, '所需裸容量对比（3 站点合计）', {a:'start', s:12, w:750, f:C.dim});
+  EC.forEach((e, i)=>{
+    const y = 28 + i*34, on = i===ecI, w = maxW * e.ov / 3;
+    T(svg, 10, y+17, e.n, {a:'start', s:12.5, w:on?800:600, f:on?C.ink:C.dim});
+    R(svg, 100, y+2, w, 22, {rx:6, fill:on?C.teal:'#dbe6f6', stroke:'none'});
+    T(svg, 108+w, y+18, fmtPB(Lg*e.ov)+' · '+e.ov+'×', {a:'start', s:12, w:on?800:500, f:on?C.teal:C.dim});
+  });
+  const e = EC[ecI];
+  T(svg, 10, 178, e.n+' 在 3 个站点上的分布：'+e.d, {a:'start', s:12, w:750, f:C.dim});
+  for(let s=0;s<3;s++){
+    const x = 10 + s*232;
+    R(svg, x, 188, 218, 74, {rx:11, fill:'#fff', stroke:C.tintS});
+    T(svg, x+16, 206, '站点 '+(s+1), {a:'start', s:11.5, w:750});
+    if(e.rep){ R(svg, x+16, 216, 186, 34, {rx:7, fill:C.teal, stroke:'none'}); T(svg, x+109, 238, '完整副本 · '+fmtPB(Lg), {s:11.5, w:700, f:'#fff'}); }
+    else {
+      const per = (e.k+e.m)/3, fw = Math.min(54, (186 - (per-1)*6)/per);
+      for(let j=0;j<per;j++){
+        const idx = s*per + j, isData = idx < e.k;
+        R(svg, x+16+j*(fw+6), 216, fw, 34, {rx:6, fill:isData?C.blue:C.violet, stroke:'none'});
+        T(svg, x+16+j*(fw+6)+fw/2, 238, isData ? 'D'+(idx+1) : 'P'+(idx-e.k+1), {s:11.5, w:700, f:'#fff'});
+      }
+    }
+  }
+  const left = e.rep ? '剩余 2 份完整副本' : '剩余 '+(e.k+e.m - (e.k+e.m)/3)+' 个分片 ≥ 重建所需 '+e.k+' 个';
+  T(svg, 350, 286, '任一站点整体失效：'+left+'，对象仍可读', {s:12.5, w:750, f:C.green});
+  $('#ecRaw').textContent = fmtPB(Lg*e.ov);
+  $('#ecOv').textContent = e.ov+'×';
+}
+bindToggle('ec', v=>{ ecI = +v; ecDraw(); });
+$('#ecL').addEventListener('input', ecDraw);
+
+/* ── 幕 11 · 访问入口 ── */
+let lbM = 'ext', lbF = 0;
+function lbDraw(){
+  const svg = $('#lbSvg'); svg.innerHTML = '';
+  const defs = E('defs', {}, svg);
+  [['lbG',C.green],['lbR',C.red],['lbN',C.grey]].forEach(([id,c])=>{
+    const m = E('marker', {id, viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:6, markerHeight:6, orient:'auto'}, defs);
+    E('path', {d:'M0 0L10 5L0 10z', fill:c}, m);
+  });
+  const xs = [30, 260, 490], f3 = lbF===1;
+  R(svg, 290, 8, 120, 40, {}); T(svg, 350, 33, 'S3 客户端', {s:12.5, w:750});
+  let out = '';
+  if(lbM==='gw'){
+    // 客户端直接指向站点 3 的 HA 组
+    L(svg, 'M350 48 C 350 120, 580 110, 580 186', f3 ? C.red : C.green, {mk: f3 ? 'lbR' : 'lbG', anim: !f3, dash: f3});
+    T(svg, 230, 120, '客户端配置：站点 3 的 HA 组地址', {s:11.5, w:650, f: f3 ? C.red : C.dim});
+    out = f3 ? vl('no', '客户端入口随站点 3 一起失效。存储侧数据还在，但客户端连不上，需要人工改配置或等待恢复，RTO 无法为零。')
+             : vl('ok', '正常时可用。HA 组能处理网关节点级故障，但处理不了站点整体失效。');
+  } else {
+    const isExt = lbM==='ext';
+    R(svg, 220, 80, 260, 44, {fill:C.tint, stroke:C.tintS});
+    T(svg, 350, 100, isExt ? '外部负载均衡' : 'DNS 轮询', {s:12.5, w:750, f:'#123a7a'});
+    T(svg, 350, 116, isExt ? (f3 ? '站点 3 健康检查失败，已摘除' : '健康检查：3 个站点在线') : '按轮询返回各站点地址，不检查健康', {s:10.5, f: isExt && f3 ? C.red : C.dim});
+    L(svg, 'M350 48 L350 78', C.green, {mk:'lbG', anim:true});
+    xs.forEach((x, i)=>{
+      const bad = f3 && i===2, d = 'M350 124 L'+(x+90)+' 186';
+      if(bad && isExt) L(svg, d, C.grey, {mk:'lbN', dash:true, op:.6});
+      else L(svg, d, bad ? C.red : C.green, {mk: bad ? 'lbR' : 'lbG', anim: !bad, dash: bad});
+    });
+    if(f3 && isExt){ R(svg, 520, 140, 110, 24, {rx:7, fill:'#fff', stroke:C.red}); T(svg, 575, 156, '自动摘除', {s:11.5, w:750, f:C.red}); }
+    if(f3 && !isExt){ R(svg, 500, 140, 150, 24, {rx:7, fill:'#fff', stroke:C.red}); T(svg, 575, 156, '请求仍被发往站点 3', {s:11.5, w:750, f:C.red}); }
+    out = isExt
+      ? (f3 ? vl('ok', '健康检查失败，站点 3 被自动摘除。请求只发往站点 1、2，读写继续，RTO = 0。') : vl('ok', '请求按健康检查结果分发到 3 个站点的 HA 组，所有站点同时承担读写。'))
+      : (f3 ? vl('no', '轮询到站点 3 的请求超时或失败，直到人工修改 DNS 记录；客户端缓存的解析结果还会再拖一段时间。') : vl('ok', '正常时可用，问题出在站点故障时：没有健康检查，就没有自动摘除。'));
+  }
+  xs.forEach((x, i)=>{
+    const bad = f3 && i===2, unused = lbM==='gw' && i<2;
+    R(svg, x, 188, 180, 116, {rx:13, fill: bad ? '#fff7f9' : '#fff', stroke: bad ? C.red : C.grey, sw:1.5, op: unused ? .45 : 1});
+    T(svg, x+90, 210, '站点 '+(i+1), {s:12.5, w:780});
+    R(svg, x+20, 222, 140, 28, {rx:7, fill:'#eef3fb', stroke:C.line});
+    T(svg, x+90, 241, 'Gateway HA 组', {s:11.5, w:650});
+    R(svg, x+20, 258, 140, 28, {rx:7, fill:C.soft, stroke:C.line});
+    T(svg, x+90, 277, '存储节点', {s:11.5, f:C.dim});
+    if(bad){ R(svg, x+40, 236, 100, 28, {rx:8, fill:C.red, stroke:'none'}); T(svg, x+90, 255, '站点故障', {s:12, w:780, f:'#fff'}); }
+  });
+  T(svg, 350, 324, lbM==='gw' && f3 ? '站点 1、2 的数据完好，但客户端不知道去哪里访问' : '站点间同步复制 · 单一命名空间', {s:11.5, w:650, f: lbM==='gw' && f3 ? C.red : C.dim});
+  $('#lbOut').innerHTML = out;
+}
+bindToggle('lb', v=>{ lbM = v; lbDraw(); });
+bindToggle('lbf', v=>{ lbF = +v; lbDraw(); });
+
+/* ── 幕 12 · 配置清单 ── */
+bindToggle('cf', v=>{
+  v = +v;
+  $$('#cfTbl tr').forEach(tr=>{
+    const c = tr.children;
+    if(c.length !== 3) return;
+    for(let i=1;i<3;i++) c[i].classList.toggle('col-on', i===v);
+  });
+});
+
+/* ── 幕 13 · 性能规划 ── */
+const PF = [{cap:100, rtt:0}, {cap:90, rtt:3}, {cap:60, rtt:8}];
+(function(){
+  const box = $('#pfCtl');
+  PF.forEach((p, i)=>{
+    const d = document.createElement('div');
+    d.className = 'panel'; d.style.padding = '9px 12px';
+    d.innerHTML = '<div style="font-size:12.6px;font-weight:750;margin-bottom:4px">站点 '+(i+1)+(i===0?' <span class="tag n">接收写入</span>':'')+'</div>'
+      + '<div class="rg"><span style="white-space:nowrap">处理能力</span><input type="range" min="20" max="100" value="'+p.cap+'" data-pf="'+i+'" data-k="cap"><b>'+p.cap+'</b></div>'
+      + (i===0 ? '<div class="rg" style="opacity:.55"><span style="white-space:nowrap">往返时延</span><input type="range" disabled value="0"><b>本地</b></div>'
+               : '<div class="rg"><span style="white-space:nowrap">往返时延</span><input type="range" min="1" max="20" value="'+p.rtt+'" data-pf="'+i+'" data-k="rtt"><b>'+p.rtt+' ms</b></div>');
+    box.appendChild(d);
+  });
+  $$('[data-pf]', box).forEach(r=> r.addEventListener('input', ()=>{
+    const p = PF[+r.dataset.pf], k = r.dataset.k;
+    p[k] = +r.value;
+    r.nextElementSibling.textContent = k==='rtt' ? r.value+' ms' : r.value;
+    pfDraw();
+  }));
+})();
+function pfDraw(){
+  const svg = $('#pfSvg'); svg.innerHTML = '';
+  const minCap = Math.min(...PF.map(p=>p.cap)), maxRtt = Math.max(...PF.map(p=>p.rtt));
+  const capW = 420 / 100, rttW = 420 / 20;
+  T(svg, 10, 16, '处理能力（相对值）', {a:'start', s:12, w:750, f:C.dim});
+  PF.forEach((p, i)=>{
+    const y = 26 + i*34, weak = p.cap === minCap;
+    T(svg, 10, y+17, '站点 '+(i+1), {a:'start', s:12.5, w:650});
+    R(svg, 80, y+2, p.cap*capW, 22, {rx:6, fill: weak ? C.orange : '#bcd2ee', stroke:'none'});
+    T(svg, 88+p.cap*capW, y+18, p.cap + (weak ? '  ← 瓶颈' : ''), {a:'start', s:12, w: weak?800:500, f: weak ? C.orange : C.dim});
+  });
+  L(svg, 'M'+(80+minCap*capW)+' 22 L'+(80+minCap*capW)+' 128', C.orange, {sw:1.8, dash:true});
+  T(svg, 10, 152, '到接收站点的往返时延', {a:'start', s:12, w:750, f:C.dim});
+  PF.forEach((p, i)=>{
+    const y = 162 + i*34, far = p.rtt === maxRtt && p.rtt > 0;
+    T(svg, 10, y+17, '站点 '+(i+1), {a:'start', s:12.5, w:650});
+    if(p.rtt === 0){ T(svg, 80, y+17, '本地', {a:'start', s:12, f:C.faint}); return; }
+    R(svg, 80, y+2, p.rtt*rttW, 22, {rx:6, fill: far ? C.violet : '#d6d1f3', stroke:'none'});
+    T(svg, 88+p.rtt*rttW, y+18, p.rtt+' ms' + (far ? '  ← 决定同步时延' : ''), {a:'start', s:12, w: far?800:500, f: far ? C.violet : C.dim});
+  });
+  $('#pfT').textContent = minCap;
+  $('#pfL').textContent = '≥ '+maxRtt+' ms';
+}
+pfDraw();
+
+/* ── 幕 14 · 故障场景查询 ── */
+const FAIL = {
+ two:[
+  ['单节点单盘故障','yes','设备使用多个磁盘组，每组至少可承受 1 块盘故障，不中断、不丢数据。'],
+  ['单站点内单节点故障','yes','不影响业务，不丢数据。'],
+  ['单站点内多节点故障','part','指向该站点的客户端操作受影响，但无数据丢失；指向另一站点的操作不受影响。'],
+  ['多个站点各有单节点故障','part','只要网格内还存在至少 1 份副本或足够的纠删码分片，就不中断、不丢数据；否则操作中断并有数据丢失风险。'],
+  ['单站点整体故障','part','GET 与 HEAD 不中断；部分客户端操作会中断，直到故障恢复。可把桶一致性降到 read-after-new-write 或更低以恢复操作。'],
+  ['单站点故障 + 另一站点单节点故障','part','HEAD 不中断；只要存在副本或足够纠删码分片，GET 也不中断。其余操作需降低一致性级别才能继续。'],
+  ['站点网络隔离','part','客户端操作中断直到故障解除，无数据丢失。可降低桶一致性级别以继续操作。'],
+  ['两个站点同时故障','no','没有可用站点。若无法完整恢复至少一个站点，数据将丢失。']
+ ],
+ three:[
+  ['单节点单盘故障','yes','设备使用多个磁盘组，每组至少可承受 1 块盘故障，不中断、不丢数据。'],
+  ['单站点内单节点故障','yes','不影响业务，不丢数据。'],
+  ['单站点内多节点故障','yes','请求自动转向其他站点，不中断、不丢数据。'],
+  ['多个站点各有单节点故障','part','只要网格内还存在至少 1 份副本或足够的纠删码分片，就不中断、不丢数据；否则操作中断并有数据丢失风险。'],
+  ['单站点整体故障','yes','不中断、不丢数据。这是三站点相对两站点最核心的差别。'],
+  ['单站点故障 + 另一站点单节点故障','yes','操作不中断；副本数量不足时存在数据丢失可能，站点内本地纠删码可规避。'],
+  ['单站点故障 + 其余每个站点各一节点故障','part','若元数据副本仲裁数无法满足则操作中断，可降低桶一致性级别继续；永久性故障时视副本数量可能丢数据，本地纠删码可规避。'],
+  ['站点网络隔离','part','被隔离站点的操作中断但无数据丢失；其余站点不受影响。可降低桶一致性级别以继续操作。'],
+  ['多站点同时故障','no','若元数据仲裁数无法满足则操作中断；永久性故障且剩余纠删码分片不足时会丢数据，本地纠删码或多副本可规避。']
+ ],
+ multi:[
+  ['单节点单盘故障','yes','设备使用多个磁盘组，每组至少可承受 1 块盘故障，不中断、不丢数据。'],
+  ['某个网格内单站点的单节点故障','yes','不中断、不丢数据。'],
+  ['两个网格各有单节点故障','yes','不中断、不丢数据。'],
+  ['某个网格内单站点多节点故障','yes','不中断、不丢数据。'],
+  ['两个网格各有站点多节点故障','yes','不中断、不丢数据。'],
+  ['某个网格多个站点各单节点故障','yes','不中断、不丢数据。'],
+  ['某个网格单站点整体故障','yes','不中断、不丢数据。'],
+  ['两个网格各有单站点整体故障','yes','不中断、不丢数据。'],
+  ['单站点故障 + 该网格另一站点单节点故障','yes','不中断、不丢数据。'],
+  ['单个物理地点整体失效','yes','不中断、不丢数据。'],
+  ['DC1 与 DC3 同时失效','part','每个网格各损失 2 个站点，操作中断直到故障恢复或降低桶一致性级别；数据仍完整存在于另外 2 个地点。'],
+  ['DC1 与 DC4 或 DC2 与 DC3 同时失效','yes','不中断、不丢数据。'],
+  ['DC2 与 DC4 同时失效','yes','不中断、不丢数据。'],
+  ['站点网络隔离','part','被隔离站点操作中断，无数据丢失；其余站点不受影响。']
+ ]
+};
+const BADGE = {yes:['ok','无影响'], part:['warn','有影响可缓解'], no:['no','数据丢失风险']};
+let fsDep = 'three', fsSt = 'all';
+function fsDraw(){
+  const q = $('#fsQ').value.trim().toLowerCase(), all = FAIL[fsDep];
+  const rows = all.filter(r=> (fsSt==='all' || r[1]===fsSt) && (!q || (r[0]+r[2]).toLowerCase().includes(q)));
+  $('#fsBody').innerHTML = rows.length
+    ? rows.map(r=> '<tr><td class="h">'+r[0]+'</td><td><span class="tag '+BADGE[r[1]][0]+'">'+BADGE[r[1]][1]+'</span>&nbsp; '+r[2]+'</td></tr>').join('')
+    : '<tr><td colspan="2">没有匹配的场景，换个关键字试试。</td></tr>';
+  $('#fsCnt').textContent = rows.length+' / '+all.length+' 项';
+}
+bindToggle('fs', v=>{ fsDep = v; fsDraw(); });
+bindToggle('fsf', v=>{ fsSt = v; fsDraw(); });
+$('#fsQ').addEventListener('input', fsDraw);
+
+/* ── 幕 17 · 方案自检 ── */
+const V = k=> $('#'+k).value;
+function checkFit(){
+  const out = []; let blocked = false, warn = false;
+  const site = V('f-site');
+  if(site==='1'){ out.push(['no','单站点无法实现站点级零 RPO，站点整体失效即数据不可达；需要至少 2 个站点，建议 3 个']); blocked = true; }
+  else if(site==='2'){ out.push(['warn','两站点可实现 2 份对象副本与 6 份元数据副本，站点整体故障时 GET / HEAD 不中断，但部分写入操作会中断；超出整站点失效之外的复合故障难以保持零 RPO']); warn = true; }
+  else if(site==='3') out.push(['ok','三站点及以上可实现 3 份副本或 3 个纠删码分片、9 份元数据副本，任意单站点整体失效读写均不中断']);
+  else out.push(['ok','四地双网格在网格内同步零 RPO 之上叠加跨网格异步复制，任意单个地点失效两套网格业务均不中断']);
+
+  if(site!=='1'){
+    if(V('f-md')==='yes' && (site==='3' || site==='m')) out.push(['ok','第三站点采用仅元数据节点，满足元数据仲裁要求而不重复存储对象，显著降低投资']);
+    else if(V('f-md')==='no') out.push(['warn','三地均存对象会提高容量成本；如无监管强制要求，建议第三站点使用仅元数据节点']);
+  }
+
+  const cons = V('f-cons');
+  if(cons==='quorum'){
+    if(site==='3' || site==='m') out.push(['ok','采用 Quorum Strong-global，跨站点读写强一致，且允许多节点或整站点故障时仍满足仲裁（3 站点仲裁数为 5/9）']);
+    else if(site==='2') out.push(['warn','两站点需采用 Legacy Strong-global；单站点故障时部分操作会中断，需临时降低桶一致性']);
+    else out.push(['no','单站点无法提供跨站点一致性']);
+  } else if(cons==='site'){ out.push(['no','Strong-site 只保证站点内读写强一致，跨站点不保证，不满足零 RPO']); blocked = true; }
+  else { out.push(['no','最终一致模型（read-after-new-write / available）不满足零 RPO；可作为故障期间的临时降级手段，不能作为常态配置']); blocked = true; }
+
+  const ilm = V('f-ilm');
+  if(ilm==='balanced') out.push(['ok','Balanced 在返回成功前同步放置对象，放置条件暂时不满足时退化为双提交并在恢复后自动纠正，是零 RPO 场景的推荐配置']);
+  else if(ilm==='strict') out.push(['warn','Strict 放置最精确，但放置条件不满足时写入直接失败，需要客户端具备重试能力，请与应用方确认']);
+  else { out.push(['no','Dual commit 先落两份再异步放置，故障时可能丢失尚未按 ILM 放置的数据，不满足零 RPO']); blocked = true; }
+
+  const lb = V('f-lb');
+  if(lb==='ext') out.push(['ok','外部负载均衡器配合健康检查，站点故障时自动摘除故障站点，这是达成 RTO=0 的必要条件']);
+  else if(lb==='gw'){ out.push(['warn','仅站点内 HA 组只能处理网关节点级故障；站点整体失效时客户端入口仍会失效，RTO 无法为零']); warn = true; }
+  else { out.push(['no','DNS 轮询或客户端直连不具备健康检查与自动摘除能力，站点故障时会持续把请求发往失效站点']); blocked = true; }
+
+  const prot = V('f-prot');
+  if(prot==='ec') out.push(['ok','跨站点纠删码在同等站点级容错下比多副本显著降低容量开销；建议同时启用节点内纠删码，让磁盘重建留在本地']);
+  else if(prot==='rep') out.push(['warn','多站点副本实现简单、恢复快，但容量开销为站点数的倍数；大容量场景建议评估跨站点纠删码']);
+  else { out.push(['no','仅站点内保护无法承受站点级故障，不满足零 RPO']); blocked = true; }
+
+  if(V('f-net')==='weak'){ out.push(['warn','网格内同步复制性能取决于吞吐最低、时延最高的站点；存在瓶颈时需评估写入时延影响，或考虑改用跨网格异步复制']); warn = true; }
+  else out.push(['ok','站点间网络满足同步复制要求；规划时建议三站点在节点数、CPU、内存、磁盘配置上尽量对等']);
+
+  out.push(['warn','需提前确认：跨网格复制（CGR）为异步，RPO 取决于两侧性能与链路，不能替代网格内同步复制']);
+
+  const head = blocked
+    ? '<div class="vhead" style="color:var(--red)">当前条件无法达成零 RPO，有需要先解决的限制项</div>'
+    : (warn ? '<div class="vhead" style="color:var(--orange)">基本可行，有需要确认或优化的项</div>'
+            : '<div class="vhead" style="color:var(--green)">当前条件符合 StorageGRID 零 RPO 部署要求</div>');
+  $('#fitOut').innerHTML = head + out.map(([t,s])=> vl(t, s)).join('');
+}
+$$('#fit select').forEach(s=> s.addEventListener('change', checkFit));
+checkFit();
+
+/* ── 讲解视频弹层 ── */
+const vDlg = $('#vDlg'), vPlayer = $('#vPlayer');
+$('#vOpen').addEventListener('click', ()=>{ vDlg.showModal(); vPlayer.play().catch(()=>{}); });
+$('#vClose').addEventListener('click', ()=> vDlg.close());
+vDlg.addEventListener('click', e=>{ if(e.target === vDlg) vDlg.close(); });
+vDlg.addEventListener('close', ()=> vPlayer.pause());
+
+/* ═══════════ 使各开关式图示与其默认选中按钮保持一致 ═══════════ */
+/* 凡是带 data-toggle-group 的按钮组，页面加载时自动点一次默认高亮的那个，
+   确保 SVG 初始状态与按钮高亮一致。新增开关式图示时，给按钮加
+   data-toggle-group="组名" 即可，无需改这里。 */
+(function syncToggles(){
+  const seen = new Set();
+  $$('[data-toggle-group].on').forEach(b=>{
+    const g = b.dataset.toggleGroup;
+    if(seen.has(g)) return;
+    seen.add(g); b.click();
+  });
+})();
+
+
+/* ═══════════ 进入幕时触发对应动效（可选） ═══════════ */
+function onEnter(i){
+  const nav = scenes[i].dataset.nav;
+  if(nav !== '写入与故障' && typeof dStop === 'function' && dTimer) dStop();
+}
+
+/* 初始化 */
+go(0, true);
+})();
+</script>
+</body>
+</html>

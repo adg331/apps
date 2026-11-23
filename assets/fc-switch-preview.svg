@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">光纤交换机配置工具界面示意图</title>
+  <desc id="desc">参数化选型面板，按型号、速率与端口数生成交换机 BOM。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef7ff"/>
+      <stop offset="1" stop-color="#f8fbff"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0672ce"/>
+      <stop offset="1" stop-color="#00a7b5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#365b84" flood-opacity=".14"/>
+    </filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#78a9d3" stroke-opacity=".11"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <rect width="800" height="450" fill="url(#grid)"/>
+  <circle cx="715" cy="72" r="118" fill="#0d76cc" opacity=".055"/>
+  <g filter="url(#shadow)">
+    <rect x="65" y="48" width="670" height="354" rx="16" fill="#fff" stroke="#cddff0"/>
+  </g>
+  <path d="M65 98V64a16 16 0 0 1 16-16h638a16 16 0 0 1 16 16v34Z" fill="#f9fbfe"/>
+  <path d="M65 98H735" stroke="#dbe7f2"/>
+  <circle cx="91" cy="73" r="5" fill="#0672ce"/>
+  <text x="106" y="78" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#17304c">FC Switch Configurator</text>
+  <rect x="637" y="63" width="70" height="21" rx="10.5" fill="#eef3f8"/>
+  <text x="672" y="77" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" font-weight="700" fill="#4f6884">BOM</text>
+
+  <text x="94" y="134" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11" font-weight="700" fill="#6a7f98">PARAMETERS</text>
+  <rect x="94" y="147" width="150" height="52" rx="9" fill="#f4f8fc" stroke="#d7e4f0"/>
+  <text x="109" y="166" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#72869d">MODEL</text>
+  <text x="109" y="187" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#17304c">DB630S</text>
+  <rect x="256" y="147" width="110" height="52" rx="9" fill="#f4f8fc" stroke="#d7e4f0"/>
+  <text x="271" y="166" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#72869d">SPEED</text>
+  <text x="271" y="187" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#17304c">32G</text>
+  <rect x="378" y="147" width="110" height="52" rx="9" fill="#f4f8fc" stroke="#d7e4f0"/>
+  <text x="393" y="166" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="9" fill="#72869d">PORTS</text>
+  <text x="393" y="187" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#17304c">96</text>
+  <rect x="500" y="147" width="206" height="52" rx="9" fill="#0672ce"/>
+  <text x="603" y="179" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="700" fill="#fff">生成配置清单</text>
+
+  <g transform="translate(94 225)">
+    <text x="0" y="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" font-weight="700" fill="#637a93">SWITCH PORTS · 48 BASE + 2 × 24 POD</text>
+    <g transform="translate(0 28)">
+      <rect x="0" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="25" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="50" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="75" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="100" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="125" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="150" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="175" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="200" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="225" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="250" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="275" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="300" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="325" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="350" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="375" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="400" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="425" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="450" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="475" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="500" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="525" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="550" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="575" y="0" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="0" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="25" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="50" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="75" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="100" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="125" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="150" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="175" y="22" width="19" height="15" rx="3" fill="#0672ce"/>
+      <rect x="200" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="225" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="250" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="275" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="300" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="325" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="350" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="375" y="22" width="19" height="15" rx="3" fill="#00a7b5"/>
+      <rect x="400" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+      <rect x="425" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+      <rect x="450" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+      <rect x="475" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+      <rect x="500" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+      <rect x="525" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+      <rect x="550" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+      <rect x="575" y="22" width="19" height="15" rx="3" fill="#e6eef7" stroke="#d0deec"/>
+    </g>
+  </g>
+  <g transform="translate(94 312)">
+    <rect width="612" height="62" rx="10" fill="#f6f9fd" stroke="#d7e4f0"/>
+    <g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#4f6884">
+      <text x="16" y="25">7D1SA004WW</text><text x="130" y="25" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11" fill="#17304c">DB630S 主机 · 激活 48 口</text><text x="590" y="25" text-anchor="end" font-weight="700" fill="#17304c">× 1</text>
+      <text x="16" y="47">4M27A37147</text><text x="130" y="47" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11" fill="#17304c">24 口 POD 许可 · 含 32G SWL</text><text x="590" y="47" text-anchor="end" font-weight="700" fill="#17304c">× 2</text>
+    </g>
+  </g>
+</svg>
