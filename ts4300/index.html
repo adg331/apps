@@ -174,7 +174,7 @@ table.bom tbody tr:last-child td{border-bottom:none}
     <span class="logo">TS4300</span>
     <h1>联想 TS4300 带库配置评估与生成工具</h1>
   </div>
-  <span class="ver">v2.1</span>
+  <span class="ver">v2.2</span>
 </header>
 
 <nav class="tabs">
@@ -259,20 +259,37 @@ table.bom tbody tr:last-child td{border-bottom:none}
           <label class="field">
             <span>全高驱动器数量 (FH)</span>
             <input type="number" id="e-fh" value="1" min="0" max="14" step="1">
+            <span class="hint" id="e-fh-hint">上限 14 个（每柜最多 1 个 FH），数量多时自动增加扩展柜，与磁带插槽无关</span>
           </label>
           <label class="field">
             <span>半高驱动器数量 (HH)</span>
             <input type="number" id="e-hh" value="0" min="0" max="42" step="1">
-            <span class="hint" id="e-hh-hint">LTO10 仅支持全高（FH）驱动器</span>
+            <span class="hint" id="e-hh-hint">上限 42 个（每柜最多 3 个 HH），数量多时自动增加扩展柜，与磁带插槽无关</span>
           </label>
           <label class="field">
             <span>I/O 站插槽数量</span>
-            <input type="number" id="e-io" value="5" min="0" step="5">
+            <select id="e-io">
+              <option value="0">0</option>
+              <option value="5" selected>5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+              <option value="25">25</option>
+              <option value="30">30</option>
+              <option value="35">35</option>
+              <option value="40">40</option>
+              <option value="45">45</option>
+              <option value="50">50</option>
+              <option value="55">55</option>
+              <option value="60">60</option>
+              <option value="65">65</option>
+              <option value="70">70</option>
+            </select>
           </label>
           <label class="field">
             <span>扩展柜数量（自动计算）</span>
             <input type="number" id="e-exp" value="0" readonly tabindex="-1">
-            <span class="hint">由「驱动器槽位」与「磁带插槽」需求取较大值决定</span>
+            <span class="hint">由「驱动器需求（FH+HH）」与「插槽需求」取较大值决定</span>
           </label>
         </div>
 
@@ -286,16 +303,16 @@ table.bom tbody tr:last-child td{border-bottom:none}
             <span class="res-value" id="r-exp">—</span>
           </div>
           <div class="res-item">
+            <span class="res-label">柜体总数</span>
+            <span class="res-value" id="r-total-cab">—</span>
+          </div>
+          <div class="res-item">
             <span class="res-label">机架空间</span>
             <span class="res-value" id="r-rack">—</span>
           </div>
           <div class="res-item">
             <span class="res-label">FH 单驱吞吐</span>
             <span class="res-value" id="r-fhtp">—</span>
-          </div>
-          <div class="res-item">
-            <span class="res-label">HH 单驱吞吐</span>
-            <span class="res-value" id="r-hhtp">—</span>
           </div>
           <div class="res-item hl">
             <span class="res-label">总吞吐量</span>
@@ -340,13 +357,13 @@ table.bom tbody tr:last-child td{border-bottom:none}
           </label>
           <label class="field">
             <span>FH 驱动器数量 / 台</span>
-            <input type="number" id="g-fh" value="1" min="0" step="1">
-            <span class="hint">全高驱动器，每个占用 2U</span>
+            <input type="number" id="g-fh" value="1" min="0" max="14" step="1">
+            <span class="hint">上限 14 个（每柜最多 1 个，2U/个），与磁带插槽无关</span>
           </label>
           <label class="field">
             <span>HH 驱动器数量 / 台</span>
-            <input type="number" id="g-hh" value="1" min="0" step="1">
-            <span class="hint" id="g-hh-hint">半高驱动器，每个占用 1U</span>
+            <input type="number" id="g-hh" value="1" min="0" max="42" step="1">
+            <span class="hint" id="g-hh-hint">上限 42 个（每柜最多 3 个，1U/个），与磁带插槽无关</span>
           </label>
         </div>
 
@@ -463,10 +480,14 @@ const LTO_SPEC = {
   10: { usable: 29,   physical: 30, fhTp: 400, hhTp: 0,   code: 7, label: 'LTO10', hasHH: false }
 };
 
-/* 驱动器物理尺寸 */
+/* 驱动器物理尺寸与数量上限（固定值，不受柜体/插槽影响） */
 const U_PER_FH = 2;
 const U_PER_HH = 1;
 const U_PER_CABINET = 3;
+const MAX_FH = 14;
+const MAX_HH = 42;
+const MAX_EXP = 13;   /* 42U - 基本柜 3U = 39U → 13 台扩展柜 */
+const MAX_CAB_PER_UNIT = MAX_EXP + 1;   /* 单台 TS4300 最多 14 柜（1 基本 + 13 扩展） */
 
 /* 基本柜 */
 const BASE_UNIT = {
@@ -511,6 +532,33 @@ const fmt = n => (n === null || n === undefined || isNaN(n)) ? '—' : String(n)
 const ceil = n => Math.ceil(n - 1e-9);
 
 /* ============================================================
+   柜体需求统一计算
+   ------------------------------------------------------------
+   每柜规则（每柜 3U）：
+     · 1 FH           (2U，剩 1U)
+     · 1 FH + 1 HH    (3U)
+     · 3 HH           (3U)
+   等价约束：每柜最多 1 个 FH，且 2×FH + HH ≤ 3×柜数。
+   最少柜数 = max( FH 数, ceil((2×FH + HH) / 3) )
+   ============================================================ */
+function cabinetsByDrive(fhN, hhN) {
+  const u = fhN * U_PER_FH + hhN * U_PER_HH;
+  return Math.max(fhN, ceil(u / U_PER_CABINET));
+}
+
+/* ============================================================
+   超出单机架 42U 时建议拆分台数
+   ------------------------------------------------------------
+   单台 TS4300 最多 14 柜（1 基本 + 13 扩展）。
+   拆分台数 = ceil(总柜数 / 14)，并给出每台平均柜数。
+   ============================================================ */
+function splitSuggestion(totalCabinets) {
+  const units = ceil(totalCabinets / MAX_CAB_PER_UNIT);
+  const perUnit = ceil(totalCabinets / units);
+  return { units, perUnit };
+}
+
+/* ============================================================
    面板一：驱动器规格联动
    ============================================================ */
 function syncDriveConstraints() {
@@ -528,7 +576,7 @@ function syncDriveConstraints() {
   } else {
     hhInput.disabled = false;
     hhInput.style.background = '#fff';
-    hhHint.textContent = 'FH 与 HH 均可选';
+    hhHint.textContent = '上限 42 个（每柜最多 3 个 HH），数量多时自动增加扩展柜，与磁带插槽无关';
     hhHint.style.color = 'var(--txt3)';
   }
 }
@@ -550,7 +598,7 @@ function syncGenConstraints() {
   } else {
     hhInput.disabled = false;
     hhInput.style.background = '#fff';
-    hhHint.textContent = '半高驱动器，每个占用 1U';
+    hhHint.textContent = '上限 42 个（每柜最多 3 个，1U/个），与磁带插槽无关';
     hhHint.style.color = 'var(--txt3)';
   }
 }
@@ -582,32 +630,27 @@ function calcEval() {
   const totalTape = tapeQty + copyQty;
   const slotTotal = totalTape + cleanN;
 
-  /* ---------- 扩展柜自动计算（按物理槽位）----------
-     每个柜体（基本柜 / 扩展柜）提供 3U 驱动器空间：
-       · 1 个 FH 驱动器 = 2U，且每个柜体最多装 1 个 FH
-         （因为 2 个 FH = 4U > 3U，装不进同一个柜体）
-       · 1 个 HH 驱动器 = 1U，每柜最多装 3 个
-       · 装了 FH 的柜体还剩 1U，可再放 1 个 HH（2U + 1U = 3U）
-     因此：
-       · FH 数量决定基础柜数（每个 FH 各占一个柜体）
-       · 每个装了 FH 的柜体还能再容纳 1 个 HH
-       · 剩余 HH 每 3 个占一个柜体
-     所需驱动器柜数 = FH + ceil(max(0, HH - FH) / 3)
-     扩展柜数（按驱动器）= 所需驱动器柜数 - 1（基本柜提供第一个柜体）
+  /* ---------- 扩展柜自动计算 ----------
+     驱动器需求柜数（每柜最多 1 FH，2FH+HH ≤ 3U）：
+       cabByDrive = max( FH, ceil((2×FH + HH) / 3) )
+     插槽需求柜数（每柜 40 插槽，含磁带 + I/O 站）：
+       cabBySlot  = ceil((slotTotal + ioN) / 40)
+     取较大值 → 柜体总数，扩展柜 = 柜体总数 - 1
+     注意：FH/HH 数量只受固定上限 14/42 约束，不受磁带插槽反向限制；
+           驱动器多时只会拉高 cabByDrive，进而拉高柜体总数。
   --------------------------------------------------- */
-  const remainingHH = Math.max(0, hhN - fhN);
-  const cabByDrive  = fhN + ceil(remainingHH / U_PER_CABINET);
-  const expByDrive  = Math.max(0, cabByDrive - 1);
+  const driveU       = fhN * U_PER_FH + hhN * U_PER_HH;
+  const cabByDrive   = cabinetsByDrive(fhN, hhN);
+  const cabBySlot    = ceil((slotTotal + ioN) / 40);
+  const cabNeeded    = Math.max(1, cabByDrive, cabBySlot);
+  const exp          = cabNeeded - 1;
+  const totalCabinets = cabNeeded;
 
-  const expBySlot   = Math.max(0, ceil(slotTotal / 40) - 1);
-  const exp         = Math.max(expByDrive, expBySlot);
-
-  /* 回写到只读输入框 */
+  /* 回写扩展柜 */
   $('e-exp').value = exp;
 
   /* ---------- 带库评估 ---------- */
   const baseUnits = 1;
-  const totalCabinets = baseUnits + exp;
   const rackSpace = U_PER_CABINET * totalCabinets;
   const fhTp = spec.fhTp;
   const hhTp = spec.hhTp;
@@ -619,13 +662,13 @@ function calcEval() {
   $('r-tape').textContent   = tapeQty + ' 盘';
   $('r-copy').textContent   = copyQty + ' 盘';
   $('r-total').textContent  = totalTape + ' 盘';
-  $('r-slots').textContent  = slotTotal + ' 盘';
+  $('r-slots').textContent  = (slotTotal + ioN) + ' 盘';
 
   $('r-base').textContent   = baseUnits + ' 台';
   $('r-exp').textContent    = exp + ' 台';
+  $('r-total-cab').textContent = totalCabinets + ' 台';
   $('r-rack').innerHTML     = rackSpace + ' <small>U</small>';
   $('r-fhtp').innerHTML     = fhTp + ' <small>MB/s</small>';
-  $('r-hhtp').innerHTML     = (spec.hasHH ? hhTp : '—') + (spec.hasHH ? ' <small>MB/s</small>' : '');
   $('r-total-tp').innerHTML = totalTp + ' <small>MB/s</small>';
 
   /* ---------- 校验 ---------- */
@@ -639,51 +682,55 @@ function calcEval() {
     errors.push('磁带双副本输入错误（仅 YES / NO）');
   if (!Number.isInteger(cleanR) || cleanR < 0)
     errors.push('清洗带数量需为非负整数');
-  if (!Number.isInteger(fhR) || fhR < 0 || fhR > 14)
-    errors.push('全高驱动器数量超出上限（0 ~ 14）');
-  if (!Number.isInteger(hhR) || hhR < 0 || hhR > 42)
-    errors.push('半高驱动器数量超出上限（0 ~ 42）');
+  /* 驱动器数量固定上限校验（14 / 42），与插槽无关 */
+  if (!Number.isInteger(fhR) || fhR < 0 || fhR > MAX_FH)
+    errors.push('全高（FH）驱动器数量超出上限（0 ~ ' + MAX_FH + '）');
+  if (!Number.isInteger(hhR) || hhR < 0 || hhR > MAX_HH)
+    errors.push('半高（HH）驱动器数量超出上限（0 ~ ' + MAX_HH + '）');
   if (spec && !spec.hasHH && hhN > 0)
     errors.push('LTO10 仅支持全高（FH）驱动器，半高（HH）数量必须为 0');
-  if ((fhN * 2 + hhN) > 42)
-    errors.push('驱动器数量超出上限（FH×2 + HH 不得超过 42）');
-  if (exp > 13)
-    errors.push('扩展柜数量超出上限（自动计算 ' + exp + ' 台，最多 13 台 / 42U）');
-  if (!Number.isInteger(ioR) || ioR < 0 || ioR % 5 !== 0 || ioR > (baseUnits + exp) * 5)
-    errors.push('I/O 站插槽需为 5 的倍数，且不超过 5 × 柜体数量（当前 ' + (baseUnits + exp) + ' 台柜体）');
+  /* 物理空间双保险（按 cabinetsByDrive 公式恒成立，仅防御） */
+  if (fhN > totalCabinets)
+    errors.push('全高驱动器数量（' + fhN + '）不能超过柜体总数（' + totalCabinets + ' 台），每个柜体最多配置 1 个 FH 驱动器');
+  if (driveU > totalCabinets * U_PER_CABINET)
+    errors.push('驱动器占用空间（' + driveU + 'U）超出柜体总空间（' + totalCabinets + ' 台 × 3U = ' + totalCabinets * U_PER_CABINET + 'U）');
+  if (exp > MAX_EXP) {
+    const sg = splitSuggestion(totalCabinets);
+    errors.push('扩展柜数量超出上限（需要 ' + exp + ' 台，单台最多 ' + MAX_EXP + ' 台 / 42U）。' +
+      '建议拆分为 <strong>' + sg.units + ' 台 TS4300</strong>，每台约 <strong>' + sg.perUnit + ' 柜</strong>（柜体合计 ' + totalCabinets + ' 台）。');
+  }
+  if (!Number.isInteger(ioR) || ioR < 0 || ioR % 5 !== 0 || ioR > totalCabinets * 5)
+    errors.push('I/O 站插槽需为 5 的倍数，且不超过 5 × 柜体数量（当前 ' + totalCabinets + ' 台柜体）');
   if (slotTotal + ioN > 560)
-    errors.push('超出插槽上限（总插槽数 ' + slotTotal + ' + I/O 插槽 ' + ioN + ' 不得超过 560）');
+    errors.push('超出插槽上限（磁带插槽 ' + slotTotal + ' + I/O 插槽 ' + ioN + ' 不得超过 560）');
 
   /* ---------- 状态提示 ---------- */
   const box = $('eval-status');
   if (errors.length === 0) {
-    /* 组装驱动器槽位说明 */
-    let drvInfo;
-    if (fhN === 0) {
-      drvInfo = hhN + ' HH 按每柜 3 个计算，共需柜体 ' + cabByDrive + ' 台';
-    } else if (hhN <= fhN) {
-      drvInfo = fhN + ' FH 各占 1 个柜体' +
-        (hhN > 0 ? '（每柜剩余 1U 可再容纳 1 个 HH，' + hhN + ' HH 全部填入 FH 柜体）' : '') +
-        '，共需柜体 ' + cabByDrive + ' 台';
-    } else {
-      drvInfo = fhN + ' FH 各占 1 个柜体（可同时容纳 ' + fhN + ' 个 HH），' +
-        '剩余 ' + remainingHH + ' 个 HH 需 ' + ceil(remainingHH / U_PER_CABINET) + ' 个额外柜体，' +
-        '共需柜体 ' + cabByDrive + ' 台';
-    }
-
     const hhInfo = spec.hasHH
       ? 'HH 单驱吞吐 ' + spec.hhTp + ' MB/s'
       : 'HH 不适用（' + spec.label + ' 无半高驱动器）';
 
+    /* 扩展柜来源说明 */
+    let cabSource;
+    if (cabBySlot > cabByDrive) {
+      cabSource = '插槽需求（' + (slotTotal + ioN) + ' 盘 ÷ 每柜 40 插槽 = ' + cabBySlot + ' 台）';
+    } else if (fhN === 0) {
+      cabSource = 'HH 驱动器需求（' + hhN + ' 个，每柜 3 个 = ' + ceil(hhN / U_PER_CABINET) + ' 台）';
+    } else if (hhN <= fhN) {
+      cabSource = 'FH 驱动器需求（' + fhN + ' 个，每柜 1 个 = ' + fhN + ' 台，' + hhN + ' 个 HH 填入 FH 柜剩余 1U）';
+    } else {
+      cabSource = '驱动器需求（' + fhN + ' FH + ' + hhN + ' HH，2×FH+HH=' + driveU + 'U ÷ 3U/柜 = ' + cabByDrive + ' 台）';
+    }
+
     box.innerHTML =
       '<div class="status ok"><span class="ico">✓</span><div><strong>配置有效</strong>' +
       '<div style="font-size:12.5px;margin-top:4px;opacity:.9">' +
-        '驱动器槽位：' + drvInfo + '（含基本柜），' +
-        '按驱动器需求扩展柜 <strong>' + expByDrive + ' 台</strong>。<br>' +
-        '插槽需求：' + slotTotal + ' 盘，每柜 40 插槽 → 按插槽需求扩展柜 <strong>' + expBySlot + ' 台</strong>。<br>' +
-        '取较大值 → 扩展柜合计 <strong>' + exp + ' 台</strong>（柜体合计 ' + totalCabinets + ' 台），' +
+        '扩展柜数量：由' + cabSource + ' 决定 → <strong>' + exp + ' 台</strong>（柜体合计 ' + totalCabinets + ' 台）。<br>' +
+        'FH 驱动器 ' + fhN + ' 个（上限 ' + MAX_FH + '，每柜最多 1 个），HH 驱动器 ' + hhN + ' 个（上限 ' + MAX_HH + '），' +
+        '总占用 <strong>' + driveU + 'U / ' + (totalCabinets * U_PER_CABINET) + 'U</strong>。' +
         '机架空间 <strong>' + rackSpace + 'U</strong>（≤ 42U）。<br>' +
-        '总插槽占用 ' + slotTotal + '（含 I/O 站 ' + ioN + '），未超过 560 上限。<br>' +
+        '总插槽占用 ' + (slotTotal + ioN) + '（磁带 ' + slotTotal + ' + I/O 站 ' + ioN + '），未超过 560 上限。<br>' +
         '吞吐量：FH 单驱 ' + spec.fhTp + ' MB/s，' + hhInfo + '。' +
       '</div></div></div>';
   } else {
@@ -725,20 +772,17 @@ function calcGen() {
 
   const baseUnit = BASE_UNIT[code] || null;
 
-  /* --- 扩展柜数量（按物理槽位，修正后）----------
-     每个柜体（基本柜 / 扩展柜）提供 3U 驱动器空间：
-       · 1 个 FH 驱动器 = 2U，且每个柜体最多装 1 个 FH
-       · 1 个 HH 驱动器 = 1U，每柜最多装 3 个
-       · 装了 FH 的柜体还剩 1U，可再放 1 个 HH
-     所需驱动器柜数 = FH + ceil(max(0, HH - FH) / 3)
-     扩展柜数（按驱动器）= 所需驱动器柜数 - 1（基本柜提供第一个柜体）
+  /* --- 扩展柜数量 ---
+     驱动器需求 = max( FH, ceil((2FH+HH)/3) )
+     插槽需求   = ceil(插槽数 / 40)
+     取较大值 → 柜体总数，扩展柜 = 柜体总数 - 1
   ------------------------------------------------- */
-  const remainingHH = Math.max(0, hhN_effective - fhN);
-  const cabByDrive  = fhN + ceil(remainingHH / U_PER_CABINET);
-  const expByDrive  = Math.max(0, cabByDrive - 1);
-
-  const expBySlot   = Math.max(0, ceil(slots / 40) - 1);
-  const expCount    = Math.max(expByDrive, expBySlot);
+  const driveU       = fhN * U_PER_FH + hhN_effective * U_PER_HH;
+  const cabByDrive   = cabinetsByDrive(fhN, hhN_effective);
+  const cabBySlot    = ceil(slots / 40);
+  const cabNeeded    = Math.max(1, cabByDrive, cabBySlot);
+  const expCount     = cabNeeded - 1;
+  const totalCabinets = cabNeeded;
 
   /* 扩展柜型号：LTO10 用带专家服务版本，其余用带机架版本 */
   const expUnit = (lCode === 7) ? EXP_UNIT_SVC : EXP_UNIT_RACK;
@@ -758,10 +802,8 @@ function calcGen() {
   const mCode = LTO_SPEC[dLtoNum].code * 10 + (worm === '支持' ? 1 : 0);
   const media = MEDIA[mCode] || null;
 
-  /* --- 电源数量（关联柜体数） --- */
-  const totalCabinetsBest = 1 + expByDrive;
-  const totalCabinetsMax  = 1 + expCount;
-  const powerQty = (power === '最佳数量' ? totalCabinetsBest : totalCabinetsMax) * 2 - 1;
+  /* --- 电源数量：按柜体总数 --- */
+  const powerQty = totalCabinets * 2 - 1;
   const cordQty = Math.max(1, Math.round((powerQty + 1) / 2));
 
   /* --- 路径冗余功能（仅 FH 支持） --- */
@@ -771,12 +813,8 @@ function calcGen() {
   const installQty = 1 + expCount;
 
   /* --- 电源备注 --- */
-  let powerNote;
-  if (power === '最佳数量') {
-    powerNote = '最佳数量：按驱动器需求柜数 ' + totalCabinetsBest + ' ×2 -1 = ' + powerQty;
-  } else {
-    powerNote = '最大数量：按实际柜数 ' + totalCabinetsMax + ' ×2 -1 = ' + powerQty;
-  }
+  const powerNote = (power === '最佳数量' ? '最佳数量' : '最大数量')
+    + '：按柜体总数 ' + totalCabinets + ' ×2 -1 = ' + powerQty;
 
   /* --- 构建 BOM --- */
   const rows = [];
@@ -797,7 +835,7 @@ function calcGen() {
     unit: expCount,
     total: qty * expCount,
     note: expCount > 0
-      ? ('按驱动器槽位 ' + expByDrive + ' / 按插槽需求 ' + expBySlot + ' 取最大值')
+      ? ('驱动器需求 ' + cabByDrive + ' 台 / 插槽需求 ' + cabBySlot + ' 台，取最大值')
       : ''
   });
 
@@ -903,31 +941,31 @@ function calcGen() {
   if (!media) warnings.push('当前「' + dLtoKey + ' + ' + worm + '」组合没有对应的数据磁带产品');
   if (ltoKey === 'LTO10' && hhN > 0)
     warnings.push('LTO10 不支持半高（HH）驱动器，HH 数量已按 0 处理');
+  /* 驱动器数量固定上限校验（14 / 42），与插槽无关 */
+  if (fhN > MAX_FH)
+    warnings.push('全高（FH）驱动器数量超出上限（0 ~ ' + MAX_FH + '）');
+  if (hhN > MAX_HH)
+    warnings.push('半高（HH）驱动器数量超出上限（0 ~ ' + MAX_HH + '）');
+  /* 物理空间双保险 */
+  if (fhN > totalCabinets)
+    warnings.push('全高驱动器数量（' + fhN + '）不能超过柜体总数（' + totalCabinets + ' 台），每个柜体最多配置 1 个 FH 驱动器');
+  if (driveU > totalCabinets * U_PER_CABINET)
+    warnings.push('驱动器占用空间（' + driveU + 'U）超出柜体总空间（' + totalCabinets + ' 台 × 3U = ' + totalCabinets * U_PER_CABINET + 'U）');
+  if (expCount > MAX_EXP) {
+    const sg = splitSuggestion(totalCabinets);
+    warnings.push('扩展柜数量超出上限（需要 ' + expCount + ' 台，单台最多 ' + MAX_EXP + ' 台 / 42U）。' +
+      '建议拆分为 <strong>' + sg.units + ' 台 TS4300</strong>，每台约 <strong>' + sg.perUnit + ' 柜</strong>（柜体合计 ' + totalCabinets + ' 台）。');
+  }
 
   const box = $('gen-status');
   if (warnings.length === 0) {
-    /* 组装驱动器槽位说明 */
-    let drvInfo;
-    if (fhN === 0) {
-      drvInfo = hhN_effective + ' HH 按每柜 3 个计算，共需柜体 ' + cabByDrive + ' 台';
-    } else if (hhN_effective <= fhN) {
-      drvInfo = fhN + ' FH 各占 1 个柜体' +
-        (hhN_effective > 0 ? '（每柜剩余 1U 可再容纳 1 个 HH，' + hhN_effective + ' HH 全部填入 FH 柜体）' : '') +
-        '，共需柜体 ' + cabByDrive + ' 台';
-    } else {
-      drvInfo = fhN + ' FH 各占 1 个柜体（可同时容纳 ' + fhN + ' 个 HH），' +
-        '剩余 ' + remainingHH + ' 个 HH 需 ' + ceil(remainingHH / U_PER_CABINET) + ' 个额外柜体，' +
-        '共需柜体 ' + cabByDrive + ' 台';
-    }
-
     box.innerHTML =
       '<div class="status ok"><span class="ico">✓</span><div><strong>配置清单生成完成</strong>' +
       '<div style="font-size:12.5px;margin-top:4px;opacity:.9">' +
-        qty + ' 台 TS4300，每台含 ' + fhN + ' 个 FH + ' + hhN_effective + ' 个 HH 驱动器（共 ' + driveN + ' 个）。<br>' +
-        '驱动器槽位：' + drvInfo + '（含基本柜），' +
-        '按驱动器需求扩展柜 <strong>' + expByDrive + ' 台</strong>。<br>' +
-        '插槽需求：' + slots + ' 盘，每柜 40 插槽 → 按插槽需求扩展柜 <strong>' + expBySlot + ' 台</strong>。<br>' +
-        '取较大值 → 扩展柜合计 <strong>' + expCount + ' 台</strong>（柜体合计 ' + (1 + expCount) + ' 台）。<br>' +
+        qty + ' 台 TS4300，每台含 ' + fhN + ' 个 FH（上限 ' + MAX_FH + '）+ ' + hhN_effective + ' 个 HH（上限 ' + MAX_HH + '）驱动器（共 ' + driveN + ' 个）。<br>' +
+        '驱动器需求：总占用 ' + driveU + 'U → ' + cabByDrive + ' 台（每柜最多 1 FH，2FH+HH ≤ 3U/柜）。<br>' +
+        '插槽需求：' + slots + ' 盘 ÷ 每柜 40 插槽 → ' + cabBySlot + ' 台。<br>' +
+        '取较大值 → 柜体合计 <strong>' + totalCabinets + ' 台</strong>（基本柜 1 + 扩展柜 ' + expCount + ' 台）。<br>' +
         '共需追加：FH 驱动器 ' + qty * extraFH + ' 个、HH 驱动器 ' + qty * extraHH + ' 个、扩展柜 ' + qty * expCount + ' 台。' +
       '</div></div></div>';
   } else {
@@ -1013,8 +1051,9 @@ $('e-drive').addEventListener('input', () => {
   calcEval();
 });
 
-['e-backup', 'e-dup', 'e-clean', 'e-fh', 'e-hh', 'e-io']
+['e-backup', 'e-dup', 'e-clean', 'e-fh', 'e-hh']
   .forEach(id => $(id).addEventListener('input', calcEval));
+$('e-io').addEventListener('change', calcEval);
 
 /* 面板二：g-lto 变更时同步约束 */
 $('g-lto').addEventListener('input', () => {
