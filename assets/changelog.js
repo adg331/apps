@@ -3,6 +3,7 @@
    kind：new = 新增展位，update = 内容更新。text 面向客户，只写内容变化。
    改完同步把 index.html 里 changelog.js?v= 改成新值（当天日期；同一天再改加 .2、.3），否则浏览器会沿用旧缓存、弹层看不到新记录。 */
 window.DEMOBAY_CHANGELOG = [
+  { date: '2026-11-25', bay: '02', kind: 'update', text: '新增「公开案例」一幕：Nebul、Lambda、emma 三家 GPU 云与主权 AI 云服务商的公开合作与分工；交付时间线与参考资料同步更新；讲解视频补充公开案例一段，约 5 分钟' },
   { date: '2026-11-24', tool: '03', kind: 'update', text: 'v2.2：扩展柜按驱动器与插槽需求统一计算，新增柜体总数显示；FH / HH 驱动器上限固定为 14 / 42，超出单机架时给出拆分台数建议；I/O 站插槽改为下拉选择' },
   { date: '2026-11-23', tool: '01', kind: 'update', text: '升级为 2026 年 11 月实测数据：新增 16 TB NL-SAS 硬盘与 ADP（高级磁盘分区）容量查询' },
   { date: '2026-11-23', tool: '03', kind: 'new',    text: '联想 TS4300 带库配置工具 v2.1：单台配置与磁带容量评估、按需求参数表生成配置清单' },

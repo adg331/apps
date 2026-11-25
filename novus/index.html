@@ -296,7 +296,7 @@ var _hmt = _hmt || [];
         <div class="chip" data-jump="12">接入与安全</div>
         <div class="chip" data-jump="15">交付与选型</div>
       </div>
-      <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 4 分钟讲解视频</button></div>
+      <div class="an" style="--d:.5s"><button class="btn vbtn" id="vOpen" type="button">▶ 观看 5 分钟讲解视频</button></div>
       <div class="an" style="--d:.56s;margin-top:30px">
         <span class="hint">按 <kbd>→</kbd> 进入下一幕 &nbsp;·&nbsp; <kbd>←</kbd> 返回 &nbsp;·&nbsp; 顶部导航可直接跳转章节</span>
       </div>
@@ -343,11 +343,11 @@ var _hmt = _hmt || [];
           <div class="go">进入 →</div>
         </div>
         <div class="dc" style="--ac:#0c8e86" data-jump="15">
-          <div class="hd"><span class="nm">交付与选型</span><span class="ct">5 幕</span></div>
-          <ul><li>适用负载与产品组合中的位置</li><li>首发范围、后续规划与交付形态</li><li>收购 PEAK:AIO 与同类方案对照</li></ul>
+          <div class="hd"><span class="nm">交付与选型</span><span class="ct">6 幕</span></div>
+          <ul><li>适用负载与产品组合中的位置</li><li>首发范围、后续规划与交付形态</li><li>收购 PEAK:AIO、公开案例与同类方案对照</li></ul>
           <div class="go">进入 →</div>
         </div>
-        <div class="dc" style="--ac:#123a7a" data-jump="20">
+        <div class="dc" style="--ac:#123a7a" data-jump="21">
           <div class="hd"><span class="nm">总结</span><span class="ct">1 幕</span></div>
           <ul><li>四点价值与评估时需要确认的事项</li><li>参考资料与信息时点</li></ul>
           <div class="go">进入 →</div>
@@ -1119,7 +1119,7 @@ var _hmt = _hmt || [];
       <div class="steps an" style="--d:.1s">
         <div class="st" data-step="0" data-grp="tl"><div class="n">2026-09-25 → 11-02</div><div class="l">宣布并完成收购 PEAK:AIO</div></div>
         <div class="st on" data-step="1" data-grp="tl"><div class="n">2026-09-29 · INSIGHT</div><div class="l">Novus 发布，开放订购</div></div>
-        <div class="st" data-step="2" data-grp="tl"><div class="n">2026-11</div><div class="l">正式 GA，首批客户部署</div></div>
+        <div class="st" data-step="2" data-grp="tl"><div class="n">2026-11</div><div class="l">正式 GA，首批客户宣布采用</div></div>
         <div class="st" data-step="3" data-grp="tl"><div class="n">Q4 CY26 – Q1 CY27（目标）</div><div class="l">NCP 认证与软件定义数据节点</div></div>
       </div>
       <div class="stbody an" style="--d:.14s;min-height:74px;margin-bottom:13px"><h4 id="tlH"></h4><p id="tlP"></p></div>
@@ -1196,11 +1196,58 @@ var _hmt = _hmt || [];
     </div>
   </section>
 
-  <!-- ══════════════════ 幕 16 · 技术定位 ══════════════════ -->
-  <section class="scene" data-sec="交付与选型" data-nav="技术定位">
+  <!-- ══════════════════ 幕 19 · 公开案例 ══════════════════ -->
+  <section class="scene" data-sec="交付与选型" data-nav="公开案例">
     <div class="wrap">
       <div class="an">
         <div class="secmark" style="--ac:#0c8e86"><i></i><span>交付与选型 · 05</span></div>
+        <h1>公开案例：<span class="g">GPU 云与主权 AI 云</span>服务商</h1>
+        <p class="lead">Novus 发布后，已有 GPU 云与欧洲主权 AI 云服务商公开宣布采用或联合介绍。另有一家欧洲服务商选择了基于 ONTAP 的主权 AI 组合。切换查看各案例的分工。</p>
+      </div>
+      <div class="hr an" style="--d:.06s"></div>
+
+      <div class="g23">
+        <div class="viz an" style="--d:.12s">
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn on" data-case="nebul" data-toggle-group="case">Nebul · 荷兰</button>
+            <button class="btn" data-case="lambda" data-toggle-group="case">Lambda · 美国</button>
+            <button class="btn" data-case="emma" data-toggle-group="case">emma · 卢森堡</button>
+            <span class="hint" style="margin-left:auto" id="caseState"></span>
+          </div>
+          <svg viewBox="0 0 640 250" id="caseSvg" style="max-height:270px"></svg>
+          <p class="note" id="caseNote"></p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="panel an" style="--d:.18s">
+            <h3>公开信息对照</h3>
+            <table class="dt">
+              <thead><tr><th>服务商</th><th>NetApp 方案</th><th style="width:118px">公开状态</th></tr></thead>
+              <tbody>
+                <tr><td class="h">Nebul</td><td>Novus</td><td><span class="tag b">宣布采用</span><br><span class="hint">2026-11-10</span></td></tr>
+                <tr><td class="h">Lambda</td><td>Novus</td><td><span class="tag b">联合介绍</span><br><span class="hint">2026-09-30</span></td></tr>
+                <tr><td class="h">emma</td><td>ONTAP（文件 + 对象）</td><td><span class="tag n">战略合作</span><br><span class="hint">2026 年 10–11 月</span></td></tr>
+                <tr><td class="h">美国大型 GPU 云（未具名）</td><td>未公开</td><td><span class="tag n">NetApp 财报提及</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="g3 an" style="--d:.26s;margin-top:13px">
+        <div class="vc"><span class="k">采用方画像</span><div class="t">与目标客户一致</div><div class="d">以 GPU 算力或主权 AI 云为主营业务，需要多租户与大规模共享命名空间。</div></div>
+        <div class="vc"><span class="k">两种组合</span><div class="t">Novus 或 ONTAP</div><div class="d">万卡级共享命名空间选 Novus；需要文件与对象统一、多租户的主权 AI 平台，也可直接基于 ONTAP 组合。</div></div>
+        <div class="vc"><span class="k">评估建议</span><div class="t">以公开状态为准</div><div class="d">上述案例均未公布部署规模、性能数据与上线时间，评估时建议向 NetApp 索取可参考的部署资料。</div></div>
+      </div>
+      <p class="note an" style="--d:.3s">依据 NetApp 2026-11-10 Nebul 公告、NetApp 与 emma 合作公告、INSIGHT 2026 主题演讲，以及 ITPro、StorageNewsletter、HPCwire 报道整理；信息时点 2026 年 11 月。</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ 幕 20 · 技术定位 ══════════════════ -->
+  <section class="scene" data-sec="交付与选型" data-nav="技术定位">
+    <div class="wrap">
+      <div class="an">
+        <div class="secmark" style="--ac:#0c8e86"><i></i><span>交付与选型 · 06</span></div>
         <h1>技术定位：<span class="g">同类方案</span>的架构路线对照</h1>
         <p class="lead">面向大规模 AI 的文件存储大致有四条技术路线，各有取舍，没有一种在所有维度都最优。按路线筛选查看。</p>
       </div>
@@ -1272,8 +1319,9 @@ var _hmt = _hmt || [];
           <div class="li">NetApp Novus 技术问答与产品说明，2026 年 10 月</div>
           <div class="li">NetApp 官方博客《Novus: AI factory storage for GPU clouds at zettabyte scale》，Arindam Banerjee，2026-09-29</div>
           <div class="li">NetApp 新闻稿：宣布收购 PEAK:AIO，2026-09-25；完成收购 PEAK:AIO，2026-11-02</div>
+          <div class="li">NetApp 新闻稿：Nebul Adopts NetApp Novus to Power Sovereign AI Infrastructure，2026-11-10；NetApp 与 Emma Technologies 主权 AI 合作公告，2026 年 11 月</div>
           <div class="li">NetApp 社区博文：Novus 的 KV Cache 卸载（讨论帖 468497）、SGLang HiCache 与 pNFS（讨论帖 468496）</div>
-          <div class="li">行业媒体与分析机构报道：StorageReview、Blocks &amp; Files、NAND Research、Futurum、Computer Weekly；pNFS Lattice 项目资料（Linux 基金会）</div>
+          <div class="li">行业媒体与分析机构报道：StorageReview、Blocks &amp; Files、NAND Research、Futurum、Computer Weekly、ITPro、HPCwire、StorageNewsletter；pNFS Lattice 项目资料（Linux 基金会）</div>
           <div class="li">NetApp Novus Overview 技术简报（Field Roadmap Webcast），2026-09-22</div>
           <div class="li">RFC 8435 · pNFS Flexible File Layout；RFC 8881 · NFSv4.1；RFC 7862 · NFSv4.2</div>
           <p class="note">本页包含对预期产品功能的前瞻性描述，反映 2026 年 11 月的公开信息与计划，实际功能与时间可能变化。</p>
@@ -1558,7 +1606,7 @@ function playIo(){
 const TL = [
   ['宣布并完成收购 PEAK:AIO','PEAK:AIO 是一家总部位于英国曼彻斯特的软件定义存储公司，核心技术是面向 pNFS 的横向扩展、解耦式元数据服务。NetApp 于 2026 年 9 月 25 日宣布收购，11 月 2 日完成，财务条款未披露。其元数据与并行文件技术将并入基于 ONTAP 的数据架构，用于强化 Novus；具体集成形态与时间尚未公布。'],
   ['Novus 发布并开放订购','Novus 于 2026 年 9 月 29 日在 NetApp INSIGHT 2026（9 月 29 日至 10 月 1 日，拉斯维加斯）发布，发布时即可订购。首发配置：Novus Data Director 运行在合格的 Supermicro 服务器上，数据层为运行 ONTAP 的 AFF A90。首发阶段的配置与规模需与 NetApp 共同确认。'],
-  ['正式 GA 与首批客户部署','NetApp 于 2026 年 11 月宣布 Novus 正式可用（GA），软件可从 NetApp 支持站下载，产品文档见 docs.netapp.com/us-en/novus。GA 版本即首发配置：Novus Data Director 运行在符合 NetApp 规格的 x86 服务器上，数据层为 AFF A90 for NetApp Novus。这一时间与发布时行业媒体报道的「首批客户在发布后一到两个月内获得系统」一致，更大范围的供货在其后数月展开。'],
+  ['正式 GA 与首批客户部署','NetApp 于 2026 年 11 月宣布 Novus 正式可用（GA），软件可从 NetApp 支持站下载，产品文档见 docs.netapp.com/us-en/novus。GA 版本即首发配置：Novus Data Director 运行在符合 NetApp 规格的 x86 服务器上，数据层为 AFF A90 for NetApp Novus。这一时间与发布时行业媒体报道的「首批客户在发布后一到两个月内获得系统」一致，更大范围的供货在其后数月展开。11 月 10 日，欧洲主权 AI 云服务商 Nebul 宣布采用 Novus（见「公开案例」一幕）。'],
   ['NCP 认证与软件定义形态','NVIDIA Cloud Partner（NCP）认证目标 Q4 CY26 – Q1 CY27，认证对象是 Data Director 元数据服务器（AFF A90 已获 NCP 认证）。第二种交付形态以运行在第三方 x86 服务器上的 ONTAP SDS 作为数据节点，GA 目标 Q1 CY27，配套云控制服务负责存储供给、可观测性、IAM 与机群管理。ONTAP 与 Data Director 的统一管理，以及对象访问、传输加密、分层等能力仍为方向性规划。以上均为目标时间，可能调整。']
 ];
 function setTl(k){
@@ -1721,6 +1769,62 @@ function drawPeak(k){
   $('#peakSvg').innerHTML = h;
 }
 toggleGroup('data-peak', drawPeak);
+
+/* ── 公开案例：三家服务商与 NetApp 的分工 ── */
+const CASES = {
+  nebul: {
+    state: '宣布采用 Novus · 2026-11-10',
+    who: ['Nebul', '欧洲 AI 云服务商 · 荷兰莱顿 · 2022 年成立'],
+    svc: ['Intelligent Cloud 主权 AI 平台', '加速计算 + 企业数据服务 + 生产级 AI 能力'],
+    na:  ['NetApp Novus', '基于 ONTAP 的 AI 工厂存储'],
+    tags: ['Data Director 元数据', 'ONTAP 数据节点', '现有数据延伸至主权云'],
+    users: '面向受监管行业的欧洲企业',
+    note: 'Novus 将支撑 Intelligent Cloud 的扩展。Novus 基于 ONTAP，已在使用 NetApp 的企业可以把现有数据延伸进主权云环境；双方还在探索加快主权 AI 落地的更多方式。部署规模与上线时间未公布。'
+  },
+  lambda: {
+    state: '联合介绍 · INSIGHT 2026',
+    who: ['Lambda', 'GPU 云服务商 · 美国'],
+    svc: ['大规模 GPU 集群交付', '1 万卡以上集群 · 服务扩展到存储'],
+    na:  ['NetApp Novus', '为集群提供共享存储'],
+    tags: ['万卡级并行供数', '内核 pNFS 客户端', '存储纳入云服务'],
+    users: '最终用户未具名',
+    note: 'INSIGHT 2026 第二天主题演讲中，Lambda 云服务总裁 David Ward 与 NetApp 首席平台与技术官 Arindam Banerjee 联合介绍 Novus 的实际使用：双方合作为一套 1 万卡以上的 GPU 集群提供存储。尚无独立公告，部署状态未公开。'
+  },
+  emma: {
+    state: '战略合作 · ONTAP 组合',
+    who: ['emma（Emma Technologies）', '云中立平台 · 卢森堡'],
+    svc: ['自有欧洲机房 GPU 算力 + 云运营平台', '负载可运行在公有云、emma 机房或自建环境'],
+    na:  ['NetApp ONTAP', '同一架构提供文件与对象存储'],
+    tags: ['文件 + 对象统一', '多租户 AI 环境', '欧洲主权 AI 联合方案'],
+    users: '面向欧洲企业',
+    note: '这是基于 ONTAP 的主权 AI 联合方案，不使用 Novus：NetApp 提供数据层，emma 提供 GPU 算力与分布式基础设施的云运营平台。公告未说明上市时间。'
+  }
+};
+function drawCase(k){
+  const c = CASES[k], nv = k !== 'emma';
+  const box = (y, h2, fill, stroke, col, t)=>
+    '<rect x="30" y="'+y+'" width="580" height="'+h2+'" rx="11" fill="'+fill+'" stroke="'+stroke+'"/>'
+    + '<text x="48" y="'+(y+22)+'" font-size="12.5" font-weight="750" fill="'+col+'">'+t[0]+'</text>'
+    + '<text x="48" y="'+(y+40)+'" font-size="10.5" fill="#5c6a8a">'+t[1]+'</text>';
+  let h = '<defs><marker id="csA" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#0c8e86"/></marker></defs>';
+  h += box(6, 52, '#fff5e6', '#e6b566', '#7a4a05', c.who)
+     + '<text x="592" y="28" text-anchor="end" font-size="10" fill="#8a6a35">'+c.users+'</text>'
+     + '<path d="M320 60V78" stroke="#0c8e86" stroke-width="2" marker-end="url(#csA)"/>'
+     + box(80, 52, '#eef8f6', '#7cc8bf', '#0a6b65', c.svc)
+     + '<path d="M320 134V152" stroke="#0c8e86" stroke-width="2" marker-end="url(#csA)"/>'
+     + '<rect x="30" y="154" width="580" height="90" rx="12" fill="'+(nv?'#e8f3ff':'#f1eefc')+'" stroke="'+(nv?'#7fb0e6':'#a99fe6')+'"/>'
+     + '<text x="48" y="176" font-size="12.5" font-weight="750" fill="'+(nv?'#123a7a':'#4a3db0')+'">'+c.na[0]+'</text>'
+     + '<text x="48" y="193" font-size="10.5" fill="#5c6a8a">'+c.na[1]+'</text>';
+  c.tags.forEach((t,i)=>{
+    const x = 48 + i*186;
+    h += '<rect x="'+x+'" y="204" width="172" height="28" rx="7" fill="#fff" stroke="'+(nv?'#7fb0e6':'#a99fe6')+'"/>'
+       + '<text x="'+(x+86)+'" y="222" text-anchor="middle" font-size="10.5" fill="'+(nv?'#123a7a':'#4a3db0')+'">'+t+'</text>';
+  });
+  $('#caseSvg').innerHTML = h;
+  $('#caseState').textContent = c.state;
+  $('#caseNote').textContent = c.note;
+}
+toggleGroup('data-case', drawCase);
 
 /* ── KV Cache 卸载：三种框架的接入示意 ── */
 const KVF = {
