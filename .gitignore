@@ -12,3 +12,7 @@ teaser/
 nvidia-stx/AI推理上下文存储_*.html
 nvidia-stx/CLAUDE.md
 eda/index.tabs.html
+
+# Fusion 本地加密工具和构建预览
+/fusion/tools/
+/fusion-v3/
